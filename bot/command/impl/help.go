@@ -16,20 +16,14 @@ import (
 type HelpCommand struct {
 }
 
-func (HelpCommand) Name() string {
-	return "help"
-}
-
-func (HelpCommand) Description() string {
-	return "Shows you a list of commands"
-}
-
-func (HelpCommand) Aliases() []string {
-	return []string{"h"}
-}
-
-func (HelpCommand) PermissionLevel() permission.PermissionLevel {
-	return permission.Everyone
+func (HelpCommand) Properties() command.Properties {
+	return command.Properties{
+		Name:            "help",
+		Description:     "Shows you a list of commands",
+		Aliases:         []string{"h"},
+		PermissionLevel: permission.Everyone,
+		Category:        command.General,
+	}
 }
 
 func (HelpCommand) Execute(ctx command.CommandContext) {
@@ -42,13 +36,13 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 
 	for _, cmd := range Commands {
 		// check bot admin / helper only commands
-		if (cmd.AdminOnly() && !utils.IsBotAdmin(ctx.Author.Id)) || (cmd.HelperOnly() && !utils.IsBotHelper(ctx.Author.Id)) {
+		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.Author.Id)) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.Author.Id)) {
 			continue
 		}
 
-		if ctx.UserPermissionLevel >= cmd.PermissionLevel() { // only send commands the user has permissions for
+		if ctx.UserPermissionLevel >= cmd.Properties().PermissionLevel { // only send commands the user has permissions for
 			var current []command.Command
-			if commands, ok := commandCategories.Get(cmd.Category()); ok {
+			if commands, ok := commandCategories.Get(cmd.Properties().Category); ok {
 				if commands == nil {
 					current = make([]command.Command, 0)
 				} else {
@@ -57,7 +51,7 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 			}
 			current = append(current, cmd)
 
-			commandCategories.Set(cmd.Category(), current)
+			commandCategories.Set(cmd.Properties().Category, current)
 		}
 	}
 
@@ -88,7 +82,8 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 		}
 	}
 
-	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id); if err != nil {
+	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id)
+	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
@@ -109,7 +104,7 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 }
 
 func formatHelp(c command.Command, prefix string) string {
-	return fmt.Sprintf("**%s%s**: %s", prefix, c.Name(), c.Description())
+	return fmt.Sprintf("**%s%s**: %s", prefix, c.Properties().Name, c.Properties().Description)
 }
 
 func getPrefix(guildId uint64) (prefix string) {
@@ -125,28 +120,3 @@ func getPrefix(guildId uint64) (prefix string) {
 
 	return
 }
-
-func (HelpCommand) Parent() interface{} {
-	return nil
-}
-
-func (HelpCommand) Children() []command.Command {
-	return nil
-}
-
-func (HelpCommand) PremiumOnly() bool {
-	return false
-}
-
-func (HelpCommand) Category() command.Category {
-	return command.General
-}
-
-func (HelpCommand) AdminOnly() bool {
-	return false
-}
-
-func (HelpCommand) HelperOnly() bool {
-	return false
-}
-

@@ -2,13 +2,13 @@ package listeners
 
 import (
 	"context"
-	"github.com/TicketsBot/TicketsGo/metrics/statsd"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/impl"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -55,7 +55,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	var c command.Command
 	for _, cmd := range impl.Commands {
-		if strings.ToLower(cmd.Name()) == strings.ToLower(root) || contains(cmd.Aliases(), strings.ToLower(root)) {
+		if strings.ToLower(cmd.Properties().Name) == strings.ToLower(root) || contains(cmd.Properties().Aliases, strings.ToLower(root)) {
 			parent := cmd
 			index := 0
 
@@ -64,8 +64,8 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					childName := args[index]
 					found := false
 
-					for _, child := range parent.Children() {
-						if strings.ToLower(child.Name()) == strings.ToLower(childName) || contains(child.Aliases(), strings.ToLower(childName)) {
+					for _, child := range parent.Properties().Children {
+						if strings.ToLower(child.Properties().Name) == strings.ToLower(childName) || contains(child.Properties().Aliases, strings.ToLower(childName)) {
 							parent = child
 							found = true
 							index++
@@ -139,25 +139,25 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		}
 		ctx.UserPermissionLevel = permLevel
 
-		if c.PermissionLevel() > permLevel {
+		if c.Properties().PermissionLevel > permLevel {
 			ctx.ReactWithCross()
 			ctx.SendEmbed(utils.Red, "Error", utils.NO_PERMISSION)
 			return
 		}
 
-		if c.AdminOnly() && !utils.IsBotAdmin(e.Author.Id) {
+		if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 			ctx.ReactWithCross()
 			ctx.SendEmbed(utils.Red, "Error", "This command is reserved for the bot owner only")
 			return
 		}
 
-		if c.HelperOnly() && !utils.IsBotHelper(e.Author.Id) && !utils.IsBotAdmin(e.Author.Id) {
+		if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 			ctx.ReactWithCross()
 			ctx.SendEmbed(utils.Red, "Error", utils.NO_PERMISSION)
 			return
 		}
 
-		if c.PremiumOnly() && premiumTier == premium.None {
+		if c.Properties().PremiumOnly && premiumTier == premium.None {
 			ctx.ReactWithCross()
 			ctx.SendEmbed(utils.Red, "PremiumTier Only Command", utils.PREMIUM_MESSAGE)
 			return

@@ -18,6 +18,7 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 		ctx := &worker.Context{
 			Token:       event.BotToken,
 			BotId:       event.BotId,
+			ShardId:     event.ShardId,
 			Cache:       cache,
 			RateLimiter: ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, fmt.Sprintf("tickets:%d", event.BotId)), 1),
 		}

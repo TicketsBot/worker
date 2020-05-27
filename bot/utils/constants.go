@@ -14,4 +14,9 @@ const (
 		"Alternatively, you can vote at <https://vote.ticketsbot.net> to get premium free for 24 hours"
 
 	DEFAULT_PREFIX string = "t!"
+
+	ABOUT_MESSAGE string = "Tickets is an easy to use and highly configurable ticket and support bot.\n" +
+		"Support server: https://discord.gg/VtV3rSk\n" +
+		"Commands: Type `t!help`\n " +
+		"Get started by running `t!setup`"
 )

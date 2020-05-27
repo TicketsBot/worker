@@ -32,7 +32,7 @@ func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessa
 		}
 
 		if ptr.Elem() == dataType {
-			reflect.ValueOf(listener).Call([]reflect.Value{
+			go reflect.ValueOf(listener).Call([]reflect.Value{
 				reflect.ValueOf(ctx),
 				event,
 			})

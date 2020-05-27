@@ -9,6 +9,7 @@ import (
 type Context struct {
 	Token       string
 	BotId       uint64
+	ShardId     int
 	Cache       *cache.PgCache
 	RateLimiter *ratelimit.Ratelimiter
 }
