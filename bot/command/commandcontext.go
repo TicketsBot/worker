@@ -2,10 +2,9 @@ package command
 
 import (
 	"fmt"
-	permcache "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/permission"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -23,7 +22,7 @@ type CommandContext struct {
 	PremiumTier         premium.PremiumTier
 	ShouldReact         bool
 	IsFromPanel         bool
-	UserPermissionLevel permcache.PermissionLevel
+	UserPermissionLevel permission.PermissionLevel
 }
 
 func (ctx *CommandContext) Guild() (guild.Guild, error) {
@@ -69,8 +68,8 @@ func (ctx *CommandContext) ReactWithCross() {
 	}
 }
 
-func (ctx *CommandContext) GetPermissionLevel(ch chan permcache.PermissionLevel) {
-	permission.GetPermissionLevel(ctx.Worker,  ctx.Member, ctx.GuildId, ch)
+func (ctx *CommandContext) GetPermissionLevel() permission.PermissionLevel {
+	return permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), ctx.Member, ctx.GuildId)
 }
 
 func (ctx *CommandContext) GetChannelFromArgs() uint64 {

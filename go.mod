@@ -4,8 +4,8 @@ go 1.14
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20200425115930-0ca198cc8306
-	github.com/TicketsBot/common v0.0.0-20200527134019-61bfe0731557
-	github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c
+	github.com/TicketsBot/common v0.0.0-20200527164507-95daaf698eb5
+	github.com/TicketsBot/database v0.0.0-20200527162848-0695e4c1f7dc
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 // indirect
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/getsentry/raven-go v0.2.0

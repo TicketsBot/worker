@@ -2,7 +2,7 @@ package listeners
 
 import (
 	"context"
-	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func OnCommand(worker *worker.Context, e *events.MessageCreate) {
+func OnCommand(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
 	if e.Author.Bot {
 		return
 	}
@@ -131,15 +131,9 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	}
 
 	if c != nil {
-		var permLevel permission.PermissionLevel
-		{
-			ch := make(chan permission.PermissionLevel)
-			go ctx.GetPermissionLevel(ch)
-			permLevel = <-ch
-		}
-		ctx.UserPermissionLevel = permLevel
+		ctx.UserPermissionLevel = ctx.GetPermissionLevel()
 
-		if c.Properties().PermissionLevel > permLevel {
+		if c.Properties().PermissionLevel > ctx.UserPermissionLevel {
 			ctx.ReactWithCross()
 			ctx.SendEmbed(utils.Red, "Error", utils.NO_PERMISSION)
 			return

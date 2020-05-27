@@ -1,10 +1,9 @@
 package impl
 
 import (
-	permcache "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/permission"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -18,7 +17,7 @@ func (BlacklistCommand) Properties() command.Properties {
 		Name:            "blacklist",
 		Description:     "Toggles whether users are allowed to interact with the bot",
 		Aliases:         []string{"unblacklist"},
-		PermissionLevel: permcache.Support,
+		PermissionLevel: permission.Support,
 		Category:        command.Settings,
 	}
 }
@@ -45,11 +44,7 @@ func (BlacklistCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	permissionLevelChan := make(chan permcache.PermissionLevel)
-	go permission.GetPermissionLevel(ctx.Worker, user.Member, ctx.GuildId, permissionLevelChan)
-	permissionLevel := <-permissionLevelChan
-
-	if permissionLevel > permcache.Everyone {
+	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), user.Member, ctx.GuildId) > permission.Everyone {
 		ctx.SendEmbed(utils.Red, "Error", "You cannot blacklist staff")
 		ctx.ReactWithCross()
 		return

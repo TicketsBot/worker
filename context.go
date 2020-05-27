@@ -7,11 +7,12 @@ import (
 )
 
 type Context struct {
-	Token       string
-	BotId       uint64
-	ShardId     int
-	Cache       *cache.PgCache
-	RateLimiter *ratelimit.Ratelimiter
+	Token        string
+	BotId        uint64
+	IsWhitelabel bool
+	ShardId      int
+	Cache        *cache.PgCache
+	RateLimiter  *ratelimit.Ratelimiter
 }
 
 func (c *Context) Self() (user.User, error) {

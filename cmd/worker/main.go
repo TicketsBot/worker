@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -19,15 +20,19 @@ func main() {
 	redis.Connect()
 	dbclient.Connect()
 
-	cache, err := cache.Connect()
+	pgCache, err := cache.Connect()
 	if err != nil {
 		panic(err)
 	}
 
-	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &cache, dbclient.Client)
+	cache.Client = &pgCache
+
+	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"))
 
 	statsd.Client, _ = statsd.NewClient()
 
-	event.Listen(redis.Client, &cache)
+	go messagequeue.ListenTicketClose()
+
+	event.Listen(redis.Client, &pgCache)
 }

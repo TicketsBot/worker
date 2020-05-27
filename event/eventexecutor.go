@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -9,7 +10,7 @@ import (
 	"reflect"
 )
 
-func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessage) {
+func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessage, extra eventforwarding.Extra) {
 	dataType := events.EventTypes[eventType]
 	if dataType == nil {
 		return
@@ -22,7 +23,7 @@ func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessa
 
 	for _, listener := range listeners.Listeners {
 		fn := reflect.TypeOf(listener)
-		if fn.NumIn() != 2 {
+		if fn.NumIn() != 3 {
 			continue
 		}
 
@@ -35,6 +36,7 @@ func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessa
 			go reflect.ValueOf(listener).Call([]reflect.Value{
 				reflect.ValueOf(ctx),
 				event,
+				reflect.ValueOf(extra),
 			})
 		}
 	}

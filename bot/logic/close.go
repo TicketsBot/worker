@@ -2,10 +2,9 @@ package logic
 
 import (
 	"fmt"
-	permcache "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/permission"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -63,15 +62,13 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	reason = strings.TrimSuffix(reason, " ")
 
 	// Check the user is permitted to close the ticket
-	permissionLevelChan := make(chan permcache.PermissionLevel)
-	go permission.GetPermissionLevel(worker, member, guildId, permissionLevelChan)
-	permissionLevel := <-permissionLevelChan
+	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
 
 	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId); if err != nil {
 		sentry.Error(err)
 	}
 
-	if (permissionLevel == permcache.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permcache.Everyone && !usersCanClose) {
+	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
 			utils.SendEmbed(worker, channelId, utils.Red, "Error", "You are not permitted to close this ticket", nil, 30, isPremium)

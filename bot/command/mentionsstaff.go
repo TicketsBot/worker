@@ -2,10 +2,10 @@ package command
 
 import (
 	"context"
-	permcache "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/permission"
 	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/utils"
 	"golang.org/x/sync/errgroup"
 	"strings"
 	"sync"
@@ -21,9 +21,7 @@ func (ctx *CommandContext) MentionsStaff() bool {
 		user.Member.User = user.User
 
 		group.Go(func() error {
-			level := make(chan permcache.PermissionLevel)
-			go permission.GetPermissionLevel(ctx.Worker, user.Member, ctx.GuildId, level)
-			if <-level > permcache.Everyone {
+			if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), user.Member, ctx.GuildId) > permission.Everyone {
 				lock.Lock()
 				mentionsStaff = true
 				lock.Unlock()
