@@ -5,11 +5,12 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
 	"github.com/go-redis/redis"
+	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/rest/ratelimit"
 )
 
-func Listen(redis *redis.Client) {
+func Listen(redis *redis.Client, cache *cache.PgCache) {
 	ch := make(chan eventforwarding.Event)
 	go eventforwarding.Listen(redis, ch)
 
@@ -17,7 +18,7 @@ func Listen(redis *redis.Client) {
 		ctx := &worker.Context{
 			Token:       event.BotToken,
 			BotId:       event.BotId,
-			Cache:       nil,
+			Cache:       cache,
 			RateLimiter: ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, fmt.Sprintf("tickets:%d", event.BotId)), 1),
 		}
 

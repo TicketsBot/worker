@@ -1,35 +1,28 @@
 package main
 
 import (
+	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/worker/bot/cache"
+	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
-	"github.com/go-redis/redis"
 	"os"
-	"strconv"
 )
 
 func main() {
-	// create redis client
-	redis, err := buildRedisClient()
+	utils.ParseBotAdmins()
+	utils.ParseBotHelpers()
+
+	redis.Connect()
+	dbclient.Connect()
+
+	cache, err := cache.Connect()
 	if err != nil {
 		panic(err)
 	}
 
-	event.Listen(redis)
-}
+	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &cache, dbclient.Client)
 
-func buildRedisClient() (client *redis.Client, err error) {
-	threads, err := strconv.Atoi(os.Getenv("WORKER_REDIS_THREADS"))
-	if err != nil {
-		return
-	}
-
-	client = redis.NewClient(&redis.Options{
-		Network:            "tcp",
-		Addr:               os.Getenv("WORKER_REDIS_ADDR"),
-		Password:           os.Getenv("WORKER_REDIS_PASSWD"),
-		PoolSize:           threads,
-		MinIdleConns:       threads,
-	})
-
-	return
+	event.Listen(redis.Client, &cache)
 }
