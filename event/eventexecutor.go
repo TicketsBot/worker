@@ -5,10 +5,13 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
+	modmaillisteners "github.com/TicketsBot/worker/bot/modmail/listeners"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
+
+var allListeners = append(listeners.Listeners, modmaillisteners.Listeners...)
 
 func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessage, extra eventforwarding.Extra) {
 	dataType := events.EventTypes[eventType]
@@ -21,7 +24,7 @@ func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessa
 		logrus.Warnf("error whilst decoding event data: %s", err.Error())
 	}
 
-	for _, listener := range listeners.Listeners {
+	for _, listener := range allListeners {
 		fn := reflect.TypeOf(listener)
 		if fn.NumIn() != 3 {
 			continue
