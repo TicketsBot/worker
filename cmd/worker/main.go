@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/cache"
@@ -17,9 +18,15 @@ func main() {
 	utils.ParseBotAdmins()
 	utils.ParseBotHelpers()
 
-	redis.Connect()
+	fmt.Println("Connect to redis...")
+	if err := redis.Connect(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Connected to Redis, connect to DB...")
 	dbclient.Connect()
 
+	fmt.Println("Connected to DB, connect to cache...")
 	pgCache, err := cache.Connect()
 	if err != nil {
 		panic(err)
@@ -27,6 +34,7 @@ func main() {
 
 	cache.Client = &pgCache
 
+	fmt.Println("Connected to cache, initialising microservice clients...")
 	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"))
 
@@ -34,5 +42,6 @@ func main() {
 
 	go messagequeue.ListenTicketClose()
 
+	fmt.Println("Listening for events...")
 	event.Listen(redis.Client, &pgCache)
 }
