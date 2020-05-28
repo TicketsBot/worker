@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest/ratelimit"
+	"os"
 	"strings"
 )
 
@@ -59,13 +60,13 @@ func ListenTicketClose() {
 					}
 
 					if bot.Token == "" {
-						token = payload.PublicBotToken
+						token = os.Getenv("WORKER_PUBLIC_TOKEN")
 					} else {
 						token = bot.Token
 						botId = whiteLabelBotId
 					}
 				} else {
-					token = payload.PublicBotToken
+					token = os.Getenv("WORKER_PUBLIC_TOKEN")
 				}
 			}
 

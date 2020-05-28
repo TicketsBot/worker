@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: golang:1.14-alpine
+    working_directory: /go/src/github.com/TicketsBot/worker
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-pkg-cache
+
+      - run:
+          name: Install czlib & GCC
+          command: apk add zlib-dev gcc musl-dev
+
+      - run:
+          name: Build worker
+          command: go build -o main cmd/worker/main.go
+
+      - store_artifacts:
+          path: /go/src/github.com/TicketsBot/worker/main
+          destination: main
