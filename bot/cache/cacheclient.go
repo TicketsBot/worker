@@ -13,7 +13,7 @@ import (
 var Client *cache.PgCache
 
 func Connect() (client cache.PgCache, err error) {
-	config, err := pgxpool.ParseConfig(os.Getenv("WORKER_PG_URI")); if err != nil {
+	config, err := pgxpool.ParseConfig(os.Getenv("WORKER_CACHE_URI")); if err != nil {
 		return
 	}
 
