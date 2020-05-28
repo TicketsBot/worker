@@ -15,6 +15,8 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 	go eventforwarding.Listen(redis, ch)
 
 	for event := range ch {
+		fmt.Println(event)
+
 		var keyPrefix string
 
 		if event.IsWhitelabel {
