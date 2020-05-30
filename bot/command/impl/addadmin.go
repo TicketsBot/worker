@@ -4,6 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -48,6 +49,11 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 				if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId, mention.Id); err != nil {
 					sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				}
+
+				if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, mention.Id, permcache.Admin); err != nil {
+					ctx.HandleError(err)
+					return
+				}
 			}()
 		}
 	} else if len(ctx.Message.MentionRoles) > 0 {
@@ -85,6 +91,11 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 		go func() {
 			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId, role); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			}
+
+			if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, role, permcache.Admin); err != nil {
+				ctx.HandleError(err)
+				return
 			}
 		}()
 	}

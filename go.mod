@@ -12,9 +12,7 @@ require (
 	github.com/go-errors/errors v1.0.2
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/gofrs/uuid v3.3.0+incompatible
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgtype v1.3.0
-	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1
 	github.com/sirupsen/logrus v1.5.0

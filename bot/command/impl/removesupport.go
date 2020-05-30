@@ -4,6 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -28,7 +29,7 @@ func (RemoveSupportCommand) Properties() command.Properties {
 func (RemoveSupportCommand) Execute(ctx command.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",
+		Value:  "`t!removesupport @User`\n`t!removesupport @Role`\n`t!removesupport role name`",
 		Inline: false,
 	}
 
@@ -45,8 +46,13 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext) {
 		user = true
 		for _, mention := range ctx.Message.Mentions {
 			go func() {
-				if err := dbclient.Client.Permissions.AddSupport(ctx.GuildId, mention.Id); err != nil {
+				if err := dbclient.Client.Permissions.RemoveSupport(ctx.GuildId, mention.Id); err != nil {
 					sentry.ErrorWithContext(err, ctx.ToErrorContext())
+				}
+
+				if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, mention.Id, permcache.Everyone); err != nil {
+					ctx.HandleError(err)
+					return
 				}
 			}()
 		}
@@ -82,8 +88,13 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext) {
 
 	// Add roles to DB
 	for _, role := range roles {
-		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId, role); err != nil {
+		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx.GuildId, role); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
+
+		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, role, permcache.Everyone); err != nil {
+			ctx.HandleError(err)
+			return
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -59,6 +60,11 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 					sentry.ErrorWithContext(err, ctx.ToErrorContext())
 					ctx.ReactWithCross()
 				}
+
+				if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, mention.Id, permcache.Support); err != nil {
+					ctx.HandleError(err)
+					return
+				}
 			}()
 		}
 	} else if len(ctx.Message.MentionRoles) > 0 {
@@ -92,6 +98,11 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 			if err := dbclient.Client.RolePermissions.RemoveAdmin(ctx.GuildId, role); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				ctx.ReactWithCross()
+			}
+
+			if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, role, permcache.Support); err != nil {
+				ctx.HandleError(err)
+				return
 			}
 		}()
 	}
