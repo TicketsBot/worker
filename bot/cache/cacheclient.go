@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"github.com/jackc/pgconn"
+	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -15,23 +15,19 @@ import (
 var Client *cache.PgCache
 
 func Connect() (client cache.PgCache, err error) {
-	maxConns, err := strconv.Atoi(os.Getenv("CACHE_THREADS"))
+	threads, err := strconv.Atoi(os.Getenv("CACHE_THREADS"))
 	if err != nil {
 		panic(err)
 	}
 
-	config := &pgxpool.Config{
-		ConnConfig: &pgx.ConnConfig{
-			Config: pgconn.Config{
-				Host:     os.Getenv("CACHE_HOST"),
-				Port:     5432,
-				Database: os.Getenv("CACHE_NAME"),
-				User:     os.Getenv("CACHE_USER"),
-				Password: os.Getenv("CACHE_PASSWORD"),
-			},
-		},
-		MaxConns: int32(maxConns),
-	}
+	config, _ := pgxpool.ParseConfig(fmt.Sprintf(
+		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
+		os.Getenv("CACHE_USER"),
+		os.Getenv("CACHE_PASSWORD"),
+		os.Getenv("CACHE_HOST"),
+		os.Getenv("CACHE_NAME"),
+		threads,
+	))
 
 	// TODO: Sentry
 	config.ConnConfig.LogLevel = pgx.LogLevelWarn
@@ -54,4 +50,3 @@ func Connect() (client cache.PgCache, err error) {
 
 	return
 }
-

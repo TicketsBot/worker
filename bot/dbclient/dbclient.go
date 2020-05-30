@@ -2,8 +2,8 @@ package dbclient
 
 import (
 	"context"
+	"fmt"
 	"github.com/TicketsBot/database"
-	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -15,23 +15,19 @@ import (
 var Client *database.Database
 
 func Connect() {
-	maxConns, err := strconv.Atoi(os.Getenv("DATABASE_THREADS"))
+	threads, err := strconv.Atoi(os.Getenv("DATABASE_THREADS"))
 	if err != nil {
 		panic(err)
 	}
 
-	config := &pgxpool.Config{
-		ConnConfig: &pgx.ConnConfig{
-			Config: pgconn.Config{
-				Host:     os.Getenv("DATABASE_HOST"),
-				Port:     5432,
-				Database: os.Getenv("DATABASE_NAME"),
-				User:     os.Getenv("DATABASE_USER"),
-				Password: os.Getenv("DATABASE_PASSWORD"),
-			},
-		},
-		MaxConns: int32(maxConns),
-	}
+	config, _ := pgxpool.ParseConfig(fmt.Sprintf(
+		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_NAME"),
+		threads,
+	))
 
 	// TODO: Sentry
 	config.ConnConfig.LogLevel = pgx.LogLevelWarn
