@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"github.com/TicketsBot/common/eventforwarding"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -75,6 +76,19 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd, extra ev
 	if closeConfirmation {
 		// Remove reaction
 		_ = worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, e.Emoji.Name) // Error is probably a 403, we can ignore
+
+		// Make sure user can close;
+		// Get user's permissions level
+		if permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), *e.Member, e.GuildId); permissionLevel == permission.Everyone {
+			usersCanClose, err := dbclient.Client.UsersCanClose.Get(e.GuildId); if err != nil {
+				sentry.Error(err)
+			}
+
+			if (permissionLevel == permission.Everyone && ticket.UserId != e.UserId) || (permissionLevel == permission.Everyone && !usersCanClose) {
+				utils.SendEmbed(worker, e.ChannelId, utils.Red, "Error", "You are not permitted to close this ticket", nil, 30, isPremium)
+				return
+			}
+		}
 
 		// Send confirmation message
 		msg, err := utils.SendEmbedWithResponse(worker, e.ChannelId, utils.Green, "Close Confirmation", "React with ✅ to confirm you want to close the ticket", nil, 10, isPremium)
