@@ -15,7 +15,7 @@ import (
 var Client *database.Database
 
 func Connect() {
-	maxConns, err := strconv.Atoi(os.Getenv("WORKER_PG_THREADS"))
+	maxConns, err := strconv.Atoi(os.Getenv("DATABASE_THREADS"))
 	if err != nil {
 		panic(err)
 	}
