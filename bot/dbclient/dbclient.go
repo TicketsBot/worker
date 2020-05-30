@@ -20,7 +20,7 @@ func Connect() {
 		panic(err)
 	}
 
-	config, _ := pgxpool.ParseConfig(fmt.Sprintf(
+	config, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
@@ -28,6 +28,10 @@ func Connect() {
 		os.Getenv("DATABASE_NAME"),
 		threads,
 	))
+
+	if err != nil {
+		panic(err)
+	}
 
 	// TODO: Sentry
 	config.ConnConfig.LogLevel = pgx.LogLevelWarn

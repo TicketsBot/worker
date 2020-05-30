@@ -20,7 +20,7 @@ func Connect() (client cache.PgCache, err error) {
 		panic(err)
 	}
 
-	config, _ := pgxpool.ParseConfig(fmt.Sprintf(
+	config, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		os.Getenv("CACHE_USER"),
 		os.Getenv("CACHE_PASSWORD"),
@@ -28,6 +28,10 @@ func Connect() (client cache.PgCache, err error) {
 		os.Getenv("CACHE_NAME"),
 		threads,
 	))
+
+	if err != nil {
+		panic(err)
+	}
 
 	// TODO: Sentry
 	config.ConnConfig.LogLevel = pgx.LogLevelWarn
