@@ -62,7 +62,8 @@ func OpenModMailTicket(worker *worker.Context, guild guild.Guild, user user.User
 	}
 
 	if useCategory {
-		channels, err := worker.GetGuildChannels(guild.Id); if err != nil {
+		channels, err := worker.GetGuildChannels(guild.Id)
+		if err != nil {
 			return 0, err
 		}
 
@@ -97,6 +98,7 @@ func OpenModMailTicket(worker *worker.Context, guild guild.Guild, user user.User
 
 	uuid, err := dbclient.Client.ModmailSession.Create(database.ModmailSession{
 		GuildId:          guild.Id,
+		BotId:            worker.BotId,
 		UserId:           user.Id,
 		StaffChannelId:   channel.Id,
 		WelcomeMessageId: welcomeMessageId,
@@ -209,4 +211,3 @@ func createOverwrites(worker *worker.Context, guildId uint64) (overwrites []chan
 
 	return overwrites
 }
-

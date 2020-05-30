@@ -27,6 +27,6 @@ func Connect() {
 	}
 
 	Client = database.NewDatabase(pool)
-	Client.CreateTables(pool)
+	//Client.CreateTables(pool)
 }
 
