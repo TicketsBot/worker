@@ -23,11 +23,11 @@ func Connect() {
 	config := &pgxpool.Config{
 		ConnConfig: &pgx.ConnConfig{
 			Config: pgconn.Config{
-				Host:     os.Getenv("WORKER_PG_HOST"),
+				Host:     os.Getenv("DATABASE_HOST"),
 				Port:     5432,
-				Database: os.Getenv("WORKER_PG_DATABASE"),
-				User:     os.Getenv("WORKER_PG_USER"),
-				Password: os.Getenv("WORKER_PG_PASSWD"),
+				Database: os.Getenv("DATABASE_NAME"),
+				User:     os.Getenv("DATABASE_USER"),
+				Password: os.Getenv("DATABASE_PASSWORD"),
 			},
 		},
 		MaxConns: int32(maxConns),
