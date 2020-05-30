@@ -20,9 +20,9 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 	reason := strings.Join(ctx.Args, " ")
 
 	// Check the user is permitted to close the ticket
-	usersCanClose, err :=  dbclient.Client.UsersCanClose.Get(session.GuildId)
+	usersCanClose, err := dbclient.Client.UsersCanClose.Get(session.GuildId)
 	if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	if (ctx.UserPermissionLevel == permission.Everyone && session.UserId != ctx.Author.Id) || (ctx.UserPermissionLevel == permission.Everyone && !usersCanClose) {
@@ -95,15 +95,14 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 	go func() {
 		isPremium := utils.PremiumClient.GetTierByGuildId(ctx.GuildId, true, ctx.Worker.Token, ctx.Worker.RateLimiter) > premium.None
 		if err := utils.ArchiverClient.StoreModmail(msgs, session.GuildId, session.Uuid.String(), isPremium); err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 	}()
 
 	// Delete the webhook
 	// We need to block for this
 	if err := dbclient.Client.ModmailWebhook.Delete(session.Uuid); err != nil {
-		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+		ctx.HandleError(err)
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
@@ -116,7 +115,7 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 
 	// Send logs to archive channel
 	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(session.GuildId); if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	var channelExists bool
@@ -140,7 +139,7 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 		}
 
 		if _, err := ctx.Worker.CreateMessageEmbed(archiveChannelId, embed); err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 	}
 
