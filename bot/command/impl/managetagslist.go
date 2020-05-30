@@ -16,7 +16,7 @@ type ManageTagsListCommand struct {
 func (ManageTagsListCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "list",
-		Description:     "Lists all canned responses",
+		Description:     "Lists all tags",
 		PermissionLevel: permission.Support,
 		Parent:          ManageTagsCommand{},
 		Category:        command.Tags,
@@ -37,5 +37,5 @@ func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
 	}
 	joined = strings.TrimSuffix(joined, "\n")
 
-	ctx.SendEmbed(utils.Green, "Canned Responses", fmt.Sprintf("IDs for all tags:\n%s\nTo view the contents of a tag, run `%stag <ID>`", joined, utils.DEFAULT_PREFIX))
+	ctx.SendEmbed(utils.Green, "Tags", fmt.Sprintf("IDs for all tags:\n%s\nTo view the contents of a tag, run `%stag <ID>`", joined, utils.DEFAULT_PREFIX))
 }

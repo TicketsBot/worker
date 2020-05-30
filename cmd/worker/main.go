@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"os"
@@ -18,7 +19,10 @@ func main() {
 	utils.ParseBotAdmins()
 	utils.ParseBotHelpers()
 
-	fmt.Println("Connect to redis...")
+	fmt.Println("Connecting to Sentry...")
+	sentry.Connect()
+
+	fmt.Println("Connected to Sentry, connect to Redis...")
 	if err := redis.Connect(); err != nil {
 		panic(err)
 	}
