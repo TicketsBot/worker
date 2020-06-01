@@ -42,6 +42,8 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 		ctx.ReactWithCheck()
 	}
 
+	fmt.Println(1)
+
 	// Archive
 	msgs := make([]message.Message, 0)
 
@@ -72,25 +74,14 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 		}
 	}
 
+	fmt.Println(2)
+
 	// Reverse messages
 	for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
 		msgs[i], msgs[j] = msgs[j], msgs[i]
 	}
 
-	logs := ""
-	for _, msg := range msgs {
-		date := msg.Timestamp.UTC().String()
-
-		content := msg.Content
-
-		// append attachments
-		for _, attachment := range msg.Attachments {
-			content += fmt.Sprintf(" %s", attachment.ProxyUrl)
-		}
-
-		logs += fmt.Sprintf("[%s][%d] %s: %s\n", date, msg.Id, msg.Author.Username, content)
-	}
-
+	fmt.Println(3)
 	// we don't use this yet so chuck it in a goroutine
 	go func() {
 		isPremium := utils.PremiumClient.GetTierByGuildId(ctx.GuildId, true, ctx.Worker.Token, ctx.Worker.RateLimiter) > premium.None
@@ -106,9 +97,11 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
+	fmt.Println(4)
 
 	// Set ticket state as closed and delete channel
 	go dbclient.Client.ModmailSession.DeleteByUser(ctx.Worker.BotId, session.UserId)
+	fmt.Println(5)
 	if _, err := ctx.Worker.DeleteChannel(session.StaffChannelId); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
