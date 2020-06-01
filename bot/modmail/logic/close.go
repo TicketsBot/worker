@@ -95,9 +95,7 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 
 	// Set ticket state as closed and delete channel
 	go dbclient.Client.ModmailSession.DeleteByUser(ctx.Worker.BotId, session.UserId)
-	fmt.Println(session.StaffChannelId)
 	if _, err := ctx.Worker.DeleteChannel(session.StaffChannelId); err != nil {
-		fmt.Println(err.Error())
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
