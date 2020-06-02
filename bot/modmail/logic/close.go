@@ -89,7 +89,6 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 	// We need to block for this
 	if err := dbclient.Client.ModmailWebhook.Delete(session.Uuid); err != nil {
 		ctx.HandleError(err)
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
 

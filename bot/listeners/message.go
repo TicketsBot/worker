@@ -13,7 +13,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-// proxy messages to web UI
+// proxy messages to web UI + set last message id
 func OnMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
 	go statsd.IncrementKey(statsd.MESSAGES)
 
@@ -22,15 +22,20 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwa
 		return
 	}
 
-	if utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter) > premium.None {
-		ticket, err := dbclient.Client.Tickets.GetByChannel(e.ChannelId)
-		if err != nil {
+	// Verify that this is a ticket
+	ticket, err := dbclient.Client.Tickets.GetByChannel(e.ChannelId)
+	if err != nil {
+		sentry.Error(err)
+		return
+	}
+
+	if ticket.UserId != 0 {
+		if err := dbclient.Client.TicketLastMessage.Set(e.GuildId, ticket.Id, e.Id); err != nil {
 			sentry.Error(err)
-			return
 		}
 
-		// Verify that this is a ticket
-		if ticket.UserId != 0 {
+		// proxy msg to web UI
+		if utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter) > premium.None {
 			data := chatrelay.MessageData{
 				Ticket:  ticket,
 				Message: e.Message,
