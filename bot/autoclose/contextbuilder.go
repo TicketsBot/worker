@@ -19,7 +19,7 @@ func buildContext(ticket autoclose.Ticket, cache *cache.PgCache) (ctx *worker.Co
 
 	whitelabelBotId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ticket.GuildId)
 	if err != nil {
-		return
+		return ctx, err
 	}
 
 	ctx.IsWhitelabel = isWhitelabel
