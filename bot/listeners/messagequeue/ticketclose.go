@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/closerelay"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"os"
@@ -39,7 +40,7 @@ func ListenTicketClose() {
 			}
 
 			// Create error context for later
-			errorContext := sentry.ErrorContext{
+			errorContext := errorcontext.WorkerErrorContext{
 				Guild: ticket.GuildId,
 				User:  payload.UserId,
 			}

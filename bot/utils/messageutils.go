@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/rest"
@@ -40,7 +41,7 @@ func SendEmbedWithResponse(worker *worker.Context, channel uint64, colour Colour
 	})
 
 	if err != nil {
-		sentry.LogWithContext(err, sentry.ErrorContext{
+		sentry.LogWithContext(err, errorcontext.WorkerErrorContext{
 			Channel: channel,
 		})
 
@@ -68,7 +69,7 @@ func DeleteAfter(msg SentMessage, secs int) {
 
 func ReactWithCheck(worker *worker.Context, channelId, messageId uint64) {
 	if err := worker.CreateReaction(channelId, messageId, "✅"); err != nil {
-		sentry.LogWithContext(err, sentry.ErrorContext{
+		sentry.LogWithContext(err, errorcontext.WorkerErrorContext{
 			Channel: channelId,
 		})
 	}
@@ -76,7 +77,7 @@ func ReactWithCheck(worker *worker.Context, channelId, messageId uint64) {
 
 func ReactWithCross(worker *worker.Context, channelId, messageId uint64) {
 	if err := worker.CreateReaction(channelId, messageId, "❌"); err != nil {
-		sentry.LogWithContext(err, sentry.ErrorContext{
+		sentry.LogWithContext(err, errorcontext.WorkerErrorContext{
 			Channel: channelId,
 		})
 	}

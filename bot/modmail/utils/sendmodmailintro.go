@@ -2,8 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"strings"

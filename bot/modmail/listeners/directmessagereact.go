@@ -3,11 +3,11 @@ package listeners
 import (
 	"fmt"
 	"github.com/TicketsBot/common/eventforwarding"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/modmail/logic"
 	modmailutils "github.com/TicketsBot/worker/bot/modmail/utils"
-	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )

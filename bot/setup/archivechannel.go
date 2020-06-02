@@ -2,9 +2,10 @@ package setup
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"strings"
@@ -28,7 +29,7 @@ func (ArchiveChannelStage) Default() string {
 
 func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) {
 	guild, err := worker.GetGuild(msg.GuildId); if err != nil {
-		sentry.ErrorWithContext(err, sentry.ErrorContext{
+		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   msg.GuildId,
 			User:    msg.Author.Id,
 			Channel: msg.ChannelId,

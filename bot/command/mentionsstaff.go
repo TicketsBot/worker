@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"golang.org/x/sync/errgroup"
 	"strings"

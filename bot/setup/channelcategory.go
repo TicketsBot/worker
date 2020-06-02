@@ -2,9 +2,10 @@ package setup
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -28,7 +29,7 @@ func (ChannelCategoryStage) Default() string {
 }
 
 func (ChannelCategoryStage) Process(worker *worker.Context, msg message.Message) {
-	errorContext := sentry.ErrorContext{
+	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   msg.GuildId,
 		User:    msg.Author.Id,
 		Channel: msg.ChannelId,

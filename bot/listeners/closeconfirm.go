@@ -3,10 +3,11 @@ package listeners
 import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
@@ -23,7 +24,7 @@ func OnCloseConfirm(worker *worker.Context, e *events.MessageReactionAdd, extra 
 	}
 
 	// Create error context for later
-	errorContext := sentry.ErrorContext{
+	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   e.GuildId,
 		User:    e.UserId,
 		Channel: e.ChannelId,

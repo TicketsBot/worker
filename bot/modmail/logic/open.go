@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	permwrapper "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
 	"github.com/rxdn/gdl/objects/channel"
@@ -129,7 +130,7 @@ func createWebhook(worker *worker.Context, guildId, channelId uint64, uuid uuid.
 		Avatar:   self.AvatarUrl(256),
 	})
 	if err != nil {
-		sentry.ErrorWithContext(err, sentry.ErrorContext{
+		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   guildId,
 			Shard:   worker.ShardId,
 			Command: "open",

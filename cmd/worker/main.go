@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"os"
@@ -20,7 +20,12 @@ func main() {
 	utils.ParseBotHelpers()
 
 	fmt.Println("Connecting to Sentry...")
-	sentry.Connect()
+	if err := sentry.Initialise(sentry.Options{
+		Dsn:     os.Getenv("WORKER_SENTRY_DSN"),
+		Project: "tickets-bot",
+	}); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	fmt.Println("Connected to Sentry, connect to Redis...")
 	if err := redis.Connect(); err != nil {

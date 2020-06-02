@@ -2,9 +2,9 @@ package utils
 
 import (
 	"context"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/sentry"
 	"github.com/jackc/pgtype"
 	"github.com/rxdn/gdl/objects/guild"
 )

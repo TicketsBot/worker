@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/sentry"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -29,13 +30,12 @@ func (ctx *CommandContext) Guild() (guild.Guild, error) {
 	return ctx.Worker.GetGuild(ctx.GuildId)
 }
 
-func (ctx *CommandContext) ToErrorContext() sentry.ErrorContext {
-	return sentry.ErrorContext{
+func (ctx *CommandContext) ToErrorContext() errorcontext.WorkerErrorContext {
+	return errorcontext.WorkerErrorContext{
 		Guild:       ctx.GuildId,
 		User:        ctx.Author.Id,
 		Channel:     ctx.ChannelId,
 		Command:     ctx.Root + " " + strings.Join(ctx.Args, " "),
-		PremiumTier: int(ctx.PremiumTier),
 	}
 }
 
