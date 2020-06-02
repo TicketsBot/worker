@@ -24,6 +24,7 @@ func (AdminCommand) Properties() command.Properties {
 			AdminGenPremiumCommand{},
 			AdminPingCommand{},
 			AdminSeedCommand{},
+			AdminUpdateSchemaCommand{},
 			AdminUsersCommand{},
 		},
 		Category:   command.Settings,

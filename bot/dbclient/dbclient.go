@@ -13,6 +13,7 @@ import (
 )
 
 var Client *database.Database
+var Pool *pgxpool.Pool
 
 func Connect() {
 	threads, err := strconv.Atoi(os.Getenv("DATABASE_THREADS"))
@@ -37,11 +38,11 @@ func Connect() {
 	config.ConnConfig.LogLevel = pgx.LogLevelWarn
 	config.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
 
-	pool, err := pgxpool.ConnectConfig(context.Background(), config)
+	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
 		panic(err)
 	}
 
-	Client = database.NewDatabase(pool)
+	Client = database.NewDatabase(Pool)
 	//Client.CreateTables(pool)
 }
