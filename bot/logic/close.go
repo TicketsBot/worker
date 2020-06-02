@@ -43,8 +43,10 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 			return
 		}
 
-		utils.ReactWithCross(worker, channelId, messageId)
-		utils.SendEmbed(worker, channelId, utils.Red, "Error", "This is not a ticket channel", nil, 30, isPremium)
+		if !fromReaction {
+			utils.ReactWithCross(worker, channelId, messageId)
+			utils.SendEmbed(worker, channelId, utils.Red, "Error", "This is not a ticket channel", nil, 30, isPremium)
+		}
 
 		return
 	}

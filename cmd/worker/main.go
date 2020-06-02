@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/worker/bot/autoclose"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
@@ -50,6 +51,7 @@ func main() {
 	statsd.Client, _ = statsd.NewClient()
 
 	go messagequeue.ListenTicketClose()
+	go autoclose.ListenAutoClose(&pgCache)
 
 	fmt.Println("Listening for events...")
 	event.Listen(redis.Client, &pgCache)
