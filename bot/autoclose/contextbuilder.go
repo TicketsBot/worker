@@ -29,7 +29,7 @@ func buildContext(ticket autoclose.Ticket, cache *cache.PgCache) (ctx *worker.Co
 	if isWhitelabel {
 		res, err := dbclient.Client.Whitelabel.GetByBotId(whitelabelBotId)
 		if err != nil {
-			return
+			return ctx, err
 		}
 
 		ctx.Token = res.Token
