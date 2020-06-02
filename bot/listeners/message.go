@@ -30,8 +30,11 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwa
 	}
 
 	if ticket.UserId != 0 {
-		if err := dbclient.Client.TicketLastMessage.Set(e.GuildId, ticket.Id, e.Id); err != nil {
-			sentry.Error(err)
+		// ignore our own messages
+		if e.Author.Id != worker.BotId {
+			if err := dbclient.Client.TicketLastMessage.Set(e.GuildId, ticket.Id, e.Id); err != nil {
+				sentry.Error(err)
+			}
 		}
 
 		// proxy msg to web UI
