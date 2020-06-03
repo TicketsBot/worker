@@ -7,8 +7,6 @@ require (
 	github.com/TicketsBot/common v0.0.0-20200602202048-9d7645170a49
 	github.com/TicketsBot/database v0.0.0-20200602215845-296c7c10921c
 	github.com/elliotchance/orderedmap v1.2.1
-	github.com/getsentry/raven-go v0.2.0
-	github.com/go-errors/errors v1.1.0
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jackc/pgtype v1.3.0
