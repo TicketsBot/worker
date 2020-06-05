@@ -53,7 +53,16 @@ func GetMutualGuilds(worker *worker.Context, userId uint64) []guild.Guild {
 			continue
 		}
 
-		guildIds = append(guildIds, guildId)
+		// verify that guild has modmail enabled
+		enabled, err := dbclient.Client.ModmailEnabled.Get(guildId)
+		if err != nil {
+			sentry.Error(err)
+			continue
+		}
+
+		if enabled {
+			guildIds = append(guildIds, guildId)
+		}
 	}
 
 	var guilds []guild.Guild
