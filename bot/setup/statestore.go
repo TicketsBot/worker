@@ -2,8 +2,10 @@ package setup
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel/embed"
 	"strconv"
 	"time"
 )
@@ -58,19 +60,17 @@ func (u *SetupUser) Next() {
 func (u *SetupUser) Finish() {
 	redis.Client.Del(fmt.Sprintf("setup:%s", u.ToString()))
 
-	msg := fmt.Sprintf("The setup has been completed!\n" +
-		"You can add / remove support staff / admins using:\n" +
-		"`t!addadmin [@User / Role Name]`\n" +
-		"`t!removeadmin [@User / Role Name]`\n" +
-		"`t!addsupport [@User / Role Name]`\n" +
-		"`t!removesupprt [@User / Role Name]`\n" +
-		"You can access more settings on the web panel at <https://panel.ticketsbot.net>\n" +
-		"You should also consider creating a panel by visiting https://panel.ticketsbot.net/manage/%d/panels",
-		u.Guild,
-	)
+	embed := embed.NewEmbed().
+		SetTitle("Setup Complete").
+		SetColor(int(utils.Green)).
+		SetDescription("The setup process has been completed; however you may like to look into creating a reaction panel or adding staff:").
+		AddField("Reaction Panels", fmt.Sprintf("Reaction panels are a commonly used feature of the bot. You can read about them [here](https://ticketsbot.net/panels), or create one on [the dashboard](https://panel.ticketsbot.net/manage/%d/panels)", u.Guild), false).
+		AddField("Adding Staff", "To make staff able to answer tickets, you must let the bot know about them first. You can do this through\n`t!addsupport [@User / @Role]` and `t!addadmin [@User / @Role]`. Administrators can change the settings of the bot and access the dashboard.", false)
 
-	// Psuedo-premium
-	utils.SendEmbed(u.Worker, u.Channel, utils.Green, "Setup", msg, nil, 30, true)
+	if _, err := u.Worker.CreateMessageEmbed(u.Channel, embed); err != nil {
+		sentry.Error(err)
+		return
+	}
 }
 
 func (u *SetupUser) Cancel() {
