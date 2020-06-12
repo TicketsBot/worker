@@ -3,6 +3,7 @@ package logic
 import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -12,10 +13,13 @@ import (
 // each msg is
 const perField = 16
 
-func BuildViewStaffMessage(guildId uint64, page int, errorContext sentry.ErrorContext) *embed.Embed {
+func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, errorContext sentry.ErrorContext) *embed.Embed {
+	self, _ := worker.Self()
+
 	embed := embed.NewEmbed().
 		SetColor(int(utils.Green)).
-		SetTitle("Staff")
+		SetTitle("Staff").
+		SetFooter(fmt.Sprintf("Page %d", page), self.AvatarUrl(256))
 
 	// Add field for admin users
 	{

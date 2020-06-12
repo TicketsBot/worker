@@ -22,7 +22,7 @@ func (ViewStaffCommand) Properties() command.Properties {
 }
 
 func (ViewStaffCommand) Execute(ctx command.CommandContext) {
-	embed := logic.BuildViewStaffMessage(ctx.GuildId, 0, ctx.ToErrorContext())
+	embed := logic.BuildViewStaffMessage(ctx.GuildId, ctx.Worker, 0, ctx.ToErrorContext())
 
 	msg, err := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed)
 	if err != nil {

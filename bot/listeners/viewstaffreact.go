@@ -26,6 +26,11 @@ func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd, extr
 		return
 	}
 
+	// ignore self
+	if e.UserId == worker.BotId {
+		return
+	}
+
 	page, isViewStaffMessage := redis.GetPage(redis.Client, e.MessageId)
 	if !isViewStaffMessage {
 		return
@@ -46,7 +51,7 @@ func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd, extr
 	}
 
 	_, err := worker.EditMessage(e.ChannelId, e.MessageId, rest.EditMessageData{
-		Embed: logic.BuildViewStaffMessage(e.GuildId, page, errorContext),
+		Embed: logic.BuildViewStaffMessage(e.GuildId, worker, page, errorContext),
 	})
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
