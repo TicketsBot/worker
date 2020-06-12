@@ -114,7 +114,7 @@ func isClose(e *events.MessageCreate) (bool, []string) {
 
 	var usedPrefix string
 
-	if strings.HasPrefix(e.Content, utils.DEFAULT_PREFIX) {
+	if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
 		usedPrefix = utils.DEFAULT_PREFIX
 	} else if customPrefix != "" && strings.HasPrefix(e.Content, customPrefix) {
 		usedPrefix = customPrefix

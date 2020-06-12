@@ -33,7 +33,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate, extra eventforwa
 
 	var usedPrefix string
 
-	if strings.HasPrefix(e.Content, utils.DEFAULT_PREFIX) {
+	if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
 		usedPrefix = utils.DEFAULT_PREFIX
 	} else if strings.HasPrefix(e.Content, customPrefix) && customPrefix != "" {
 		usedPrefix = customPrefix

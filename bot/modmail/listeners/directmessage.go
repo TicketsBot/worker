@@ -186,7 +186,7 @@ func handleCommand(ctx command.CommandContext, session database.ModmailSession) 
 
 	var usedPrefix string
 
-	if strings.HasPrefix(ctx.Message.Content, utils.DEFAULT_PREFIX) {
+	if strings.HasPrefix(strings.ToLower(ctx.Message.Content), utils.DEFAULT_PREFIX) {
 		usedPrefix = utils.DEFAULT_PREFIX
 	} else if customPrefix != "" && strings.HasPrefix(ctx.Message.Content, customPrefix) {
 		usedPrefix = customPrefix
