@@ -14,7 +14,6 @@ func (AdminUpdateSchemaCommand) Properties() command.Properties {
 		Name:            "updateschema",
 		Description:     "Updates the database schema",
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		AdminOnly:       true,
 	}

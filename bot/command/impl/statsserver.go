@@ -21,7 +21,6 @@ func (StatsServerCommand) Properties() command.Properties {
 		Name:            "server",
 		Description:     "Shows you statistics about the server",
 		PermissionLevel: permission.Support,
-		Parent:          StatsCommand{},
 		Category:        command.Statistics,
 		PremiumOnly:     true,
 	}

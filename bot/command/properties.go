@@ -7,7 +7,6 @@ type Properties struct {
 	Description     string
 	Aliases         []string
 	PermissionLevel permission.PermissionLevel
-	Parent          interface{}
 	Children        []Command
 	PremiumOnly     bool
 	Category        Category

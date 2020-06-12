@@ -19,7 +19,6 @@ func (ManageTagsAddCommand) Properties() command.Properties {
 		Description:     "Adds a new tag",
 		Aliases:         []string{"new", "create"},
 		PermissionLevel: permission.Support,
-		Parent:          ManageTagsCommand{},
 		Category:        command.Tags,
 	}
 }

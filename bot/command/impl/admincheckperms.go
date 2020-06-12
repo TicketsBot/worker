@@ -15,7 +15,6 @@ func (AdminCheckPermsCommand) Properties() command.Properties {
 		Description:     "Checks permissions for the bot on the channel",
 		Aliases:         []string{"cp"},
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		HelperOnly:      true,
 	}

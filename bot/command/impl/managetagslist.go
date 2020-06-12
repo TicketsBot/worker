@@ -18,7 +18,6 @@ func (ManageTagsListCommand) Properties() command.Properties {
 		Name:            "list",
 		Description:     "Lists all tags",
 		PermissionLevel: permission.Support,
-		Parent:          ManageTagsCommand{},
 		Category:        command.Tags,
 	}
 }

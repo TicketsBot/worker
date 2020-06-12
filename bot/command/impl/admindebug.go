@@ -19,7 +19,6 @@ func (AdminDebugCommand) Properties() command.Properties {
 		Name:            "debug",
 		Description:     "Provides debugging information",
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		HelperOnly:      true,
 	}

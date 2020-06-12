@@ -16,7 +16,6 @@ func (AdminSeedCommand) Properties() command.Properties {
 		Name:            "seed",
 		Description:     "Seeds the cache with members",
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		AdminOnly:       true,
 	}

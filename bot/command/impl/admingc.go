@@ -14,7 +14,6 @@ func (AdminGCCommand) Properties() command.Properties {
 		Name:            "gc",
 		Description:     "Forces a GC sweep",
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		AdminOnly:       true,
 	}

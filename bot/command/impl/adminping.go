@@ -17,7 +17,6 @@ func (AdminPingCommand) Properties() command.Properties {
 		Description:     "Measures WS latency to Discord",
 		Aliases:         []string{"latency"},
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		HelperOnly:      true,
 	}

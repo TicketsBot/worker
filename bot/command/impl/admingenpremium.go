@@ -22,7 +22,6 @@ func (AdminGenPremiumCommand) Properties() command.Properties {
 		Description:     "Generate premium keys",
 		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		AdminOnly:       true,
 	}

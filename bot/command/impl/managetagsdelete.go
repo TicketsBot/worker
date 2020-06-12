@@ -19,7 +19,6 @@ func (ManageTagsDeleteCommand) Properties() command.Properties {
 		Description:     "Deletes a tag",
 		Aliases:         []string{"del", "rm", "remove"},
 		PermissionLevel: permission.Support,
-		Parent:          ManageTagsCommand{},
 		Category:        command.Tags,
 	}
 }

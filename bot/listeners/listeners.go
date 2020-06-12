@@ -12,4 +12,5 @@ var Listeners = []interface{}{
 	OnMessage,
 	OnPanelReact,
 	OnSetupProgress,
+	OnViewStaffReact,
 }

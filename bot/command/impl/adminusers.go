@@ -16,7 +16,6 @@ func (AdminUsersCommand) Properties() command.Properties {
 		Name:            "users",
 		Description:     "Prints the total seen member count",
 		PermissionLevel: permission.Everyone,
-		Parent:          AdminCommand{},
 		Category:        command.Settings,
 		HelperOnly:      true,
 	}
