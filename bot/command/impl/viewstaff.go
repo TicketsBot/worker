@@ -32,7 +32,7 @@ func (ViewStaffCommand) Execute(ctx command.CommandContext) {
 			ctx.HandleError(err)
 		}
 
-		if err := ctx.Worker.CreateReaction(ctx.ChannelId, msg.Id, "▶️️"); err != nil {
+		if err := ctx.Worker.CreateReaction(ctx.ChannelId, msg.Id, "▶️"); err != nil {
 			ctx.HandleError(err)
 		}
 

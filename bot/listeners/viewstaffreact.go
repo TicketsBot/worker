@@ -39,6 +39,8 @@ func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd, extr
 		return
 	}
 
+	_ = worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, e.Emoji.Name) // TODO: Permission check
+
 	if page < 0 {
 		return
 	}
