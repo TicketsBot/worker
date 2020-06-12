@@ -19,7 +19,7 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 	embed := embed.NewEmbed().
 		SetColor(int(utils.Green)).
 		SetTitle("Staff").
-		SetFooter(fmt.Sprintf("Page %d", page), self.AvatarUrl(256))
+		SetFooter(fmt.Sprintf("Page %d", page + 1), self.AvatarUrl(256))
 
 	// Add field for admin users
 	{
