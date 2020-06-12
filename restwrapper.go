@@ -93,7 +93,7 @@ func (ctx *Context) DeleteAllReactionsEmoji(channelId, messageId uint64, emoji s
 	return rest.DeleteAllReactionsEmoji(ctx.Token, ctx.RateLimiter, channelId, messageId, emoji)
 }
 
-func (ctx *Context) EditMessage(channelId, messageId uint64, data rest.ModifyChannelData) (message.Message, error) {
+func (ctx *Context) EditMessage(channelId, messageId uint64, data rest.EditMessageData) (message.Message, error) {
 	return rest.EditMessage(ctx.Token, ctx.RateLimiter, channelId, messageId, data)
 }
 
