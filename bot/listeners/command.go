@@ -26,23 +26,27 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate, extra eventforwa
 		return
 	}
 
-	customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
-	if err != nil {
-		sentry.Error(err)
-	}
-
 	var usedPrefix string
 
 	if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
 		usedPrefix = utils.DEFAULT_PREFIX
-	} else if strings.HasPrefix(e.Content, customPrefix) && customPrefix != "" {
-		usedPrefix = customPrefix
-	} else { // Not a command
-		return
+	} else {
+		// No need to query the custom prefix if we just the default prefix
+		customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return
+		}
+
+		if customPrefix != "" && strings.HasPrefix(e.Content, customPrefix) {
+			usedPrefix = customPrefix
+		} else { // Not a command
+			return
+		}
 	}
 
 	split := strings.Split(e.Content, " ")
-	root := strings.TrimPrefix(split[0], usedPrefix)
+	root := split[0][len(usedPrefix):]
 
 	args := make([]string, 0)
 	if len(split) > 1 {

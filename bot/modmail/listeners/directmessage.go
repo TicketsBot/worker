@@ -195,7 +195,7 @@ func handleCommand(ctx command.CommandContext, session database.ModmailSession) 
 	}
 
 	split := strings.Split(ctx.Message.Content, " ")
-	root := strings.TrimPrefix(split[0], usedPrefix)
+	root := split[0][len(usedPrefix):]
 
 	args := make([]string, 0)
 	if len(split) > 1 {

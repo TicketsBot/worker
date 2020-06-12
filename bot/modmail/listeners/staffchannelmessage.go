@@ -123,7 +123,7 @@ func isClose(e *events.MessageCreate) (bool, []string) {
 	}
 
 	split := strings.Split(e.Content, " ")
-	root := strings.TrimPrefix(split[0], usedPrefix)
+	root := split[0][len(usedPrefix):]
 
 	if strings.ToLower(root) != "close" {
 		return false, nil
