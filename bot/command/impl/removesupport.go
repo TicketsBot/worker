@@ -21,6 +21,7 @@ func (RemoveSupportCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "removesupport",
 		Description:     "Revokes a user's or role's support representative privileges",
+		Aliases:         []string{"removesuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 	}
