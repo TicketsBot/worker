@@ -20,8 +20,10 @@ func (AdminCommand) Properties() command.Properties {
 		Children: []command.Command{
 			AdminCheckPermsCommand{},
 			AdminDebugCommand{},
+			AdminForceCloseCommand{},
 			AdminGCCommand{},
 			AdminGenPremiumCommand{},
+			AdminGetOwnerCommand{},
 			AdminPingCommand{},
 			AdminSeedCommand{},
 			AdminUpdateSchemaCommand{},
