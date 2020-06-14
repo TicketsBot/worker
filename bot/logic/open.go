@@ -177,7 +177,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		return
 	}
 
-	welcomeMessageId := sendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject)
+	welcomeMessageId := sendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject, panel)
 
 	// UpdateUser channel in DB
 	go func() {
@@ -287,11 +287,17 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 }
 
 // returns msg id
-func sendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint64, isPremium bool, subject string) uint64 {
+func sendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint64, isPremium bool, subject string, panel *database.Panel) uint64 {
 	// Send welcome message
-	welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(guildId); if err != nil {
-		sentry.Error(err)
-		welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
+	var welcomeMessage string
+	if panel == nil || panel.WelcomeMessage == nil {
+		var err error
+		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(guildId); if err != nil {
+			sentry.Error(err)
+			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
+		}
+	} else {
+		welcomeMessage = *panel.WelcomeMessage
 	}
 
 	// %average_response%
