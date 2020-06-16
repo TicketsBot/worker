@@ -34,6 +34,7 @@ func OnDirectMessage(worker *worker.Context, e *events.MessageCreate, extra even
 		Message:     e.Message,
 		ShouldReact: true,
 		IsFromPanel: false,
+		PremiumTier: utils.PremiumClient.GetTierByGuildId(session.GuildId, true, worker.Token, worker.RateLimiter),
 	}
 
 	session, err := dbclient.Client.ModmailSession.GetByUser(worker.BotId, e.Author.Id)
@@ -91,7 +92,6 @@ func OnDirectMessage(worker *worker.Context, e *events.MessageCreate, extra even
 		open(ctx, targetGuild, dmChannel.Id)
 	} else { // Forward message to guild or handle command
 		// Update context
-		ctx.PremiumTier = utils.PremiumClient.GetTierByGuildId(session.GuildId, true, worker.Token, worker.RateLimiter)
 		ctx.ChannelId = dmChannel.Id
 
 		// Parse DM channel ID
@@ -216,17 +216,7 @@ func open(ctx command.CommandContext, targetGuild guild.Guild, dmChannelId uint6
 	utils.SendEmbed(ctx.Worker, dmChannelId, utils.Green, "Modmail", fmt.Sprintf("Your modmail ticket in %s has been opened! Use `t!close` to close the session.", targetGuild.Name), nil, 0, true)
 
 	// Send guild's welcome message
-	welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(targetGuild.Id)
-	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
-	}
-
-	welcomeMessageId, err := utils.SendEmbedWithResponse(ctx.Worker, dmChannelId, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
-	if err != nil {
-		utils.SendEmbed(ctx.Worker, dmChannelId, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
-		return
-	}
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker, targetGuild.Id, dmChannelId, ctx.Author.Id, ctx.PremiumTier >= premium.Premium, "Modmail", nil, 0)
 
 	staffChannel, err := logic.OpenModMailTicket(ctx.Worker, targetGuild, ctx.Author, welcomeMessageId.Id)
 	if err != nil {

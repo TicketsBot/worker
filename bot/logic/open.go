@@ -16,7 +16,6 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"golang.org/x/sync/errgroup"
 	"strings"
-	"time"
 )
 
 // if panel != nil, msg should be artifically filled, excluding the message ID
@@ -177,7 +176,10 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		return
 	}
 
-	welcomeMessageId := sendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject, panel)
+	welcomeMessageId, err := utils.SendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject, panel, id)
+	if err != nil {
+		sentry.Error(err)
+	}
 
 	// UpdateUser channel in DB
 	go func() {
@@ -284,48 +286,6 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 		sentry.Error(err)
 	}
 	//}
-}
-
-// returns msg id
-func sendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint64, isPremium bool, subject string, panel *database.Panel) uint64 {
-	// Send welcome message
-	var welcomeMessage string
-	if panel == nil || panel.WelcomeMessage == nil {
-		var err error
-		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(guildId); if err != nil {
-			sentry.Error(err)
-			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
-		}
-	} else {
-		welcomeMessage = *panel.WelcomeMessage
-	}
-
-	// %average_response%
-	if isPremium && strings.Contains(welcomeMessage, "%average_response%") {
-		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(guildId, time.Hour * 24 * 7)
-		if err != nil {
-			sentry.Error(err)
-		} else {
-			strings.Replace(welcomeMessage, "%average_response%", utils.FormatTime(*weeklyResponseTime), -1)
-		}
-	}
-
-	// variables
-	welcomeMessage = strings.Replace(welcomeMessage, "%user%", fmt.Sprintf("<@%d>", userId), -1)
-	// welcomeMessage = strings.Replace(welcomeMessage, "%server%", ctx.Guild.Name, -1)
-
-	// Send welcome message
-	if msg, err := utils.SendEmbedWithResponse(worker, channelId, utils.Green, subject, welcomeMessage, nil, 0, isPremium); err == nil {
-		// Add close reaction to the welcome message
-		err := worker.CreateReaction(channelId, msg.Id, "🔒")
-		if err != nil {
-			sentry.Error(err)
-		}
-
-		return msg.Id
-	}
-
-	return 0
 }
 
 func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {

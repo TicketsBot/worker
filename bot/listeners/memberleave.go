@@ -24,7 +24,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove, extra ev
 	if err != nil {
 		sentry.Error(err)
 	} else {
-		// check setting is neabled
+		// check setting is enabled
 		if settings.Enabled && settings.OnUserLeave != nil && *settings.OnUserLeave {
 			// get open tickets by user
 			tickets, err := dbclient.Client.Tickets.GetOpenByUser(e.GuildId, e.User.Id)
