@@ -34,7 +34,7 @@ func OnDirectMessage(worker *worker.Context, e *events.MessageCreate, extra even
 		Message:     e.Message,
 		ShouldReact: true,
 		IsFromPanel: false,
-		PremiumTier: utils.PremiumClient.GetTierByGuildId(session.GuildId, true, worker.Token, worker.RateLimiter),
+		PremiumTier: utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter),
 	}
 
 	session, err := dbclient.Client.ModmailSession.GetByUser(worker.BotId, e.Author.Id)
@@ -218,11 +218,11 @@ func open(ctx command.CommandContext, targetGuild guild.Guild, dmChannelId uint6
 	// Send guild's welcome message
 	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker, targetGuild.Id, dmChannelId, ctx.Author.Id, ctx.PremiumTier >= premium.Premium, "Modmail", nil, 0)
 
-	staffChannel, err := logic.OpenModMailTicket(ctx.Worker, targetGuild, ctx.Author, welcomeMessageId.Id)
+	staffChannel, err := logic.OpenModMailTicket(ctx.Worker, targetGuild, ctx.Author, welcomeMessageId)
 	if err != nil {
 		utils.SendEmbed(ctx.Worker, dmChannelId, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
 		return
 	}
 
-	utils.SendEmbed(ctx.Worker, staffChannel, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
+	_, _ = utils.SendWelcomeMessage(ctx.Worker, targetGuild.Id, staffChannel, ctx.Author.Id, ctx.PremiumTier >= premium.Premium, "Modmail", nil, 0)
 }
