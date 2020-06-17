@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -26,7 +25,7 @@ func (HelpCommand) Properties() command.Properties {
 	}
 }
 
-func (HelpCommand) Execute(ctx command.CommandContext) {
+func (h HelpCommand) Execute(ctx command.CommandContext) {
 	commandCategories := orderedmap.NewOrderedMap()
 
 	// initialise map with the correct order of categories
@@ -74,8 +73,8 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
-			for _, command := range commands {
-				formatted = append(formatted, formatHelp(command, prefix))
+			for _, cmd := range commands {
+				formatted = append(formatted, command.FormatHelp(cmd, prefix))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)
@@ -101,10 +100,6 @@ func (HelpCommand) Execute(ctx command.CommandContext) {
 		ctx.ReactWithCross()
 		ctx.SendEmbed(utils.Red, "Error", "I couldn't send you a direct message: make sure your privacy settings aren't too high")
 	}
-}
-
-func formatHelp(c command.Command, prefix string) string {
-	return fmt.Sprintf("**%s%s**: %s", prefix, c.Properties().Name, c.Properties().Description)
 }
 
 func getPrefix(guildId uint64) (prefix string) {

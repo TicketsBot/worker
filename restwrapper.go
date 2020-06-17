@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/rxdn/gdl/objects/auditlog"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -506,4 +507,8 @@ func (ctx *Context) DeleteWebhook(webhookId uint64) error {
 // if wait=true, a message object will be returned
 func (ctx *Context) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) (*message.Message, error) {
 	return rest.ExecuteWebhook(webhookToken, ctx.RateLimiter, webhookId, wait, data)
+}
+
+func (ctx *Context) GetGuildAuditLog(guildId uint64, data rest.GetGuildAuditLogData) (auditlog.AuditLog, error) {
+	return rest.GetGuildAuditLog(ctx.Token, ctx.RateLimiter, guildId, data)
 }
