@@ -27,7 +27,8 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		category = panel.TargetCategory
 	} else { // else we can just use the default category
 		var err error
-		category, err = dbclient.Client.ChannelCategory.Get(guildId); if err != nil {
+		category, err = dbclient.Client.ChannelCategory.Get(guildId)
+		if err != nil {
 			sentry.Error(err)
 		}
 	}
@@ -131,7 +132,8 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	}
 
 	// Create channel
-	id, err := dbclient.Client.Tickets.Create(guildId, user.Id); if err != nil {
+	id, err := dbclient.Client.Tickets.Create(guildId, user.Id)
+	if err != nil {
 		sentry.Error(err)
 		return
 	}
@@ -188,22 +190,64 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 	}()
 
-	// Ping @everyone
-	pingEveryone, err := dbclient.Client.PingEveryone.Get(guildId); if err != nil {
-		sentry.Error(err)
-	}
+	// mentions
+	{
+		var content string
 
-	if pingEveryone {
-		pingMessage, err := worker.CreateMessageComplex(channel.Id, rest.CreateMessageData{
-			Content:         "@everyone",
-			AllowedMentions: message.MentionEveryone,
-		})
+		if panel == nil {
+			// Ping @everyone
+			pingEveryone, err := dbclient.Client.PingEveryone.Get(guildId)
+			if err != nil {
+				sentry.Error(err)
+			}
 
-		if err != nil {
-			sentry.Error(err)
+			if pingEveryone {
+				content = fmt.Sprintf("@everyone")
+			}
 		} else {
-			// error is likely to be a permission error
-			_ = worker.DeleteMessage(channel.Id, pingMessage.Id)
+			// roles
+			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.MessageId)
+			if err != nil {
+				sentry.Error(err)
+			} else {
+				for _, roleId := range roles {
+					content += fmt.Sprintf("<@&%d>", roleId)
+				}
+			}
+
+			// user
+			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.MessageId)
+			if err != nil {
+				sentry.Error(err)
+			} else {
+				if shouldMentionUser {
+					content += fmt.Sprintf("<@%d>", user.Id)
+				}
+			}
+		}
+
+		if content != "" {
+			if len(content) > 2000 {
+				content = content[:2000]
+			}
+
+			pingMessage, err := worker.CreateMessageComplex(channel.Id, rest.CreateMessageData{
+				Content:         content,
+				AllowedMentions: message.AllowedMention{
+					Parse: []message.AllowedMentionType{
+						message.EVERYONE,
+						message.USERS,
+						message.ROLES,
+					},
+				},
+			})
+
+			if err != nil {
+				sentry.Error(err)
+			} else {
+				// error is likely to be a permission error
+				_ = worker.DeleteMessage(channel.Id, pingMessage.Id)
+			}
 		}
 	}
 
@@ -211,7 +255,8 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	if panel == nil {
 		utils.SendEmbed(worker, channelId, utils.Green, "Ticket", fmt.Sprintf("Opened a new ticket: %s", channel.Mention()), nil, 30, isPremium)
 	} else {
-		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId); if err != nil {
+		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId)
+		if err != nil {
 			sentry.Error(err)
 		}
 
@@ -263,7 +308,7 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	if err == nil {
 		data = rest.WebhookData{
 			Username: self.Username,
-			Avatar: self.AvatarUrl(256),
+			Avatar:   self.AvatarUrl(256),
 		}
 	} else {
 		data = rest.WebhookData{
@@ -302,7 +347,8 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	allowedRoles := make([]uint64, 0)
 
 	// Get support reps & admins
-	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId); if err != nil {
+	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
+	if err != nil {
 		sentry.Error(err)
 	}
 
@@ -311,7 +357,8 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	}
 
 	// Get support roles & admin roles
-	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId); if err != nil {
+	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
+	if err != nil {
 		sentry.Error(err)
 	}
 
