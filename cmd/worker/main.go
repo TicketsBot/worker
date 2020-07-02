@@ -46,7 +46,7 @@ func main() {
 
 	fmt.Println("Connected to cache, initialising microservice clients...")
 	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
-	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"))
+	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
 
 	statsd.Client, _ = statsd.NewClient()
 
