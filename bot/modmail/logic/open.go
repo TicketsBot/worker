@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	permwrapper "github.com/TicketsBot/common/permission"
@@ -90,6 +91,11 @@ func OpenModMailTicket(worker *worker.Context, guild guild.Guild, user user.User
 		PermissionOverwrites: overwrites,
 		ParentId:             category, // If not using category, value will be 0 and omitempty
 	}
+
+	// DEBUG
+	marshalled, _ := json.Marshal(data)
+	fmt.Println(string(marshalled))
+	// DEBUG
 
 	channel, err := worker.CreateGuildChannel(guild.Id, data)
 	if err != nil {
