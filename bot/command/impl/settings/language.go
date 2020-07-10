@@ -3,7 +3,6 @@ package settings
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -53,13 +52,13 @@ func (l LanguageCommand) Execute(ctx command.CommandContext) {
 func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
 	example := embed.EmbedField{
 		Name:   "Example",
-		Value:  fmt.Sprintf("`%slanguage en`\n`%slanguage fr`\n`%slanguage 🇩🇪`", utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX),
+		Value:  fmt.Sprintf("`%slanguage en`\n`%slanguage fr`\n`%slanguage de`", utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX),
 		Inline: false,
 	}
 
 	var list string
 	for language, flag := range translations.Flags {
-		list += fmt.Sprintf("%s: `%s\n`", flag, language)
+		list += fmt.Sprintf("%s `%s\n`", flag, language)
 	}
 	list = strings.TrimSuffix(list, "\n")
 

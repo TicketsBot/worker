@@ -75,7 +75,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
 			for _, cmd := range commands {
-				formatted = append(formatted, command.FormatHelp(cmd, prefix))
+				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId, prefix))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)

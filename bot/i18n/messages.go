@@ -30,7 +30,7 @@ func GetMessage(language translations.Language, id translations.MessageId) strin
 	}
 
 	value, ok := messages[language][id]
-	if !ok {
+	if !ok || value == "" {
 		if language == translations.English {
 			return fmt.Sprintf("error: translation for %d is missing", id)
 		}
@@ -53,11 +53,15 @@ func GetMessageFromGuild(guildId uint64, id translations.MessageId) string {
 		// check preferred locale
 		preferredLocale, err := getPreferredLocale(guildId)
 		if err == nil {
-			var ok bool
-			language, ok = translations.Locales[preferredLocale]
-			
-			if !ok {
+			if preferredLocale == nil {
 				language = translations.English
+			} else {
+				var ok bool
+				language, ok = translations.Locales[*preferredLocale]
+
+				if !ok {
+					language = translations.English
+				}
 			}
 		} else {
 			language = translations.English
@@ -71,7 +75,7 @@ func GetMessageFromGuild(guildId uint64, id translations.MessageId) string {
 	return GetMessage(language, id)
 }
 
-func getPreferredLocale(guildId uint64) (locale string, err error) {
+func getPreferredLocale(guildId uint64) (locale *string, err error) {
 	query := `SELECT "data"->'preferred_locale' FROM guilds WHERE "guild_id" = $1;`
 	err = cache.Client.QueryRow(context.Background(), query, guildId).Scan(&locale)
 	return
