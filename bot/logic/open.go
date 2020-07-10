@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -90,8 +91,8 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			if limit > 1 {
 				ticketsPluralised += "s"
 			}
-			content := fmt.Sprintf("You are only able to open %d %s at once", limit, ticketsPluralised)
-			utils.SendEmbed(worker, targetChannel, utils.Red, "Error", content, nil, 30, isPremium)
+
+			utils.SendEmbed(worker, targetChannel, guildId, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
 		}
 
 		return
@@ -122,7 +123,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 
 		if channelCount >= 50 {
-			utils.SendEmbed(worker, channelId, utils.Red, "Error", "There are too many tickets in the ticket category. Ask an admin to close some, or to move them to another category", nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageTooManyTickets, nil, 30, isPremium)
 			return
 		}
 	}
@@ -253,7 +254,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		utils.SendEmbed(worker, channelId, utils.Green, "Ticket", fmt.Sprintf("Opened a new ticket: %s", channel.Mention()), nil, 30, isPremium)
+		utils.SendEmbed(worker, channelId, guildId, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 30, isPremium, channel.Mention())
 	} else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId)
 		if err != nil {
@@ -261,7 +262,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
-			utils.SendEmbed(worker, dmChannel.Id, utils.Green, "Ticket", fmt.Sprintf("Opened a new ticket: %s", channel.Mention()), nil, 0, isPremium)
+			utils.SendEmbed(worker, dmChannel.Id, guildId, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 0, isPremium, channel.Mention())
 		}
 	}
 

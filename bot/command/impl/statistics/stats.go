@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -39,14 +40,14 @@ func (StatsCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "Invalid argument: refer to usage", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageInvalidArgument, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
 
 	// server is handled as a subcommand, so a user has been pinged
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "Invalid argument: refer to usage", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageInvalidArgument, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}

@@ -1,8 +1,8 @@
 package tickets
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -30,7 +30,7 @@ func (ClaimCommand) Execute(ctx command.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "This is not a ticket channel")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
 		ctx.ReactWithCross()
 		return
 	}
@@ -40,6 +40,6 @@ func (ClaimCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbedNoDelete(utils.Green, "Ticket Claimed", fmt.Sprintf("Your ticket will be handled by %s", ctx.Author.Mention()))
+	ctx.SendEmbedNoDelete(utils.Green, "Ticket Claimed", translations.MessageClaimed, ctx.Author.Mention())
 	ctx.ReactWithCheck()
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -45,7 +46,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, utils.Red, "Error", "This is not a ticket channel", nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, isPremium)
 		}
 
 		return
@@ -73,7 +74,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, utils.Red, "Error", "You are not permitted to close this ticket", nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
 		}
 		return
 	}

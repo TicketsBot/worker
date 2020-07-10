@@ -1,10 +1,10 @@
 package settings
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -33,15 +33,15 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 				return
 			}
 
-			ctx.SendEmbed(utils.Red, "Premium", fmt.Sprintf("This guild already has premium. It expires on %s", expiry.UTC().String()))
+			ctx.SendEmbed(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
 		} else {
-			ctx.SendEmbed(utils.Red, "Premium", utils.PREMIUM_MESSAGE)
+			ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
 		}
 	} else {
 		key, err := uuid.FromString(ctx.Args[0])
 
 		if err != nil {
-			ctx.SendEmbed(utils.Red, "Premium", "Invalid key. Ensure that you have copied it correctly.")
+			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
 			ctx.ReactWithCross()
 			return
 		}
@@ -54,7 +54,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 		}
 
 		if length == 0 {
-			ctx.SendEmbed(utils.Red, "Premium", "Invalid key. Ensure that you have copied it correctly.")
+			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
 			ctx.ReactWithCross()
 			return
 		}

@@ -25,10 +25,9 @@ func (SyncCommand) Properties() command.Properties {
 }
 
 func (s SyncCommand) Execute(ctx command.CommandContext) {
-
 	if !utils.IsBotHelper(ctx.Author.Id) {
 		if s.isInCooldown(ctx.GuildId) {
-			ctx.SendEmbed(utils.Red, "Sync", "This command is currently in cooldown")
+			ctx.SendEmbedRaw(utils.Red, "Sync", "This command is currently in cooldown")
 			return
 		}
 

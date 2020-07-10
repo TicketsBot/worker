@@ -1,8 +1,8 @@
 package setup
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -16,10 +16,8 @@ func (PrefixStage) State() State {
 	return Prefix
 }
 
-func (PrefixStage) Prompt() string {
-	return "Type the prefix that you would like to use for the bot" +
-		"\nThe prefix is the characters that come *before* the command (excluding the actual command itself)" +
-		"\nExample: `t!`"
+func (PrefixStage) Prompt() translations.MessageId {
+	return translations.SetupPrefix
 }
 
 func (PrefixStage) Default() string {
@@ -28,7 +26,7 @@ func (PrefixStage) Default() string {
 
 func (PrefixStage) Process(worker *worker.Context, msg message.Message) {
 	if len(msg.Content) > 8 {
-		utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", fmt.Sprintf("The maxium prefix length is 8 characters\nDefaulting to `%s`", PrefixStage{}.Default()), nil, 15, true)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageInvalidPrefix, nil, 15, true, PrefixStage{}.Default())
 		return
 	}
 

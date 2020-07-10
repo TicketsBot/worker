@@ -2,6 +2,7 @@ package general
 
 import (
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 )
@@ -19,6 +20,6 @@ func (VoteCommand) Properties() command.Properties {
 }
 
 func (VoteCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "Vote", "Click here to vote for 24 hours of free premium:\nhttps://vote.ticketsbot.net")
+	ctx.SendEmbed(utils.Green, "Vote", translations.MessageVote)
 	ctx.ReactWithCheck()
 }

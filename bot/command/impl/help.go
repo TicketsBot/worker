@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -98,7 +99,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		ctx.ReactWithCheck()
 	} else {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "I couldn't send you a direct message: make sure your privacy settings aren't too high")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageHelpDMFailed)
 	}
 }
 

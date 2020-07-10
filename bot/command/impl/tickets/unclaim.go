@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -30,7 +31,7 @@ func (UnclaimCommand) Execute(ctx command.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "This is not a ticket channel")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
 		ctx.ReactWithCross()
 		return
 	}
@@ -42,13 +43,13 @@ func (UnclaimCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if whoClaimed == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "This ticket is not claimed")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotClaimed)
 		ctx.ReactWithCross()
 		return
 	}
 
 	if ctx.UserPermissionLevel < permission.Admin && ctx.Author.Id != whoClaimed {
-		ctx.SendEmbed(utils.Red, "Error", "Only admins and the user who claimed the ticket can unclaim the ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageOnlyClaimerCanUnclaim)
 		ctx.ReactWithCross()
 		return
 	}
@@ -68,6 +69,6 @@ func (UnclaimCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Ticket Unclaimed", "All support representatives can now respond to the ticket")
+	ctx.SendEmbed(utils.Green, "Ticket Unclaimed", translations.MessageUnclaimed)
 	ctx.ReactWithCheck()
 }

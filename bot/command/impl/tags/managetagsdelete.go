@@ -1,9 +1,9 @@
 package tags
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -32,7 +32,7 @@ func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext) {
 
 	if len(ctx.Args) == 0 {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "You must specify a tag ID to delete", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagDeleteInvalidArguments, []embed.EmbedField{usageEmbed})
 		return
 	}
 
@@ -52,7 +52,7 @@ func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext) {
 
 	if !found {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", fmt.Sprintf("A tag with the ID `%s` could not be found", id))
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagDeleteDoesNotExist, id)
 		return
 	}
 

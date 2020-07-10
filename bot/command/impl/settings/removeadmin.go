@@ -3,6 +3,7 @@ package settings
 import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -31,7 +32,7 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention a user or name a role to revoke admin privileges from", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
@@ -46,12 +47,12 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Message.Mentions) > 0 {
 		for _, mention := range ctx.Message.Mentions {
 			if guild.OwnerId == mention.Id {
-				ctx.SendEmbed(utils.Red, "Error", "The guild owner must be an admin")
+				ctx.SendEmbed(utils.Red, "Error", translations.MessageOwnerMustBeAdmin)
 				continue
 			}
 
 			if ctx.Author.Id == mention.Id {
-				ctx.SendEmbed(utils.Red, "Error", "You cannot revoke your own privileges")
+				ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveStaffSelf)
 				continue
 			}
 
@@ -86,7 +87,7 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.SendEmbed(utils.Red, "Error", "You need to mention a user or name a role to revoke admin privileges from", usageEmbed)
+			ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, usageEmbed)
 			ctx.ReactWithCross()
 			return
 		}

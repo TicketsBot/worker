@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
@@ -18,9 +19,8 @@ func (ArchiveChannelStage) State() State {
 	return ArchiveChannel
 }
 
-func (ArchiveChannelStage) Prompt() string {
-	return "Please specify you wish ticket logs to be sent to after tickets have been closed" +
-		"\nExample: `#logs`"
+func (ArchiveChannelStage) Prompt() translations.MessageId {
+	return translations.SetupArchiveChannel
 }
 
 func (ArchiveChannelStage) Default() string {
@@ -55,7 +55,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !exists {
-			utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", "Invalid channel, disabling archiving", nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}
@@ -66,7 +66,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 
 		// Get channels from discord
 		channels, err := worker.GetGuildChannels(msg.GuildId); if err != nil {
-			utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()), nil, 15, true)
+			utils.SendEmbedRaw(worker, msg.ChannelId, utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()), nil, 15, true)
 			return
 		}
 
@@ -80,7 +80,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !found {
-			utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", "Invalid channel, disabling archiving", nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}

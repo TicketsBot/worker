@@ -34,7 +34,7 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 	}
 
 	days, err := strconv.Atoi(ctx.Args[0]); if err != nil {
-		ctx.SendEmbed(utils.Red, "Admin", err.Error())
+		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
 		ctx.ReactWithCross()
 		return
 	}
@@ -63,7 +63,7 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 	}
 
 	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id); if err != nil {
-		ctx.SendEmbed(utils.Red, "Admin", err.Error())
+		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
 		ctx.ReactWithCross()
 		return
 	}
@@ -76,7 +76,7 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 	content += "```"
 
 	_, err = ctx.Worker.CreateMessage(dmChannel.Id, content); if err != nil {
-		ctx.SendEmbed(utils.Red, "Admin", err.Error())
+		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
 		ctx.ReactWithCross()
 		return
 	}

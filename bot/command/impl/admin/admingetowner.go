@@ -23,13 +23,13 @@ func (AdminGetOwnerCommand) Properties() command.Properties {
 
 func (AdminGetOwnerCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "No guild ID provided")
+		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
 		return
 	}
 
 	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
 	if err != nil {
-		ctx.SendEmbed(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
@@ -39,6 +39,6 @@ func (AdminGetOwnerCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Admin", fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
+	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
 	ctx.ReactWithCheck()
 }

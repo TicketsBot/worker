@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/autoclose"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -35,6 +36,10 @@ func main() {
 
 	fmt.Println("Connected to Redis, connect to DB...")
 	dbclient.Connect()
+
+	if err := i18n.LoadMessages(dbclient.Client); err != nil {
+		panic(err)
+	}
 
 	fmt.Println("Connected to DB, connect to cache...")
 	pgCache, err := cache.Connect()

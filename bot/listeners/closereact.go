@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -86,7 +87,7 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd, extra ev
 			}
 
 			if (permissionLevel == permission.Everyone && ticket.UserId != e.UserId) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				utils.SendEmbed(worker, e.ChannelId, utils.Red, "Error", "You are not permitted to close this ticket", nil, 30, isPremium)
+				utils.SendEmbed(worker, e.ChannelId, e.GuildId, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
 				return
 			}
 		}

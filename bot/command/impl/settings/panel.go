@@ -1,8 +1,8 @@
 package settings
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 )
@@ -20,6 +20,5 @@ func (PanelCommand) Properties() command.Properties {
 }
 
 func (PanelCommand) Execute(ctx command.CommandContext) {
-	msg := fmt.Sprintf("Visit https://panel.ticketsbot.net/manage/%d/panels to configure a panel", ctx.GuildId)
-	ctx.SendEmbed(utils.Green, "Panel", msg)
+	ctx.SendEmbed(utils.Green, "Panel", translations.MessagePanel, ctx.GuildId)
 }

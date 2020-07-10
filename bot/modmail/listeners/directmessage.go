@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -129,8 +130,7 @@ func sendMessage(session database.ModmailSession, ctx command.CommandContext, dm
 
 	if !success {
 		if _, err := ctx.Worker.CreateMessage(session.StaffChannelId, ctx.Message.Content); err != nil {
-			utils.SendEmbed(ctx.Worker, dmChannel, utils.Red, "Error", fmt.Sprintf("An error has occurred: `%s`", err.Error()), nil, 30, ctx.PremiumTier > premium.None)
-			sentry.LogWithContext(err, ctx.ToErrorContext())
+			ctx.HandleWarning(err)
 		}
 	}
 
@@ -149,8 +149,7 @@ func sendMessage(session database.ModmailSession, ctx command.CommandContext, dm
 		}
 
 		if _, err := ctx.Worker.CreateMessage(session.StaffChannelId, content); err != nil {
-			utils.SendEmbed(ctx.Worker, dmChannel, utils.Red, "Error", fmt.Sprintf("An error has occurred: `%s`", err.Error()), nil, 30, ctx.PremiumTier > premium.None)
-			sentry.LogWithContext(err, ctx.ToErrorContext())
+			ctx.HandleWarning(err)
 		}
 	}
 }
@@ -209,18 +208,18 @@ func open(ctx command.CommandContext, targetGuild guild.Guild, dmChannelId uint6
 	}
 
 	if isBlacklisted {
-		utils.SendEmbed(ctx.Worker, dmChannelId, utils.Red, "Error", "You are blacklisted in this server!", nil, 30, true)
+		utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, utils.Red, "Error", translations.MessageBlacklisted, nil, 30, true)
 		return
 	}
 
-	utils.SendEmbed(ctx.Worker, dmChannelId, utils.Green, "Modmail", fmt.Sprintf("Your modmail ticket in %s has been opened! Use `t!close` to close the session.", targetGuild.Name), nil, 0, true)
+	utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, utils.Green, "Modmail", translations.MessageModmailOpened, nil, 0, true, targetGuild.Name)
 
 	// Send guild's welcome message
 	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker, targetGuild.Id, dmChannelId, ctx.Author.Id, ctx.PremiumTier >= premium.Premium, "Modmail", nil, 0)
 
 	staffChannel, err := logic.OpenModMailTicket(ctx.Worker, targetGuild, ctx.Author, welcomeMessageId)
 	if err != nil {
-		utils.SendEmbed(ctx.Worker, dmChannelId, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
+		ctx.HandleError(err)
 		return
 	}
 

@@ -5,8 +5,10 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -39,12 +41,24 @@ func (ctx *CommandContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *CommandContext) SendEmbed(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None)
+func (ctx *CommandContext) SendEmbed(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, nil, 30, ctx.PremiumTier > premium.None, format...)
 }
 
-func (ctx *CommandContext) SendEmbedNoDelete(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 0, ctx.PremiumTier > premium.None)
+func (ctx *CommandContext) SendEmbedWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None, format...)
+}
+
+func (ctx *CommandContext) SendEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
+	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None)
+}
+
+func (ctx *CommandContext) SendEmbedNoDelete(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, nil, 0, ctx.PremiumTier > premium.None, format...)
+}
+
+func (ctx *CommandContext) SendEmbedNoDeleteRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
+	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 0, ctx.PremiumTier > premium.None)
 }
 
 func (ctx *CommandContext) SendMessage(content string) {
@@ -89,5 +103,14 @@ func (ctx *CommandContext) GetChannelFromArgs() uint64 {
 
 func (ctx *CommandContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
-	ctx.SendEmbed(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	ctx.SendEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+}
+
+func (ctx *CommandContext) HandleWarning(err error) {
+	sentry.LogWithContext(err, ctx.ToErrorContext())
+	ctx.SendEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+}
+
+func (ctx *CommandContext) GetMessage(id translations.MessageId) string {
+	return i18n.GetMessageFromGuild(ctx.GuildId, id)
 }

@@ -30,5 +30,5 @@ func (AdminUsersCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Admin", fmt.Sprintf("Seen %d users", count))
+	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seen %d users", count))
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -33,7 +34,7 @@ func (TagCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You must provide the ID of the tag. For more help with tag, visit <https://ticketsbot.net/tags>.", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagInvalidArguments, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -48,7 +49,7 @@ func (TagCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if content == "" {
-		ctx.SendEmbed(utils.Red, "Error", "Invalid tag. For more help with tags, visit <https://ticketsbot.net/tags>.", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}

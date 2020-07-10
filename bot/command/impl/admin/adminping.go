@@ -24,5 +24,5 @@ func (AdminPingCommand) Properties() command.Properties {
 
 func (AdminPingCommand) Execute(ctx command.CommandContext) {
 	latency := time.Now().Sub(ctx.Timestamp)
-	ctx.SendEmbed(utils.Green, "Admin", fmt.Sprintf("Shard %d latency: `%dms`", ctx.Worker.ShardId, latency))
+	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Shard %d latency: `%dms`", ctx.Worker.ShardId, latency))
 }

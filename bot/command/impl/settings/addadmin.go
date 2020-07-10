@@ -3,6 +3,7 @@ package settings
 import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -34,7 +35,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention a user or name a role to grant admin privileges to", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -80,7 +81,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.SendEmbed(utils.Red, "Error", "You need to mention a user or name a role to grant admin privileges to", usageEmbed)
+			ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.ReactWithCross()
 			return
 		}

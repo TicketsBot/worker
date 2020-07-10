@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -27,7 +28,7 @@ func HandleClose(session database.ModmailSession, ctx command.CommandContext) {
 
 	if (ctx.UserPermissionLevel == permission.Everyone && session.UserId != ctx.Author.Id) || (ctx.UserPermissionLevel == permission.Everyone && !usersCanClose) {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "You are not permitted to close this ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageCloseNoPermission)
 		return
 	}
 

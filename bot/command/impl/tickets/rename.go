@@ -1,9 +1,9 @@
 package tickets
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -40,12 +40,12 @@ func (RenameCommand) Execute(ctx command.CommandContext) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Rename", "This command can only be ran in ticket channels", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Rename", translations.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Rename", "You need to specify a new name for this ticket", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Rename", translations.MessageRenameMissingName, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -59,5 +59,5 @@ func (RenameCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Rename", fmt.Sprintf("This ticket has been renamed to <#%d>", ctx.ChannelId))
+	ctx.SendEmbed(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId)
 }

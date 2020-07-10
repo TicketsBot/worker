@@ -36,5 +36,5 @@ func (ManageTagsCommand) Execute(ctx command.CommandContext) {
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbed(utils.Red, "Error", msg)
+	ctx.SendEmbedRaw(utils.Red, "Error", msg)
 }

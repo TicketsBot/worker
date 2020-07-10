@@ -3,6 +3,7 @@ package settings
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -30,7 +31,7 @@ func (BlacklistCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention a user to toggle the blacklist state for", usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -39,13 +40,13 @@ func (BlacklistCommand) Execute(ctx command.CommandContext) {
 	user.Member.User = user.User
 
 	if ctx.Author.Id == user.Id {
-		ctx.SendEmbed(utils.Red, "Error", "You cannot blacklist yourself")
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
 
 	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), user.Member, ctx.GuildId) > permission.Everyone {
-		ctx.SendEmbed(utils.Red, "Error", "You cannot blacklist staff")
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}

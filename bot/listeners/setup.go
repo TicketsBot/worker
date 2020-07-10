@@ -27,7 +27,8 @@ func OnSetupProgress(worker *worker.Context, e *events.MessageCreate, extra even
 			stage := state.GetStage()
 			if stage != nil {
 				// Psuedo-premium
-				utils.SendEmbed(worker, e.ChannelId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
+				// TODO: TRANSLATE PROMPTS
+				utils.SendEmbed(worker, e.ChannelId, e.GuildId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
 			}
 		}
 	}

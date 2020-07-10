@@ -44,5 +44,5 @@ func (AdminCommand) Execute(ctx command.CommandContext) {
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbed(utils.Green, "Admin", msg)
+	ctx.SendEmbedRaw(utils.Green, "Admin", msg)
 }

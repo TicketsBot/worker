@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/impl"
@@ -139,25 +140,25 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate, extra eventforwa
 
 		if c.Properties().PermissionLevel > ctx.UserPermissionLevel {
 			ctx.ReactWithCross()
-			ctx.SendEmbed(utils.Red, "Error", utils.NO_PERMISSION)
+			ctx.SendEmbed(utils.Red, "Error", translations.MessageNoPermission)
 			return
 		}
 
 		if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 			ctx.ReactWithCross()
-			ctx.SendEmbed(utils.Red, "Error", "This command is reserved for the bot owner only")
+			ctx.SendEmbed(utils.Red, "Error", translations.MessageOwnerOnly)
 			return
 		}
 
 		if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 			ctx.ReactWithCross()
-			ctx.SendEmbed(utils.Red, "Error", utils.NO_PERMISSION)
+			ctx.SendEmbed(utils.Red, "Error", translations.MessageNoPermission)
 			return
 		}
 
 		if c.Properties().PremiumOnly && premiumTier == premium.None {
 			ctx.ReactWithCross()
-			ctx.SendEmbed(utils.Red, "PremiumTier Only Command", utils.PREMIUM_MESSAGE)
+			ctx.SendEmbed(utils.Red, "Premium Only Command", translations.MessagePremium)
 			return
 		}
 

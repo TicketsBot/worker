@@ -3,6 +3,7 @@ package tickets
 import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -32,7 +33,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 
 	// Check users are mentioned
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention members to add to the ticket", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoMembers, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
@@ -40,7 +41,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 	// Check channel is mentioned
 	ticketChannel := ctx.GetChannelFromArgs()
 	if ticketChannel == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention a ticket channel to add the user(s) in", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoChannel, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
@@ -53,7 +54,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 
 	// 2 in 1: verify guild is the same & the channel is valid
 	if ticket.GuildId != ctx.GuildId {
-		ctx.SendEmbed(utils.Red, "Error", "The mentioned channel is not a ticket", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddChannelNotTicket, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
@@ -63,7 +64,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 
 	// Verify that the user is allowed to modify the ticket
 	if ctx.UserPermissionLevel == 0 && <-owner != ctx.Author.Id {
-		ctx.SendEmbed(utils.Red, "Error", "You don't have permission to add people to this ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoPermission)
 		ctx.ReactWithCross()
 		return
 	}

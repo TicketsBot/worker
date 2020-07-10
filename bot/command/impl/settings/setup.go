@@ -1,8 +1,8 @@
 package settings
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/setup"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -25,7 +25,7 @@ func (SetupCommand) Execute(ctx command.CommandContext) {
 
 	if u.InSetup() {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", fmt.Sprintf("You are already in setup mode (use `%scancel` to exit)", utils.DEFAULT_PREFIX))
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageAlreadyInSetup, utils.DEFAULT_PREFIX)
 	} else {
 		ctx.ReactWithCheck()
 
@@ -34,7 +34,8 @@ func (SetupCommand) Execute(ctx command.CommandContext) {
 		stage := state.GetStage()
 		if stage != nil {
 			// Psuedo-premium
-			utils.SendEmbed(ctx.Worker, ctx.ChannelId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
+			// TODO: TRANSLATE SETUP PROMPTS
+			utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
 		}
 	}
 }

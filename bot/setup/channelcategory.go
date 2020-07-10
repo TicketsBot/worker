@@ -1,8 +1,8 @@
 package setup
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
@@ -20,8 +20,8 @@ func (ChannelCategoryStage) State() State {
 	return ChannelCategory
 }
 
-func (ChannelCategoryStage) Prompt() string {
-	return "Type the **name** of the **channel category** that you would like tickets to be created under"
+func (ChannelCategoryStage) Prompt() translations.MessageId {
+	return translations.SetupChannelCategory
 }
 
 func (ChannelCategoryStage) Default() string {
@@ -60,13 +60,13 @@ func (ChannelCategoryStage) Process(worker *worker.Context, msg message.Message)
 
 		category, err := worker.CreateGuildChannel(guild.Id, data); if err != nil {
 			// Likely no permission, default to having no category
-			utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", "Invalid category\nDefaulting to using no category", nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageInvalidCategory, nil, 15, true)
 			return
 		}
 
 		categoryId = category.Id
 
-		utils.SendEmbed(worker, msg.ChannelId, utils.Red, "Error", fmt.Sprintf("I have created the channel category %s for you, you may need to adjust permissions yourself", category.Name), nil, 15, true)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageCreatedCategory, nil, 15, true, category.Name)
 	}
 
 	if err := dbclient.Client.ChannelCategory.Set(msg.GuildId, categoryId); err == nil {

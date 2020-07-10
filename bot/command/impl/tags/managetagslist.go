@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -36,5 +37,5 @@ func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
 	}
 	joined = strings.TrimSuffix(joined, "\n")
 
-	ctx.SendEmbed(utils.Green, "Tags", fmt.Sprintf("IDs for all tags:\n%s\nTo view the contents of a tag, run `%stag <ID>`", joined, utils.DEFAULT_PREFIX))
+	ctx.SendEmbed(utils.Green, "Tags", translations.MessageTagList, joined, utils.DEFAULT_PREFIX)
 }

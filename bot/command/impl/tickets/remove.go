@@ -3,6 +3,7 @@ package tickets
 import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -31,7 +32,7 @@ func (RemoveCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "You need to mention members to remove from the ticket", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveNoMembers, usageEmbed)
 		ctx.ReactWithCross()
 		return
 	}
@@ -46,21 +47,21 @@ func (RemoveCommand) Execute(ctx command.CommandContext) {
 
 	// Verify that the current channel is a real ticket
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", "The current channel is not a ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
 		ctx.ReactWithCross()
 		return
 	}
 
 	// Verify that the user is allowed to modify the ticket
 	if ctx.UserPermissionLevel == 0 && ticket.UserId != ctx.Author.Id {
-		ctx.SendEmbed(utils.Red, "Error", "You don't have permission to remove people from this ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveNoPermission)
 		ctx.ReactWithCross()
 		return
 	}
 
 	// verify that the user isn't trying to remove staff
 	if ctx.MentionsStaff() {
-		ctx.SendEmbed(utils.Red, "Error", "You cannot remove staff from a ticket")
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
 		ctx.ReactWithCross()
 		return
 	}

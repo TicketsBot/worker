@@ -3,6 +3,7 @@ package tags
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -32,7 +33,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 
 	if len(ctx.Args) < 2 {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "You must specify a tag ID and contents", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateInvalidArguments, usageEmbed)
 		return
 	}
 
@@ -42,7 +43,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 	// Length check
 	if len(id) > 16 {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "Tag IDs cannot be longer than 16 characters", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateTooLong, usageEmbed)
 		return
 	}
 
@@ -61,7 +62,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 
 	if tagExists {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", "A tag with the ID `$id` already exists. You can delete the response using `t!managetags delete [ID]`", usageEmbed)
+		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, usageEmbed)
 		return
 	}
 

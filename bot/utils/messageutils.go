@@ -3,8 +3,10 @@ package utils
 import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/rest"
@@ -16,7 +18,13 @@ type SentMessage struct {
 	Message *message.Message
 }
 
-func SendEmbed(worker *worker.Context, channel uint64, colour Colour, title, content string, fields []embed.EmbedField, deleteAfter int, isPremium bool) {
+// guildId is only used to get the language
+func SendEmbed(worker *worker.Context, channelId, guildId uint64, colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField, deleteAfter int, isPremium bool, format ...interface{}) {
+	content := fmt.Sprintf(i18n.GetMessageFromGuild(guildId, messageType), format...)
+	_, _ = SendEmbedWithResponse(worker, channelId, colour, title, content, fields, deleteAfter, isPremium)
+}
+
+func SendEmbedRaw(worker *worker.Context, channel uint64, colour Colour, title, content string, fields []embed.EmbedField, deleteAfter int, isPremium bool) {
 	_, _ = SendEmbedWithResponse(worker, channel, colour, title, content, fields, deleteAfter, isPremium)
 }
 

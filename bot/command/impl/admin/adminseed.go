@@ -25,7 +25,7 @@ func (AdminSeedCommand) Execute(ctx command.CommandContext) {
 	var guilds []uint64
 	guilds = []uint64{ctx.GuildId}
 
-	ctx.SendEmbed(utils.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
+	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
 
 	// retrieve all guild members
 	var seeded int
@@ -52,9 +52,9 @@ func (AdminSeedCommand) Execute(ctx command.CommandContext) {
 		seeded++
 
 		if seeded % 10 == 0 {
-			ctx.SendEmbed(utils.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
+			ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
 		}
 	}
 
-	ctx.SendEmbed(utils.Green, "Admin", "Seeding complete")
+	ctx.SendEmbedRaw(utils.Green, "Admin", "Seeding complete")
 }

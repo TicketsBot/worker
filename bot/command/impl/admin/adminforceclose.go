@@ -24,20 +24,20 @@ func (AdminForceCloseCommand) Properties() command.Properties {
 
 func (AdminForceCloseCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) < 2 {
-		ctx.SendEmbed(utils.Red, "Error", "No guild ID provided")
+		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
 		return
 	}
 
 	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
 	if err != nil {
-		ctx.SendEmbed(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
 	for i := 1; i < len(ctx.Args); i++ {
 		id, err := strconv.Atoi(ctx.Args[i])
 		if err != nil {
-			ctx.SendEmbed(utils.Red, "Error", fmt.Sprintf("Invalid ticket ID provided: `%s`", ctx.Args[i]))
+			ctx.SendEmbedRaw(utils.Red, "Error", fmt.Sprintf("Invalid ticket ID provided: `%s`", ctx.Args[i]))
 			continue
 		}
 

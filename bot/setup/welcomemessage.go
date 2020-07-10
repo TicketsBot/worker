@@ -2,6 +2,7 @@ package setup
 
 import (
 	"github.com/TicketsBot/common/sentry"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -15,8 +16,8 @@ func (WelcomeMessageStage) State() State {
 	return WelcomeMessage
 }
 
-func (WelcomeMessageStage) Prompt() string {
-	return "Type the message that should be sent by the bot when a ticket is opened"
+func (WelcomeMessageStage) Prompt() database.MessageId {
+	return database.SetupWelcomeMessage
 }
 
 func (WelcomeMessageStage) Default() string {

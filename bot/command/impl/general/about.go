@@ -2,6 +2,7 @@ package general
 
 import (
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 )
@@ -19,5 +20,5 @@ func (AboutCommand) Properties() command.Properties {
 }
 
 func (AboutCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "About", utils.ABOUT_MESSAGE)
+	ctx.SendEmbed(utils.Green, "About", translations.MessageAbout)
 }
