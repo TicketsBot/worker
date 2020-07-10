@@ -47,6 +47,8 @@ func (l LanguageCommand) Execute(ctx command.CommandContext) {
 		l.sendInvalidMessage(ctx)
 		return
 	}
+
+	ctx.ReactWithCheck()
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
