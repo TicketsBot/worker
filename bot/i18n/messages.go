@@ -1,11 +1,14 @@
 package i18n
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/jackc/pgx/v4"
 	"strings"
 )
 
@@ -47,8 +50,29 @@ func GetMessageFromGuild(guildId uint64, id translations.MessageId) string {
 	}
 
 	if language == "" {
-		language = translations.English
+		// check preferred locale
+		preferredLocale, err := getPreferredLocale(guildId)
+		if err == nil {
+			var ok bool
+			language, ok = translations.Locales[preferredLocale]
+			
+			if !ok {
+				language = translations.English
+			}
+		} else {
+			language = translations.English
+
+			if err != pgx.ErrNoRows {
+				sentry.Error(err)
+			}
+		}
 	}
 
 	return GetMessage(language, id)
+}
+
+func getPreferredLocale(guildId uint64) (locale string, err error) {
+	query := `SELECT "data"->'preferred_locale' FROM guilds WHERE "guild_id" = $1;`
+	err = cache.Client.QueryRow(context.Background(), query, guildId).Scan(&locale)
+	return
 }

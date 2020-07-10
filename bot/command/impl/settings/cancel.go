@@ -2,6 +2,7 @@ package settings
 
 import (
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/setup"
 )
@@ -12,7 +13,7 @@ type CancelCommand struct {
 func (CancelCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "cancel",
-		Description:     "Cancels the setup process",
+		Description:     translations.HelpCancel,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

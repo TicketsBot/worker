@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -17,7 +18,7 @@ type AdminDebugCommand struct {
 func (AdminDebugCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "debug",
-		Description:     "Provides debugging information",
+		Description:     database.HelpAdminDebug,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

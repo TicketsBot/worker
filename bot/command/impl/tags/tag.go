@@ -18,7 +18,7 @@ type TagCommand struct {
 func (TagCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "tag",
-		Description:     "Sends a message snippet",
+		Description:     translations.HelpTag,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
 		Children:        []command.Command{ManageTagsListCommand{}, ManageTagsDeleteCommand{}, ManageTagsAddCommand{}},
 		PermissionLevel: permission.Support,

@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strconv"
@@ -14,7 +15,7 @@ type AdminGetOwnerCommand struct {
 func (AdminGetOwnerCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "getowner",
-		Description:     "Gets the owner of a server",
+		Description:     database.HelpAdminGetOwner,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

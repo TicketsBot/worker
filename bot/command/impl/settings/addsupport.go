@@ -21,7 +21,7 @@ type AddSupportCommand struct {
 func (AddSupportCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "addsupport",
-		Description:     "Adds a user or role as a support representative",
+		Description:     translations.HelpAddSupport,
 		Aliases:         []string{"addsuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,

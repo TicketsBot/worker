@@ -18,7 +18,7 @@ type RemoveCommand struct {
 func (RemoveCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "remove",
-		Description:     "Removes a user from a ticket",
+		Description:     translations.HelpRemove,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
 	}

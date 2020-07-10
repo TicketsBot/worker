@@ -16,7 +16,7 @@ type UnclaimCommand struct {
 func (UnclaimCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "unclaim",
-		Description:     "Removes the claim on the current ticket",
+		Description:     translations.HelpUnclaim,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 	"time"
@@ -14,7 +15,7 @@ type AdminPingCommand struct {
 func (AdminPingCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "ping",
-		Description:     "Measures WS latency to Discord",
+		Description:     database.HelpAdminPing,
 		Aliases:         []string{"latency"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

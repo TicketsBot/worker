@@ -18,7 +18,7 @@ type RenameCommand struct {
 func (RenameCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "rename",
-		Description:     "Renames the current ticket",
+		Description:     translations.HelpRename,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

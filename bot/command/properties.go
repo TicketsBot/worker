@@ -1,10 +1,13 @@
 package command
 
-import "github.com/TicketsBot/common/permission"
+import (
+	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
+)
 
 type Properties struct {
 	Name            string
-	Description     string
+	Description     database.MessageId
 	Aliases         []string
 	PermissionLevel permission.PermissionLevel
 	Children        []Command

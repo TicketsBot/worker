@@ -22,6 +22,7 @@ var Commands = []command.Command{
 	settings.AddSupportCommand{},
 	settings.BlacklistCommand{},
 	settings.CancelCommand{},
+	settings.LanguageCommand{},
 	settings.PanelCommand{},
 	settings.PremiumCommand{},
 	settings.RemoveAdminCommand{},

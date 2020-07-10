@@ -16,7 +16,7 @@ type BlacklistCommand struct {
 func (BlacklistCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "blacklist",
-		Description:     "Toggles whether users are allowed to interact with the bot",
+		Description:     translations.HelpBlacklist,
 		Aliases:         []string{"unblacklist"},
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,

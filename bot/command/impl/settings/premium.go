@@ -17,7 +17,7 @@ type PremiumCommand struct {
 func (PremiumCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "premium",
-		Description:     "Activate a premium key for your guild",
+		Description:     translations.HelpPremium,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

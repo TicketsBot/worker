@@ -17,7 +17,7 @@ type ManageTagsAddCommand struct {
 func (ManageTagsAddCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "add",
-		Description:     "Adds a new tag",
+		Description:     translations.HelpTagAdd,
 		Aliases:         []string{"new", "create"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,

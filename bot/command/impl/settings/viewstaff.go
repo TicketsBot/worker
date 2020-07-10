@@ -3,6 +3,7 @@ package settings
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -15,7 +16,7 @@ type ViewStaffCommand struct {
 func (ViewStaffCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "viewstaff",
-		Description:     "Lists the staff members and roles",
+		Description:     translations.HelpViewStaff,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 	}

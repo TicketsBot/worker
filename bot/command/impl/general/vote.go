@@ -13,7 +13,7 @@ type VoteCommand struct {
 func (VoteCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "vote",
-		Description:     "Gives you a link to vote for free premium",
+		Description:     translations.HelpVote,
 		PermissionLevel: permission.Everyone,
 		Category:        command.General,
 	}

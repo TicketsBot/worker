@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -19,7 +20,7 @@ type AdminGenPremiumCommand struct {
 func (AdminGenPremiumCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "genpremium",
-		Description:     "Generate premium keys",
+		Description:     database.HelpAdminGenPremium,
 		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

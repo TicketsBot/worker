@@ -21,7 +21,7 @@ type AddAdminCommand struct {
 func (AddAdminCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "addadmin",
-		Description:     "Grants a user or role admin privileges",
+		Description:     translations.HelpAddAdmin,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 	}
@@ -62,7 +62,8 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 			roles = append(roles, mention)
 		}
 	} else {
-		guildRoles, err := ctx.Worker.GetGuildRoles(ctx.GuildId); if err != nil {
+		guildRoles, err := ctx.Worker.GetGuildRoles(ctx.GuildId)
+		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
@@ -112,7 +113,8 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 			continue
 		}
 
-		ch, err := ctx.Worker.GetChannel(*ticket.ChannelId); if err != nil {
+		ch, err := ctx.Worker.GetChannel(*ticket.ChannelId)
+		if err != nil {
 			continue
 		}
 
@@ -122,10 +124,10 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 			// If adding individual admins, apply each override individually
 			for _, mention := range ctx.Message.Mentions {
 				overwrites = append(overwrites, channel.PermissionOverwrite{
-					Id: mention.Id,
-					Type: channel.PermissionTypeMember,
+					Id:    mention.Id,
+					Type:  channel.PermissionTypeMember,
 					Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-					Deny: 0,
+					Deny:  0,
 				})
 			}
 		} else {
@@ -135,14 +137,14 @@ func (AddAdminCommand) Execute(ctx command.CommandContext) {
 					Id:    role,
 					Type:  channel.PermissionTypeRole,
 					Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-					Deny: 0,
+					Deny:  0,
 				})
 			}
 		}
 
 		data := rest.ModifyChannelData{
 			PermissionOverwrites: overwrites,
-			Position: ch.Position,
+			Position:             ch.Position,
 		}
 
 		if _, err = ctx.Worker.ModifyChannel(*ticket.ChannelId, data); err != nil {

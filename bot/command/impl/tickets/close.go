@@ -3,6 +3,7 @@ package tickets
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/logic"
 )
@@ -13,7 +14,7 @@ type CloseCommand struct {
 func (CloseCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "close",
-		Description:     "Closes the current ticket",
+		Description:     translations.HelpClose,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,
 	}

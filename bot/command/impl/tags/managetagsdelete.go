@@ -16,7 +16,7 @@ type ManageTagsDeleteCommand struct {
 func (ManageTagsDeleteCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "delete",
-		Description:     "Deletes a tag",
+		Description:     translations.HelpTagDelete,
 		Aliases:         []string{"del", "rm", "remove"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,

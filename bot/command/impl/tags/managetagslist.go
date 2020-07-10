@@ -17,7 +17,7 @@ type ManageTagsListCommand struct {
 func (ManageTagsListCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "list",
-		Description:     "Lists all tags",
+		Description:     translations.HelpTagList,
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 	}

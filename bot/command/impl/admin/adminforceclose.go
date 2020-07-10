@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -15,7 +16,7 @@ type AdminForceCloseCommand struct {
 func (AdminForceCloseCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "forceclose",
-		Description:     "Sets the state of the provided tickets to closed",
+		Description:     database.HelpAdminForceClose,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 )
@@ -14,7 +15,7 @@ type AdminUsersCommand struct {
 func (AdminUsersCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "users",
-		Description:     "Prints the total seen member count",
+		Description:     database.HelpAdminUsers,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

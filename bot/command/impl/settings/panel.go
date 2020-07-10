@@ -13,7 +13,7 @@ type PanelCommand struct {
 func (PanelCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "panel",
-		Description:     "Creates a panel to enable users to open a ticket with 1 click",
+		Description:     translations.HelpPanel,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

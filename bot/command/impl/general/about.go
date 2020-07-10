@@ -13,7 +13,7 @@ type AboutCommand struct {
 func (AboutCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "about",
-		Description:     "Tells you information about the bot",
+		Description:     translations.HelpAbout,
 		PermissionLevel: permission.Everyone,
 		Category:        command.General,
 	}

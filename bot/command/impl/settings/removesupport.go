@@ -21,7 +21,7 @@ type RemoveSupportCommand struct {
 func (RemoveSupportCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "removesupport",
-		Description:     "Revokes a user's or role's support representative privileges",
+		Description:     translations.HelpRemoveSupport,
 		Aliases:         []string{"removesuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,

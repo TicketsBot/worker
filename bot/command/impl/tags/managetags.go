@@ -3,6 +3,7 @@ package tags
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
@@ -14,7 +15,7 @@ type ManageTagsCommand struct {
 func (ManageTagsCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "managetags",
-		Description:     "Add, delete or list tags",
+		Description:     translations.HelpManageTags,
 		Aliases:         []string{"managecannedresponse", "managecannedresponses", "editcannedresponse", "editcannedresponses", "ecr", "managetags", "mcr", "managetag", "mt"},
 		PermissionLevel: permission.Support,
 		Children: []command.Command{

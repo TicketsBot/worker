@@ -14,7 +14,7 @@ type SetupCommand struct {
 func (SetupCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "setup",
-		Description:     "Allows you to easily configure the bot",
+		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
@@ -14,7 +15,7 @@ type AdminCommand struct {
 func (AdminCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "admin",
-		Description:     "Bot management",
+		Description:     database.HelpAdmin,
 		Aliases:         []string{"a"},
 		PermissionLevel: permission.Everyone,
 		Children: []command.Command{

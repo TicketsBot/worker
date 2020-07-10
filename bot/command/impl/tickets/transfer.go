@@ -16,7 +16,7 @@ type TransferCommand struct {
 func (TransferCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "transfer",
-		Description:     "Transfers a claimed ticket to another user",
+		Description:     translations.HelpTransfer,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

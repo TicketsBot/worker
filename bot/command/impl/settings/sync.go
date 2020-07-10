@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -18,7 +19,7 @@ type SyncCommand struct {
 func (SyncCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "sync",
-		Description:     "Syncs the bot's database to the channels - useful if you a Discord outage has taken place",
+		Description:     translations.HelpSync,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

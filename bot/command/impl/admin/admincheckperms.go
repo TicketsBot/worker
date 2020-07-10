@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 )
 
@@ -12,7 +13,7 @@ type AdminCheckPermsCommand struct {
 func (AdminCheckPermsCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "checkperms",
-		Description:     "Checks permissions for the bot on the channel",
+		Description:     database.HelpAdminCheckPerms,
 		Aliases:         []string{"cp"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

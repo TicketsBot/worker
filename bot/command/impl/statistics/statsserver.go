@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -19,7 +20,7 @@ type StatsServerCommand struct {
 func (StatsServerCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "server",
-		Description:     "Shows you statistics about the server",
+		Description:     translations.HelpStatsServer,
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,

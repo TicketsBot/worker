@@ -18,7 +18,7 @@ type RemoveAdminCommand struct {
 func (RemoveAdminCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "removeAdmin",
-		Description:     "Revokes a user's or role's admin privileges",
+		Description:     translations.HelpRemoveAdmin,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 	}

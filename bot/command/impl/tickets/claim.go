@@ -15,7 +15,7 @@ type ClaimCommand struct {
 func (ClaimCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "claim",
-		Description:     "Assigns a single staff member to a ticket",
+		Description:     translations.HelpClaim,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

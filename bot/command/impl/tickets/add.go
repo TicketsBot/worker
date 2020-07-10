@@ -18,7 +18,7 @@ type AddCommand struct {
 func (AddCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "add",
-		Description:     "Adds a user to a ticket",
+		Description:     translations.HelpAdd,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
 	}

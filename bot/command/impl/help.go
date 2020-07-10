@@ -19,7 +19,7 @@ type HelpCommand struct {
 func (HelpCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "help",
-		Description:     "Shows you a list of commands",
+		Description:     translations.HelpHelp,
 		Aliases:         []string{"h"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.General,

@@ -21,7 +21,7 @@ type StatsCommand struct {
 func (StatsCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "stats",
-		Description:     "Shows you statistics about users, support staff and the server",
+		Description:     translations.HelpStats,
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Children: []command.Command{
