@@ -40,14 +40,14 @@ func (StatsCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageInvalidArgument, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
 
 	// server is handled as a subcommand, so a user has been pinged
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageInvalidArgument, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}

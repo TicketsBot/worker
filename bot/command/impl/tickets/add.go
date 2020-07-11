@@ -33,7 +33,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 
 	// Check users are mentioned
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoMembers, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -41,7 +41,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 	// Check channel is mentioned
 	ticketChannel := ctx.GetChannelFromArgs()
 	if ticketChannel == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoChannel, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddNoChannel, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -54,7 +54,7 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 
 	// 2 in 1: verify guild is the same & the channel is valid
 	if ticket.GuildId != ctx.GuildId {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddChannelNotTicket, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}

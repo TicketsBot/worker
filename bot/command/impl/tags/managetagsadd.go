@@ -33,7 +33,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 
 	if len(ctx.Args) < 2 {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateInvalidArguments, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateInvalidArguments, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -43,7 +43,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 	// Length check
 	if len(id) > 16 {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateTooLong, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -62,7 +62,7 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 
 	if tagExists {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 

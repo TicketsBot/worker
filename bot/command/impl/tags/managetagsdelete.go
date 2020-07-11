@@ -32,7 +32,7 @@ func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext) {
 
 	if len(ctx.Args) == 0 {
 		ctx.ReactWithCross()
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagDeleteInvalidArguments, []embed.EmbedField{usageEmbed})
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagDeleteInvalidArguments, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 

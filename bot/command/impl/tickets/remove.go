@@ -32,7 +32,7 @@ func (RemoveCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveNoMembers, usageEmbed)
+		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
