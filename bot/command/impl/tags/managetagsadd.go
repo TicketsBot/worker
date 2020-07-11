@@ -61,8 +61,8 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if tagExists {
-		ctx.ReactWithCross()
 		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), id, id)
+		ctx.ReactWithCross()
 		return
 	}
 
