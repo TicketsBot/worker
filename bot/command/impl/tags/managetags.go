@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
 )
@@ -32,7 +33,7 @@ func (ManageTagsCommand) Execute(ctx command.CommandContext) {
 
 	children := ManageTagsCommand{}.Properties().Children
 	for _, child := range children {
-		msg += fmt.Sprintf("`%smt %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, child.Properties().Description)
+		msg += fmt.Sprintf("`%smt %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description))
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
