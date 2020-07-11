@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
 )
@@ -27,6 +28,7 @@ func (AdminCommand) Properties() command.Properties {
 			AdminGetOwnerCommand{},
 			AdminPingCommand{},
 			AdminSeedCommand{},
+			AdminSetMessageCommand{},
 			AdminUpdateSchemaCommand{},
 			AdminUsersCommand{},
 		},
@@ -40,7 +42,8 @@ func (AdminCommand) Execute(ctx command.CommandContext) {
 
 	children := AdminCommand{}.Properties().Children
 	for _, child := range children {
-		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, child.Properties().Description)
+		description := i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description)
+		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, description)
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
