@@ -29,9 +29,9 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate, extra eventfor
 		sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
 
 		// find who invited the bot
-		if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
+		/*if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
 			sendIntroMessage(worker, e.Guild, inviter)
-		}
+		}*/
 	}
 }
 
