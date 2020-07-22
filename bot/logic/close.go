@@ -53,16 +53,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	}
 
 	// Create reason
-	var reason string
-	silentClose := false
-	for _, arg := range args {
-		if arg == "--silent" {
-			silentClose = true
-		} else {
-			reason += fmt.Sprintf("%s ", arg)
-		}
-	}
-	reason = strings.TrimSuffix(reason, " ")
+	reason := strings.Join(args, " ")
 
 	// Check the user is permitted to close the ticket
 	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
@@ -137,44 +128,42 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		sentry.Error(err)
 	}
 
-	var channelExists bool
+	var archiveChannelExists bool
 	if archiveChannelId != 0 {
 		if _, err := worker.GetChannel(archiveChannelId); err == nil {
-			channelExists = true
+			archiveChannelExists = true
 		}
 	}
 
 	// Save space - delete the webhook
 	go dbclient.Client.Webhooks.Delete(guildId, ticket.Id)
 
-	if channelExists {
-		embed := embed.NewEmbed().
-			SetTitle("Ticket Closed").
-			SetColor(int(utils.Green)).
-			AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
-			AddField("Closed By", member.User.Mention(), true).
-			AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", guildId, ticket.Id), true)
+	embed := embed.NewEmbed().
+		SetTitle("Ticket Closed").
+		SetColor(int(utils.Green)).
+		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
+		AddField("Closed By", member.User.Mention(), true).
+		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", guildId, ticket.Id), true)
 
-		if reason == "" {
-			embed.AddField("Reason", "No reason specified", false)
-		} else {
-			embed.AddField("Reason", reason, false)
-		}
+	if reason == "" {
+		embed.AddField("Reason", "No reason specified", false)
+	} else {
+		embed.AddField("Reason", reason, false)
+	}
 
+	if archiveChannelExists {
 		if _, err := worker.CreateMessageEmbed(archiveChannelId, embed); err != nil {
 			sentry.Error(err)
 		}
+	}
 
-		// Notify user and send logs in DMs
-		if !silentClose {
-			dmChannel, err := worker.CreateDM(ticket.UserId)
+	// Notify user and send logs in DMs
+	dmChannel, err := worker.CreateDM(ticket.UserId)
 
-			// Only send the msg if we could create the channel
-			if err == nil {
-				if _, err := worker.CreateMessageEmbed(dmChannel.Id, embed); err != nil {
-					sentry.Error(err)
-				}
-			}
+	// Only send the msg if we could create the channel
+	if err == nil {
+		if _, err := worker.CreateMessageEmbed(dmChannel.Id, embed); err != nil {
+			sentry.Error(err)
 		}
 	}
 }
