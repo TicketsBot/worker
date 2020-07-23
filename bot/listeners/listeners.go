@@ -10,6 +10,7 @@ var Listeners = []interface{}{
 	OnGuildLeave,
 	OnMemberLeave,
 	OnMessage,
+	OnMultiPanelReact,
 	OnPanelReact,
 	OnSetupProgress,
 	OnViewStaffReact,
