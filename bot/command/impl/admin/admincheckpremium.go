@@ -14,7 +14,7 @@ type AdminCheckPremiumCommand struct {
 
 func (AdminCheckPremiumCommand) Properties() command.Properties {
 	return command.Properties{
-		Name:            "getowner",
+		Name:            "checkpremium",
 		Description:     database.HelpAdminCheckPremium,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
