@@ -21,6 +21,7 @@ func (AdminCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Children: []command.Command{
 			AdminCheckPermsCommand{},
+			AdminCheckPremiumCommand{},
 			AdminDebugCommand{},
 			AdminForceCloseCommand{},
 			AdminGCCommand{},
