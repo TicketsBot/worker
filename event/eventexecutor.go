@@ -11,7 +11,7 @@ import (
 	"reflect"
 )
 
-var allListeners = append(listeners.Listeners, modmaillisteners.Listeners...)
+var allListeners = append(listeners.Listeners)
 
 func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessage, extra eventforwarding.Extra) {
 	dataType := events.EventTypes[eventType]
