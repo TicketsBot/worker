@@ -157,6 +157,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		}
 	}
 
+	/*
 	// Notify user and send logs in DMs
 	dmChannel, err := worker.CreateDM(ticket.UserId)
 
@@ -166,5 +167,6 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 			sentry.Error(err)
 		}
 	}
+	*/
 }
 

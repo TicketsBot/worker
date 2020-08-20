@@ -26,7 +26,7 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate, extra eventfor
 	if extra.IsJoin {
 		go statsd.IncrementKey(statsd.JOINS)
 
-		sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
+		//sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
 
 		// find who invited the bot
 		/*if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
