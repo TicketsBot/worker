@@ -5,7 +5,6 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
-	modmaillisteners "github.com/TicketsBot/worker/bot/modmail/listeners"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/sirupsen/logrus"
 	"reflect"

@@ -82,17 +82,21 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		}
 	}
 
-	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id)
+	/*dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
-	}
+	}*/
 
 	if ctx.PremiumTier == premium.None {
 		self, _ := ctx.Worker.Self()
 		embed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
 	}
 
+	// TODO: Handle error
+	_, err = ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed)
+
+	/*
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
 	_, err = ctx.Worker.CreateMessageEmbed(dmChannel.Id, embed)
 	if err == nil {
@@ -100,7 +104,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 	} else {
 		ctx.ReactWithCross()
 		ctx.SendEmbed(utils.Red, "Error", translations.MessageHelpDMFailed)
-	}
+	}*/
 }
 
 func getPrefix(guildId uint64) (prefix string) {
