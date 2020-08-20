@@ -94,7 +94,10 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 	}
 
 	// TODO: Handle error
-	_, _ = ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed)
+	if _, err := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return
+	}
 
 	/*
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
