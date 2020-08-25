@@ -20,6 +20,7 @@ func (AdminCommand) Properties() command.Properties {
 		Aliases:         []string{"a"},
 		PermissionLevel: permission.Everyone,
 		Children: []command.Command{
+			AdminBlacklistCommand{},
 			AdminCheckPermsCommand{},
 			AdminCheckPremiumCommand{},
 			AdminDebugCommand{},
@@ -30,6 +31,7 @@ func (AdminCommand) Properties() command.Properties {
 			AdminPingCommand{},
 			AdminSeedCommand{},
 			AdminSetMessageCommand{},
+			AdminUnblacklistCommand{},
 			AdminUpdateSchemaCommand{},
 			AdminUsersCommand{},
 		},

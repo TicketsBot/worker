@@ -17,6 +17,19 @@ import (
 
 // Fires when we receive a guild
 func OnGuildCreate(worker *worker.Context, e *events.GuildCreate, extra eventforwarding.Extra) {
+	// check if guild is blacklisted
+	if blacklisted, err := dbclient.Client.ServerBlacklist.IsBlacklisted(e.Guild.Id); err == nil {
+		if blacklisted {
+			if err := worker.LeaveGuild(e.Guild.Id); err != nil {
+				sentry.Error(err)
+			}
+
+			return
+		}
+	} else {
+		sentry.Error(err)
+	}
+
 	if worker.IsWhitelabel {
 		if err := dbclient.Client.WhitelabelGuilds.Add(worker.BotId, e.Guild.Id); err != nil {
 			sentry.Error(err)
