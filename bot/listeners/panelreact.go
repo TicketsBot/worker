@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"context"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -14,7 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd, extra eventforwarding.Extra) {
+func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   e.GuildId,
 		User:    e.UserId,

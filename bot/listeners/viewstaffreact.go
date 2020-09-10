@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
@@ -11,7 +10,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 )
 
-func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd, extra eventforwarding.Extra) {
+func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	// Create error context for later
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   e.GuildId,

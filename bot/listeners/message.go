@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"github.com/TicketsBot/common/chatrelay"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -14,7 +13,7 @@ import (
 )
 
 // proxy messages to web UI + set last message id
-func OnMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 	go statsd.IncrementKey(statsd.MESSAGES)
 
 	// ignore DMs

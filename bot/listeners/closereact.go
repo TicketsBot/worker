@@ -1,21 +1,20 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd, extra eventforwarding.Extra) {
+func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	// Check the right emoji has been used
 	if e.Emoji.Name != "🔒" {
 		return

@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func OnFirstResponse(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnFirstResponse(worker *worker.Context, e *events.MessageCreate) {
 	// Make sure this is a guild
 	if e.GuildId == 0 || e.Author.Bot {
 		return

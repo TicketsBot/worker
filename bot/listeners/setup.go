@@ -1,14 +1,13 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/setup"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnSetupProgress(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnSetupProgress(worker *worker.Context, e *events.MessageCreate) {
 	u := setup.SetupUser{
 		Guild:   e.GuildId,
 		User:    e.Author.Id,

@@ -1,18 +1,17 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnCloseConfirm(worker *worker.Context, e *events.MessageReactionAdd, extra eventforwarding.Extra) {
+func OnCloseConfirm(worker *worker.Context, e *events.MessageReactionAdd) {
 	// Check reaction is a ✅
 	if e.UserId == worker.BotId || e.Emoji.Name != "✅" {
 		return

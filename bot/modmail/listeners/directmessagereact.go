@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
@@ -13,7 +12,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnDirectOpenMessageReact(worker *worker.Context, e *events.MessageReactionAdd, extra eventforwarding.Extra) {
+func OnDirectOpenMessageReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	if e.GuildId != 0 { // DMs only
 		return
 	}

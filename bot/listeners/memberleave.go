@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -14,7 +13,7 @@ import (
 )
 
 // Remove user permissions when they leave
-func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove, extra eventforwarding.Extra) {
+func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 	if err := dbclient.Client.Permissions.RemoveSupport(e.GuildId, e.User.Id); err != nil {
 		sentry.Error(err)
 	}

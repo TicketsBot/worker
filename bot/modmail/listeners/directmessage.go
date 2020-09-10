@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -21,7 +20,7 @@ import (
 	"strings"
 )
 
-func OnDirectMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnDirectMessage(worker *worker.Context, e *events.MessageCreate) {
 	if e.Author.Bot {
 		return
 	}

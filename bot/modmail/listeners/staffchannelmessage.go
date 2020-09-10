@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -15,7 +14,7 @@ import (
 	"strings"
 )
 
-func OnModMailChannelMessage(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnModMailChannelMessage(worker *worker.Context, e *events.MessageCreate) {
 	if e.Author.Id == worker.BotId {
 		return
 	}

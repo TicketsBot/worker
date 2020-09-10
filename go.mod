@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919
-	github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df
+	github.com/TicketsBot/common v0.0.0-20200910203537-76ab6a52f495
 	github.com/TicketsBot/database v0.0.0-20200825122115-d96e1879634c
 	github.com/TicketsBot/logarchiver v0.0.0-20200425163447-199b93429026 // indirect
 	github.com/elliotchance/orderedmap v1.2.1
@@ -19,3 +19,5 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
+
+replace github.com/TicketsBot/common => ../common

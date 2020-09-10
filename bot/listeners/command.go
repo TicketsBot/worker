@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"context"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -17,7 +16,7 @@ import (
 	"strings"
 )
 
-func OnCommand(worker *worker.Context, e *events.MessageCreate, extra eventforwarding.Extra) {
+func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	if e.Author.Bot {
 		return
 	}

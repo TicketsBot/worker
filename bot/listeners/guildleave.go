@@ -1,7 +1,6 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -14,7 +13,7 @@ import (
  * The inner payload is an unavailable guild object.
  * If the unavailable field is not set, the user was removed from the guild.
  */
-func OnGuildLeave(worker *worker.Context, e *events.GuildDelete, extra eventforwarding.Extra) {
+func OnGuildLeave(worker *worker.Context, e *events.GuildDelete) {
 	if e.Unavailable == nil {
 		go statsd.IncrementKey(statsd.LEAVES)
 

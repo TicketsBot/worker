@@ -31,7 +31,7 @@ func (AddSupportCommand) Properties() command.Properties {
 func (AddSupportCommand) Execute(ctx command.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",
+		Value:  "`t!addsupport @User`\n`t!addsupport @Role`\n`t!addsupport role name`",
 		Inline: false,
 	}
 

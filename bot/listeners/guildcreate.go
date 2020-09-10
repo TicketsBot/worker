@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -13,10 +12,11 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/rest"
+	"time"
 )
 
 // Fires when we receive a guild
-func OnGuildCreate(worker *worker.Context, e *events.GuildCreate, extra eventforwarding.Extra) {
+func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 	// check if guild is blacklisted
 	if blacklisted, err := dbclient.Client.ServerBlacklist.IsBlacklisted(e.Guild.Id); err == nil {
 		if blacklisted {
@@ -36,7 +36,7 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate, extra eventfor
 		}
 	}
 
-	if extra.IsJoin {
+	if time.Now().Sub(e.JoinedAt) < time.Minute {
 		go statsd.IncrementKey(statsd.JOINS)
 
 		//sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)

@@ -32,6 +32,6 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		execute(ctx, events.EventType(event.EventType), event.Data, event.Extra)
+		execute(ctx, events.EventType(event.EventType), event.Data)
 	}
 }
