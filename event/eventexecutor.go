@@ -24,7 +24,7 @@ func execute(ctx *worker.Context, eventType events.EventType, data json.RawMessa
 
 	for _, listener := range allListeners {
 		fn := reflect.TypeOf(listener)
-		if fn.NumIn() != 3 {
+		if fn.NumIn() != 2 {
 			continue
 		}
 
