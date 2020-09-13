@@ -2,30 +2,29 @@ package event
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
 	"github.com/rxdn/gdl/gateway/payloads"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
-func execute(ctx *worker.Context, event json.RawMessage) {
+func execute(ctx *worker.Context, event json.RawMessage) error {
 	var payload payloads.Payload
 	if err := json.Unmarshal(event, &payload); err != nil {
-		logrus.Warnf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
-		return
+		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))
 	}
 
 	dataType := events.EventTypes[events.EventType(payload.EventName)]
 	if dataType == nil {
-		return
+		return errors.New(fmt.Sprintf("Invalid event type: %s", payload.EventName))
 	}
 
 	data := reflect.New(dataType)
 	if err := json.Unmarshal(payload.Data, data.Interface()); err != nil {
-		logrus.Warnf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
-		return
+		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))
 	}
 
 	for _, listener := range listeners.Listeners {

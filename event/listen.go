@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/sirupsen/logrus"
 )
 
 func Listen(redis *redis.Client, cache *cache.PgCache) {
@@ -15,9 +16,6 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 	go eventforwarding.Listen(redis, ch)
 
 	for event := range ch {
-		a, _ := json.Marshal(event)
-		fmt.Println(a)
-
 		var keyPrefix string
 
 		if event.IsWhitelabel {
@@ -35,6 +33,9 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		execute(ctx, event.Event)
+		if err := execute(ctx, event.Event); err != nil {
+			marshalled, _ := json.Marshal(event)
+			logrus.Warnf("error executing event: %e (payload: %s)", err, string(marshalled))
+		}
 	}
 }
