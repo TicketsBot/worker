@@ -45,5 +45,7 @@ func execute(ctx *worker.Context, event json.RawMessage) error {
 			})
 		}
 	}
+
+	return nil
 }
 
