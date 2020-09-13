@@ -10,8 +10,6 @@ import (
 	"reflect"
 )
 
-var allListeners = append(listeners.Listeners)
-
 func execute(ctx *worker.Context, event json.RawMessage) {
 	var payload payloads.Payload
 	if err := json.Unmarshal(event, &payload); err != nil {
@@ -30,7 +28,7 @@ func execute(ctx *worker.Context, event json.RawMessage) {
 		return
 	}
 
-	for _, listener := range allListeners {
+	for _, listener := range listeners.Listeners {
 		fn := reflect.TypeOf(listener)
 		if fn.NumIn() != 2 {
 			continue
