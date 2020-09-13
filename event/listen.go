@@ -1,6 +1,7 @@
 package event
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/worker"
@@ -14,6 +15,9 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 	go eventforwarding.Listen(redis, ch)
 
 	for event := range ch {
+		a, _ := json.Marshal(event)
+		fmt.Println(a)
+
 		var keyPrefix string
 
 		if event.IsWhitelabel {
