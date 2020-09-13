@@ -6,7 +6,6 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/go-redis/redis"
 	"github.com/rxdn/gdl/cache"
-	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/rest/ratelimit"
 )
 
@@ -32,6 +31,6 @@ func Listen(redis *redis.Client, cache *cache.PgCache) {
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		execute(ctx, events.EventType(event.EventType), event.Data)
+		execute(ctx, event.Event)
 	}
 }
