@@ -13,7 +13,7 @@ import (
 func execute(ctx *worker.Context, event json.RawMessage) {
 	var payload payloads.Payload
 	if err := json.Unmarshal(event, &payload); err != nil {
-		logrus.Warnf("error whilst decoding event data: %s", err.Error())
+		logrus.Warnf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
 		return
 	}
 
@@ -24,7 +24,7 @@ func execute(ctx *worker.Context, event json.RawMessage) {
 
 	data := reflect.New(dataType)
 	if err := json.Unmarshal(payload.Data, data.Interface()); err != nil {
-		logrus.Warnf("error whilst decoding event data: %s", err.Error())
+		logrus.Warnf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
 		return
 	}
 
