@@ -157,16 +157,12 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		}
 	}
 
-	/*
 	// Notify user and send logs in DMs
-	dmChannel, err := worker.CreateDM(ticket.UserId)
-
-	// Only send the msg if we could create the channel
-	if err == nil {
+	if dmChannel, err := worker.CreateDM(ticket.UserId); err == nil {
+		// Only send the msg if we could create the channel
 		if _, err := worker.CreateMessageEmbed(dmChannel.Id, embed); err != nil {
 			sentry.Error(err)
 		}
 	}
-	*/
 }
 
