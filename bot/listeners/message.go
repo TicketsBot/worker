@@ -14,7 +14,7 @@ import (
 
 // proxy messages to web UI + set last message id
 func OnMessage(worker *worker.Context, e *events.MessageCreate) {
-	go statsd.IncrementKey(statsd.MESSAGES)
+	go statsd.Client.IncrementKey(statsd.MESSAGES)
 
 	// ignore DMs
 	if e.GuildId == 0 {

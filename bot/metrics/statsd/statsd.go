@@ -3,10 +3,14 @@ package statsd
 import (
 	stats "gopkg.in/alexcesaro/statsd.v2"
 	"os"
+	"sync"
+	"time"
 )
 
 type StatsdClient struct {
-	*stats.Client
+	client *stats.Client
+	buffer map[Key]int
+	bufferLock sync.RWMutex
 }
 
 var Client StatsdClient
@@ -17,18 +21,44 @@ func NewClient() (StatsdClient, error) {
 	}
 
 	return StatsdClient{
-		client,
+		client: client,
+		buffer: make(map[Key]int),
 	}, nil
 }
 
-func IsClientNull() bool {
-	return Client.Client == nil
+func (c *StatsdClient) StartDaemon() {
+	for {
+		time.Sleep(time.Second * 15)
+
+		c.bufferLock.RLock()
+		for key, count := range c.buffer {
+			c.client.Count(key.String(), count)
+		}
+		c.bufferLock.RUnlock()
+	}
 }
 
-func IncrementKey(key Key) {
+func IsClientNull() bool {
+	return Client.client == nil
+}
+
+func (c *StatsdClient) IncrementKey(key Key) {
 	if IsClientNull() {
 		return
 	}
 
-	Client.Increment(key.String())
+	c.bufferLock.Lock()
+	defer c.bufferLock.Unlock()
+
+	var val int
+	if current, ok := c.buffer[key]; ok {
+		val = current
+	} else {
+		val = 0
+	}
+
+	val++
+	c.buffer[key] = val
+
+	c.client.Increment(key.String())
 }

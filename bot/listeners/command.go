@@ -162,7 +162,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		}
 
 		go c.Execute(ctx)
-		go statsd.IncrementKey(statsd.COMMANDS)
+		go statsd.Client.IncrementKey(statsd.COMMANDS)
 
 		utils.DeleteAfter(utils.SentMessage{Worker: worker, Message: &e.Message}, 30)
 	}

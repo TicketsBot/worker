@@ -37,7 +37,7 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 	}
 
 	if time.Now().Sub(e.JoinedAt) < time.Minute {
-		go statsd.IncrementKey(statsd.JOINS)
+		go statsd.Client.IncrementKey(statsd.JOINS)
 
 		//sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
 

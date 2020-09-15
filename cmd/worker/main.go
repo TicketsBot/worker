@@ -14,6 +14,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
+	"github.com/rxdn/gdl/rest/request"
 	"os"
 )
 
@@ -53,7 +54,13 @@ func main() {
 	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
 
-	statsd.Client, _ = statsd.NewClient()
+	statsd.Client, err = statsd.NewClient()
+	if err != nil {
+		sentry.Error(err)
+	} else {
+		request.Hook = statsd.RestHook
+		go statsd.Client.StartDaemon()
+	}
 
 	go messagequeue.ListenTicketClose()
 	go autoclose.ListenAutoClose(&pgCache)

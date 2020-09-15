@@ -266,7 +266,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 	}
 
-	go statsd.IncrementKey(statsd.TICKETS)
+	go statsd.Client.IncrementKey(statsd.TICKETS)
 
 	if isPremium {
 		go createWebhook(worker, id, guildId, channel.Id)
