@@ -1,4 +1,4 @@
-package settings
+package setup
 
 import (
 	"github.com/TicketsBot/common/permission"
@@ -20,6 +20,7 @@ func (SetupCommand) Properties() command.Properties {
 	}
 }
 
+// TODO: Translations
 func (SetupCommand) Execute(ctx command.CommandContext) {
 	u := setup.FromContext(ctx)
 

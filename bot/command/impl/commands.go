@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/impl/admin"
 	"github.com/TicketsBot/worker/bot/command/impl/general"
 	"github.com/TicketsBot/worker/bot/command/impl/settings"
+	"github.com/TicketsBot/worker/bot/command/impl/settings/setup"
 	"github.com/TicketsBot/worker/bot/command/impl/statistics"
 	"github.com/TicketsBot/worker/bot/command/impl/tags"
 	"github.com/TicketsBot/worker/bot/command/impl/tickets"
@@ -27,7 +28,7 @@ var Commands = []command.Command{
 	settings.PremiumCommand{},
 	settings.RemoveAdminCommand{},
 	settings.RemoveSupportCommand{},
-	settings.SetupCommand{},
+	setup.SetupCommand{},
 	settings.ViewStaffCommand{},
 
 	settings.SyncCommand{},
