@@ -20,7 +20,7 @@ type SentMessage struct {
 
 // guildId is only used to get the language
 func SendEmbed(worker *worker.Context, channelId, guildId uint64, colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField, deleteAfter int, isPremium bool, format ...interface{}) {
-	content := fmt.Sprintf(i18n.GetMessageFromGuild(guildId, messageType), format...)
+	content := i18n.GetMessageFromGuild(guildId, messageType, format...)
 	_, _ = SendEmbedWithResponse(worker, channelId, colour, title, content, fields, deleteAfter, isPremium)
 }
 

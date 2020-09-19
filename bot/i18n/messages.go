@@ -19,14 +19,14 @@ func LoadMessages(db *database.Database) (err error) {
 	return
 }
 
-func GetMessage(language translations.Language, id translations.MessageId) string {
+func GetMessage(language translations.Language, id translations.MessageId, format ...interface{}) string {
 	if messages[language] == nil {
 		if language == translations.English {
 			return "error: lang en is missing"
 		}
 
 		language = translations.English // default to english
-		return GetMessage(language, id)
+		return GetMessage(language, id, format...)
 	}
 
 	value, ok := messages[language][id]
@@ -36,13 +36,13 @@ func GetMessage(language translations.Language, id translations.MessageId) strin
 		}
 
 		language = translations.English // default to english
-		return GetMessage(language, id)
+		return GetMessage(language, id, format...)
 	}
 
-	return strings.Replace(value, "\\n", "\n", -1)
+	return fmt.Sprintf(strings.Replace(value, "\\n", "\n", -1), format...)
 }
 
-func GetMessageFromGuild(guildId uint64, id translations.MessageId) string {
+func GetMessageFromGuild(guildId uint64, id translations.MessageId, format ...interface{}) string {
 	language, err := dbclient.Client.ActiveLanguage.Get(guildId)
 	if err != nil {
 		sentry.Error(err)
@@ -72,7 +72,7 @@ func GetMessageFromGuild(guildId uint64, id translations.MessageId) string {
 		}
 	}
 
-	return GetMessage(language, id)
+	return GetMessage(language, id, format...)
 }
 
 func getPreferredLocale(guildId uint64) (locale *string, err error) {

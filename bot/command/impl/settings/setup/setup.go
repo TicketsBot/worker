@@ -1,11 +1,16 @@
 package setup
 
 import (
+	"context"
+	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/setup"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"golang.org/x/sync/errgroup"
 )
 
 type SetupCommand struct {
@@ -17,26 +22,63 @@ func (SetupCommand) Properties() command.Properties {
 		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Children: []command.Command{
+			EasySetupCommand{},
+			AutoSetupCommand{},
+			PrefixSetupCommand{},
+			WelcomeMessageSetupCommand{},
+			LimitSetupCommand{},
+			TranscriptsSetupCommand{},
+			CategorySetupCommand{},
+		},
 	}
 }
 
-// TODO: Translations
-func (SetupCommand) Execute(ctx command.CommandContext) {
-	u := setup.FromContext(ctx)
+func (c SetupCommand) Execute(ctx command.CommandContext) {
+	wrapped := utils.SentMessage{
+		Worker:  ctx.Worker,
+		Message: &ctx.Message,
+	}
+	utils.DeleteAfter(wrapped, 60)
 
-	if u.InSetup() {
-		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAlreadyInSetup, utils.DEFAULT_PREFIX)
-	} else {
-		ctx.ReactWithCheck()
+	ctx.SendEmbedWithFieldsNoDelete(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
+}
 
-		u.Next()
-		state := u.GetState()
-		stage := state.GetStage()
-		if stage != nil {
-			// Psuedo-premium
-			// TODO: TRANSLATE SETUP PROMPTS
-			utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
-		}
+func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
+	fields := make([]embed.EmbedField, 9)
+
+	group, _ := errgroup.WithContext(context.Background())
+
+	group.Go(getFieldFunc(ctx, fields, 0, "t!setup ez", translations.SetupEasyDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 1, "t!setup auto", translations.SetupAutoDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 2, "Dashboard", translations.SetupDashboardDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 3, "t!setup prefix", translations.SetupPrefixDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 4, "t!setup limit", translations.SetupLimitDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 5, "t!setup welcomemessage", translations.SetupWelcomeMessageDescription, false))
+	group.Go(getFieldFunc(ctx, fields, 6, "t!setup transcripts", translations.SetupTranscriptsDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 7, "t!setup category", translations.SetupCategoryDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 8, "Reaction Panels", translations.SetupReactionPanelsDescription, false, ctx.GuildId))
+
+	// should never happen
+	if err := group.Wait(); err != nil {
+		sentry.Error(err)
+		return nil
+	}
+
+	return fields
+}
+
+func newFieldFromTranslation(ctx command.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
+	return embed.EmbedField{
+		Name:   name,
+		Value:  fmt.Sprintf(i18n.GetMessageFromGuild(ctx.GuildId, value), format...),
+		Inline: inline,
+	}
+}
+
+func getFieldFunc(ctx command.CommandContext, fields []embed.EmbedField, index int, name string, value translations.MessageId, inline bool, format ...interface{}) func() error {
+	return func() error {
+		fields[index] = newFieldFromTranslation(ctx, name, value, inline, format...)
+		return nil
 	}
 }
