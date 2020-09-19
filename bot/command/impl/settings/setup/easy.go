@@ -1,4 +1,4 @@
-package settings
+package setup
 
 import (
 	"github.com/TicketsBot/common/permission"
@@ -8,19 +8,19 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 )
 
-type SetupCommand struct {
-}
+type EasySetupCommand struct{}
 
-func (SetupCommand) Properties() command.Properties {
+func (EasySetupCommand) Properties() command.Properties {
 	return command.Properties{
-		Name:            "setup",
-		Description:     translations.HelpSetup,
+		Name:            "ez",
+		Description:     translations.HelpSetupEasy,
+		Aliases:         []string{"easy"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}
 }
 
-func (SetupCommand) Execute(ctx command.CommandContext) {
+func (EasySetupCommand) Execute(ctx command.CommandContext) {
 	u := setup.FromContext(ctx)
 
 	if u.InSetup() {
@@ -39,3 +39,4 @@ func (SetupCommand) Execute(ctx command.CommandContext) {
 		}
 	}
 }
+

@@ -49,6 +49,10 @@ func (ctx *CommandContext) SendEmbedWithFields(colour utils.Colour, title string
 	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None, format...)
 }
 
+func (ctx *CommandContext) SendEmbedWithFieldsNoDelete(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, fields, 0, ctx.PremiumTier > premium.None, format...)
+}
+
 func (ctx *CommandContext) SendEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
 	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None)
 }
