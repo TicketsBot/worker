@@ -10,7 +10,7 @@ import (
 type StatsdClient struct {
 	client *stats.Client
 	buffer map[Key]int
-	bufferLock sync.RWMutex
+	bufferLock sync.Mutex
 }
 
 var Client StatsdClient
@@ -30,11 +30,12 @@ func (c *StatsdClient) StartDaemon() {
 	for {
 		time.Sleep(time.Second * 15)
 
-		c.bufferLock.RLock()
+		c.bufferLock.Lock()
 		for key, count := range c.buffer {
 			c.client.Count(key.String(), count)
 		}
-		c.bufferLock.RUnlock()
+		c.buffer = make(map[Key]int)
+		c.bufferLock.Unlock()
 	}
 }
 
