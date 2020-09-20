@@ -2,7 +2,6 @@ package setup
 
 import (
 	"context"
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -71,7 +70,7 @@ func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
 func newFieldFromTranslation(ctx command.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
 	return embed.EmbedField{
 		Name:   name,
-		Value:  fmt.Sprintf(i18n.GetMessageFromGuild(ctx.GuildId, value), format...),
+		Value:  i18n.GetMessageFromGuild(ctx.GuildId, value, format...),
 		Inline: inline,
 	}
 }
