@@ -34,6 +34,10 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 			if err := dbclient.Client.TicketLastMessage.Set(e.GuildId, ticket.Id, e.Id); err != nil {
 				sentry.Error(err)
 			}
+
+			if err := dbclient.Client.Participants.Set(e.GuildId, ticket.Id, e.Id); err != nil {
+				sentry.Error(err)
+			}
 		}
 
 		// proxy msg to web UI
