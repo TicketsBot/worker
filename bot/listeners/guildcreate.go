@@ -39,12 +39,12 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 	if time.Now().Sub(e.JoinedAt) < time.Minute {
 		go statsd.Client.IncrementKey(statsd.JOINS)
 
-		//sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
+		sendIntroMessage(worker, e.Guild, e.Guild.OwnerId)
 
 		// find who invited the bot
-		/*if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
+		if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
 			sendIntroMessage(worker, e.Guild, inviter)
-		}*/
+		}
 	}
 }
 
