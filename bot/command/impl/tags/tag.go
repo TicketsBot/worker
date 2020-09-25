@@ -64,7 +64,8 @@ func (TagCommand) Execute(ctx command.CommandContext) {
 		content = strings.Replace(content, "%user%", mention, -1)
 	}
 
-	ctx.ReactWithCheck()
+	_ = ctx.Worker.DeleteMessage(ctx.ChannelId, ctx.Id)
+
 	if _, err := ctx.Worker.CreateMessage(ctx.ChannelId, content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
