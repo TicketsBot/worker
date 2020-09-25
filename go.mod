@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919
-	github.com/TicketsBot/common v0.0.0-20200913101829-f7c0ab4e5319
+	github.com/TicketsBot/common v0.0.0-20200925115036-a1bbe85f45bb
 	github.com/TicketsBot/database v0.0.0-20200921193549-97eada07c065
 	github.com/TicketsBot/logarchiver v0.0.0-20200425163447-199b93429026 // indirect
 	github.com/elliotchance/orderedmap v1.2.1
@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgtype v1.4.0
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20200710114205-467eb017d90b
+	github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e
 	github.com/sirupsen/logrus v1.5.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

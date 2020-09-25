@@ -4,12 +4,10 @@ github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919 h1:XkT+R
 github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919/go.mod h1:wOLgx3HgFylGaLs8p0RzVh1jNwqYwq9rtYU9gRYhgx4=
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df h1:e9JUSOqEYxeADqxAoNGeREuHwxcG2Yu2jojHBB4aWek=
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df/go.mod h1:YrggAZACJ3Lz08rvgbEuhMPdrXIQcxk1PtJdxmI3j34=
-github.com/TicketsBot/common v0.0.0-20200913101829-f7c0ab4e5319 h1:GXrjKTz87IvWnCi1r+8uypj7f5Lsn6jOLVqz22bWSwU=
-github.com/TicketsBot/common v0.0.0-20200913101829-f7c0ab4e5319/go.mod h1:YrggAZACJ3Lz08rvgbEuhMPdrXIQcxk1PtJdxmI3j34=
+github.com/TicketsBot/common v0.0.0-20200925115036-a1bbe85f45bb h1:BQsGKBtQoCa9xXSgBHt/yyDC9HYqi++ZxhcaTWgiK8g=
+github.com/TicketsBot/common v0.0.0-20200925115036-a1bbe85f45bb/go.mod h1:KVuvTmhUhMBVTMmjEpSzitKnODu6wMkFa3pK/W2NuiY=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
-github.com/TicketsBot/database v0.0.0-20200920182542-af40447c6a41 h1:5ilDD6qVgUpaknObqxNLUEOZWEf5uaeDyNxE93GZXww=
-github.com/TicketsBot/database v0.0.0-20200920182542-af40447c6a41/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20200921193549-97eada07c065 h1:kRkaM9pRSYnK0Gzhq9iKgzmKGMBPKMq5zsGSI3DdaJw=
 github.com/TicketsBot/database v0.0.0-20200921193549-97eada07c065/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14 h1:wVGMTUIDHLj198ElVIecqGGUiQ6NagUlbQOyfiMTF/Y=
@@ -194,8 +192,8 @@ github.com/rs/zerolog v1.13.0/go.mod h1:YbFCdg8HfsridGWAh22vktObvhZbQsZXe4/zB0OK
 github.com/rs/zerolog v1.15.0/go.mod h1:xYTKnLHcpfU2225ny5qZjxnj9NvkumZYjJHlAThCjNc=
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1 h1:jOKXGHwm7R2bCSbP8ntoT/sQ4BsYgix3Mt8K45Wl0Kg=
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
-github.com/rxdn/gdl v0.0.0-20200710114205-467eb017d90b h1:K9A9pZpmROzAVYpMQBiGzDLEMNgmuBTtKR4xUVdm+gU=
-github.com/rxdn/gdl v0.0.0-20200710114205-467eb017d90b/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
+github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e h1:PlCz91DgXLLPpKHOxt+tZqVm4icUhWBZWuNlfEqjh/E=
+github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=

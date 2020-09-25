@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -271,6 +272,18 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	if isPremium {
 		go createWebhook(worker, id, guildId, channel.Id)
 	}
+
+	// update cache
+	go func() {
+		// retrieve member
+		// GetGuildMember will cache if not already cached
+		if _, err := worker.GetGuildMember(guildId, user.Id); err != nil {
+			sentry.Error(err)
+		}
+
+		// store user
+		cache.Client.StoreUser(user)
+	}()
 }
 
 // has hit ticket limit, ticket limit

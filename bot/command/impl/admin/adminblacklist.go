@@ -6,7 +6,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/rest/request"
 	"strconv"
 )
 
@@ -35,7 +34,7 @@ func (AdminBlacklistCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	if err := ctx.Worker.LeaveGuild(guildId); err != nil && !request.IsClientError(err) {
+	if err := ctx.Worker.LeaveGuild(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

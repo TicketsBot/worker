@@ -12,7 +12,6 @@ import (
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
-	"image"
 )
 
 func (ctx *Context) GetChannel(channelId uint64) (channel.Channel, error) {
@@ -409,10 +408,6 @@ func (ctx *Context) ModifyGuildEmbed(guildId uint64, data guild.GuildEmbed) (gui
 // returns invite object with only "code" and "uses" fields
 func (ctx *Context) GetGuildVanityUrl(guildId uint64) (invite.Invite, error) {
 	return rest.GetGuildVanityURL(ctx.Token, ctx.RateLimiter, guildId)
-}
-
-func (ctx *Context) GetGuildWidgetImage(guildId uint64, style guild.WidgetStyle) (image.Image, error) {
-	return rest.GetGuildWidgetImage(ctx.Token, ctx.RateLimiter, guildId, style)
 }
 
 func (ctx *Context) GetInvite(inviteCode string, withCounts bool) (invite.Invite, error) {

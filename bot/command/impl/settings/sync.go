@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/rest/request"
 	"time"
 )
 
@@ -75,7 +74,7 @@ func processDeletedTickets(ctx command.CommandContext) (updated int) {
 		}
 
 		_, err := ctx.Worker.GetChannel(*ticket.ChannelId)
-		if err != nil && err == request.ErrNotFound { // An admin has deleted the channel manually
+		if err != nil { // An admin has deleted the channel manually
 			updated++
 
 			go func() {
@@ -103,7 +102,7 @@ func processDeletedPanels(ctx command.CommandContext) (removed int) {
 		}
 
 		// Check cache first to prevent extra requests to discord
-		if _, err := ctx.Worker.GetChannelMessage(panel.ChannelId, panel.MessageId); err != nil && err == request.ErrNotFound {
+		if _, err := ctx.Worker.GetChannelMessage(panel.ChannelId, panel.MessageId); err != nil {
 			removed++
 
 			// Message no longer exists
