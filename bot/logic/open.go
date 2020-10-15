@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -22,8 +23,15 @@ import (
 
 // if panel != nil, msg should be artifically filled, excluding the message ID
 func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, messageId uint64, isPremium bool, args []string, panel *database.Panel) {
-	// If we're using a panel, then we need to create the ticket in the specified category
+	errorContext := errorcontext.WorkerErrorContext{
+		Guild:   guildId,
+		User:    user.Id,
+		Channel: channelId,
+		Shard:   worker.ShardId,
+		Command: "open",
+	}
 
+	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
 		category = panel.TargetCategory
@@ -31,7 +39,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		var err error
 		category, err = dbclient.Client.ChannelCategory.Get(guildId)
 		if err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 
@@ -136,7 +144,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	// Create channel
 	id, err := dbclient.Client.Tickets.Create(guildId, user.Id)
 	if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 		return
 	}
 
@@ -148,7 +156,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	namingScheme, err := dbclient.Client.NamingScheme.Get(guildId)
 	if err != nil {
 		namingScheme = database.Id
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	if namingScheme == database.Username {
@@ -170,11 +178,11 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 	channel, err := worker.CreateGuildChannel(guildId, data)
 	if err != nil { // Bot likely doesn't have permission
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 
 		// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
 		if err := dbclient.Client.Tickets.Close(id, guildId); err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
 		}
 
 		return
@@ -182,13 +190,13 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 	welcomeMessageId, err := utils.SendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject, panel, id)
 	if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	// UpdateUser channel in DB
 	go func() {
 		if err := dbclient.Client.Tickets.SetTicketProperties(guildId, id, channel.Id, welcomeMessageId); err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
 		}
 	}()
 
@@ -200,7 +208,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			// Ping @everyone
 			pingEveryone, err := dbclient.Client.PingEveryone.Get(guildId)
 			if err != nil {
-				sentry.Error(err)
+				sentry.ErrorWithContext(err, errorContext)
 			}
 
 			if pingEveryone {
@@ -210,7 +218,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			// roles
 			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.MessageId)
 			if err != nil {
-				sentry.Error(err)
+				sentry.ErrorWithContext(err, errorContext)
 			} else {
 				for _, roleId := range roles {
 					content += fmt.Sprintf("<@&%d>", roleId)
@@ -220,7 +228,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			// user
 			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.MessageId)
 			if err != nil {
-				sentry.Error(err)
+				sentry.ErrorWithContext(err, errorContext)
 			} else {
 				if shouldMentionUser {
 					content += fmt.Sprintf("<@%d>", user.Id)
@@ -245,7 +253,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			})
 
 			if err != nil {
-				sentry.Error(err)
+				sentry.ErrorWithContext(err, errorContext)
 			} else {
 				// error is likely to be a permission error
 				_ = worker.DeleteMessage(channel.Id, pingMessage.Id)
@@ -259,7 +267,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	} else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId)
 		if err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
@@ -278,7 +286,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		// retrieve member
 		// GetGuildMember will cache if not already cached
 		if _, err := worker.GetGuildMember(guildId, user.Id); err != nil {
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
 		}
 
 		// store user
@@ -348,6 +356,12 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 }
 
 func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {
+	errorContext := errorcontext.WorkerErrorContext{
+		Guild:   guildId,
+		User:    userId,
+		Command: "open",
+	}
+
 	// Apply permission overwrites
 	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
 		Id:    guildId,
@@ -363,7 +377,7 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	// Get support reps & admins
 	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
 	if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	for _, user := range supportUsers {
@@ -373,7 +387,7 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	// Get support roles & admin roles
 	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
 	if err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	for _, role := range supportRoles {
