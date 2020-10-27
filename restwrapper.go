@@ -397,8 +397,8 @@ func (ctx *Context) SyncGuildIntegration(guildId, integrationId uint64) error {
 	return rest.SyncGuildIntegration(ctx.Token, ctx.RateLimiter, guildId, integrationId)
 }
 
-func (ctx *Context) GetGuildEmbed(guildId uint64) (guild.GuildEmbed, error) {
-	return rest.GetGuildEmbed(ctx.Token, ctx.RateLimiter, guildId)
+func (ctx *Context) GetGuildEmbed(guildId uint64) (guild.GuildWidget, error) {
+	return rest.GetGuildWidget(ctx.Token, ctx.RateLimiter, guildId)
 }
 
 func (ctx *Context) ModifyGuildEmbed(guildId uint64, data guild.GuildEmbed) (guild.GuildEmbed, error) {
