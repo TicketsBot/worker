@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
+	"time"
 )
 
 type PremiumCommand struct {
@@ -33,10 +34,12 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 				return
 			}
 
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
-		} else {
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
+			if expiry.After(time.Now()) {
+				ctx.SendEmbed(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
+				return
+			}
 		}
+		ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
 	} else {
 		key, err := uuid.FromString(ctx.Args[0])
 
