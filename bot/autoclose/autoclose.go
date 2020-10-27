@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/cache"
+	"github.com/rxdn/gdl/rest/request"
 	"strings"
 )
 
@@ -42,6 +43,13 @@ func ListenAutoClose(cache *cache.PgCache) {
 			// get self member
 			self, err := worker.GetGuildMember(ticket.GuildId, worker.BotId)
 			if err != nil {
+				// We are no longer in the guild and can exclude all tickets
+				if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 403 {
+					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ticket.GuildId); err != nil {
+						sentry.Error(err)
+					}
+				}
+
 				sentry.Error(err)
 				return
 			}

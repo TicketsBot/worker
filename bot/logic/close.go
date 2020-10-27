@@ -12,6 +12,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest"
+	"github.com/rxdn/gdl/rest/request"
 	"strconv"
 	"strings"
 )
@@ -120,6 +121,13 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	}
 
 	if _, err := worker.DeleteChannel(channelId); err != nil {
+		// Check if we should exclude this from autoclose
+		if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 403 {
+			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+				sentry.Error(err)
+			}
+		}
+
 		sentry.Error(err)
 	}
 
