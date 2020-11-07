@@ -242,7 +242,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			}
 
 			pingMessage, err := worker.CreateMessageComplex(channel.Id, rest.CreateMessageData{
-				Content:         content,
+				Content: content,
 				AllowedMentions: message.AllowedMention{
 					Parse: []message.AllowedMentionType{
 						message.EVERYONE,
@@ -370,6 +370,18 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 		Deny:  permission.BuildPermissions(permission.ViewChannel),
 	})
 
+	// Add overwrites for ourself
+	// Manage roles is required for t!add to work
+	overwrites = append(overwrites, channel.PermissionOverwrite{
+		Id:   selfId,
+		Type: channel.PermissionTypeMember,
+		Allow: permission.BuildPermissions(
+			permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles,
+			permission.ReadMessageHistory, permission.EmbedLinks, permission.ManageRoles,
+		),
+		Deny: 0,
+	})
+
 	// Create list of members & roles who should be added to the ticket
 	allowedUsers := make([]uint64, 0)
 	allowedRoles := make([]uint64, 0)
@@ -394,8 +406,8 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 		allowedRoles = append(allowedRoles, role)
 	}
 
-	// Add ourselves and the sender
-	allowedUsers = append(allowedUsers, selfId, userId)
+	// Add the sender
+	allowedUsers = append(allowedUsers, userId)
 
 	for _, member := range allowedUsers {
 		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
