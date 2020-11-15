@@ -370,18 +370,6 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 		Deny:  permission.BuildPermissions(permission.ViewChannel),
 	})
 
-	// Add overwrites for ourself
-	// Manage roles is required for t!add to work
-	overwrites = append(overwrites, channel.PermissionOverwrite{
-		Id:   selfId,
-		Type: channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(
-			permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles,
-			permission.ReadMessageHistory, permission.EmbedLinks, permission.ManageRoles,
-		),
-		Deny: 0,
-	})
-
 	// Create list of members & roles who should be added to the ticket
 	allowedUsers := make([]uint64, 0)
 	allowedRoles := make([]uint64, 0)
@@ -406,15 +394,15 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 		allowedRoles = append(allowedRoles, role)
 	}
 
-	// Add the sender
-	allowedUsers = append(allowedUsers, userId)
+	// Add the sender & self
+	allowedUsers = append(allowedUsers, selfId, userId)
 
 	for _, member := range allowedUsers {
 		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
-			allow = append(allow, permission.ManageWebhooks)
+			allow = append(allow, permission.ManageWebhooks, permission.ManageRoles)
 		}
 
 		overwrites = append(overwrites, channel.PermissionOverwrite{

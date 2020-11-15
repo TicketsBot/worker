@@ -19,12 +19,12 @@ func execute(ctx *worker.Context, event json.RawMessage) error {
 
 	dataType := events.EventTypes[events.EventType(payload.EventName)]
 	if dataType == nil {
-		return errors.New(fmt.Sprintf("Invalid event type: %s", payload.EventName))
+		return fmt.Errorf("Invalid event type: %s", payload.EventName)
 	}
 
 	data := reflect.New(dataType)
 	if err := json.Unmarshal(payload.Data, data.Interface()); err != nil {
-		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))
+		return fmt.Errorf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
 	}
 
 	for _, listener := range listeners.Listeners {
