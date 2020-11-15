@@ -20,12 +20,11 @@ func GetPage(client *redis.Client, msgId uint64) (page int, success bool) {
 
 	data, err := client.Get(key).Result()
 	if err != nil {
-		if err == redis.Nil {
-			return
-		} else {
+		if err != redis.Nil {
 			sentry.Error(err)
-			return
 		}
+
+		return
 	}
 
 	page, err = strconv.Atoi(data)

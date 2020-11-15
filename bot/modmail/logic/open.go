@@ -71,7 +71,7 @@ func OpenModMailTicket(worker *worker.Context, guild guild.Guild, user user.User
 		channelCount := 0
 		for _, channel := range channels {
 			if channel.ParentId == category {
-				channelCount += 1
+				channelCount++
 			}
 		}
 
