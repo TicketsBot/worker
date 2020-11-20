@@ -7,9 +7,9 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/i18n"
+	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
-	"github.com/rxdn/gdl/rest"
 	"time"
 )
 
@@ -18,17 +18,32 @@ type SentMessage struct {
 	Message *message.Message
 }
 
+var NoReply = message.MessageReference{}
+
 // guildId is only used to get the language
-func SendEmbed(worker *worker.Context, channelId, guildId uint64, colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField, deleteAfter int, isPremium bool, format ...interface{}) {
+func SendEmbed(
+	worker *worker.Context,
+	channelId, guildId uint64, replyTo message.MessageReference,
+	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
+	deleteAfter int, isPremium bool,
+	format ...interface{}) {
 	content := i18n.GetMessageFromGuild(guildId, messageType, format...)
-	_, _ = SendEmbedWithResponse(worker, channelId, colour, title, content, fields, deleteAfter, isPremium)
+	_, _ = SendEmbedWithResponse(worker, channelId, replyTo, colour, title, content, fields, deleteAfter, isPremium)
 }
 
-func SendEmbedRaw(worker *worker.Context, channel uint64, colour Colour, title, content string, fields []embed.EmbedField, deleteAfter int, isPremium bool) {
-	_, _ = SendEmbedWithResponse(worker, channel, colour, title, content, fields, deleteAfter, isPremium)
+func SendEmbedRaw(
+	worker *worker.Context,
+	channel uint64, replyTo message.MessageReference,
+	colour Colour, title, content string, fields []embed.EmbedField,
+	deleteAfter int, isPremium bool) {
+	_, _ = SendEmbedWithResponse(worker, channel, replyTo, colour, title, content, fields, deleteAfter, isPremium)
 }
 
-func SendEmbedWithResponse(worker *worker.Context, channel uint64, colour Colour, title, content string, fields []embed.EmbedField, deleteAfter int, isPremium bool) (message.Message, error) {
+func SendEmbedWithResponse(
+	worker *worker.Context,
+	channel uint64, replyTo message.MessageReference,
+	colour Colour, title, content string, fields []embed.EmbedField,
+	deleteAfter int, isPremium bool) (message.Message, error) {
 	msgEmbed := embed.NewEmbed().
 		SetColor(int(colour)).
 		SetTitle(title).
@@ -44,9 +59,7 @@ func SendEmbedWithResponse(worker *worker.Context, channel uint64, colour Colour
 	}
 
 	// Explicitly ignore error because it's usually a 403 (missing permissions)
-	msg, err := worker.CreateMessageComplex(channel, rest.CreateMessageData{
-		Embed: msgEmbed,
-	})
+	msg, err := worker.CreateMessageEmbedReply(channel, msgEmbed, replyTo)
 
 	if err != nil {
 		sentry.LogWithContext(err, errorcontext.WorkerErrorContext{
@@ -94,3 +107,28 @@ func ReactWithCross(worker *worker.Context, channelId, messageId uint64) {
 func PadDiscriminator(discrim uint16) string {
 	return fmt.Sprintf("%04d", discrim)
 }
+
+func CreateReference(messageId, channelId, guildId uint64) message.MessageReference {
+	return message.MessageReference{
+		MessageId: messageId,
+		ChannelId: channelId,
+		GuildId:   guildId,
+	}
+}
+
+func CreateReferenceFromEvent(ev *events.MessageCreate) message.MessageReference {
+	return message.MessageReference{
+		MessageId: ev.Id,
+		ChannelId: ev.ChannelId,
+		GuildId:   ev.GuildId,
+	}
+}
+
+func CreateReferenceFromMessage(msg message.Message) message.MessageReference {
+	return message.MessageReference{
+		MessageId: msg.Id,
+		ChannelId: msg.ChannelId,
+		GuildId:   msg.GuildId,
+	}
+}
+

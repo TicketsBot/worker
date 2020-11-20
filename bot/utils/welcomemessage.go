@@ -44,7 +44,7 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 	welcomeMessage = doSubstitutions(welcomeMessage, worker, guildId, userId, channelId, ticketId)
 
 	// Send welcome message
-	if msg, err := SendEmbedWithResponse(worker, channelId, Green, subject, welcomeMessage, nil, 0, isPremium); err == nil {
+	if msg, err := SendEmbedWithResponse(worker, channelId, NoReply, Green, subject, welcomeMessage, nil, 0, isPremium); err == nil {
 		// Add close reaction to the welcome message
 		err := worker.CreateReaction(channelId, msg.Id, "🔒")
 		if err != nil {

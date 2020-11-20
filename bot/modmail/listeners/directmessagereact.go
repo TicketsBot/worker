@@ -71,7 +71,7 @@ func OnDirectOpenMessageReact(worker *worker.Context, e *events.MessageReactionA
 	}
 
 	if isBlacklisted {
-		utils.SendEmbed(worker, dmChannel.Id, targetGuild.Id, utils.Red, "Error", translations.MessageBlacklisted, nil, 30, true)
+		utils.SendEmbed(worker, dmChannel.Id, targetGuild.Id, utils.NoReply, utils.Red, "Error", translations.MessageBlacklisted, nil, 30, true)
 		return
 	}
 
@@ -82,7 +82,7 @@ func OnDirectOpenMessageReact(worker *worker.Context, e *events.MessageReactionA
 		return
 	}
 
-	utils.SendEmbed(worker, dmChannel.Id, targetGuild.Id, utils.Green, "Modmail", translations.MessageModmailOpened, nil, 0, true, targetGuild.Name)
+	utils.SendEmbed(worker, dmChannel.Id, targetGuild.Id, utils.NoReply, utils.Green, "Modmail", translations.MessageModmailOpened, nil, 0, true, targetGuild.Name)
 
 	// Send guild's welcome message
 	welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(targetGuild.Id); if err != nil {
@@ -90,18 +90,18 @@ func OnDirectOpenMessageReact(worker *worker.Context, e *events.MessageReactionA
 		welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
 	}
 
-	welcomeMessageId, err := utils.SendEmbedWithResponse(worker, dmChannel.Id, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
+	welcomeMessageId, err := utils.SendEmbedWithResponse(worker, dmChannel.Id, utils.NoReply, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
 	if err != nil {
-		utils.SendEmbedRaw(worker, dmChannel.Id, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
+		utils.SendEmbedRaw(worker, dmChannel.Id, utils.NoReply, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
 		return
 	}
 
 	staffChannel, err := logic.OpenModMailTicket(worker, targetGuild, user, welcomeMessageId.Id)
 	if err != nil {
-		utils.SendEmbedRaw(worker, dmChannel.Id, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
+		utils.SendEmbedRaw(worker, dmChannel.Id, utils.NoReply, utils.Red, "Error", fmt.Sprintf("An error has occurred: %s", err.Error()), nil, 30, true)
 		return
 	}
 
-	utils.SendEmbedRaw(worker, staffChannel, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
+	utils.SendEmbedRaw(worker, staffChannel, utils.NoReply, utils.Green, "Modmail", welcomeMessage, nil, 0, true)
 }
 

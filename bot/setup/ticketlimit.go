@@ -28,11 +28,13 @@ func (TicketLimitStage) Default() string {
 }
 
 func (TicketLimitStage) Process(worker *worker.Context, msg message.Message) {
+	replyContext := utils.CreateReferenceFromMessage(msg)
+
 	amountRaw := strings.Split(msg.Content, " ")[0]
 	amount, err := strconv.Atoi(amountRaw)
 	if err != nil || amount > 10 || amount < 1 {
 		amount = 5
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageInvalidTicketLimit, nil, 30, true, amount)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidTicketLimit, nil, 30, true, amount)
 		utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 	} else {
 		utils.ReactWithCheck(worker, msg.ChannelId, msg.Id)

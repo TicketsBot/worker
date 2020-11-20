@@ -8,8 +8,6 @@ github.com/TicketsBot/common v0.0.0-20201015164440-602656bff706 h1:lS8LXgVEAvP0v
 github.com/TicketsBot/common v0.0.0-20201015164440-602656bff706/go.mod h1:KVuvTmhUhMBVTMmjEpSzitKnODu6wMkFa3pK/W2NuiY=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
-github.com/TicketsBot/database v0.0.0-20201027233610-811066716c60 h1:UA1lonT6IAle/A9H/vUSQZeJ9GL8vM6sVLMzpv34kR0=
-github.com/TicketsBot/database v0.0.0-20201027233610-811066716c60/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20201105181405-1cf81496bbca h1:rQXkD4WxOL00dbkXJeeWNhOOTBQHQIXAM1bpo/egh48=
 github.com/TicketsBot/database v0.0.0-20201105181405-1cf81496bbca/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14 h1:wVGMTUIDHLj198ElVIecqGGUiQ6NagUlbQOyfiMTF/Y=
@@ -196,8 +194,8 @@ github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1 h1:jOKXGHwm7R2bCSbP8ntoT/
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e h1:PlCz91DgXLLPpKHOxt+tZqVm4icUhWBZWuNlfEqjh/E=
 github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
-github.com/rxdn/gdl v0.0.0-20201027221415-e420474288d4 h1:wZtXUQ0m6ztLr/ot6SWiQ3tEvOcUUJCMcH9qE+Avstg=
-github.com/rxdn/gdl v0.0.0-20201027221415-e420474288d4/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
+github.com/rxdn/gdl v0.0.0-20201120171853-e40c45068b4e h1:uRj3/VWQ5KRngV4UxNb47TElRC/tJCtQ0gIj5nsGlfk=
+github.com/rxdn/gdl v0.0.0-20201120171853-e40c45068b4e/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=

@@ -35,7 +35,7 @@ func (EasySetupCommand) Execute(ctx command.CommandContext) {
 		if stage != nil {
 			// Psuedo-premium
 			// TODO: TRANSLATE SETUP PROMPTS
-			utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, utils.Green, "Setup", (*stage).Prompt(), nil, 120, true)
+			ctx.SendEmbedWithDeleteAfter(utils.Green, "Setup", (*stage).Prompt(), 120)
 		}
 	}
 }

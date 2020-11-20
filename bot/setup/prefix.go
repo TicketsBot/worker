@@ -25,8 +25,10 @@ func (PrefixStage) Default() string {
 }
 
 func (PrefixStage) Process(worker *worker.Context, msg message.Message) {
+	replyContext := utils.CreateReferenceFromMessage(msg)
+
 	if len(msg.Content) > 8 {
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageInvalidPrefix, nil, 15, true, PrefixStage{}.Default())
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidPrefix, nil, 15, true, PrefixStage{}.Default())
 		return
 	}
 

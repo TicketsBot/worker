@@ -18,6 +18,8 @@ import (
 )
 
 func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, member member.Member, args []string, fromReaction, isPremium bool) {
+	replyTo := utils.CreateReference(messageId, channelId, guildId)
+
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(channelId)
 	if err != nil {
@@ -47,7 +49,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, isPremium)
 		}
 
 		return
@@ -66,7 +68,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
 		}
 		return
 	}

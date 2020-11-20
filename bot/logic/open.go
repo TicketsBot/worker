@@ -31,6 +31,13 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		Command: "open",
 	}
 
+	var replyTo message.MessageReference
+	if panel == nil {
+		replyTo = utils.NoReply
+	} else {
+		replyTo = utils.CreateReference(messageId, channelId, guildId)
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -101,7 +108,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 				ticketsPluralised += "s"
 			}
 
-			utils.SendEmbed(worker, targetChannel, guildId, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
+			utils.SendEmbed(worker, targetChannel, guildId, replyTo, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
 		}
 
 		return
@@ -132,7 +139,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 
 		if channelCount >= 50 {
-			utils.SendEmbed(worker, channelId, guildId, utils.Red, "Error", translations.MessageTooManyTickets, nil, 30, isPremium)
+			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageTooManyTickets, nil, 30, isPremium)
 			return
 		}
 	}
@@ -263,7 +270,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		utils.SendEmbed(worker, channelId, guildId, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 30, isPremium, channel.Mention())
+		utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 30, isPremium, channel.Mention())
 	} else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId)
 		if err != nil {
@@ -271,7 +278,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
-			utils.SendEmbed(worker, dmChannel.Id, guildId, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 0, isPremium, channel.Mention())
+			utils.SendEmbed(worker, dmChannel.Id, guildId, replyTo, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 0, isPremium, channel.Mention())
 		}
 	}
 

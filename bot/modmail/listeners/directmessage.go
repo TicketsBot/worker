@@ -156,11 +156,16 @@ func sendMessage(session database.ModmailSession, ctx command.CommandContext, dm
 func executeWebhook(worker *worker.Context, webhook database.ModmailWebhook, data rest.WebhookBody) bool {
 	_, err := worker.ExecuteWebhook(webhook.WebhookId, webhook.WebhookToken, true, data)
 
-	if err == request.ErrForbidden || err == request.ErrNotFound {
-		go dbclient.Client.ModmailWebhook.Delete(webhook.Uuid)
-		return false
-	} else {
+	if err == nil {
 		return true
+	} else {
+		if restError, ok := err.(request.RestError); ok {
+			if restError.ErrorCode == 403 || restError.ErrorCode == 404 {
+				go dbclient.Client.ModmailWebhook.Delete(webhook.Uuid)
+			}
+		}
+
+		return false
 	}
 }
 
@@ -207,11 +212,11 @@ func open(ctx command.CommandContext, targetGuild guild.Guild, dmChannelId uint6
 	}
 
 	if isBlacklisted {
-		utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, utils.Red, "Error", translations.MessageBlacklisted, nil, 30, true)
+		utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, ctx.ReplyContext(), utils.Red, "Error", translations.MessageBlacklisted, nil, 30, true)
 		return
 	}
 
-	utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, utils.Green, "Modmail", translations.MessageModmailOpened, nil, 0, true, targetGuild.Name)
+	utils.SendEmbed(ctx.Worker, dmChannelId, targetGuild.Id, ctx.ReplyContext(), utils.Green, "Modmail", translations.MessageModmailOpened, nil, 0, true, targetGuild.Name)
 
 	// Send guild's welcome message
 	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker, targetGuild.Id, dmChannelId, ctx.Author.Id, ctx.PremiumTier >= premium.Premium, "Modmail", nil, 0)

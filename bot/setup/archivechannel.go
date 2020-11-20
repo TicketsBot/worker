@@ -38,6 +38,8 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		return
 	}
 
+	replyContext := utils.CreateReferenceFromMessage(msg)
+
 	var archiveChannelId uint64
 
 	// Prefer channel mention
@@ -55,7 +57,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !exists {
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}
@@ -66,7 +68,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 
 		// Get channels from discord
 		channels, err := worker.GetGuildChannels(msg.GuildId); if err != nil {
-			utils.SendEmbedRaw(worker, msg.ChannelId, utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()), nil, 15, true)
+			utils.SendEmbedRaw(worker, msg.ChannelId, replyContext, utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()), nil, 15, true)
 			return
 		}
 
@@ -80,7 +82,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !found {
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}

@@ -36,6 +36,8 @@ func (ChannelCategoryStage) Process(worker *worker.Context, msg message.Message)
 		Shard:   worker.ShardId,
 	}
 
+	replyContext := utils.CreateReferenceFromMessage(msg)
+
 	name := msg.Content
 
 	guild, err := worker.GetGuild(msg.GuildId); if err != nil {
@@ -60,13 +62,13 @@ func (ChannelCategoryStage) Process(worker *worker.Context, msg message.Message)
 
 		category, err := worker.CreateGuildChannel(guild.Id, data); if err != nil {
 			// Likely no permission, default to having no category
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageInvalidCategory, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidCategory, nil, 15, true)
 			return
 		}
 
 		categoryId = category.Id
 
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, utils.Red, "Error", translations.MessageCreatedCategory, nil, 15, true, category.Name)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageCreatedCategory, nil, 15, true, category.Name)
 	}
 
 	if err := dbclient.Client.ChannelCategory.Set(msg.GuildId, categoryId); err == nil {

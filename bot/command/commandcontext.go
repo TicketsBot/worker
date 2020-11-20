@@ -42,27 +42,31 @@ func (ctx *CommandContext) ToErrorContext() errorcontext.WorkerErrorContext {
 }
 
 func (ctx *CommandContext) SendEmbed(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, nil, 30, ctx.PremiumTier > premium.None, format...)
+	ctx.SendEmbedWithDeleteAfter(colour, title, content, 30, format...)
+}
+
+func (ctx *CommandContext) SendEmbedWithDeleteAfter(colour utils.Colour, title string, content translations.MessageId, deleteAfter int, format ...interface{}) {
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, ctx.ReplyContext(), colour, title, content, nil, deleteAfter, ctx.PremiumTier > premium.None, format...)
 }
 
 func (ctx *CommandContext) SendEmbedWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None, format...)
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, ctx.ReplyContext(), colour, title, content, fields, 30, ctx.PremiumTier > premium.None, format...)
 }
 
 func (ctx *CommandContext) SendEmbedWithFieldsNoDelete(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, fields, 0, ctx.PremiumTier > premium.None, format...)
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, ctx.ReplyContext(), colour, title, content, fields, 0, ctx.PremiumTier > premium.None, format...)
 }
 
 func (ctx *CommandContext) SendEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
-	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 30, ctx.PremiumTier > premium.None)
+	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, ctx.ReplyContext(), colour, title, content, fields, 30, ctx.PremiumTier > premium.None)
 }
 
 func (ctx *CommandContext) SendEmbedNoDelete(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
-	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, colour, title, content, nil, 0, ctx.PremiumTier > premium.None, format...)
+	utils.SendEmbed(ctx.Worker, ctx.ChannelId, ctx.GuildId, ctx.ReplyContext(), colour, title, content, nil, 0, ctx.PremiumTier > premium.None, format...)
 }
 
 func (ctx *CommandContext) SendEmbedNoDeleteRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) {
-	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, colour, title, content, fields, 0, ctx.PremiumTier > premium.None)
+	utils.SendEmbedRaw(ctx.Worker, ctx.ChannelId, ctx.ReplyContext(), colour, title, content, fields, 0, ctx.PremiumTier > premium.None)
 }
 
 func (ctx *CommandContext) SendMessage(content string) {
@@ -117,4 +121,8 @@ func (ctx *CommandContext) HandleWarning(err error) {
 
 func (ctx *CommandContext) GetMessage(id translations.MessageId) string {
 	return i18n.GetMessageFromGuild(ctx.GuildId, id)
+}
+
+func (ctx *CommandContext) ReplyContext() message.MessageReference {
+	return utils.CreateReference(ctx.Id, ctx.ChannelId, ctx.GuildId)
 }
