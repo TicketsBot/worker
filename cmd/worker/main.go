@@ -15,6 +15,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/rxdn/gdl/rest/request"
+	"net/http"
 	"os"
 )
 
@@ -28,6 +29,11 @@ func main() {
 		Project: "tickets-bot",
 	}); err != nil {
 		fmt.Println(err.Error())
+	}
+
+	// Configure HTTP proxy
+	if os.Getenv("DISCORD_PROXY_URL") != "" {
+		request.Client.Transport.(*http.Transport).Proxy = utils.GetProxy
 	}
 
 	fmt.Println("Connected to Sentry, connect to Redis...")
