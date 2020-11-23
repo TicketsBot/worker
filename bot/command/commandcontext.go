@@ -123,6 +123,6 @@ func (ctx *CommandContext) GetMessage(id translations.MessageId) string {
 	return i18n.GetMessageFromGuild(ctx.GuildId, id)
 }
 
-func (ctx *CommandContext) ReplyContext() message.MessageReference {
+func (ctx *CommandContext) ReplyContext() *message.MessageReference {
 	return utils.CreateReference(ctx.Id, ctx.ChannelId, ctx.GuildId)
 }

@@ -59,7 +59,7 @@ func (ctx *Context) CreateMessage(channelId uint64, content string) (message.Mes
 	})
 }
 
-func (ctx *Context) CreateMessageReply(channelId uint64, content string, reference message.MessageReference) (message.Message, error) {
+func (ctx *Context) CreateMessageReply(channelId uint64, content string, reference *message.MessageReference) (message.Message, error) {
 	return ctx.CreateMessageComplex(channelId, rest.CreateMessageData{
 		Content: content,
 		MessageReference: reference,
@@ -72,7 +72,7 @@ func (ctx *Context) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (me
 	})
 }
 
-func (ctx *Context) CreateMessageEmbedReply(channelId uint64, embed *embed.Embed, reference message.MessageReference) (message.Message, error) {
+func (ctx *Context) CreateMessageEmbedReply(channelId uint64, embed *embed.Embed, reference *message.MessageReference) (message.Message, error) {
 	return ctx.CreateMessageComplex(channelId, rest.CreateMessageData{
 		Embed: embed,
 		MessageReference: reference,

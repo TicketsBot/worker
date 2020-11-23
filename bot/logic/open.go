@@ -31,10 +31,8 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		Command: "open",
 	}
 
-	var replyTo message.MessageReference
-	if panel == nil {
-		replyTo = utils.NoReply
-	} else {
+	var replyTo *message.MessageReference = nil
+	if panel != nil {
 		replyTo = utils.CreateReference(messageId, channelId, guildId)
 	}
 

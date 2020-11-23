@@ -86,13 +86,13 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 			}
 
 			if (permissionLevel == permission.Everyone && ticket.UserId != e.UserId) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				utils.SendEmbed(worker, e.ChannelId, e.GuildId, utils.NoReply, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
+				utils.SendEmbed(worker, e.ChannelId, e.GuildId, nil, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
 				return
 			}
 		}
 
 		// Send confirmation message
-		msg, err := utils.SendEmbedWithResponse(worker, e.ChannelId, utils.NoReply, utils.Green, "Close Confirmation", "React with ✅ to confirm you want to close the ticket", nil, 10, isPremium)
+		msg, err := utils.SendEmbedWithResponse(worker, e.ChannelId, nil, utils.Green, "Close Confirmation", "React with ✅ to confirm you want to close the ticket", nil, 10, isPremium)
 		if err != nil {
 			sentry.LogWithContext(err, errorContext)
 			return

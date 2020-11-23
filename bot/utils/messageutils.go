@@ -18,12 +18,10 @@ type SentMessage struct {
 	Message *message.Message
 }
 
-var NoReply = message.MessageReference{}
-
 // guildId is only used to get the language
 func SendEmbed(
 	worker *worker.Context,
-	channelId, guildId uint64, replyTo message.MessageReference,
+	channelId, guildId uint64, replyTo *message.MessageReference,
 	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 	format ...interface{}) {
@@ -33,7 +31,7 @@ func SendEmbed(
 
 func SendEmbedRaw(
 	worker *worker.Context,
-	channel uint64, replyTo message.MessageReference,
+	channel uint64, replyTo *message.MessageReference,
 	colour Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool) {
 	_, _ = SendEmbedWithResponse(worker, channel, replyTo, colour, title, content, fields, deleteAfter, isPremium)
@@ -41,7 +39,7 @@ func SendEmbedRaw(
 
 func SendEmbedWithResponse(
 	worker *worker.Context,
-	channel uint64, replyTo message.MessageReference,
+	channel uint64, replyTo *message.MessageReference,
 	colour Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool) (message.Message, error) {
 	msgEmbed := embed.NewEmbed().
@@ -108,24 +106,24 @@ func PadDiscriminator(discrim uint16) string {
 	return fmt.Sprintf("%04d", discrim)
 }
 
-func CreateReference(messageId, channelId, guildId uint64) message.MessageReference {
-	return message.MessageReference{
+func CreateReference(messageId, channelId, guildId uint64) *message.MessageReference {
+	return &message.MessageReference{
 		MessageId: messageId,
 		ChannelId: channelId,
 		GuildId:   guildId,
 	}
 }
 
-func CreateReferenceFromEvent(ev *events.MessageCreate) message.MessageReference {
-	return message.MessageReference{
+func CreateReferenceFromEvent(ev *events.MessageCreate) *message.MessageReference {
+	return &message.MessageReference{
 		MessageId: ev.Id,
 		ChannelId: ev.ChannelId,
 		GuildId:   ev.GuildId,
 	}
 }
 
-func CreateReferenceFromMessage(msg message.Message) message.MessageReference {
-	return message.MessageReference{
+func CreateReferenceFromMessage(msg message.Message) *message.MessageReference {
+	return &message.MessageReference{
 		MessageId: msg.Id,
 		ChannelId: msg.ChannelId,
 		GuildId:   msg.GuildId,
