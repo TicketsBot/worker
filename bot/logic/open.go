@@ -106,7 +106,12 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 				ticketsPluralised += "s"
 			}
 
-			utils.SendEmbed(worker, targetChannel, guildId, replyTo, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
+			var replyContext *message.MessageReference
+			if targetChannel == channelId {
+				replyContext = replyTo
+			}
+
+			utils.SendEmbed(worker, targetChannel, guildId, replyContext, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
 		}
 
 		return

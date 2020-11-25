@@ -12,8 +12,7 @@ import (
 )
 
 func Listen(redis *redis.Client, cache *cache.PgCache) {
-	ch := make(chan eventforwarding.Event)
-	go eventforwarding.Listen(redis, ch)
+	ch := eventforwarding.Listen(redis)
 
 	for event := range ch {
 		var keyPrefix string

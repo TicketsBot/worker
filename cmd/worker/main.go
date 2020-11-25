@@ -15,7 +15,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/rxdn/gdl/rest/request"
-	"net/http"
 	"os"
 )
 
@@ -32,8 +31,9 @@ func main() {
 	}
 
 	// Configure HTTP proxy
+	fmt.Println("Configuring proxy...")
 	if os.Getenv("DISCORD_PROXY_URL") != "" {
-		request.Client.Transport.(*http.Transport).Proxy = utils.GetProxy
+		request.RegisterHook(utils.ProxyHook)
 	}
 
 	fmt.Println("Connected to Sentry, connect to Redis...")
@@ -64,7 +64,7 @@ func main() {
 	if err != nil {
 		sentry.Error(err)
 	} else {
-		request.Hook = statsd.RestHook
+		request.RegisterHook(statsd.RestHook)
 		go statsd.Client.StartDaemon()
 	}
 

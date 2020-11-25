@@ -1,5 +1,7 @@
 package statsd
 
-func RestHook(string) {
-	Client.IncrementKey(REST)
+import "net/http"
+
+func RestHook(string, *http.Request) {
+	go Client.IncrementKey(REST)
 }
