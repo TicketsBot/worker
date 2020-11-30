@@ -40,13 +40,7 @@ func (c *StatsdClient) StartDaemon() {
 
 			c.buffer = make(map[Key]int)
 		case key := <-c.incrementChannel:
-			var val int
-			if current, ok := c.buffer[key]; ok {
-				val = current
-			}
-
-			val++
-			c.buffer[key] = val
+			c.buffer[key]++
 		}
 	}
 }
