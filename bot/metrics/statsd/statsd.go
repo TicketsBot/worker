@@ -3,39 +3,51 @@ package statsd
 import (
 	stats "gopkg.in/alexcesaro/statsd.v2"
 	"os"
-	"sync"
 	"time"
 )
 
 type StatsdClient struct {
-	client *stats.Client
-	buffer map[Key]int
-	bufferLock sync.Mutex
+	client           *stats.Client
+	buffer           map[Key]int
+	incrementChannel chan Key
 }
 
 var Client StatsdClient
 
 func NewClient() (StatsdClient, error) {
-	client, err := stats.New(stats.Address(os.Getenv("WORKER_STATSD_ADDR")), stats.Prefix(os.Getenv("WORKER_STATSD_PREFIX"))); if err != nil {
+	client, err := stats.New(stats.Address(os.Getenv("WORKER_STATSD_ADDR")), stats.Prefix(os.Getenv("WORKER_STATSD_PREFIX")))
+	if err != nil {
 		return StatsdClient{}, err
 	}
 
 	return StatsdClient{
-		client: client,
-		buffer: make(map[Key]int),
+		client:           client,
+		buffer:           make(map[Key]int),
+		incrementChannel: make(chan Key),
 	}, nil
 }
 
 func (c *StatsdClient) StartDaemon() {
-	for {
-		time.Sleep(time.Second * 15)
+	ticker := time.NewTicker(time.Second * 15)
+	defer ticker.Stop()
 
-		c.bufferLock.Lock()
-		for key, count := range c.buffer {
-			c.client.Count(key.String(), count)
+	for {
+		select {
+		case _ = <-ticker.C:
+			for key, count := range c.buffer {
+				c.client.Count(key.String(), count)
+			}
+
+			c.buffer = make(map[Key]int)
+		case key := <-c.incrementChannel:
+			var val int
+			if current, ok := c.buffer[key]; ok {
+				val = current
+			}
+
+			val++
+			c.buffer[key] = val
 		}
-		c.buffer = make(map[Key]int)
-		c.bufferLock.Unlock()
 	}
 }
 
@@ -48,18 +60,5 @@ func (c *StatsdClient) IncrementKey(key Key) {
 		return
 	}
 
-	c.bufferLock.Lock()
-	defer c.bufferLock.Unlock()
-
-	var val int
-	if current, ok := c.buffer[key]; ok {
-		val = current
-	} else {
-		val = 0
-	}
-
-	val++
-	c.buffer[key] = val
-
-	c.client.Increment(key.String())
+	c.incrementChannel <- key
 }
