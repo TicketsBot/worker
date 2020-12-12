@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -20,12 +21,19 @@ func (LanguageCommand) Properties() command.Properties {
 		Description:     translations.HelpLanguage,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString),
+		),
 	}
 }
 
-func (l LanguageCommand) Execute(ctx command.CommandContext) {
+func (c LanguageCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (c LanguageCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		l.sendInvalidMessage(ctx)
+		c.sendInvalidMessage(ctx)
 		return
 	}
 
@@ -44,7 +52,7 @@ func (l LanguageCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if !valid {
-		l.sendInvalidMessage(ctx)
+		c.sendInvalidMessage(ctx)
 		return
 	}
 

@@ -19,6 +19,10 @@ func (CancelCommand) Properties() command.Properties {
 	}
 }
 
+func (c CancelCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (CancelCommand) Execute(ctx command.CommandContext) {
 	u := setup.FromContext(ctx)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
+	"github.com/rxdn/gdl/objects/interaction"
 	"time"
 )
 
@@ -21,11 +22,18 @@ func (PremiumCommand) Properties() command.Properties {
 		Description:     translations.HelpPremium,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewOptionalArgument("key", "Premium key to activate", interaction.OptionTypeString, translations.MessageInvalidPremiumKey),
+		),
 	}
 }
 
-func (PremiumCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
+func (c PremiumCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
+	if key == nil {
 		if ctx.PremiumTier > premium.None {
 			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId)
 			if err != nil {
@@ -41,7 +49,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 		}
 		ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
 	} else {
-		key, err := uuid.FromString(ctx.Args[0])
+		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
 			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
@@ -49,7 +57,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 			return
 		}
 
-		length, err := dbclient.Client.PremiumKeys.Delete(key)
+		length, err := dbclient.Client.PremiumKeys.Delete(parsed)
 		if err != nil {
 			ctx.ReactWithCross()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -62,7 +70,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 			return
 		}
 
-		if err := dbclient.Client.UsedKeys.Set(key, ctx.GuildId, ctx.Author.Id); err != nil {
+		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId, ctx.Author.Id); err != nil {
 			ctx.ReactWithCross()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return

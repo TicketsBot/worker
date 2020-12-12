@@ -354,9 +354,13 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		if properties.Arguments[i].Required && arg != nil {
 			value = reflect.ValueOf(arg)
 		} else {
-			value = reflect.New(reflect.TypeOf(arg))
-			tmp := value.Elem()
-			tmp.Set(reflect.ValueOf(arg))
+			if arg == nil {
+				value = reflect.ValueOf(arg)
+			} else {
+				value = reflect.New(reflect.TypeOf(arg))
+				tmp := value.Elem()
+				tmp.Set(reflect.ValueOf(arg))
+			}
 		}
 
 		if !value.IsValid() {

@@ -24,6 +24,10 @@ func (SyncCommand) Properties() command.Properties {
 	}
 }
 
+func (c SyncCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (s SyncCommand) Execute(ctx command.CommandContext) {
 	if !utils.IsBotHelper(ctx.Author.Id) {
 		if s.isInCooldown(ctx.GuildId) {

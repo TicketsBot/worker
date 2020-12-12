@@ -22,6 +22,10 @@ func (ViewStaffCommand) Properties() command.Properties {
 	}
 }
 
+func (c ViewStaffCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (ViewStaffCommand) Execute(ctx command.CommandContext) {
 	embed := logic.BuildViewStaffMessage(ctx.GuildId, ctx.Worker, 0, ctx.ToErrorContext())
 

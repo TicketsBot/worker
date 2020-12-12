@@ -24,6 +24,10 @@ func (RemoveAdminCommand) Properties() command.Properties {
 	}
 }
 
+func (c RemoveAdminCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",

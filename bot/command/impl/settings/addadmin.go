@@ -29,53 +29,48 @@ func (AddAdminCommand) Properties() command.Properties {
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewArgument("user", "User to apply the administrator permission to", interaction.OptionTypeUser, false, translations.MessageAddAdminNoMembers),
-			command.NewArgument("role", "Role to apply the administrator permission to", interaction.OptionTypeRole, false, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("user", "User to apply the administrator permission to", interaction.OptionTypeUser, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("role", "Role to apply the administrator permission to", interaction.OptionTypeRole, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgumentMessageOnly("role_name", "Names of roles to apply the administrator permission to", interaction.OptionTypeString, translations.MessageAddAdminNoMembers),
 		),
 	}
 }
 
-func (a AddAdminCommand) GetExecutor() interface{} {
-	return a.Execute
+func (c AddAdminCommand) GetExecutor() interface{} {
+	return c.Execute
 }
 
-func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member, aarole *guild.Role) {
-	fmt.Println(aauser)
-	fmt.Println(aarole)
+func (AddAdminCommand) Execute(ctx command.CommandContext, user *member.Member, role *guild.Role, names *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",
 		Inline: false,
 	}
 
-	if len(ctx.Args) == 0 {
+	if user == nil && role == nil && names == nil {
 		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
 
-	user := false
 	roles := make([]uint64, 0)
 
-	if len(ctx.Message.Mentions) > 0 {
-		user = true
-		for _, mention := range ctx.Message.Mentions {
-			go func() {
-				if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId, mention.Id); err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
-				}
+	if user != nil {
+		if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId, user.User.Id); err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
 
-				if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, mention.Id, permcache.Admin); err != nil {
-					ctx.HandleError(err)
-					return
-				}
-			}()
+		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, user.User.Id, permcache.Admin); err != nil {
+			ctx.HandleError(err)
+			return
 		}
-	} else if len(ctx.Message.MentionRoles) > 0 {
-		for _, mention := range ctx.Message.MentionRoles {
-			roles = append(roles, mention)
-		}
-	} else {
+	}
+
+	if role != nil {
+		roles = []uint64{role.Id}
+	}
+
+	if names != nil {
 		guildRoles, err := ctx.Worker.GetGuildRoles(ctx.GuildId)
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -96,6 +91,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member
 
 		// Verify a valid role was mentioned
 		if !valid {
+			fmt.Println(1)
 			ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.ReactWithCross()
 			return
@@ -104,6 +100,8 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member
 
 	// Add roles to DB
 	for _, role := range roles {
+		role := role
+
 		go func() {
 			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId, role); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -134,7 +132,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member
 
 		overwrites := ch.PermissionOverwrites
 
-		if user {
+		if user != nil {
 			// If adding individual admins, apply each override individually
 			for _, mention := range ctx.Message.Mentions {
 				overwrites = append(overwrites, channel.PermissionOverwrite{
@@ -144,16 +142,16 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member
 					Deny:  0,
 				})
 			}
-		} else {
-			// If adding a role as an admin, apply overrides to role
-			for _, role := range roles {
-				overwrites = append(overwrites, channel.PermissionOverwrite{
-					Id:    role,
-					Type:  channel.PermissionTypeRole,
-					Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-					Deny:  0,
-				})
-			}
+		}
+
+		// If adding a role as an admin, apply overrides to role
+		for _, role := range roles {
+			overwrites = append(overwrites, channel.PermissionOverwrite{
+				Id:    role,
+				Type:  channel.PermissionTypeRole,
+				Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+				Deny:  0,
+			})
 		}
 
 		data := rest.ModifyChannelData{

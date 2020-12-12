@@ -26,6 +26,10 @@ func (HelpCommand) Properties() command.Properties {
 	}
 }
 
+func (c HelpCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (h HelpCommand) Execute(ctx command.CommandContext) {
 	commandCategories := orderedmap.NewOrderedMap()
 

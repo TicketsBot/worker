@@ -28,6 +28,10 @@ func (AddSupportCommand) Properties() command.Properties {
 	}
 }
 
+func (c AddSupportCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AddSupportCommand) Execute(ctx command.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
