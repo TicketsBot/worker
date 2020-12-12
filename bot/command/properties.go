@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/database/translations"
 )
 
 type Properties struct {
@@ -15,4 +15,5 @@ type Properties struct {
 	Category        Category
 	AdminOnly       bool
 	HelperOnly      bool
+	Arguments       []Argument
 }

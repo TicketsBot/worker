@@ -2,17 +2,11 @@ package impl
 
 import (
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/impl/admin"
-	"github.com/TicketsBot/worker/bot/command/impl/general"
 	"github.com/TicketsBot/worker/bot/command/impl/settings"
-	"github.com/TicketsBot/worker/bot/command/impl/settings/setup"
-	"github.com/TicketsBot/worker/bot/command/impl/statistics"
-	"github.com/TicketsBot/worker/bot/command/impl/tags"
-	"github.com/TicketsBot/worker/bot/command/impl/tickets"
 )
 
 var Commands = []command.Command{
-	HelpCommand{},
+	/*HelpCommand{},
 
 	admin.AdminCommand{},
 
@@ -44,5 +38,7 @@ var Commands = []command.Command{
 	tickets.RemoveCommand{},
 	tickets.RenameCommand{},
 	tickets.TransferCommand{},
-	tickets.UnclaimCommand{},
+	tickets.UnclaimCommand{},*/
+
+	settings.AddAdminCommand{},
 }

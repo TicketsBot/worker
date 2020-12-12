@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -10,6 +11,9 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"strings"
@@ -24,10 +28,20 @@ func (AddAdminCommand) Properties() command.Properties {
 		Description:     translations.HelpAddAdmin,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewArgument("user", "User to apply the administrator permission to", interaction.OptionTypeUser, false, translations.MessageAddAdminNoMembers),
+			command.NewArgument("role", "Role to apply the administrator permission to", interaction.OptionTypeRole, false, translations.MessageAddAdminNoMembers),
+		),
 	}
 }
 
-func (AddAdminCommand) Execute(ctx command.CommandContext) {
+func (a AddAdminCommand) GetExecutor() interface{} {
+	return a.Execute
+}
+
+func (AddAdminCommand) Execute(ctx command.CommandContext, aauser *member.Member, aarole *guild.Role) {
+	fmt.Println(aauser)
+	fmt.Println(aarole)
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",

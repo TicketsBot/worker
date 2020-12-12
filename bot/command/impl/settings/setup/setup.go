@@ -22,13 +22,13 @@ func (SetupCommand) Properties() command.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children: []command.Command{
-			EasySetupCommand{},
+			/*EasySetupCommand{},
 			AutoSetupCommand{},
 			PrefixSetupCommand{},
 			WelcomeMessageSetupCommand{},
 			LimitSetupCommand{},
 			TranscriptsSetupCommand{},
-			CategorySetupCommand{},
+			CategorySetupCommand{},*/
 		},
 	}
 }

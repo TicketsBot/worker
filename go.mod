@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgtype v1.4.0
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20201123164345-0469e0a3cea3
+	github.com/rxdn/gdl v0.0.0-20201211152733-ddf7d77e7684
 	github.com/sirupsen/logrus v1.5.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

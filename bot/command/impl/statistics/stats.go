@@ -25,7 +25,7 @@ func (StatsCommand) Properties() command.Properties {
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Children: []command.Command{
-			StatsServerCommand{},
+			//StatsServerCommand{},
 		},
 		Category:    command.Statistics,
 		PremiumOnly: true,

@@ -6,7 +6,8 @@ import (
 )
 
 type Command interface {
-	Execute(ctx CommandContext)
+	GetExecutor() interface{}
+	//Execute(ctx CommandContext)
 	Properties() Properties
 }
 
