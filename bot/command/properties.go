@@ -10,7 +10,7 @@ type Properties struct {
 	Description     database.MessageId
 	Aliases         []string
 	PermissionLevel permission.PermissionLevel
-	Children        []Command
+	Children        []Command // TODO: Map
 	PremiumOnly     bool
 	Category        Category
 	AdminOnly       bool

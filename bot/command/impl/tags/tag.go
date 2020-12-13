@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -17,29 +18,28 @@ type TagCommand struct {
 
 func (TagCommand) Properties() command.Properties {
 	return command.Properties{
-		Name:            "tag",
-		Description:     translations.HelpTag,
-		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
+		Name:        "tag",
+		Description: translations.HelpTag,
+		Aliases:     []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
 		//Children:        []command.Command{ManageTagsListCommand{}, ManageTagsDeleteCommand{}, ManageTagsAddCommand{}},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("tag_id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, translations.MessageTagInvalidArguments),
+		),
 	}
 }
 
-func (TagCommand) Execute(ctx command.CommandContext) {
+func (c TagCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (TagCommand) Execute(ctx command.CommandContext, tagId string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!tag [TagID]`",
 		Inline: false,
 	}
-
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagInvalidArguments, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
-		return
-	}
-
-	tagId := strings.ToLower(ctx.Args[0])
 
 	content, err := dbclient.Client.Tag.Get(ctx.GuildId, tagId)
 	if err != nil {

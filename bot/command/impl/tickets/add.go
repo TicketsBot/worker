@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
 )
 
@@ -21,32 +22,25 @@ func (AddCommand) Properties() command.Properties {
 		Description:     translations.HelpAdd,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("user", "User to add to the ticket", interaction.OptionTypeUser, translations.MessageAddNoMembers),
+			command.NewRequiredArgument("channel", "Channel to add the user to", interaction.OptionTypeChannel, translations.MessageAddNoChannel),
+		),
 	}
 }
 
-func (a AddCommand) Execute(ctx command.CommandContext) {
+func (c AddCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!add @User #ticket-channel`",
 		Inline: false,
 	}
 
-	// Check users are mentioned
-	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddNoMembers, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
-		return
-	}
-
-	// Check channel is mentioned
-	ticketChannel := ctx.GetChannelFromArgs()
-	if ticketChannel == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddNoChannel, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
-		return
-	}
-
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ticketChannel)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(channelId)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
@@ -69,21 +63,18 @@ func (a AddCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	for _, user := range ctx.Message.Mentions {
-		// Add user to ticket in DB
-		go func() {
-			if err := dbclient.Client.TicketMembers.Add(ctx.GuildId, ticket.Id, user.Id); err != nil {
-				sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			}
-		}()
+	// Add user to ticket in DB
+	if err := dbclient.Client.TicketMembers.Add(ctx.GuildId, ticket.Id, userId); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return
+	}
 
-		if err := ctx.Worker.EditChannelPermissions(ticketChannel, channel.PermissionOverwrite{
-			Id:    user.Id,
-			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-		}); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		}
+	if err := ctx.Worker.EditChannelPermissions(channelId, channel.PermissionOverwrite{
+		Id:    userId,
+		Type:  channel.PermissionTypeMember,
+		Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+	}); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	ctx.ReactWithCheck()

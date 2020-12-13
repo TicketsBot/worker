@@ -8,8 +8,8 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
-	"strings"
 )
 
 type RenameCommand struct {
@@ -21,10 +21,17 @@ func (RenameCommand) Properties() command.Properties {
 		Description:     translations.HelpRename,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("name", "New name for the ticket", interaction.OptionTypeString, translations.MessageRenameMissingName),
+		),
 	}
 }
 
-func (RenameCommand) Execute(ctx command.CommandContext) {
+func (c RenameCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!rename [ticket-name]`",
@@ -44,12 +51,6 @@ func (RenameCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Rename", translations.MessageRenameMissingName, utils.FieldsToSlice(usageEmbed))
-		return
-	}
-
-	name := strings.Join(ctx.Args, " ")
 	data := rest.ModifyChannelData{
 		Name: name,
 	}

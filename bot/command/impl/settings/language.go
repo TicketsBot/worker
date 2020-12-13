@@ -22,7 +22,7 @@ func (LanguageCommand) Properties() command.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString),
+			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, translations.MessageLanguageInvalidLanguage),
 		),
 	}
 }
@@ -31,14 +31,8 @@ func (c LanguageCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (c LanguageCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		c.sendInvalidMessage(ctx)
-		return
-	}
-
-	newLanguage := ctx.Args[0]
-
+// TODO: Show options properly
+func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string) {
 	var valid bool
 	for language, flag := range translations.Flags {
 		if newLanguage == string(language) || newLanguage == flag {

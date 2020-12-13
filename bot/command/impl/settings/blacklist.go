@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/objects/member"
 )
 
 type BlacklistCommand struct {
@@ -23,7 +22,7 @@ func (BlacklistCommand) Properties() command.Properties {
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser),
+			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser, translations.MessageBlacklistNoMembers),
 		),
 	}
 }
@@ -32,11 +31,17 @@ func (c BlacklistCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (BlacklistCommand) Execute(ctx command.CommandContext, member member.Member) {
+func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!blacklist @User`",
 		Inline: false,
+	}
+
+	member, err := ctx.Worker.GetGuildMember(ctx.GuildId, userId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
 	if ctx.Author.Id == member.User.Id {

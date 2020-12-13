@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
 )
 
@@ -21,21 +21,22 @@ func (RemoveCommand) Properties() command.Properties {
 		Description:     translations.HelpRemove,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("user", "User to remove from the current ticket", interaction.OptionTypeUser, translations.MessageRemoveAdminNoMembers),
+		),
 	}
 }
 
-func (RemoveCommand) Execute(ctx command.CommandContext) {
-	usageEmbed := embed.EmbedField{
+func (c RemoveCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
+	/*usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!remove @User`",
 		Inline: false,
-	}
-
-	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveNoMembers, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
-		return
-	}
+	}*/
 
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId)
@@ -60,7 +61,14 @@ func (RemoveCommand) Execute(ctx command.CommandContext) {
 	}
 
 	// verify that the user isn't trying to remove staff
-	if ctx.MentionsStaff() {
+	member, err := ctx.Worker.GetGuildMember(ctx.GuildId, userId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	permissionLevel := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker), member, ctx.GuildId)
+	if permissionLevel >= permcache.Everyone {
 		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
 		ctx.ReactWithCross()
 		return

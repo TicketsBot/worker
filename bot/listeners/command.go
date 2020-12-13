@@ -215,13 +215,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			}
 
 			if userId, err := strconv.ParseUint(match[1], 10, 64); err == nil {
-				member, err := worker.GetGuildMember(e.GuildId, userId)
-				if err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
-					return
-				}
-
-				parsedArguments[i] = member
+				parsedArguments[i] = userId
 				argsIndex++
 			} else {
 				if argument.Required {
@@ -246,13 +240,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			}
 
 			if channelId, err := strconv.ParseUint(match[1], 10, 64); err == nil {
-				channel, err := worker.GetChannel(channelId)
-				if err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
-					return
-				}
-
-				parsedArguments[i] = channel
+				parsedArguments[i] = channelId
 				argsIndex++
 			} else {
 				if argument.Required {
@@ -277,33 +265,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			}
 
 			if roleId, err := strconv.ParseUint(match[1], 10, 64); err == nil {
-				roles, err := worker.GetGuildRoles(e.GuildId)
-				if err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
-					return
-				}
-
-				var role guild.Role
-				var found bool
-				for _, guildRole := range roles {
-					if guildRole.Id == roleId {
-						role = guildRole
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					if argument.Required {
-						ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
-						return
-					} else {
-						parsedArguments[i] = (*guild.Role)(nil)
-						continue
-					}
-				}
-
-				parsedArguments[i] = role
+				parsedArguments[i] = roleId
 				argsIndex++
 			} else {
 				if argument.Required {

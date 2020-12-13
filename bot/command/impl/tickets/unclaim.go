@@ -22,6 +22,10 @@ func (UnclaimCommand) Properties() command.Properties {
 	}
 }
 
+func (c UnclaimCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (UnclaimCommand) Execute(ctx command.CommandContext) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId); if err != nil {

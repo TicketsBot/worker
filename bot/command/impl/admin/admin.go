@@ -40,6 +40,10 @@ func (AdminCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminCommand) Execute(ctx command.CommandContext) {
 	msg := "Select a subcommand:\n"
 

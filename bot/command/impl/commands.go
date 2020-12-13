@@ -2,42 +2,46 @@ package impl
 
 import (
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/impl/admin"
 	"github.com/TicketsBot/worker/bot/command/impl/general"
 	"github.com/TicketsBot/worker/bot/command/impl/settings"
+	"github.com/TicketsBot/worker/bot/command/impl/tags"
+	"github.com/TicketsBot/worker/bot/command/impl/tickets"
 )
 
-var Commands = []command.Command{
-	HelpCommand{},
+var Commands = map[string]command.Command{
+	"help": HelpCommand{},
 
-	//admin.AdminCommand{},
+	"admin":            admin.AdminCommand{},
+	"registercommands": RegisterCommandsCommand{},
 
-	general.AboutCommand{},
-	general.VoteCommand{},
+	"about": general.AboutCommand{},
+	"vote": general.VoteCommand{},
 
-	settings.AddAdminCommand{},
-	/*settings.AddSupportCommand{},
-	settings.BlacklistCommand{},
-	settings.CancelCommand{},
-	settings.LanguageCommand{},
-	settings.PanelCommand{},
-	settings.PremiumCommand{},
-	settings.RemoveAdminCommand{},
-	settings.RemoveSupportCommand{},
-	setup.SetupCommand{},
-	settings.ViewStaffCommand{},
+	"addadmin": settings.AddAdminCommand{},
+	//settings.AddSupportCommand{},
+	"blacklist": settings.BlacklistCommand{},
+	"cancel": settings.CancelCommand{},
+	"language": settings.LanguageCommand{},
+	"panel": settings.PanelCommand{},
+	"premium": settings.PremiumCommand{},
+	//settings.RemoveAdminCommand{},
+	//settings.RemoveSupportCommand{},
+	//setup.SetupCommand{},
+	"viewstaff": settings.ViewStaffCommand{},
 
-	settings.SyncCommand{},
-	statistics.StatsCommand{},
+	"sync": settings.SyncCommand{},
+	//statistics.StatsCommand{},
 
-	tags.ManageTagsCommand{},
-	tags.TagCommand{},
+	//tags.ManageTagsCommand{},
+	"tag": tags.TagCommand{},
 
-	tickets.AddCommand{},
-	tickets.ClaimCommand{},
-	tickets.CloseCommand{},
-	tickets.OpenCommand{},
-	tickets.RemoveCommand{},
-	tickets.RenameCommand{},
-	tickets.TransferCommand{},
-	tickets.UnclaimCommand{},*/
+	"add": tickets.AddCommand{},
+	"claim": tickets.ClaimCommand{},
+	"close": tickets.CloseCommand{},
+	"open": tickets.OpenCommand{},
+	//"remove": tickets.RemoveCommand{},
+	"rename": tickets.RenameCommand{},
+	"transfer": tickets.TransferCommand{},
+	"unclaim": tickets.UnclaimCommand{},
 }

@@ -21,6 +21,10 @@ func (OpenCommand) Properties() command.Properties {
 	}
 }
 
+func (c OpenCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (OpenCommand) Execute(ctx command.CommandContext) {
 	logic.OpenTicket(ctx.Worker, ctx.Author, ctx.GuildId, ctx.ChannelId, ctx.Id, ctx.PremiumTier > premium.None, ctx.Args, nil)
 }
