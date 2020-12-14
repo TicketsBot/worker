@@ -22,15 +22,15 @@ func (AdminCheckPermsCommand) Properties() command.Properties {
 }
 
 func (AdminCheckPermsCommand) Execute(ctx command.CommandContext) {
-	guild, err := ctx.Worker.GetGuild(ctx.GuildId)
+	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.SendMessage(fmt.Sprintf("roles: %d", len(guild.Roles)))
+	ctx.ReplyPlain(fmt.Sprintf("roles: %d", len(guild.Roles)))
 
 	for _, role := range guild.Roles {
-		ctx.SendMessage(fmt.Sprintf("role %s: %d", role.Name, role.Permissions))
+		ctx.ReplyPlain(fmt.Sprintf("role %s: %d", role.Name, role.Permissions))
 	}
 }

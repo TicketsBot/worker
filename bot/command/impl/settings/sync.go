@@ -31,7 +31,7 @@ func (c SyncCommand) GetExecutor() interface{} {
 func (s SyncCommand) Execute(ctx command.CommandContext) {
 	if !utils.IsBotHelper(ctx.Author.Id) {
 		if s.isInCooldown(ctx.GuildId) {
-			ctx.SendEmbedRaw(utils.Red, "Sync", "This command is currently in cooldown")
+			ctx.ReplyRaw(utils.Red, "Sync", "This command is currently in cooldown")
 			return
 		}
 

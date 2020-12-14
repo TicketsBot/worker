@@ -23,14 +23,14 @@ func (LimitSetupCommand) Properties() command.Properties {
 
 func (LimitSetupCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupLimitInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupLimitInvalid)
 		ctx.ReactWithCross()
 		return
 	}
 
 	limit, err := strconv.Atoi(ctx.Args[0])
 	if err != nil || limit < 1 || limit > 10 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupLimitInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupLimitInvalid)
 		ctx.ReactWithCross()
 		return
 	}
@@ -40,6 +40,6 @@ func (LimitSetupCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Setup", translations.SetupLimitComplete, limit)
+	ctx.Reply(utils.Green, "Setup", translations.SetupLimitComplete, limit)
 	ctx.ReactWithCheck()
 }

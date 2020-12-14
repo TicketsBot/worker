@@ -24,5 +24,5 @@ func (c AboutCommand) GetExecutor() interface{} {
 }
 
 func (AboutCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "About", translations.MessageAbout)
+	ctx.Reply(utils.Green, "About", translations.MessageAbout)
 }

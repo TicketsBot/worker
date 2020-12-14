@@ -22,7 +22,7 @@ func (TranscriptsSetupCommand) Properties() command.Properties {
 
 func (TranscriptsSetupCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupTranscriptsInvalid, ctx.ChannelId)
+		ctx.Reply(utils.Red, "Setup", translations.SetupTranscriptsInvalid, ctx.ChannelId)
 		ctx.ReactWithCross()
 		return
 	}
@@ -52,7 +52,7 @@ func (TranscriptsSetupCommand) Execute(ctx command.CommandContext) {
 		}
 
 		if !exists {
-			ctx.SendEmbed(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
+			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
 			ctx.ReactWithCross()
 			return
 		}
@@ -75,7 +75,7 @@ func (TranscriptsSetupCommand) Execute(ctx command.CommandContext) {
 		}
 
 		if !found {
-			ctx.SendEmbed(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
+			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
 			ctx.ReactWithCross()
 			return
 		}
@@ -83,7 +83,7 @@ func (TranscriptsSetupCommand) Execute(ctx command.CommandContext) {
 
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId, transcriptsChannelId); err == nil {
 		ctx.ReactWithCheck()
-		ctx.SendEmbed(utils.Green, "Setup", translations.SetupTranscriptsComplete, transcriptsChannelId)
+		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, transcriptsChannelId)
 	} else {
 		ctx.HandleError(err)
 	}

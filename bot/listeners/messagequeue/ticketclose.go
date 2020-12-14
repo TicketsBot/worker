@@ -14,7 +14,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"os"
-	"strings"
 )
 
 // TODO: Make this good
@@ -100,13 +99,10 @@ func ListenTicketClose() {
 				return
 			}
 
-			// Add reason to args
-			reason := strings.Split(payload.Reason, " ")
-
 			if ticket.ChannelId == nil {
 				return
 			}
-			logic.CloseTicket(ctx, ticket.GuildId, *ticket.ChannelId, 0, member, reason, false, isPremium)
+			logic.CloseTicket(ctx, ticket.GuildId, *ticket.ChannelId, 0, member, &payload.Reason, false, isPremium)
 		}()
 	}
 }

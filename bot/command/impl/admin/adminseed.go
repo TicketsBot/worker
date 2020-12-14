@@ -22,11 +22,15 @@ func (AdminSeedCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminSeedCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminSeedCommand) Execute(ctx command.CommandContext) {
 	var guilds []uint64
-	guilds = []uint64{ctx.GuildId}
+	guilds = []uint64{ctx.GuildId()}
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
+	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
 
 	// retrieve all guild members
 	var seeded int
@@ -36,7 +40,7 @@ func (AdminSeedCommand) Execute(ctx command.CommandContext) {
 
 		for moreAvailable {
 			// calling this func will cache for us
-			members, _ := ctx.Worker.ListGuildMembers(guildId, rest.ListGuildMembersData{
+			members, _ := ctx.Worker().ListGuildMembers(guildId, rest.ListGuildMembersData{
 				Limit: 1000,
 				After: after,
 			})
@@ -53,9 +57,9 @@ func (AdminSeedCommand) Execute(ctx command.CommandContext) {
 		seeded++
 
 		if seeded % 10 == 0 {
-			ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
+			ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
 		}
 	}
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", "Seeding complete")
+	ctx.ReplyRaw(utils.Green, "Admin", "Seeding complete")
 }

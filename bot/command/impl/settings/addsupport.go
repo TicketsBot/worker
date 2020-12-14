@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"strings"
@@ -25,6 +26,11 @@ func (AddSupportCommand) Properties() command.Properties {
 		Aliases:         []string{"addsuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewOptionalArgument("user", "User to apply the support representative permission to", interaction.OptionTypeUser, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("role", "Role to apply the support representative permission to", interaction.OptionTypeRole, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to apply the support representative permission to", interaction.OptionTypeString, translations.MessageAddAdminNoMembers),
+		),
 	}
 }
 
@@ -32,53 +38,47 @@ func (c AddSupportCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AddSupportCommand) Execute(ctx command.CommandContext) {
+func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!addsupport @User`\n`t!addsupport @Role`\n`t!addsupport role name`",
 		Inline: false,
 	}
 
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	if userId == nil && roleId == nil && roleName == nil {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
-	user := false
 	roles := make([]uint64, 0)
 
-	if len(ctx.Message.Mentions) > 0 {
-		user = true
-		for _, mention := range ctx.Message.Mentions {
-			go func() {
-				if err := dbclient.Client.Permissions.AddSupport(ctx.GuildId, mention.Id); err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
-				}
+	if userId != nil {
+		if err := dbclient.Client.Permissions.AddSupport(ctx.GuildId(), *userId); err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
 
-				if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, mention.Id, permcache.Support); err != nil {
-					ctx.HandleError(err)
-					return
-				}
-			}()
+		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), *userId, permcache.Support); err != nil {
+			ctx.HandleError(err)
+			return
 		}
-	} else if len(ctx.Message.MentionRoles) > 0 {
-		for _, mention := range ctx.Message.MentionRoles {
-			roles = append(roles, mention)
-		}
-	} else {
-		guildRoles, err := ctx.Worker.GetGuildRoles(ctx.GuildId)
+	}
+
+	if roleId != nil {
+		roles = []uint64{*roleId}
+	}
+
+	if roleName != nil {
+		guildRoles, err := ctx.Worker().GetGuildRoles(ctx.GuildId())
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
-		roleName := strings.ToLower(strings.Join(ctx.Args, " "))
-
 		// Get role ID from name
 		valid := false
 		for _, role := range guildRoles {
-			if strings.ToLower(role.Name) == roleName {
+			if strings.ToLower(role.Name) == *roleName {
 				valid = true
 				roles = append(roles, role.Id)
 				break
@@ -87,25 +87,25 @@ func (AddSupportCommand) Execute(ctx command.CommandContext) {
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
-			ctx.ReactWithCross()
+			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.Reject()
 			return
 		}
 	}
 
 	// Add roles to DB
 	for _, role := range roles {
-		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId, role); err != nil {
+		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId(), role); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
-		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId, role, permcache.Support); err != nil {
+		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	}
 
-	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId)
+	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
@@ -116,33 +116,30 @@ func (AddSupportCommand) Execute(ctx command.CommandContext) {
 			continue
 		}
 
-		ch, err := ctx.Worker.GetChannel(*ticket.ChannelId)
+		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			continue
 		}
 
 		overwrites := ch.PermissionOverwrites
 
-		if user {
-			// If adding individual admins, apply each override individually
-			for _, mention := range ctx.Message.Mentions {
-				overwrites = append(overwrites, channel.PermissionOverwrite{
-					Id:    mention.Id,
-					Type:  channel.PermissionTypeMember,
-					Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-					Deny:  0,
-				})
-			}
-		} else {
-			// If adding a role as an admin, apply overrides to role
-			for _, role := range roles {
-				overwrites = append(overwrites, channel.PermissionOverwrite{
-					Id:    role,
-					Type:  channel.PermissionTypeRole,
-					Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-					Deny:  0,
-				})
-			}
+		if userId != nil {
+			overwrites = append(overwrites, channel.PermissionOverwrite{
+				Id:    *userId,
+				Type:  channel.PermissionTypeMember,
+				Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+				Deny:  0,
+			})
+		}
+
+		// If adding a role as an admin, apply overrides to role
+		for _, role := range roles {
+			overwrites = append(overwrites, channel.PermissionOverwrite{
+				Id:    role,
+				Type:  channel.PermissionTypeRole,
+				Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+				Deny:  0,
+			})
 		}
 
 		data := rest.ModifyChannelData{
@@ -150,10 +147,10 @@ func (AddSupportCommand) Execute(ctx command.CommandContext) {
 			Position:             ch.Position,
 		}
 
-		if _, err = ctx.Worker.ModifyChannel(*ticket.ChannelId, data); err != nil {
+		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

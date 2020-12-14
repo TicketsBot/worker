@@ -24,7 +24,7 @@ func (CategorySetupCommand) Properties() command.Properties {
 
 func (CategorySetupCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupCategoryInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupCategoryInvalid)
 		ctx.ReactWithCross()
 		return
 	}
@@ -45,14 +45,14 @@ func (CategorySetupCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if category.Id == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupCategoryInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupCategoryInvalid)
 		ctx.ReactWithCross()
 		return
 	}
 
 	if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId, category.Id); err == nil {
 		ctx.ReactWithCheck()
-		ctx.SendEmbed(utils.Green, "Setup", translations.SetupCategoryComplete, category.Name)
+		ctx.Reply(utils.Green, "Setup", translations.SetupCategoryComplete, category.Name)
 	} else {
 		ctx.HandleError(err)
 	}

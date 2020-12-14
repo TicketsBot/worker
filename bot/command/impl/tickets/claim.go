@@ -34,7 +34,7 @@ func (ClaimCommand) Execute(ctx command.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
 		ctx.ReactWithCross()
 		return
 	}
@@ -44,6 +44,6 @@ func (ClaimCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbedNoDelete(utils.Green, "Ticket Claimed", translations.MessageClaimed, ctx.Author.Mention())
+	ctx.ReplyNoDelete(utils.Green, "Ticket Claimed", translations.MessageClaimed, ctx.Author.Mention())
 	ctx.ReactWithCheck()
 }

@@ -103,7 +103,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		ctx.ReactWithCheck()
 	} else {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageHelpDMFailed)
+		ctx.Reply(utils.Red, "Error", translations.MessageHelpDMFailed)
 	}
 }
 

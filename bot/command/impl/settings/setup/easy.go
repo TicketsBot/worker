@@ -25,7 +25,7 @@ func (EasySetupCommand) Execute(ctx command.CommandContext) {
 
 	if u.InSetup() {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAlreadyInSetup, utils.DEFAULT_PREFIX)
+		ctx.Reply(utils.Red, "Error", translations.MessageAlreadyInSetup, utils.DEFAULT_PREFIX)
 	} else {
 		ctx.ReactWithCheck()
 
@@ -35,7 +35,7 @@ func (EasySetupCommand) Execute(ctx command.CommandContext) {
 		if stage != nil {
 			// Psuedo-premium
 			// TODO: TRANSLATE SETUP PROMPTS
-			ctx.SendEmbedWithDeleteAfter(utils.Green, "Setup", (*stage).Prompt(), 120)
+			ctx.ReplyWithDeleteAfter(utils.Green, "Setup", (*stage).Prompt(), 120)
 		}
 	}
 }

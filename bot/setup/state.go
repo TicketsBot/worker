@@ -41,10 +41,7 @@ func (s *State) Process(worker *worker.Context, msg message.Message) {
 
 	(*stage).Process(worker, msg)
 
-	utils.DeleteAfter(utils.SentMessage{
-		Worker:  worker,
-		Message: &msg,
-	}, 0)
+	utils.DeleteAfter(worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 }
 
 func GetMaxStage() int {

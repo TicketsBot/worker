@@ -36,7 +36,7 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -51,12 +51,12 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Message.Mentions) > 0 {
 		for _, mention := range ctx.Message.Mentions {
 			if guild.OwnerId == mention.Id {
-				ctx.SendEmbed(utils.Red, "Error", translations.MessageOwnerMustBeAdmin)
+				ctx.Reply(utils.Red, "Error", translations.MessageOwnerMustBeAdmin)
 				continue
 			}
 
 			if ctx.Author.Id == mention.Id {
-				ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveStaffSelf)
+				ctx.Reply(utils.Red, "Error", translations.MessageRemoveStaffSelf)
 				continue
 			}
 
@@ -91,7 +91,7 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext) {
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.ReactWithCross()
 			return
 		}

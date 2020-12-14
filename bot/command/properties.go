@@ -15,5 +15,6 @@ type Properties struct {
 	Category        Category
 	AdminOnly       bool
 	HelperOnly      bool
+	InteractionOnly bool
 	Arguments       []Argument
 }

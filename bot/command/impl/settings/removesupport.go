@@ -40,7 +40,7 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.ReactWithCross()
 		return
 	}
@@ -86,7 +86,7 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext) {
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.ReactWithCross()
 			return
 		}

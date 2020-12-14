@@ -28,7 +28,6 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		User:    user.Id,
 		Channel: channelId,
 		Shard:   worker.ShardId,
-		Command: "open",
 	}
 
 	var replyTo *message.MessageReference = nil
@@ -58,7 +57,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	}
 
 	if !permission.HasPermissions(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), requiredPerms...) {
-		ctx.SendEmbed(utils.Red, "Error", "I am missing the required permissions. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
+		ctx.Reply(utils.Red, "Error", "I am missing the required permissions. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
 		if ctx.ShouldReact {
 			ctx.ReactWithCross()
 		}
@@ -75,7 +74,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		} else {
 			// TODO: Re-add permission check
 			/*if !permission.HasPermissionsChannel(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), category, requiredPerms...) {
-				ctx.SendEmbed(utils.Red, "Error", "I am missing the required permissions on the ticket category. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
+				ctx.Reply(utils.Red, "Error", "I am missing the required permissions on the ticket category. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
 				if ctx.ShouldReact {
 					ctx.ReactWithCross()
 				}
@@ -369,7 +368,6 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   guildId,
 		User:    userId,
-		Command: "open",
 	}
 
 	// Apply permission overwrites

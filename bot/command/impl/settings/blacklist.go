@@ -38,44 +38,44 @@ func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
 		Inline: false,
 	}
 
-	member, err := ctx.Worker.GetGuildMember(ctx.GuildId, userId)
+	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	if ctx.Author.Id == member.User.Id {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	if ctx.UserId() == member.User.Id {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
-	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), member, ctx.GuildId) > permission.Everyone {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId()) > permission.Everyone {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
-	isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId, member.User.Id)
+	isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), member.User.Id)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
 	if isBlacklisted {
-		if err := dbclient.Client.Blacklist.Remove(ctx.GuildId, member.User.Id); err != nil {
+		if err := dbclient.Client.Blacklist.Remove(ctx.GuildId(), member.User.Id); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 	} else {
-		if err := dbclient.Client.Blacklist.Add(ctx.GuildId, member.User.Id); err != nil {
+		if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

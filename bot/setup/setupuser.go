@@ -19,9 +19,9 @@ func (s *SetupUser) ToString() string {
 
 func FromContext(ctx command.CommandContext) SetupUser {
 	return SetupUser{
-		Guild:   ctx.GuildId,
-		User:    ctx.Author.Id,
-		Channel: ctx.ChannelId,
-		Worker:  ctx.Worker,
+		Guild:   ctx.GuildId(),
+		User:    ctx.UserId(),
+		Channel: ctx.ChannelId(),
+		Worker:  ctx.Worker(),
 	}
 }

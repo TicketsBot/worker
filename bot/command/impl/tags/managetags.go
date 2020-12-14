@@ -33,10 +33,10 @@ func (ManageTagsCommand) Execute(ctx command.CommandContext) {
 
 	children := ManageTagsCommand{}.Properties().Children
 	for _, child := range children {
-		msg += fmt.Sprintf("`%smt %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description))
+		msg += fmt.Sprintf("`%smt %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description))
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbedRaw(utils.Red, "Error", msg)
+	ctx.ReplyRaw(utils.Red, "Error", msg)
 }

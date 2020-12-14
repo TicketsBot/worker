@@ -24,6 +24,6 @@ func (c VoteCommand) GetExecutor() interface{} {
 }
 
 func (VoteCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "Vote", translations.MessageVote)
-	ctx.ReactWithCheck()
+	ctx.Reply(utils.Green, "Vote", translations.MessageVote)
+	ctx.Accept()
 }

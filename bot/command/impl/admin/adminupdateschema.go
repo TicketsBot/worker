@@ -20,7 +20,11 @@ func (AdminUpdateSchemaCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminUpdateSchemaCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminUpdateSchemaCommand) Execute(ctx command.CommandContext) {
 	dbclient.Client.CreateTables(dbclient.Pool)
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

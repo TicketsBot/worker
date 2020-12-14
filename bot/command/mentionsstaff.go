@@ -1,17 +1,6 @@
 package command
 
-import (
-	"context"
-	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
-	"golang.org/x/sync/errgroup"
-	"strings"
-	"sync"
-)
-
-func (ctx *CommandContext) MentionsStaff() bool {
+/*func (ctx *CommandContext) MentionsStaff() bool {
 	var lock sync.Mutex
 	var mentionsStaff bool
 
@@ -91,4 +80,4 @@ func (ctx *CommandContext) GetMentionedStaff() (userId uint64, found bool) {
 	}
 
 	return
-}
+}*/

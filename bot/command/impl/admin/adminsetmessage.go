@@ -5,9 +5,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
-	"strconv"
-	"strings"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type AdminSetMessageCommand struct {
@@ -20,35 +18,26 @@ func (AdminSetMessageCommand) Properties() command.Properties {
 		Aliases:         []string{"sm"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
-		AdminOnly:      true,
+		AdminOnly:       true,
+		InteractionOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("language", "Language", interaction.OptionTypeString, translations.MessageInvalidArgument),
+			command.NewRequiredArgument("id", "ID of the message to update", interaction.OptionTypeInteger, translations.MessageInvalidArgument),
+			command.NewRequiredArgument("value", "New value for the message", interaction.OptionTypeString, translations.MessageInvalidArgument),
+		),
 	}
 }
 
+func (c AdminSetMessageCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 // t!admin sm lang id value
-func (AdminSetMessageCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) < 3 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid syntax. Use `t!admin setmessage lang id value`")
-		return
-	}
-
-	language := ctx.Args[0]
-	if len(language) > 8 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Language ID is too long")
-		return
-	}
-
-	id, err := strconv.Atoi(ctx.Args[1])
-	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid message ID")
-		return
-	}
-
-	value := strings.Join(ctx.Args[2:], " ")
-
+func (AdminSetMessageCommand) Execute(ctx command.CommandContext, language string, id int, value string) {
 	if err := dbclient.Client.Translations.Set(language, translations.MessageId(id), value); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

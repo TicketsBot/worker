@@ -20,7 +20,11 @@ func (AdminGCCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminGCCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminGCCommand) Execute(ctx command.CommandContext) {
 	runtime.GC()
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

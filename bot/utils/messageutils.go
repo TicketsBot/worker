@@ -10,13 +10,9 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/rest"
 	"time"
 )
-
-type SentMessage struct {
-	Worker  *worker.Context
-	Message *message.Message
-}
 
 // guildId is only used to get the language
 func SendEmbed(
@@ -24,7 +20,8 @@ func SendEmbed(
 	channelId, guildId uint64, replyTo *message.MessageReference,
 	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
-	format ...interface{}) {
+	format ...interface{},
+) {
 	content := i18n.GetMessageFromGuild(guildId, messageType, format...)
 	_, _ = SendEmbedWithResponse(worker, channelId, replyTo, colour, title, content, fields, deleteAfter, isPremium)
 }
@@ -33,7 +30,8 @@ func SendEmbedRaw(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
 	colour Colour, title, content string, fields []embed.EmbedField,
-	deleteAfter int, isPremium bool) {
+	deleteAfter int, isPremium bool,
+) {
 	_, _ = SendEmbedWithResponse(worker, channel, replyTo, colour, title, content, fields, deleteAfter, isPremium)
 }
 
@@ -41,7 +39,8 @@ func SendEmbedWithResponse(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
 	colour Colour, title, content string, fields []embed.EmbedField,
-	deleteAfter int, isPremium bool) (message.Message, error) {
+	deleteAfter int, isPremium bool,
+) (message.Message, error) {
 	msgEmbed := embed.NewEmbed().
 		SetColor(int(colour)).
 		SetTitle(title).
@@ -56,8 +55,12 @@ func SendEmbedWithResponse(
 		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
 	}
 
-	// Explicitly ignore error because it's usually a 403 (missing permissions)
-	msg, err := worker.CreateMessageEmbedReply(channel, msgEmbed, replyTo)
+	data := rest.CreateMessageData{
+		Embed:            msgEmbed,
+		MessageReference: replyTo,
+	}
+
+	msg, err := worker.CreateMessageComplex(channel, data)
 
 	if err != nil {
 		sentry.LogWithContext(err, errorcontext.WorkerErrorContext{
@@ -68,21 +71,67 @@ func SendEmbedWithResponse(
 	}
 
 	if deleteAfter > 0 {
-		DeleteAfter(SentMessage{worker, &msg}, deleteAfter)
+		DeleteAfter(worker, msg.ChannelId, msg.Id, deleteAfter)
 	}
 
 	return msg, err
 }
 
-func DeleteAfter(msg SentMessage, secs int) {
+func BuildEmbed(
+	worker *worker.Context,
+	guildId uint64,
+	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
+	isPremium bool,
+	format ...interface{},
+) *embed.Embed {
+	content := i18n.GetMessageFromGuild(guildId, messageType, format...)
+
+	msgEmbed := embed.NewEmbed().
+		SetColor(int(colour)).
+		SetTitle(title).
+		SetDescription(content)
+
+	for _, field := range fields {
+		msgEmbed.AddField(field.Name, field.Value, field.Inline)
+	}
+
+	if !isPremium {
+		self, _ := worker.Self()
+		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
+	}
+
+	return msgEmbed
+}
+
+func BuildEmbedRaw(
+	worker *worker.Context,
+	colour Colour, title, content string, fields []embed.EmbedField,
+	isPremium bool,
+) *embed.Embed {
+	msgEmbed := embed.NewEmbed().
+		SetColor(int(colour)).
+		SetTitle(title).
+		SetDescription(content)
+
+	for _, field := range fields {
+		msgEmbed.AddField(field.Name, field.Value, field.Inline)
+	}
+
+	if !isPremium {
+		self, _ := worker.Self()
+		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
+	}
+
+	return msgEmbed
+}
+
+func DeleteAfter(worker *worker.Context, channelId, messageId uint64, secs int) {
 	go func() {
 		time.Sleep(time.Duration(secs) * time.Second)
 
-		// Fix a panic
-		if msg.Message != nil && msg.Worker != nil {
-			// Explicitly ignore error, pretty much always a 404
-			_ = msg.Worker.DeleteMessage(msg.Message.ChannelId, msg.Message.Id)
-		}
+		// Explicitly ignore error, pretty much always a 404
+		// TODO: Should we log it?
+		_ = worker.DeleteMessage(channelId, messageId)
 	}()
 }
 
@@ -129,4 +178,3 @@ func CreateReferenceFromMessage(msg message.Message) *message.MessageReference {
 		GuildId:   msg.GuildId,
 	}
 }
-

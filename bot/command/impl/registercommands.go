@@ -47,6 +47,8 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext) {
 			ctx.ReactWithCross()
 			return
 		}
+
+		fmt.Printf("registered %s\n", properties.Name)
 	}
 
 	ctx.ReactWithCheck()

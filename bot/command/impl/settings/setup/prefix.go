@@ -21,7 +21,7 @@ func (PrefixSetupCommand) Properties() command.Properties {
 
 func (PrefixSetupCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 || len(ctx.Args[0]) > 8 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupPrefixInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupPrefixInvalid)
 		ctx.ReactWithCross()
 		return
 	}
@@ -32,7 +32,7 @@ func (PrefixSetupCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Setup", translations.SetupPrefixComplete, prefix, prefix)
+	ctx.Reply(utils.Green, "Setup", translations.SetupPrefixComplete, prefix, prefix)
 	ctx.ReactWithCheck()
 }
 

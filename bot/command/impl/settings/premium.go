@@ -43,16 +43,16 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.SendEmbed(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
+				ctx.Reply(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
 				return
 			}
 		}
-		ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
+		ctx.Reply(utils.Red, "Premium", translations.MessagePremium)
 	} else {
 		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
 			ctx.ReactWithCross()
 			return
 		}
@@ -65,7 +65,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 		}
 
 		if length == 0 {
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
 			ctx.ReactWithCross()
 			return
 		}

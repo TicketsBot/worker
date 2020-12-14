@@ -22,14 +22,18 @@ func (AdminUsersCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminUsersCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminUsersCommand) Execute(ctx command.CommandContext) {
 	var count int
 
 	query := `SELECT COUNT(DISTINCT "user_id") FROM members;`
-	if err := ctx.Worker.Cache.QueryRow(context.Background(), query).Scan(&count); err != nil {
+	if err := ctx.Worker().Cache.QueryRow(context.Background(), query).Scan(&count); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Seen %d users", count))
+	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("Seen %d users", count))
 }

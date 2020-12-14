@@ -7,7 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type ManageTagsDeleteCommand struct {
@@ -20,30 +20,30 @@ func (ManageTagsDeleteCommand) Properties() command.Properties {
 		Aliases:         []string{"del", "rm", "remove"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("id", "ID of the tag to delete", interaction.OptionTypeString, translations.MessageTagDeleteInvalidArguments),
+		),
 	}
 }
 
-func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext) {
-	usageEmbed := embed.EmbedField{
+func (c ManageTagsDeleteCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext, tagId string) {
+	/*usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!managetags delete [TagID]`",
 		Inline: false,
-	}
+	}*/
 
-	if len(ctx.Args) == 0 {
-		ctx.ReactWithCross()
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagDeleteInvalidArguments, utils.FieldsToSlice(usageEmbed))
-		return
-	}
-
-	id := ctx.Args[0]
-
+	// TODO: Causes a race condition, just try to delete
 	var found bool
 	{
-		tag, err := dbclient.Client.Tag.Get(ctx.GuildId, id)
+		tag, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 
@@ -51,15 +51,15 @@ func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if !found {
-		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageTagDeleteDoesNotExist, id)
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Error", translations.MessageTagDeleteDoesNotExist, tagId)
 		return
 	}
 
-	if err := dbclient.Client.Tag.Delete(ctx.GuildId, id); err == nil {
-		ctx.ReactWithCheck()
+	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err == nil {
+		ctx.Accept()
 	} else {
-		ctx.ReactWithCross()
+		ctx.Reject()
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }

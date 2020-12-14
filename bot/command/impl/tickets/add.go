@@ -47,9 +47,9 @@ func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) 
 	}
 
 	// 2 in 1: verify guild is the same & the channel is valid
-	if ticket.GuildId != ctx.GuildId {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	if ticket.GuildId != ctx.GuildId() {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
@@ -57,19 +57,19 @@ func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) 
 	owner := make(chan uint64)
 
 	// Verify that the user is allowed to modify the ticket
-	if ctx.UserPermissionLevel == 0 && <-owner != ctx.Author.Id {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageAddNoPermission)
-		ctx.ReactWithCross()
+	if ctx.UserPermissionLevel() == permcache.Everyone && <-owner != ctx.UserId() {
+		ctx.Reply(utils.Red, "Error", translations.MessageAddNoPermission)
+		ctx.Reject()
 		return
 	}
 
 	// Add user to ticket in DB
-	if err := dbclient.Client.TicketMembers.Add(ctx.GuildId, ticket.Id, userId); err != nil {
+	if err := dbclient.Client.TicketMembers.Add(ctx.GuildId(), ticket.Id, userId); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
 
-	if err := ctx.Worker.EditChannelPermissions(channelId, channel.PermissionOverwrite{
+	if err := ctx.Worker().EditChannelPermissions(channelId, channel.PermissionOverwrite{
 		Id:    userId,
 		Type:  channel.PermissionTypeMember,
 		Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
@@ -77,5 +77,5 @@ func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) 
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

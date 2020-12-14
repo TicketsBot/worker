@@ -23,14 +23,14 @@ func (WelcomeMessageSetupCommand) Properties() command.Properties {
 
 func (WelcomeMessageSetupCommand) Execute(ctx command.CommandContext) {
 	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
 		ctx.ReactWithCross()
 		return
 	}
 
 	message := strings.Join(ctx.Args, " ")
 	if len(message) > 1024 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
+		ctx.Reply(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
 		ctx.ReactWithCross()
 		return
 	}
@@ -40,6 +40,6 @@ func (WelcomeMessageSetupCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Setup", translations.SetupWelcomeMessageComplete)
+	ctx.Reply(utils.Green, "Setup", translations.SetupWelcomeMessageComplete)
 	ctx.ReactWithCheck()
 }

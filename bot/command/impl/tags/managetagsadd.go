@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
-	"strings"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type ManageTagsAddCommand struct {
@@ -21,39 +21,39 @@ func (ManageTagsAddCommand) Properties() command.Properties {
 		Aliases:         []string{"new", "create"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
+		InteractionOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("id", "Identifier for the tag", interaction.OptionTypeString, translations.MessageTagCreateInvalidArguments),
+		),
 	}
 }
 
-func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
+func (c ManageTagsAddCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (ManageTagsAddCommand) Execute(ctx command.CommandContext, tagId, content string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!managetags add [TagID] [Tag contents]`",
 		Inline: false,
 	}
 
-	if len(ctx.Args) < 2 {
-		ctx.ReactWithCross()
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateInvalidArguments, utils.FieldsToSlice(usageEmbed))
-		return
-	}
-
-	id := ctx.Args[0]
-	content := ctx.Args[1:] // content cannot be bigger than the Discord limit, obviously
-
 	// Length check
-	if len(id) > 16 {
-		ctx.ReactWithCross()
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
+	if len(tagId) > 16 {
+		ctx.Reject()
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
 	// Verify a tag with the ID doesn't already exist
+	// TODO: This causes a race condition, just try to insert and handle error
 	var tagExists bool
 	{
-		tag, err := dbclient.Client.Tag.Get(ctx.GuildId, id)
+		tag, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 
@@ -61,15 +61,15 @@ func (ManageTagsAddCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if tagExists {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), id, id)
-		ctx.ReactWithCross()
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
+		ctx.Reject()
 		return
 	}
 
-	if err := dbclient.Client.Tag.Set(ctx.GuildId, id, strings.Join(content, " ")); err == nil {
-		ctx.ReactWithCheck()
+	if err := dbclient.Client.Tag.Set(ctx.GuildId(), tagId, content); err == nil {
+		ctx.Accept()
 	} else {
-		ctx.ReactWithCross()
+		ctx.Reject()
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }

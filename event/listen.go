@@ -61,7 +61,7 @@ func ListenCommands(redis *redis.Client, cache *cache.PgCache) {
 
 		if err := executeCommand(ctx, command.Event); err != nil {
 			marshalled, _ := json.Marshal(command)
-			logrus.Warnf("error executing event: %e (payload: %s)", err, string(marshalled))
+			logrus.Warnf("error executing command: %e (payload: %s)", err, string(marshalled))
 		}
 	}
 }

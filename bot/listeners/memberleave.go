@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"strings"
 )
 
 // Remove user permissions when they leave
@@ -52,7 +51,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 						*ticket.ChannelId,
 						0,
 						self,
-						strings.Split(autoclose.AutoCloseReason, " "),
+						&autoclose.AutoCloseReason,
 						true,
 						premiumTier >= premium.Premium,
 					)

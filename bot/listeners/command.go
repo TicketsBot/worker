@@ -139,7 +139,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		return
 	}
 
-	ctx := command.CommandContext{
+	ctx := command.MessageContext{
 		Worker:      worker,
 		Message:     e.Message,
 		Root:        root,
@@ -157,7 +157,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	for i, argument := range properties.Arguments {
 		if argsIndex >= len(args) {
 			if argument.Required {
-				ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+				ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 				return
 			}
 
@@ -175,7 +175,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			value, err := strconv.Atoi(raw)
 			if err != nil {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*int)(nil)
@@ -191,7 +191,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			value, err := strconv.ParseBool(raw)
 			if err != nil {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*bool)(nil)
@@ -206,7 +206,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			match := userPattern.FindStringSubmatch(args[argsIndex])
 			if len(match) < 2 {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*user.User)(nil)
@@ -219,7 +219,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 				argsIndex++
 			} else {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*user.User)(nil)
@@ -231,7 +231,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			match := channelPattern.FindStringSubmatch(args[argsIndex])
 			if len(match) < 2 {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*channel.Channel)(nil)
@@ -244,7 +244,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 				argsIndex++
 			} else {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*channel.Channel)(nil)
@@ -256,7 +256,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			match := rolePattern.FindStringSubmatch(args[argsIndex])
 			if len(match) < 2 {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*guild.Role)(nil)
@@ -269,7 +269,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 				argsIndex++
 			} else {
 				if argument.Required {
-					ctx.SendEmbed(utils.Red, "Error", argument.InvalidMessage)
+					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
 					parsedArguments[i] = (*guild.Role)(nil)
@@ -285,25 +285,25 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	if c.Properties().PermissionLevel > ctx.UserPermissionLevel {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageNoPermission)
+		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return
 	}
 
 	if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageOwnerOnly)
+		ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
 		return
 	}
 
 	if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageNoPermission)
+		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return
 	}
 
 	if c.Properties().PremiumOnly && premiumTier == premium.None {
 		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Premium Only Command", translations.MessagePremium)
+		ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
 		return
 	}
 

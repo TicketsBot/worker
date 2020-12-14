@@ -37,5 +37,5 @@ func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
 	}
 	joined = strings.TrimSuffix(joined, "\n")
 
-	ctx.SendEmbed(utils.Green, "Tags", translations.MessageTagList, joined, utils.DEFAULT_PREFIX)
+	ctx.Reply(utils.Green, "Tags", translations.MessageTagList, joined, utils.DEFAULT_PREFIX)
 }

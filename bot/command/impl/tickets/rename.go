@@ -47,7 +47,7 @@ func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Rename", translations.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Rename", translations.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -60,5 +60,5 @@ func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId)
+	ctx.Reply(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId)
 }

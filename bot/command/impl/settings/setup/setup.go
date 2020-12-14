@@ -40,7 +40,7 @@ func (c SetupCommand) Execute(ctx command.CommandContext) {
 	}
 	utils.DeleteAfter(wrapped, 60)
 
-	ctx.SendEmbedWithFieldsNoDelete(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
+	ctx.ReplyWithFieldsNoDelete(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
 }
 
 func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {

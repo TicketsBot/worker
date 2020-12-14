@@ -49,11 +49,11 @@ func (AdminCommand) Execute(ctx command.CommandContext) {
 
 	children := AdminCommand{}.Properties().Children
 	for _, child := range children {
-		description := i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description)
+		description := i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description)
 		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, description)
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", msg)
+	ctx.ReplyRaw(utils.Green, "Admin", msg)
 }
