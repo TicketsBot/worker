@@ -3,47 +3,35 @@ package logic
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/cache"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
-	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
+	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
-	"strings"
 )
 
-// if panel != nil, msg should be artifically filled, excluding the message ID
-func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, messageId uint64, isPremium bool, args []string, panel *database.Panel) {
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   guildId,
-		User:    user.Id,
-		Channel: channelId,
-		Shard:   worker.ShardId,
-	}
-
-	var replyTo *message.MessageReference = nil
-	if panel != nil {
-		replyTo = utils.CreateReference(messageId, channelId, guildId)
-	}
-
+func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject string) {
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
 		category = panel.TargetCategory
 	} else { // else we can just use the default category
 		var err error
-		category, err = dbclient.Client.ChannelCategory.Get(guildId)
+		category, err = dbclient.Client.ChannelCategory.Get(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			ctx.HandleError(err)
+			return
 		}
 	}
 
@@ -67,10 +55,17 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	useCategory := category != 0
 	if useCategory {
 		// Check if the category still exists
-		_, err := worker.GetChannel(category)
+		_, err := ctx.Worker().GetChannel(category)
 		if err != nil {
 			useCategory = false
-			//go database.DeleteCategory(ctx.GuildId) TODO: Could this be due to a Discord outage? Check specifically for a 404
+
+			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
+				if panel == nil {
+					if err := dbclient.Client.ChannelCategory.Delete(ctx.GuildId()); err != nil {
+						ctx.HandleError(err)
+					}
+				} // TODO: Else, set panel category to 0
+			}
 		} else {
 			// TODO: Re-add permission check
 			/*if !permission.HasPermissionsChannel(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), category, requiredPerms...) {
@@ -84,19 +79,24 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 	}
 
 	// create DM channel
-	dmChannel, err := worker.CreateDM(user.Id)
+	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
 
 	// target channel for messaging the user
 	// either DMs or the channel where the command was run
 	var targetChannel uint64
 	if panel == nil {
-		targetChannel = channelId
+		targetChannel = ctx.ChannelId()
 	} else {
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
 		targetChannel = dmChannel.Id
 	}
 
 	// Make sure ticket count is within ticket limit
-	violatesTicketLimit, limit := getTicketLimit(guildId, user.Id)
+	violatesTicketLimit, limit := getTicketLimit(ctx.GuildId(), ctx.UserId())
 	if violatesTicketLimit {
 		// Notify the user
 		if targetChannel != 0 {
@@ -105,25 +105,20 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 				ticketsPluralised += "s"
 			}
 
-			var replyContext *message.MessageReference
-			if targetChannel == channelId {
-				replyContext = replyTo
-			}
-
-			utils.SendEmbed(worker, targetChannel, guildId, replyContext, utils.Red, "Error", translations.MessageTicketLimitReached, nil, 30, isPremium, limit, ticketsPluralised)
+			ctx.Reply(utils.Red, "Error", translations.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return
 	}
 
 	// Generate subject
-	subject := "No subject given"
 	if panel != nil && panel.Title != "" { // If we're using a panel, use the panel title as the subject
 		subject = panel.Title
 	} else { // Else, take command args as the subject
-		if len(args) > 0 {
-			subject = strings.Join(args, " ")
+		if subject == "" {
+			subject = "No subject given"
 		}
+
 		if len(subject) > 256 {
 			subject = subject[0:255]
 		}
@@ -131,7 +126,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 	// Make sure there's not > 50 channels in a category
 	if useCategory {
-		channels, _ := worker.GetGuildChannels(guildId)
+		channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
 		channelCount := 0
 		for _, channel := range channels {
@@ -141,34 +136,38 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		}
 
 		if channelCount >= 50 {
-			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageTooManyTickets, nil, 30, isPremium)
+			ctx.Reply(utils.Red, "Error", translations.MessageTooManyTickets)
 			return
 		}
 	}
 
-	if panel == nil {
-		utils.ReactWithCheck(worker, channelId, messageId)
-	}
+	ctx.Accept()
 
 	// Create channel
-	id, err := dbclient.Client.Tickets.Create(guildId, user.Id)
+	id, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 		return
 	}
 
-	overwrites := CreateOverwrites(guildId, user.Id, worker.BotId)
+	overwrites := CreateOverwrites(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId)
 
 	// Create ticket name
 	var name string
 
-	namingScheme, err := dbclient.Client.NamingScheme.Get(guildId)
+	namingScheme, err := dbclient.Client.NamingScheme.Get(ctx.GuildId())
 	if err != nil {
 		namingScheme = database.Id
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 	}
 
 	if namingScheme == database.Username {
+		user, err := ctx.User()
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
 		name = fmt.Sprintf("ticket-%s", user.Username)
 	} else {
 		name = fmt.Sprintf("ticket-%d", id)
@@ -185,29 +184,27 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 		data.ParentId = category
 	}
 
-	channel, err := worker.CreateGuildChannel(guildId, data)
+	channel, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
 	if err != nil { // Bot likely doesn't have permission
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 
 		// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
-		if err := dbclient.Client.Tickets.Close(id, guildId); err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+		if err := dbclient.Client.Tickets.Close(id, ctx.GuildId()); err != nil {
+			ctx.HandleError(err)
 		}
 
 		return
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(worker, guildId, channel.Id, user.Id, isPremium, subject, panel, id)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ctx.GuildId(), channel.Id, ctx.UserId(), ctx.PremiumTier() > premium.None, subject, panel, id)
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 	}
 
 	// UpdateUser channel in DB
-	go func() {
-		if err := dbclient.Client.Tickets.SetTicketProperties(guildId, id, channel.Id, welcomeMessageId); err != nil {
-			sentry.ErrorWithContext(err, errorContext)
-		}
-	}()
+	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, channel.Id, welcomeMessageId); err != nil {
+		ctx.HandleError(err)
+	}
 
 	// mentions
 	{
@@ -215,9 +212,9 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 
 		if panel == nil {
 			// Ping @everyone
-			pingEveryone, err := dbclient.Client.PingEveryone.Get(guildId)
+			pingEveryone, err := dbclient.Client.PingEveryone.Get(ctx.GuildId())
 			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
+				ctx.HandleError(err)
 			}
 
 			if pingEveryone {
@@ -227,7 +224,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			// roles
 			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.MessageId)
 			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
+				ctx.HandleError(err)
 			} else {
 				for _, roleId := range roles {
 					content += fmt.Sprintf("<@&%d>", roleId)
@@ -237,10 +234,10 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			// user
 			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.MessageId)
 			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
+				ctx.HandleError(err)
 			} else {
 				if shouldMentionUser {
-					content += fmt.Sprintf("<@%d>", user.Id)
+					content += fmt.Sprintf("<@%d>", ctx.UserId())
 				}
 			}
 		}
@@ -250,7 +247,7 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 				content = content[:2000]
 			}
 
-			pingMessage, err := worker.CreateMessageComplex(channel.Id, rest.CreateMessageData{
+			pingMessage, err := ctx.Worker().CreateMessageComplex(channel.Id, rest.CreateMessageData{
 				Content: content,
 				AllowedMentions: message.AllowedMention{
 					Parse: []message.AllowedMentionType{
@@ -262,44 +259,46 @@ func OpenTicket(worker *worker.Context, user user.User, guildId, channelId, mess
 			})
 
 			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
+				ctx.HandleError(err)
 			} else {
 				// error is likely to be a permission error
-				_ = worker.DeleteMessage(channel.Id, pingMessage.Id)
+				_ = ctx.Worker().DeleteMessage(channel.Id, pingMessage.Id)
 			}
 		}
 	}
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 30, isPremium, channel.Mention())
+		ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
 	} else {
-		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(guildId)
+		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			ctx.HandleError(err)
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
-			utils.SendEmbed(worker, dmChannel.Id, guildId, replyTo, utils.Green, "Ticket", translations.MessageTicketOpened, nil, 0, isPremium, channel.Mention())
+			ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
 		}
 	}
 
 	go statsd.Client.IncrementKey(statsd.TICKETS)
 
-	if isPremium {
-		go createWebhook(worker, id, guildId, channel.Id)
+	if ctx.PremiumTier() > premium.None {
+		go createWebhook(ctx.Worker(), id, ctx.GuildId(), channel.Id)
 	}
 
 	// update cache
 	go func() {
 		// retrieve member
 		// GetGuildMember will cache if not already cached
-		if _, err := worker.GetGuildMember(guildId, user.Id); err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+		if _, err := ctx.Worker().GetGuildMember(ctx.GuildId(), ctx.UserId()); err != nil {
+			ctx.HandleError(err)
 		}
 
-		// store user
-		cache.Client.StoreUser(user)
+		// cache user
+		if _, err := ctx.Worker().GetUser(ctx.UserId()); err != nil {
+			ctx.HandleError(err)
+		}
 	}()
 }
 
@@ -366,8 +365,8 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 
 func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   guildId,
-		User:    userId,
+		Guild: guildId,
+		User:  userId,
 	}
 
 	// Apply permission overwrites

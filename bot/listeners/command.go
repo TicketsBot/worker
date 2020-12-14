@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"context"
+	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -113,6 +114,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	var blacklisted bool
 	var premiumTier premium.PremiumTier
+	var userPermissionLevel permcache.PermissionLevel
 
 	group, _ := errgroup.WithContext(context.Background())
 
@@ -128,6 +130,12 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		return nil
 	})
 
+	// get permission level
+	group.Go(func() error {
+		userPermissionLevel = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+		return nil
+	})
+
 	if err := group.Wait(); err != nil {
 		sentry.Error(err)
 		return
@@ -139,14 +147,30 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		return
 	}
 
-	ctx := command.MessageContext{
-		Worker:      worker,
-		Message:     e.Message,
-		Root:        root,
-		Args:        args,
-		PremiumTier: premiumTier,
-		ShouldReact: true,
-		IsFromPanel: false,
+	ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
+
+	if c.Properties().PermissionLevel > ctx.UserPermissionLevel() {
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+		return
+	}
+
+	if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+		return
+	}
+
+	if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+		return
+	}
+
+	if c.Properties().PremiumOnly && premiumTier == premium.None {
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+		return
 	}
 
 	// parse args
@@ -281,32 +305,6 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	e.Member.User = e.Author
 
-	ctx.UserPermissionLevel = ctx.GetPermissionLevel()
-
-	if c.Properties().PermissionLevel > ctx.UserPermissionLevel {
-		ctx.ReactWithCross()
-		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
-		return
-	}
-
-	if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
-		ctx.ReactWithCross()
-		ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
-		return
-	}
-
-	if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
-		ctx.ReactWithCross()
-		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
-		return
-	}
-
-	if c.Properties().PremiumOnly && premiumTier == premium.None {
-		ctx.ReactWithCross()
-		ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
-		return
-	}
-
 	valueArgs := make([]reflect.Value, len(parsedArguments)+1)
 	valueArgs[0] = reflect.ValueOf(ctx)
 
@@ -335,7 +333,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	go reflect.ValueOf(c.GetExecutor()).Call(valueArgs)
 	go statsd.Client.IncrementKey(statsd.COMMANDS)
 
-	utils.DeleteAfter(utils.SentMessage{Worker: worker, Message: &e.Message}, 30)
+	utils.DeleteAfter(worker, e.ChannelId, e.Id, utils.DeleteAfterSeconds)
 }
 
 func contains(s []string, e string) bool {

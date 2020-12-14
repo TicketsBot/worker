@@ -11,17 +11,29 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
 )
 
 type InteractionContext struct {
 	worker             *worker.Context
-	guildId, channelId uint64
-	Member             member.Member
 	Interaction        interaction.Interaction
 	premium            premium.PremiumTier
+}
+
+func NewInteractionContext(
+	worker *worker.Context,
+	interaction interaction.Interaction,
+	premium premium.PremiumTier,
+) InteractionContext {
+	return InteractionContext{
+		worker,
+		interaction,
+		premium,
+	}
 }
 
 func (ctx *InteractionContext) Worker() *worker.Context {
@@ -29,19 +41,19 @@ func (ctx *InteractionContext) Worker() *worker.Context {
 }
 
 func (ctx *InteractionContext) GuildId() uint64 {
-	return ctx.guildId
+	return ctx.Interaction.GuildId
 }
 
 func (ctx *InteractionContext) ChannelId() uint64 {
-	return ctx.channelId
+	return ctx.Interaction.ChannelId
 }
 
 func (ctx *InteractionContext) UserId() uint64 {
-	return ctx.Member.User.Id
+	return ctx.Interaction.Member.User.Id
 }
 
 func (ctx *InteractionContext) UserPermissionLevel() permcache.PermissionLevel {
-	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), ctx.Member, ctx.guildId)
+	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), ctx.Interaction.Member, ctx.GuildId())
 }
 
 func (ctx *InteractionContext) PremiumTier() premium.PremiumTier {
@@ -54,9 +66,9 @@ func (ctx *InteractionContext) IsInteraction() bool {
 
 func (ctx *InteractionContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
-		Guild:   ctx.guildId,
-		User:    ctx.Member.User.Id,
-		Channel: ctx.channelId,
+		Guild:   ctx.GuildId(),
+		User:    ctx.Interaction.Member.User.Id,
+		Channel: ctx.ChannelId(),
 	}
 }
 
@@ -85,7 +97,7 @@ func (ctx *InteractionContext) replyRaw(flags uint, content string) {
 }
 
 func (ctx *InteractionContext) buildEmbed(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
-	return utils.BuildEmbed(ctx.worker, ctx.guildId, colour, title, content, fields, ctx.premium > premium.None, format...)
+	return utils.BuildEmbed(ctx.worker, ctx.GuildId(), colour, title, content, fields, ctx.premium > premium.None, format...)
 }
 
 func (ctx *InteractionContext) buildEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) *embed.Embed {
@@ -140,4 +152,16 @@ func (ctx *InteractionContext) HandleWarning(err error) {
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+}
+
+func (ctx *InteractionContext) Guild() (guild.Guild, error) {
+	return ctx.Worker().GetGuild(ctx.GuildId())
+}
+
+func (ctx *InteractionContext) Member() (member.Member, error) {
+	return ctx.Interaction.Member, nil
+}
+
+func (ctx *InteractionContext) User() (user.User, error) {
+	return ctx.Worker().GetUser(ctx.UserId())
 }

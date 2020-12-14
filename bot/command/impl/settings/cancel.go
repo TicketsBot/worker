@@ -28,10 +28,10 @@ func (CancelCommand) Execute(ctx command.CommandContext) {
 
 	// Check if the user is in the setup process
 	if !u.InSetup() {
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
 	u.Cancel()
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

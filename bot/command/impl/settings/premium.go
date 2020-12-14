@@ -34,10 +34,10 @@ func (c PremiumCommand) GetExecutor() interface{} {
 
 func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 	if key == nil {
-		if ctx.PremiumTier > premium.None {
-			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId)
+		if ctx.PremiumTier() > premium.None {
+			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId())
 			if err != nil {
-				ctx.ReactWithCross()
+				ctx.Reject()
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				return
 			}
@@ -53,31 +53,31 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 
 		if err != nil {
 			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 
 		length, err := dbclient.Client.PremiumKeys.Delete(parsed)
 		if err != nil {
-			ctx.ReactWithCross()
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
 		if length == 0 {
 			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 
-		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId, ctx.Author.Id); err != nil {
-			ctx.ReactWithCross()
+		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId(), ctx.UserId()); err != nil {
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
-		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId, length); err != nil {
-			ctx.ReactWithCross()
+		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
@@ -87,8 +87,8 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 			FromVoting: false,
 		}
 
-		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId, data); err == nil {
-			ctx.ReactWithCheck()
+		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
+			ctx.Accept()
 		} else {
 			ctx.HandleError(err)
 		}

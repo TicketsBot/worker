@@ -29,24 +29,24 @@ func (c SyncCommand) GetExecutor() interface{} {
 }
 
 func (s SyncCommand) Execute(ctx command.CommandContext) {
-	if !utils.IsBotHelper(ctx.Author.Id) {
-		if s.isInCooldown(ctx.GuildId) {
+	if !utils.IsBotHelper(ctx.UserId()) {
+		if s.isInCooldown(ctx.GuildId()) {
 			ctx.ReplyRaw(utils.Red, "Sync", "This command is currently in cooldown")
 			return
 		}
 
-		s.addCooldown(ctx.GuildId)
+		s.addCooldown(ctx.GuildId())
 	}
 
 	// Process deleted tickets
-	ctx.SendMessage("Scanning for deleted ticket channels...")
-	ctx.SendMessage(fmt.Sprintf("Completed **%d** ticket state synchronisation(s)", processDeletedTickets(ctx)))
+	ctx.ReplyPlain("Scanning for deleted ticket channels...")
+	ctx.ReplyPlain(fmt.Sprintf("Completed **%d** ticket state synchronisation(s)", processDeletedTickets(ctx)))
 
 	// Check any panels still exist
-	ctx.SendMessage("Scanning for deleted panels...")
-	ctx.SendMessage(fmt.Sprintf("Completed **%d** panel state synchronisation(s)", processDeletedPanels(ctx)))
+	ctx.ReplyPlain("Scanning for deleted panels...")
+	ctx.ReplyPlain(fmt.Sprintf("Completed **%d** panel state synchronisation(s)", processDeletedPanels(ctx)))
 
-	ctx.SendMessage("Sync complete!")
+	ctx.ReplyPlain("Sync complete!")
 }
 
 const cooldown = time.Minute
@@ -66,7 +66,7 @@ func (s SyncCommand) addCooldown(guildId uint64) {
 }
 
 func processDeletedTickets(ctx command.CommandContext) (updated int) {
-	tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId)
+	tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
@@ -77,7 +77,7 @@ func processDeletedTickets(ctx command.CommandContext) (updated int) {
 			continue
 		}
 
-		_, err := ctx.Worker.GetChannel(*ticket.ChannelId)
+		_, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil { // An admin has deleted the channel manually
 			updated++
 
@@ -93,7 +93,7 @@ func processDeletedTickets(ctx command.CommandContext) (updated int) {
 }
 
 func processDeletedPanels(ctx command.CommandContext) (removed int) {
-	panels, err := dbclient.Client.Panel.GetByGuild(ctx.GuildId)
+	panels, err := dbclient.Client.Panel.GetByGuild(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
@@ -106,7 +106,7 @@ func processDeletedPanels(ctx command.CommandContext) (removed int) {
 		}
 
 		// Check cache first to prevent extra requests to discord
-		if _, err := ctx.Worker.GetChannelMessage(panel.ChannelId, panel.MessageId); err != nil {
+		if _, err := ctx.Worker().GetChannelMessage(panel.ChannelId, panel.MessageId); err != nil {
 			removed++
 
 			// Message no longer exists

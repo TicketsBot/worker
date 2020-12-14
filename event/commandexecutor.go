@@ -3,7 +3,6 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/impl"
@@ -60,22 +59,13 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 		}
 	}
 
-	interactionContext := command.InteractionContext{
-		Worker:              ctx,
-		GuildId:             data.GuildId,
-		ChannelId:           data.GuildId,
-		Author:              data.Member.User,
-		FromInteraction:     true,
-		Root:                cmd.Properties().Name,
-		Args:                nil,
-		PremiumTier:         utils.PremiumClient.GetTierByGuildId(data.GuildId, true, ctx.Token, ctx.RateLimiter),
-		ShouldReact:         false,
-		IsFromPanel:         false,
-		UserPermissionLevel: permcache.GetPermissionLevel(utils.ToRetriever(ctx), data.Member, data.GuildId),
-	}
+	// get premium tier
+	permLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId, true, ctx.Token, ctx.RateLimiter)
+
+	interactionContext := command.NewInteractionContext(ctx, data, permLevel)
 
 	valueArgs := make([]reflect.Value, len(args)+1)
-	valueArgs[0] = reflect.ValueOf(commandCtx)
+	valueArgs[0] = reflect.ValueOf(interactionContext)
 
 	fn := reflect.TypeOf(cmd.GetExecutor())
 	properties := cmd.Properties()

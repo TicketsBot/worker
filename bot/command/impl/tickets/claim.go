@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
@@ -27,7 +28,7 @@ func (c ClaimCommand) GetExecutor() interface{} {
 
 func (ClaimCommand) Execute(ctx command.CommandContext) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId); if err != nil {
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -35,15 +36,15 @@ func (ClaimCommand) Execute(ctx command.CommandContext) {
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
 		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx.Worker, ticket, ctx.Author.Id); err != nil {
+	if err := logic.ClaimTicket(ctx.Worker(), ticket, ctx.UserId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.ReplyNoDelete(utils.Green, "Ticket Claimed", translations.MessageClaimed, ctx.Author.Mention())
-	ctx.ReactWithCheck()
+	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", translations.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
+	ctx.Accept()
 }

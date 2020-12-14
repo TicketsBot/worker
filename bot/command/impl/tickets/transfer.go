@@ -32,7 +32,7 @@ func (c TransferCommand) GetExecutor() interface{} {
 
 func (TransferCommand) Execute(ctx command.CommandContext, userId uint64) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -40,30 +40,30 @@ func (TransferCommand) Execute(ctx command.CommandContext, userId uint64) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
-		ctx.ReactWithCross()
+		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reject()
 		return
 	}
 
-	member, err := ctx.Worker.GetGuildMember(ctx.GuildId, userId)
+	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), member, ctx.GuildId)
+	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
 	if permissionLevel < permission.Support {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageInvalidUser)
-		ctx.ReactWithCross()
+		ctx.Reply(utils.Red, "Error", translations.MessageInvalidUser)
+		ctx.Reject()
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx.Worker, ticket, userId); err != nil {
+	if err := logic.ClaimTicket(ctx.Worker(), ticket, userId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
 	mention := fmt.Sprintf("<@%d>", userId)
-	ctx.SendEmbedNoDelete(utils.Green, "Ticket Claimed", translations.MessageClaimed, mention)
-	ctx.ReactWithCheck()
+	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", translations.MessageClaimed, mention)
+	ctx.Accept()
 }

@@ -11,6 +11,9 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/member"
+	"github.com/rxdn/gdl/objects/user"
 )
 
 type MessageContext struct {
@@ -19,6 +22,22 @@ type MessageContext struct {
 	Args            []string
 	premium         premium.PremiumTier
 	permissionLevel permcache.PermissionLevel
+}
+
+func NewMessageContext(
+	worker *worker.Context,
+	message message.Message,
+	args []string,
+	premium premium.PremiumTier,
+	permissionLevel permcache.PermissionLevel,
+) MessageContext {
+	return MessageContext{
+		worker,
+		message,
+		args,
+		premium,
+		permissionLevel,
+	}
 }
 
 func (ctx *MessageContext) Worker() *worker.Context {
@@ -150,4 +169,16 @@ func (ctx *MessageContext) HandleWarning(err error) {
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	ctx.reply(embed)
+}
+
+func (ctx *MessageContext) Guild() (guild.Guild, error) {
+	return ctx.Worker().GetGuild(ctx.GuildId())
+}
+
+func (ctx *MessageContext) Member() (member.Member, error) {
+	return ctx.Worker().GetGuildMember(ctx.GuildId(), ctx.UserId())
+}
+
+func (ctx *MessageContext) User() (user.User, error) {
+	return ctx.Worker().GetUser(ctx.UserId())
 }

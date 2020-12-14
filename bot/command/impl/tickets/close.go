@@ -29,5 +29,11 @@ func (c CloseCommand) GetExecutor() interface{} {
 }
 
 func (CloseCommand) Execute(ctx command.CommandContext, reason *string) {
-	logic.CloseTicket(ctx.Worker(), ctx.GuildId(), ctx.ChannelId(), ctx.Id, ctx.Member, reason, false, ctx.PremiumTier > premium.None)
+	member, err := ctx.Member()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	logic.CloseTicket(ctx.Worker(), ctx.GuildId(), ctx.ChannelId(), 0, member, reason, false, ctx.PremiumTier() > premium.None)
 }

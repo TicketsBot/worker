@@ -41,20 +41,20 @@ func (TagCommand) Execute(ctx command.CommandContext, tagId string) {
 		Inline: false,
 	}
 
-	content, err := dbclient.Client.Tag.Get(ctx.GuildId, tagId)
+	content, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
 	if content == "" {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
@@ -64,9 +64,10 @@ func (TagCommand) Execute(ctx command.CommandContext, tagId string) {
 		content = strings.Replace(content, "%user%", mention, -1)
 	}
 
-	_ = ctx.Worker.DeleteMessage(ctx.ChannelId, ctx.Id)
+	// TODO: Delete message if message context
+	//_ = ctx.Worker().DeleteMessage(ctx.ChannelId(), ctx.Id)
 
-	if _, err := ctx.Worker.CreateMessage(ctx.ChannelId, content); err != nil {
+	if _, err := ctx.Worker().CreateMessage(ctx.ChannelId(), content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }

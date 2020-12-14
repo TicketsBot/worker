@@ -36,7 +36,7 @@ func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string)
 	var valid bool
 	for language, flag := range translations.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
-			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId, language); err != nil {
+			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language); err != nil {
 				ctx.HandleError(err)
 			}
 
@@ -50,7 +50,7 @@ func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string)
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
@@ -66,6 +66,6 @@ func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
 	}
 	list = strings.TrimSuffix(list, "\n")
 
-	ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
-	ctx.ReactWithCross()
+	ctx.ReplyWithFields(utils.Red, "Error", translations.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
+	ctx.Accept()
 }

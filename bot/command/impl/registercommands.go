@@ -42,16 +42,16 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext) {
 		}
 
 		// TODO: Make global
-		if _, err := ctx.Worker.CreateGuildCommand(ctx.Worker.BotId, ctx.GuildId, data); err != nil {
-			ctx.SendEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
-			ctx.ReactWithCross()
+		if _, err := ctx.Worker().CreateGuildCommand(ctx.Worker().BotId, ctx.GuildId(), data); err != nil {
+			ctx.ReplyRaw(utils.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
+			ctx.Reject()
 			return
 		}
 
 		fmt.Printf("registered %s\n", properties.Name)
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }
 
 func buildOption(cmd command.Command) interaction.ApplicationCommandOption {

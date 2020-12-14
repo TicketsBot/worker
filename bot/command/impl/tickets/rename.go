@@ -2,7 +2,6 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -38,10 +37,9 @@ func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 		Inline: false,
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
-		ctx.ReactWithCross()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 		return
 	}
 
@@ -55,8 +53,8 @@ func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 		Name: name,
 	}
 
-	if _, err := ctx.Worker.ModifyChannel(ctx.ChannelId, data); err != nil {
-		sentry.LogWithContext(err, ctx.ToErrorContext()) // Probably 403
+	if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), data); err != nil {
+		ctx.HandleError(err)
 		return
 	}
 

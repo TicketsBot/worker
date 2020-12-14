@@ -8,6 +8,9 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/member"
+	"github.com/rxdn/gdl/objects/user"
 )
 
 type CommandContext interface {
@@ -38,4 +41,9 @@ type CommandContext interface {
 
 	HandleError(err error)
 	HandleWarning(err error)
+
+	// Utility functions
+	Guild() (guild.Guild, error)
+	Member() (member.Member, error)
+	User() (user.User, error)
 }

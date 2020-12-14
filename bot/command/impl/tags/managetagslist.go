@@ -3,7 +3,6 @@ package tags
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -24,10 +23,9 @@ func (ManageTagsListCommand) Properties() command.Properties {
 }
 
 func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
-	ids, err := dbclient.Client.Tag.GetTagIds(ctx.GuildId)
+	ids, err := dbclient.Client.Tag.GetTagIds(ctx.GuildId())
 	if err != nil {
-		ctx.ReactWithCross()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 		return
 	}
 

@@ -2,7 +2,6 @@ package tickets
 
 import (
 	permcache "github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -39,61 +38,56 @@ func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
 	}*/
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId)
-	if err != nil {
-		ctx.ReactWithCross()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		return
-	}
-
-	// Verify that the current channel is a real ticket
-	if ticket.UserId == 0 {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageNotATicketChannel)
-		ctx.ReactWithCross()
-		return
-	}
-
-	// Verify that the user is allowed to modify the ticket
-	if ctx.UserPermissionLevel == 0 && ticket.UserId != ctx.Author.Id {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveNoPermission)
-		ctx.ReactWithCross()
-		return
-	}
-
-	// verify that the user isn't trying to remove staff
-	member, err := ctx.Worker.GetGuildMember(ctx.GuildId, userId)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	permissionLevel := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker), member, ctx.GuildId)
-	if permissionLevel >= permcache.Everyone {
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
-		ctx.ReactWithCross()
+	// Verify that the current channel is a real ticket
+	if ticket.UserId == 0 {
+		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reject()
 		return
 	}
 
-	for _, user := range ctx.Message.Mentions {
-		// Remove user from ticket in DB
-		if err := dbclient.Client.TicketMembers.Delete(ctx.GuildId, ticket.Id, user.Id); err != nil {
-			ctx.ReactWithCross()
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			return
-		}
-
-		// Remove user from ticket
-		if err := ctx.Worker.EditChannelPermissions(ctx.ChannelId, channel.PermissionOverwrite{
-			Id:    user.Id,
-			Type:  channel.PermissionTypeMember,
-			Allow: 0,
-			Deny:  permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
-		}); err != nil {
-			ctx.ReactWithCross()
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			return
-		}
+	// Verify that the user is allowed to modify the ticket
+	if ctx.UserPermissionLevel() == permcache.Everyone && ticket.UserId != ctx.UserId() {
+		ctx.Reply(utils.Red, "Error", translations.MessageRemoveNoPermission)
+		ctx.Reject()
+		return
 	}
 
-	ctx.ReactWithCheck()
+	// verify that the user isn't trying to remove staff
+	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	permissionLevel := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	if permissionLevel >= permcache.Everyone {
+		ctx.Reply(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
+		ctx.Reject()
+		return
+	}
+
+	// Remove user from ticket in DB
+	if err := dbclient.Client.TicketMembers.Delete(ctx.GuildId(), ticket.Id, userId); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	// Remove user from ticket
+	if err := ctx.Worker().EditChannelPermissions(ctx.ChannelId(), channel.PermissionOverwrite{
+		Id:    userId,
+		Type:  channel.PermissionTypeMember,
+		Allow: 0,
+		Deny:  permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+	}); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	ctx.Accept()
 }
