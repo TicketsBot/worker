@@ -13,10 +13,7 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/objects/user"
 	"golang.org/x/sync/errgroup"
 	"reflect"
 	"regexp"
@@ -141,6 +138,18 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	// get permission level
 	group.Go(func() (err error) {
 		userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+
+		guild, err1 := worker.GetGuild(e.GuildId)
+		if err1 != nil {
+			sentry.Error(err)
+		}
+
+		sentry.Log("permission log", map[string]interface{}{
+			"guild": guild,
+			"user": e.Member,
+			"level": userPermissionLevel,
+		})
+
 		return
 	})
 
@@ -245,7 +254,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*user.User)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
@@ -258,7 +267,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*user.User)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
@@ -270,7 +279,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*channel.Channel)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
@@ -283,7 +292,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*channel.Channel)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
@@ -295,7 +304,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*guild.Role)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
@@ -308,7 +317,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					ctx.Reply(utils.Red, "Error", argument.InvalidMessage)
 					return
 				} else {
-					parsedArguments[i] = (*guild.Role)(nil)
+					parsedArguments[i] = nil
 					continue
 				}
 			}
