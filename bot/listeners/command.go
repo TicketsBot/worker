@@ -138,23 +138,6 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	// get permission level
 	group.Go(func() (err error) {
 		userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
-
-		guild, err1 := worker.GetGuild(e.GuildId)
-		if err1 != nil {
-			sentry.Error(err)
-		}
-
-		guild.Channels = nil
-		guild.Roles = nil
-		guild.Members = nil
-
-		sentry.Log("permission log", map[string]interface{}{
-			"guild": guild,
-			"owner": guild.OwnerId,
-			"user":  e.Member,
-			"level": userPermissionLevel,
-		})
-
 		return
 	})
 
