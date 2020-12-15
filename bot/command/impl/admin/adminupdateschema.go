@@ -17,6 +17,7 @@ func (AdminUpdateSchemaCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
 	}
 }
 

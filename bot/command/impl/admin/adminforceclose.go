@@ -20,6 +20,7 @@ func (AdminForceCloseCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild of the ticket to close", interaction.OptionTypeString, database.MessageInvalidArgument),
 			command.NewRequiredArgument("ticket_id", "ID of the ticket to close", interaction.OptionTypeInteger, database.MessageInvalidArgument),

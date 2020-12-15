@@ -36,6 +36,7 @@ func (AdminCommand) Properties() command.Properties {
 		},
 		Category:   command.Settings,
 		HelperOnly: true,
+		MessageOnly: true,
 	}
 }
 

@@ -22,6 +22,7 @@ func (RegisterCommandsCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewOptionalArgument("global", "Register commands globally", interaction.OptionTypeBoolean, database.MessageInvalidArgument),
 		),

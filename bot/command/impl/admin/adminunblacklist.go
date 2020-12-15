@@ -20,6 +20,7 @@ func (AdminUnblacklistCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to unblacklist", interaction.OptionTypeString, database.MessageInvalidArgument),
 		),

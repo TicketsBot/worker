@@ -11,6 +11,7 @@ import (
 type AdminSetMessageCommand struct {
 }
 
+// TODO: This is interaction only, but we don't want to show admin cmds
 func (AdminSetMessageCommand) Properties() command.Properties {
 	return command.Properties{
 		Name:            "setmessage",
@@ -20,6 +21,7 @@ func (AdminSetMessageCommand) Properties() command.Properties {
 		Category:        command.Settings,
 		AdminOnly:       true,
 		InteractionOnly: true,
+		MessageOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("language", "Language", interaction.OptionTypeString, translations.MessageInvalidArgument),
 			command.NewRequiredArgument("id", "ID of the message to update", interaction.OptionTypeInteger, translations.MessageInvalidArgument),

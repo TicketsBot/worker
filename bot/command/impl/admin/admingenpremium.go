@@ -25,6 +25,7 @@ func (AdminGenPremiumCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, database.MessageInvalidArgument),
 			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, database.MessageInvalidArgument),

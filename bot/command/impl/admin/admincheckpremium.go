@@ -20,6 +20,7 @@ func (AdminCheckPremiumCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to check premium status for", interaction.OptionTypeString, database.MessageInvalidArgument),
 		),

@@ -20,6 +20,7 @@ func (AdminPingCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
 	}
 }
 
