@@ -73,6 +73,8 @@ func (ctx *InteractionContext) ToErrorContext() errorcontext.WorkerErrorContext 
 }
 
 func (ctx *InteractionContext) reply(flags uint, content *embed.Embed) {
+	fmt.Println(ctx.Interaction.Token)
+
 	// TODO: Should we wait?
 	_, err := ctx.worker.ExecuteWebhook(ctx.worker.BotId, ctx.Interaction.Token, false, rest.WebhookBody{
 		Embeds: []*embed.Embed{content},
@@ -106,11 +108,11 @@ func (ctx *InteractionContext) buildEmbedRaw(colour utils.Colour, title, content
 
 func (ctx *InteractionContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) ReplyWithEmbed(embed *embed.Embed) {
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
@@ -120,12 +122,12 @@ func (ctx *InteractionContext) ReplyPermanent(colour utils.Colour, title string,
 
 func (ctx *InteractionContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) ReplyRaw(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
@@ -144,14 +146,14 @@ func (ctx *InteractionContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) Guild() (guild.Guild, error) {

@@ -18,10 +18,10 @@ type TagCommand struct {
 
 func (TagCommand) Properties() command.Properties {
 	return command.Properties{
-		Name:        "tag",
-		Description: translations.HelpTag,
-		Aliases:     []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
-		//Children:        []command.Command{ManageTagsListCommand{}, ManageTagsDeleteCommand{}, ManageTagsAddCommand{}},
+		Name:            "tag",
+		Description:     translations.HelpTag,
+		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
+		Children:        []command.Command{ManageTagsListCommand{}, ManageTagsDeleteCommand{}, ManageTagsAddCommand{}},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 		Arguments: command.Arguments(

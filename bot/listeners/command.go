@@ -306,7 +306,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	e.Member.User = e.Author
 
 	valueArgs := make([]reflect.Value, len(parsedArguments)+1)
-	valueArgs[0] = reflect.ValueOf(ctx)
+	valueArgs[0] = reflect.ValueOf(&ctx)
 
 	fn := reflect.TypeOf(c.GetExecutor())
 	for i, arg := range parsedArguments {

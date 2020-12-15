@@ -65,7 +65,7 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 	interactionContext := command.NewInteractionContext(ctx, data, permLevel)
 
 	valueArgs := make([]reflect.Value, len(args)+1)
-	valueArgs[0] = reflect.ValueOf(interactionContext)
+	valueArgs[0] = reflect.ValueOf(&interactionContext)
 
 	fn := reflect.TypeOf(cmd.GetExecutor())
 	properties := cmd.Properties()

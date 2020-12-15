@@ -19,11 +19,11 @@ func (ManageTagsCommand) Properties() command.Properties {
 		Description:     translations.HelpManageTags,
 		Aliases:         []string{"managecannedresponse", "managecannedresponses", "editcannedresponse", "editcannedresponses", "ecr", "managetags", "mcr", "managetag", "mt"},
 		PermissionLevel: permission.Support,
-		/*Children: []command.Command{
+		Children: []command.Command{
 			ManageTagsAddCommand{},
 			ManageTagsDeleteCommand{},
 			ManageTagsListCommand{},
-		},*/
+		},
 		Category:        command.Tags,
 	}
 }

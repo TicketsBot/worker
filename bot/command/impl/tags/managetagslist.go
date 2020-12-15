@@ -22,6 +22,10 @@ func (ManageTagsListCommand) Properties() command.Properties {
 	}
 }
 
+func (c ManageTagsListCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
 	ids, err := dbclient.Client.Tag.GetTagIds(ctx.GuildId())
 	if err != nil {
