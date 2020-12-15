@@ -144,9 +144,14 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 			sentry.Error(err)
 		}
 
+		guild.Channels = nil
+		guild.Roles = nil
+		guild.Members = nil
+
 		sentry.Log("permission log", map[string]interface{}{
 			"guild": guild,
-			"user": e.Member,
+			"owner": guild.OwnerId,
+			"user":  e.Member,
 			"level": userPermissionLevel,
 		})
 
