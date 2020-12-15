@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.14-alpine
+      - image: golang:1.14
     working_directory: /go/src/github.com/TicketsBot/worker
 
     steps:
@@ -14,7 +14,7 @@ jobs:
 
       - run:
           name: Install czlib & GCC
-          command: apk add zlib-dev gcc musl-dev
+          command: apt-get install -y zlib1g-dev gcc
 
       - run:
           name: Build worker
