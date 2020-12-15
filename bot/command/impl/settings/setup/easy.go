@@ -17,26 +17,30 @@ func (EasySetupCommand) Properties() command.Properties {
 		Aliases:         []string{"easy"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		MessageOnly:     true,
 	}
+}
+
+func (c EasySetupCommand) GetExecutor() interface{} {
+	return c.Execute
 }
 
 func (EasySetupCommand) Execute(ctx command.CommandContext) {
 	u := setup.FromContext(ctx)
 
 	if u.InSetup() {
-		ctx.ReactWithCross()
+		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageAlreadyInSetup, utils.DEFAULT_PREFIX)
 	} else {
-		ctx.ReactWithCheck()
+		ctx.Accept()
 
 		u.Next()
 		state := u.GetState()
 		stage := state.GetStage()
 		if stage != nil {
 			// Psuedo-premium
-			// TODO: TRANSLATE SETUP PROMPTS
-			ctx.ReplyWithDeleteAfter(utils.Green, "Setup", (*stage).Prompt(), 120)
+			// TODO: Delete after
+			ctx.ReplyPermanent(utils.Green, "Setup", (*stage).Prompt())
 		}
 	}
 }
-

@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -19,39 +20,61 @@ func (CategorySetupCommand) Properties() command.Properties {
 		Aliases:         []string{"ticketcategory", "cat", "channelcategory"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgumentInteractionOnly("category", "Channel category for tickets to be created under", interaction.OptionTypeChannel, translations.SetupCategoryInvalid),
+			command.NewRequiredArgumentMessageOnly("category", "Name of the channel category", interaction.OptionTypeString, translations.SetupCategoryInvalid),
+		),
 	}
 }
 
-func (CategorySetupCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.Reply(utils.Red, "Setup", translations.SetupCategoryInvalid)
-		ctx.ReactWithCross()
-		return
-	}
+func (c CategorySetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	name := strings.Join(ctx.Args, " ")
-	channels, err := ctx.Worker.GetGuildChannels(ctx.GuildId)
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
+func (CategorySetupCommand) Execute(ctx command.CommandContext, categoryId *uint64, categoryName *string) {
 	var category channel.Channel
-	for _, ch := range channels {
-		if ch.Type == channel.ChannelTypeGuildCategory && strings.EqualFold(ch.Name, name) {
-			category = ch
-			break
+	if categoryId != nil {
+		var err error
+		category, err = ctx.Worker().GetChannel(*categoryId)
+		if err != nil {
+			ctx.HandleError(err)
+			return
 		}
-	}
 
-	if category.Id == 0 {
+		if category.Type != channel.ChannelTypeGuildCategory {
+			ctx.Reply(utils.Red, "Error", translations.SetupCategoryInvalid)
+			ctx.Reject()
+			return
+		}
+	} else if categoryName != nil {
+		channels, err := ctx.Worker().GetGuildChannels(ctx.GuildId())
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		var found bool
+		for _, ch := range channels {
+			if ch.Type == channel.ChannelTypeGuildCategory && strings.EqualFold(ch.Name, *categoryName) {
+				category = ch
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			ctx.Reply(utils.Red, "Setup", translations.SetupCategoryInvalid)
+			ctx.Reject()
+			return
+		}
+	} else { // Should not be possible
 		ctx.Reply(utils.Red, "Setup", translations.SetupCategoryInvalid)
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
-	if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId, category.Id); err == nil {
-		ctx.ReactWithCheck()
+	if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId(), category.Id); err == nil {
+		ctx.Accept()
 		ctx.Reply(utils.Green, "Setup", translations.SetupCategoryComplete, category.Name)
 	} else {
 		ctx.HandleError(err)

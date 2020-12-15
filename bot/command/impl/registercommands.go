@@ -22,6 +22,9 @@ func (RegisterCommandsCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		Arguments: command.Arguments(
+			command.NewOptionalArgument("global", "Register commands globally", interaction.OptionTypeBoolean, database.MessageInvalidArgument),
+		),
 	}
 }
 
@@ -29,26 +32,36 @@ func (c RegisterCommandsCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (RegisterCommandsCommand) Execute(ctx command.CommandContext) {
+func (RegisterCommandsCommand) Execute(ctx command.CommandContext, global *bool) {
 	for _, cmd := range Commands {
 		properties := cmd.Properties()
 
-		//option := buildOption(cmd)
-
-		data := rest.CreateCommandData{
-			Name:        properties.Name,
-			Description: i18n.GetMessage(database.English, properties.Description),
-			Options:     make([]interaction.ApplicationCommandOption, 0),
+		if properties.MessageOnly {
+			continue
 		}
 
-		// TODO: Make global
-		if _, err := ctx.Worker().CreateGuildCommand(ctx.Worker().BotId, ctx.GuildId(), data); err != nil {
+		option := buildOption(cmd)
+
+		data := rest.CreateCommandData{
+			Name:        option.Name,
+			Description: option.Description,
+			Options:     option.Options,
+		}
+
+		var err error
+		if global != nil && *global {
+			_, err = ctx.Worker().CreateGlobalCommand(ctx.Worker().BotId, data)
+		} else {
+			_, err = ctx.Worker().CreateGuildCommand(ctx.Worker().BotId, ctx.GuildId(), data)
+		}
+
+		if err != nil {
 			ctx.ReplyRaw(utils.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
 			ctx.Reject()
 			return
 		}
 
-		fmt.Printf("registered %s\n", properties.Name)
+		fmt.Printf("Registered %s\n", properties.Name)
 	}
 
 	ctx.Accept()
@@ -57,13 +70,30 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext) {
 func buildOption(cmd command.Command) interaction.ApplicationCommandOption {
 	properties := cmd.Properties()
 
-	var options []interaction.ApplicationCommandOption
+	// Required args must come before optional args
+	var required []interaction.ApplicationCommandOption
+	var optional []interaction.ApplicationCommandOption
+
 	for _, child := range properties.Children {
-		options = append(options, buildOption(child))
+		if child.Properties().MessageOnly {
+			continue
+		}
+
+		option := buildOption(child)
+
+		if option.Required {
+			required = append(required, option)
+		} else {
+			optional = append(optional, option)
+		}
 	}
 
 	for _, argument := range properties.Arguments {
-		options = append(options, interaction.ApplicationCommandOption{
+		if !argument.SlashCommandCompatible {
+			continue
+		}
+
+		option := interaction.ApplicationCommandOption{
 			Type:        argument.Type,
 			Name:        argument.Name,
 			Description: argument.Description,
@@ -71,8 +101,16 @@ func buildOption(cmd command.Command) interaction.ApplicationCommandOption {
 			Required:    argument.Required,
 			Choices:     nil,
 			Options:     nil,
-		})
+		}
+
+		if option.Required {
+			required = append(required, option)
+		} else {
+			optional = append(optional, option)
+		}
 	}
+
+	options := append(required, optional...)
 
 	return interaction.ApplicationCommandOption{
 		Type:        interaction.OptionTypeSubCommand,

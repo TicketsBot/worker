@@ -21,11 +21,10 @@ func (TagCommand) Properties() command.Properties {
 		Name:            "tag",
 		Description:     translations.HelpTag,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
-		Children:        []command.Command{ManageTagsListCommand{}, ManageTagsDeleteCommand{}, ManageTagsAddCommand{}},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("tag_id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, translations.MessageTagInvalidArguments),
+			command.NewRequiredArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, translations.MessageTagInvalidArguments),
 		),
 	}
 }

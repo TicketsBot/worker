@@ -22,25 +22,23 @@ func (SetupCommand) Properties() command.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children: []command.Command{
-			/*EasySetupCommand{},
+			EasySetupCommand{},
 			AutoSetupCommand{},
 			PrefixSetupCommand{},
 			WelcomeMessageSetupCommand{},
 			LimitSetupCommand{},
 			TranscriptsSetupCommand{},
-			CategorySetupCommand{},*/
+			CategorySetupCommand{},
 		},
 	}
 }
 
-func (c SetupCommand) Execute(ctx command.CommandContext) {
-	wrapped := utils.SentMessage{
-		Worker:  ctx.Worker,
-		Message: &ctx.Message,
-	}
-	utils.DeleteAfter(wrapped, 60)
+func (c SetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	ctx.ReplyWithFieldsNoDelete(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
+func (c SetupCommand) Execute(ctx command.CommandContext) {
+	ctx.ReplyWithFieldsPermanent(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
 }
 
 func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
@@ -70,7 +68,7 @@ func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
 func newFieldFromTranslation(ctx command.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
 	return embed.EmbedField{
 		Name:   name,
-		Value:  i18n.GetMessageFromGuild(ctx.GuildId, value, format...),
+		Value:  i18n.GetMessageFromGuild(ctx.GuildId(), value, format...),
 		Inline: inline,
 	}
 }

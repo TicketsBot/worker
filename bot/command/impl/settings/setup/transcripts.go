@@ -6,6 +6,8 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type TranscriptsSetupCommand struct{}
@@ -17,72 +19,42 @@ func (TranscriptsSetupCommand) Properties() command.Properties {
 		Aliases:         []string{"transcript", "archives", "archive"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("channel", "The channel that ticket transcripts should be sent to", interaction.OptionTypeChannel, translations.SetupTranscriptsInvalid),
+		),
 	}
 }
 
-func (TranscriptsSetupCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.Reply(utils.Red, "Setup", translations.SetupTranscriptsInvalid, ctx.ChannelId)
-		ctx.ReactWithCross()
+func (c TranscriptsSetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uint64) {
+	var transcriptsChannelId uint64
+
+	channels, err := ctx.Worker().GetGuildChannels(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
 		return
 	}
 
-	var transcriptsChannelId uint64
-
-	// Prefer channel mention
-	// TODO: Remove code repetition
-	mentions := ctx.ChannelMentions()
-	if len(mentions) > 0 {
-		transcriptsChannelId = mentions[0]
-
-		// get guild object
-		guild, err := ctx.Guild()
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		// Verify that the channel exists
-		exists := false
-		for _, guildChannel := range guild.Channels {
-			if guildChannel.Id == transcriptsChannelId {
-				exists = true
-				break
-			}
-		}
-
-		if !exists {
-			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
-			ctx.ReactWithCross()
-			return
-		}
-	} else { // Try to match channel name
-		name := ctx.Args[0]
-
-		// Get channels from discord
-		channels, err := ctx.Worker.GetGuildChannels(ctx.GuildId); if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		found := false
-		for _, channel := range channels {
-			if channel.Name == name {
-				found = true
-				transcriptsChannelId = channel.Id
-				break
-			}
-		}
-
-		if !found {
-			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
-			ctx.ReactWithCross()
-			return
+	// Verify that the channel exists
+	exists := false
+	for _, ch := range channels {
+		if ch.Id == transcriptsChannelId && ch.Type == channel.ChannelTypeGuildText {
+			exists = true
+			break
 		}
 	}
 
-	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId, transcriptsChannelId); err == nil {
-		ctx.ReactWithCheck()
+	if !exists {
+		ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
+		ctx.Reject()
+		return
+	}
+
+	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), transcriptsChannelId); err == nil {
+		ctx.Accept()
 		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, transcriptsChannelId)
 	} else {
 		ctx.HandleError(err)

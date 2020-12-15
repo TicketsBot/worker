@@ -28,6 +28,10 @@ func (ManageTagsCommand) Properties() command.Properties {
 	}
 }
 
+func (c ManageTagsCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (ManageTagsCommand) Execute(ctx command.CommandContext) {
 	msg := "Select a subcommand:\n"
 

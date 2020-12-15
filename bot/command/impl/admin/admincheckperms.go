@@ -21,6 +21,10 @@ func (AdminCheckPermsCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminCheckPermsCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminCheckPermsCommand) Execute(ctx command.CommandContext) {
 	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
 	if err != nil {

@@ -73,6 +73,10 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	var c command.Command
 	for _, cmd := range impl.Commands {
+		if cmd.Properties().InteractionOnly {
+			continue
+		}
+
 		if strings.ToLower(cmd.Properties().Name) == strings.ToLower(root) || contains(cmd.Properties().Aliases, strings.ToLower(root)) {
 			parent := cmd
 			index := 0
@@ -83,6 +87,10 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 					found := false
 
 					for _, child := range parent.Properties().Children {
+						if child.Properties().InteractionOnly {
+							continue
+						}
+
 						if strings.ToLower(child.Properties().Name) == strings.ToLower(childName) || contains(child.Properties().Aliases, strings.ToLower(childName)) {
 							parent = child
 							found = true
@@ -179,6 +187,10 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	var argsIndex int
 	for i, argument := range properties.Arguments {
+		if !argument.MessageCompatible {
+			parsedArguments[i] = nil
+		}
+
 		if argsIndex >= len(args) {
 			if argument.Required {
 				ctx.Reply(utils.Red, "Error", argument.InvalidMessage)

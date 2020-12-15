@@ -26,6 +26,10 @@ func (AdminCheckPremiumCommand) Properties() command.Properties {
 	}
 }
 
+func (c AdminCheckPremiumCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminCheckPremiumCommand) Execute(ctx command.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {

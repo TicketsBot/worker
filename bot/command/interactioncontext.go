@@ -19,9 +19,9 @@ import (
 )
 
 type InteractionContext struct {
-	worker             *worker.Context
-	Interaction        interaction.Interaction
-	premium            premium.PremiumTier
+	worker      *worker.Context
+	Interaction interaction.Interaction
+	premium     premium.PremiumTier
 }
 
 func NewInteractionContext(
@@ -73,8 +73,6 @@ func (ctx *InteractionContext) ToErrorContext() errorcontext.WorkerErrorContext 
 }
 
 func (ctx *InteractionContext) reply(flags uint, content *embed.Embed) {
-	fmt.Println(ctx.Interaction.Token)
-
 	// TODO: Should we wait?
 	_, err := ctx.worker.ExecuteWebhook(ctx.worker.BotId, ctx.Interaction.Token, false, rest.WebhookBody{
 		Embeds: []*embed.Embed{content},
@@ -115,12 +113,21 @@ func (ctx *InteractionContext) ReplyWithEmbed(embed *embed.Embed) {
 	ctx.reply(message.SumFlags(), embed)
 }
 
+func (ctx *InteractionContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
+	ctx.reply(message.SumFlags(), embed)
+}
+
 func (ctx *InteractionContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
 	ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *InteractionContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	embed := ctx.buildEmbed(colour, title, content, fields, format...)
+	ctx.reply(message.SumFlags(), embed)
+}
+
+func (ctx *InteractionContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
 	ctx.reply(message.SumFlags(), embed)
 }
@@ -139,8 +146,13 @@ func (ctx *InteractionContext) ReplyPlain(content string) {
 	ctx.replyRaw(message.SumFlags(message.FlagEphemeral), content)
 }
 
-func (ctx *InteractionContext) Accept() {}
-func (ctx *InteractionContext) Reject() {}
+func (ctx *InteractionContext) Accept() {
+	ctx.ReplyPlain("✅")
+}
+
+func (ctx *InteractionContext) Reject() {
+	ctx.ReplyPlain("❌")
+}
 
 func (ctx *InteractionContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())

@@ -11,6 +11,7 @@ type Argument struct {
 	Type                   interaction.ApplicationCommandOptionType
 	Required               bool
 	InvalidMessage         translations.MessageId
+	MessageCompatible      bool
 	SlashCommandCompatible bool
 }
 
@@ -21,6 +22,7 @@ func NewOptionalArgument(name, description string, argumentType interaction.Appl
 		Type:                   argumentType,
 		Required:               false,
 		InvalidMessage:         invalidMessage,
+		MessageCompatible:      true,
 		SlashCommandCompatible: true,
 	}
 }
@@ -32,6 +34,7 @@ func NewRequiredArgument(name, description string, argumentType interaction.Appl
 		Type:                   argumentType,
 		Required:               true,
 		InvalidMessage:         invalidMessage,
+		MessageCompatible:      true,
 		SlashCommandCompatible: true,
 	}
 }
@@ -43,6 +46,7 @@ func NewOptionalArgumentMessageOnly(name, description string, argumentType inter
 		Type:                   argumentType,
 		Required:               false,
 		InvalidMessage:         invalidMessage,
+		MessageCompatible:      true,
 		SlashCommandCompatible: false,
 	}
 }
@@ -54,7 +58,32 @@ func NewRequiredArgumentMessageOnly(name, description string, argumentType inter
 		Type:                   argumentType,
 		Required:               true,
 		InvalidMessage:         invalidMessage,
+		MessageCompatible:      true,
 		SlashCommandCompatible: false,
+	}
+}
+
+func NewOptionalArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+	return Argument{
+		Name:                   name,
+		Description:            description,
+		Type:                   argumentType,
+		Required:               false,
+		InvalidMessage:         invalidMessage,
+		MessageCompatible:      false,
+		SlashCommandCompatible: true,
+	}
+}
+
+func NewRequiredArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+	return Argument{
+		Name:                   name,
+		Description:            description,
+		Type:                   argumentType,
+		Required:               true,
+		InvalidMessage:         invalidMessage,
+		MessageCompatible:      false,
+		SlashCommandCompatible: true,
 	}
 }
 

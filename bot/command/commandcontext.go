@@ -27,8 +27,10 @@ type CommandContext interface {
 
 	Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{})
 	ReplyWithEmbed(embed *embed.Embed)
+	ReplyWithEmbedPermanent(embed *embed.Embed)
 	ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{})
 	ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{})
 
 	ReplyRaw(colour utils.Colour, title, content string)
 	ReplyRawPermanent(colour utils.Colour, title, content string)

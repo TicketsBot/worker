@@ -120,6 +120,12 @@ func (ctx *MessageContext) Reply(colour utils.Colour, title string, content tran
 }
 
 func (ctx *MessageContext) ReplyWithEmbed(embed *embed.Embed) {
+	if msg, ok := ctx.reply(embed); ok {
+		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
+	}
+}
+
+func (ctx *MessageContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
 	ctx.reply(embed)
 }
 
@@ -131,6 +137,10 @@ func (ctx *MessageContext) ReplyWithFields(colour utils.Colour, title string, co
 	if msg, ok := ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...)); ok {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
+}
+
+func (ctx *MessageContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...))
 }
 
 func (ctx *MessageContext) ReplyRaw(colour utils.Colour, title, content string) {

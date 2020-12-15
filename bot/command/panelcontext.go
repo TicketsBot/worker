@@ -89,12 +89,16 @@ func (ctx *PanelContext) buildEmbedRaw(colour utils.Colour, title, content strin
 func (ctx *PanelContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 }
 
-func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed) {}
+func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed)          {}
+func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) {}
 
 func (ctx *PanelContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 }
 
 func (ctx *PanelContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+}
+
+func (ctx *PanelContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 }
 
 func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {}

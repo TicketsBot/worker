@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"reflect"
+	"strconv"
 )
 
 func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
@@ -24,7 +25,7 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 	}
 
 	options := data.Data.Options
-	for len(options) > 0 && options[0].Options != nil {
+	for len(options) > 0 && options[0].Value == nil { // Value and Options are mutually exclusive, value is never present on subcommands
 		subCommand := options[0]
 
 		var found bool
@@ -45,13 +46,49 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 
 	var args []interface{}
 	for _, argument := range cmd.Properties().Arguments {
+		if !argument.SlashCommandCompatible {
+			args = append(args, nil)
+			continue
+		}
+
 		var found bool
 		for _, option := range options {
 			if option.Name == argument.Name {
 				found = true
-				args = append(args, option.Value)
-				// TODO: properly parse?
+
+				switch argument.Type {
+				// Parse snowflakes
+				case interaction.OptionTypeUser:
+					fallthrough
+				case interaction.OptionTypeChannel:
+					fallthrough
+				case interaction.OptionTypeRole:
+					raw, ok := option.Value.(string)
+					if !ok {
+						return fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
+					}
+
+					id, err := strconv.ParseUint(raw, 10, 64)
+					if err != nil {
+						return err
+					}
+
+					args = append(args, id)
+				case interaction.OptionTypeInteger:
+					raw, ok := option.Value.(float64)
+					if !ok {
+						return fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
+					}
+
+					args = append(args, int(raw))
+				default:
+					args = append(args, option.Value)
+				}
 			}
+		}
+
+		if !found {
+			args = append(args, nil)
 		}
 
 		if !found && argument.Required {

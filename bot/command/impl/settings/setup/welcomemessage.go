@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
-	"strings"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type WelcomeMessageSetupCommand struct{}
@@ -18,28 +18,28 @@ func (WelcomeMessageSetupCommand) Properties() command.Properties {
 		Aliases:         []string{"wm", "welcome"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("message", "The initial message sent in ticket channels", interaction.OptionTypeString, translations.SetupWelcomeMessageInvalid),
+		),
 	}
 }
 
-func (WelcomeMessageSetupCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.Reply(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
-		ctx.ReactWithCross()
-		return
-	}
+func (c WelcomeMessageSetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	message := strings.Join(ctx.Args, " ")
+func (WelcomeMessageSetupCommand) Execute(ctx command.CommandContext, message string) {
 	if len(message) > 1024 {
 		ctx.Reply(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
-	if err := dbclient.Client.WelcomeMessages.Set(ctx.GuildId, message); err != nil {
+	if err := dbclient.Client.WelcomeMessages.Set(ctx.GuildId(), message); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
 	ctx.Reply(utils.Green, "Setup", translations.SetupWelcomeMessageComplete)
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

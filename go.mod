@@ -12,7 +12,7 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20201214225748-0d2c48b4931c
+	github.com/rxdn/gdl v0.0.0-20201214225805-4ae598a98327
 	github.com/sirupsen/logrus v1.5.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

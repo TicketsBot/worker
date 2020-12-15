@@ -16,5 +16,6 @@ type Properties struct {
 	AdminOnly       bool
 	HelperOnly      bool
 	InteractionOnly bool
+	MessageOnly     bool
 	Arguments       []Argument
 }
