@@ -50,7 +50,13 @@ func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId()) > permission.Everyone {
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if permLevel > permission.Everyone {
 		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return

@@ -48,11 +48,10 @@ func (ctx *PanelContext) UserId() uint64 {
 	return ctx.userId
 }
 
-func (ctx *PanelContext) UserPermissionLevel() permcache.PermissionLevel {
+func (ctx *PanelContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
 	member, err := ctx.Member()
 	if err != nil {
-		ctx.HandleError(err)
-		return permcache.Everyone
+		return permcache.Everyone, err
 	}
 
 	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), member, ctx.guildId)

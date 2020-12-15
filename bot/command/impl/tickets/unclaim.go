@@ -52,7 +52,13 @@ func (UnclaimCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	if ctx.UserPermissionLevel() < permission.Admin && ctx.UserId() != whoClaimed {
+	permissionLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if permissionLevel < permission.Admin && ctx.UserId() != whoClaimed {
 		ctx.Reply(utils.Red, "Error", translations.MessageOnlyClaimerCanUnclaim)
 		ctx.Reject()
 		return

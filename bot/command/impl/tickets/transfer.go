@@ -51,7 +51,12 @@ func (TransferCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	if permissionLevel < permission.Support {
 		ctx.Reply(utils.Red, "Error", translations.MessageInvalidUser)
 		ctx.Reject()

@@ -20,7 +20,7 @@ type CommandContext interface {
 	ChannelId() uint64
 	UserId() uint64
 
-	UserPermissionLevel() permcache.PermissionLevel
+	UserPermissionLevel() (permcache.PermissionLevel, error)
 	PremiumTier() premium.PremiumTier
 	IsInteraction() bool
 	ToErrorContext() errorcontext.WorkerErrorContext

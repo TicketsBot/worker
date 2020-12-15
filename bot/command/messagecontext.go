@@ -56,8 +56,8 @@ func (ctx *MessageContext) UserId() uint64 {
 	return ctx.Author.Id
 }
 
-func (ctx *MessageContext) UserPermissionLevel() permcache.PermissionLevel {
-	return ctx.permissionLevel
+func (ctx *MessageContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
+	return ctx.permissionLevel, nil
 }
 
 func (ctx *MessageContext) PremiumTier() premium.PremiumTier {

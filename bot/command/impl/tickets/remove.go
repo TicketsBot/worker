@@ -51,8 +51,14 @@ func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
+	selfPermissionLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	// Verify that the user is allowed to modify the ticket
-	if ctx.UserPermissionLevel() == permcache.Everyone && ticket.UserId != ctx.UserId() {
+	if selfPermissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
 		ctx.Reply(utils.Red, "Error", translations.MessageRemoveNoPermission)
 		ctx.Reject()
 		return
@@ -65,7 +71,12 @@ func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	permissionLevel := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	permissionLevel, err := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	if permissionLevel >= permcache.Everyone {
 		ctx.Reply(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
 		ctx.Reject()

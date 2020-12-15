@@ -52,7 +52,7 @@ func (ctx *InteractionContext) UserId() uint64 {
 	return ctx.Interaction.Member.User.Id
 }
 
-func (ctx *InteractionContext) UserPermissionLevel() permcache.PermissionLevel {
+func (ctx *InteractionContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
 	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), ctx.Interaction.Member, ctx.GuildId())
 }
 

@@ -43,7 +43,11 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	permLevel := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	permLevel, err := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
 
 	// User stats
 	if permLevel == 0 {

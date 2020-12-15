@@ -38,7 +38,12 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		commandCategories.Set(category, nil)
 	}
 
-	permLevel := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	for _, cmd := range Commands {
 		// check bot admin / helper only commands
 		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.UserId())) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.UserId())) {

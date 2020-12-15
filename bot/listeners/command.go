@@ -139,9 +139,9 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	})
 
 	// get permission level
-	group.Go(func() error {
-		userPermissionLevel = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
-		return nil
+	group.Go(func() (err error) {
+		userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+		return
 	})
 
 	if err := group.Wait(); err != nil {
@@ -157,7 +157,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
-	if c.Properties().PermissionLevel > ctx.UserPermissionLevel() {
+	if c.Properties().PermissionLevel > userPermissionLevel {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return

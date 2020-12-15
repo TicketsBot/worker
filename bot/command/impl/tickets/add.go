@@ -53,11 +53,14 @@ func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) 
 		return
 	}
 
-	// Get ticket ID
-	owner := make(chan uint64)
+	permissionLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
 
 	// Verify that the user is allowed to modify the ticket
-	if ctx.UserPermissionLevel() == permcache.Everyone && <-owner != ctx.UserId() {
+	if permissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
 		ctx.Reply(utils.Red, "Error", translations.MessageAddNoPermission)
 		ctx.Reject()
 		return

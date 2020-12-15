@@ -80,7 +80,13 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 
 		// Make sure user can close;
 		// Get user's permissions level
-		if permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), *e.Member, e.GuildId); permissionLevel == permission.Everyone {
+		permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), *e.Member, e.GuildId)
+		if err != nil {
+			sentry.Error(err) // TODO: context
+			return
+		}
+
+		if permissionLevel == permission.Everyone {
 			usersCanClose, err := dbclient.Client.UsersCanClose.Get(e.GuildId); if err != nil {
 				sentry.Error(err)
 			}

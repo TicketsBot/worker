@@ -55,7 +55,10 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	}
 
 	// Check the user is permitted to close the ticket
-	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
+	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
+	if err != nil {
+		sentry.Error(err)
+	}
 
 	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId); if err != nil {
 		sentry.Error(err)
