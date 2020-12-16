@@ -3,6 +3,8 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/TicketsBot/common/premium"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/impl"
@@ -98,15 +100,45 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 	}
 
 	// get premium tier
-	permLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId, true, ctx.Token, ctx.RateLimiter)
+	premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId, true, ctx.Token, ctx.RateLimiter)
 
-	interactionContext := command.NewInteractionContext(ctx, data, permLevel)
+	interactionContext := command.NewInteractionContext(ctx, data, premiumLevel)
+
+	permLevel, err := interactionContext.UserPermissionLevel()
+	if err != nil {
+		interactionContext.HandleError(err)
+		return err
+	}
+
+	properties := cmd.Properties()
+	if properties.PermissionLevel > permLevel {
+		interactionContext.Reject()
+		interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+		return nil
+	}
+
+	if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
+		interactionContext.Reject()
+		interactionContext.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+		return nil
+	}
+
+	if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
+		interactionContext.Reject()
+		interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+		return nil
+	}
+
+	if properties.PremiumOnly && premiumLevel == premium.None {
+		interactionContext.Reject()
+		interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+		return nil
+	}
 
 	valueArgs := make([]reflect.Value, len(args)+1)
 	valueArgs[0] = reflect.ValueOf(&interactionContext)
 
 	fn := reflect.TypeOf(cmd.GetExecutor())
-	properties := cmd.Properties()
 	for i, arg := range args {
 		var value reflect.Value
 		if properties.Arguments[i].Required && arg != nil {
