@@ -130,6 +130,7 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 
 	// Goroutine because recording metrics is blocking
 	go statsd.Client.IncrementKey(statsd.KeySlashCommands)
+	go statsd.Client.IncrementKey(statsd.KeyCommands)
 
 	go reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
 	return nil

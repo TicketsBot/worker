@@ -281,7 +281,7 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		}
 	}
 
-	go statsd.Client.IncrementKey(statsd.TICKETS)
+	go statsd.Client.IncrementKey(statsd.KeyTickets)
 
 	if ctx.PremiumTier() > premium.None {
 		go createWebhook(ctx.Worker(), id, ctx.GuildId(), channel.Id)

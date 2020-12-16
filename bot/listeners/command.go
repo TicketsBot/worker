@@ -340,7 +340,7 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	}
 
 	go reflect.ValueOf(c.GetExecutor()).Call(valueArgs)
-	go statsd.Client.IncrementKey(statsd.COMMANDS)
+	go statsd.Client.IncrementKey(statsd.KeyCommands)
 
 	utils.DeleteAfter(worker, e.ChannelId, e.Id, utils.DeleteAfterSeconds)
 }
