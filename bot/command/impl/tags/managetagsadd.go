@@ -24,6 +24,7 @@ func (ManageTagsAddCommand) Properties() command.Properties {
 		InteractionOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("id", "Identifier for the tag", interaction.OptionTypeString, translations.MessageTagCreateInvalidArguments),
+			command.NewRequiredArgument("content", "Tag contents to be sent when /tag is used", interaction.OptionTypeString, translations.MessageTagCreateInvalidArguments),
 		),
 	}
 }
