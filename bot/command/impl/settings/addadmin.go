@@ -1,8 +1,8 @@
 package settings
 
 import (
+	"context"
 	permcache "github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -13,6 +13,8 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
+	"github.com/rxdn/gdl/rest/request"
+	"golang.org/x/sync/errgroup"
 	"strings"
 )
 
@@ -53,8 +55,21 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 	roles := make([]uint64, 0)
 
 	if userId != nil {
+		// Guild owner doesn't need to be added
+		guild, err := ctx.Guild()
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if guild.OwnerId == *userId {
+			ctx.Reply(utils.Red, "Error", translations.MessageOwnerIsAlreadyAdmin)
+			return
+		}
+
 		if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId(), *userId); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			ctx.HandleError(err)
+			return
 		}
 
 		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), *userId, permcache.Admin); err != nil {
@@ -70,7 +85,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 	if roleName != nil {
 		guildRoles, err := ctx.Worker().GetGuildRoles(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			ctx.HandleError(err)
 			return
 		}
 
@@ -93,24 +108,32 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 	}
 
 	// Add roles to DB
+	group, _ := errgroup.WithContext(context.Background())
 	for _, role := range roles {
 		role := role
 
-		go func() {
-			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), role); err != nil {
-				sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			}
-
-			if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Admin); err != nil {
-				ctx.HandleError(err)
+		group.Go(func() (err error) {
+			if err = dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), role); err != nil {
 				return
 			}
-		}()
+
+			if err = permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Admin); err != nil {
+				return
+			}
+
+			return
+		})
+	}
+
+	if err := group.Wait(); err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
+		return
 	}
 
 	// Update permissions for existing tickets
@@ -121,7 +144,18 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
-			continue
+			// Check if the channel has been deleted
+			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
+				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+					ctx.HandleError(err)
+					return
+				}
+
+				continue
+			} else {
+				ctx.HandleError(err)
+				return
+			}
 		}
 
 		overwrites := ch.PermissionOverwrites
@@ -151,7 +185,8 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 		}
 
 		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			ctx.HandleError(err)
+			return
 		}
 	}
 

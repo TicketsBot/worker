@@ -65,9 +65,6 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		}
 	}
 
-	// get prefix
-	prefix := getPrefix(ctx.GuildId())
-
 	embed := embed.NewEmbed().
 		SetColor(int(utils.Green)).
 		SetTitle("Help")
@@ -85,7 +82,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
 			for _, cmd := range commands {
-				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId(), prefix))
+				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId()))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)

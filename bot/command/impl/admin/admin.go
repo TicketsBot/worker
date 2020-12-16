@@ -49,6 +49,10 @@ func (AdminCommand) Execute(ctx command.CommandContext) {
 
 	children := AdminCommand{}.Properties().Children
 	for _, child := range children {
+		if child.Properties().InteractionOnly {
+			continue
+		}
+
 		description := i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description)
 		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, description)
 	}
