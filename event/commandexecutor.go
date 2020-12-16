@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/impl"
+	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"reflect"
@@ -126,6 +127,9 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 
 		valueArgs[i+1] = value
 	}
+
+	// Goroutine because recording metrics is blocking
+	go statsd.Client.IncrementKey(statsd.KeySlashCommands)
 
 	go reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
 	return nil

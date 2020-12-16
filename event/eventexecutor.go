@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
+	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/rxdn/gdl/gateway/payloads"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"reflect"
@@ -45,6 +46,9 @@ func execute(ctx *worker.Context, event json.RawMessage) error {
 			})
 		}
 	}
+
+	// Goroutine because recording metrics is blocking
+	go statsd.Client.IncrementKey(statsd.KeyEvents)
 
 	return nil
 }

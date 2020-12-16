@@ -3,17 +3,18 @@ package statsd
 type Key string
 
 const (
-	MESSAGES  Key = "messages"
-	TICKETS   Key = "tickets"
-	COMMANDS  Key = "commands"
-	JOINS     Key = "joins"
-	LEAVES    Key = "leaves"
-	REST      Key = "rest"
-	RECONNECT Key = "reconnect"
-	IDENTIFY  Key = "identify"
+	KeyMessages      Key = "messages"
+	KeyTickets       Key = "tickets"
+	KeyCommands      Key = "commands"
+	KeyJoins         Key = "joins"
+	KeyLeaves        Key = "leaves"
+	KeyRest          Key = "rest"
+	KeyReconnect     Key = "reconnect"
+	KeyIdentify      Key = "identify"
+	KeySlashCommands Key = "slash_commands"
+	KeyEvents        Key = "events"
 )
 
 func (k Key) String() string {
 	return string(k)
 }
-
