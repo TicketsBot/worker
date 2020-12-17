@@ -138,6 +138,29 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 	// get permission level
 	group.Go(func() (err error) {
 		userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+		if err != nil {
+			return
+		}
+
+		// DEBUG START
+		guild, err := worker.GetGuild(e.GuildId)
+		if err != nil {
+			return err
+		}
+
+		extra := map[string]interface{}{
+			"member_id": e.Member.User.Id,
+			"level":    userPermissionLevel,
+			"owner_id": guild.OwnerId,
+		}
+
+		tags := map[string]string{
+			"user_id":  strconv.FormatUint(e.Author.Id, 10),
+			"guild_id": strconv.FormatUint(e.GuildId, 10),
+		}
+
+		sentry.LogWithTags("permission log", extra, tags)
+		// DEBUG END
 		return
 	})
 
@@ -154,32 +177,32 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
-	if c.Properties().PermissionLevel > userPermissionLevel {
+	properties := c.Properties()
+	if properties.PermissionLevel > userPermissionLevel {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return
 	}
 
-	if c.Properties().AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
+	if properties.AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
 		return
 	}
 
-	if c.Properties().HelperOnly && !utils.IsBotHelper(e.Author.Id) {
+	if properties.HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return
 	}
 
-	if c.Properties().PremiumOnly && premiumTier == premium.None {
+	if properties.PremiumOnly && premiumTier == premium.None {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
 		return
 	}
 
 	// parse args
-	properties := c.Properties()
 	parsedArguments := make([]interface{}, len(properties.Arguments))
 
 	var argsIndex int
