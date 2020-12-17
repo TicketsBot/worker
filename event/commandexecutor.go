@@ -59,7 +59,30 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 			if option.Name == argument.Name {
 				found = true
 
+				// Discord does not validate types server side, so we must or risk panicking
 				switch argument.Type {
+				case interaction.OptionTypeString:
+					if _, ok := option.Value.(string); !ok {
+						return fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
+					}
+
+					args = append(args, option.Value)
+
+				case interaction.OptionTypeInteger:
+					raw, ok := option.Value.(float64)
+					if !ok {
+						return fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
+					}
+
+					args = append(args, int(raw))
+
+				case interaction.OptionTypeBoolean:
+					if _, ok := option.Value.(bool); !ok {
+						return fmt.Errorf("option %s of type %d was not a boolean", option.Name, argument.Type)
+					}
+
+					args = append(args, option.Value)
+
 				// Parse snowflakes
 				case interaction.OptionTypeUser:
 					fallthrough
@@ -77,15 +100,6 @@ func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
 					}
 
 					args = append(args, id)
-				case interaction.OptionTypeInteger:
-					raw, ok := option.Value.(float64)
-					if !ok {
-						return fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
-					}
-
-					args = append(args, int(raw))
-				default:
-					args = append(args, option.Value)
 				}
 			}
 		}
