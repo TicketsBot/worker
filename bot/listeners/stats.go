@@ -19,7 +19,13 @@ func OnFirstResponse(worker *worker.Context, e *events.MessageCreate) {
 	e.Member.User = e.Author
 
 	// Only count replies from support reps
-	if permission.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId) > 0 {
+	permLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+	if err != nil {
+		sentry.Error(err)
+		return
+	}
+
+	if permLevel > permission.Everyone {
 		// Retrieve ticket struct
 		ticket, err := dbclient.Client.Tickets.GetByChannel(e.ChannelId)
 		if err != nil {

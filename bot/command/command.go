@@ -3,14 +3,33 @@ package command
 import (
 	"fmt"
 	"github.com/TicketsBot/worker/bot/i18n"
+	"strings"
 )
 
 type Command interface {
-	Execute(ctx CommandContext)
+	GetExecutor() interface{}
+	//Execute(ctx CommandContext)
 	Properties() Properties
 }
 
-func FormatHelp(c Command, guildId uint64, prefix string) string {
+func FormatHelp(c Command, guildId uint64) string {
 	description := i18n.GetMessageFromGuild(guildId, c.Properties().Description)
-	return fmt.Sprintf("**%s%s**: %s", prefix, c.Properties().Name, description)
+
+	var args []string
+	for _, arg := range c.Properties().Arguments {
+		if arg.SlashCommandCompatible {
+			if arg.Required {
+				args = append(args, fmt.Sprintf("[%s] ", arg.Name))
+			} else {
+				args = append(args, fmt.Sprintf("<%s> ", arg.Name))
+			}
+		}
+	}
+
+	var argsJoined string
+	if len(args) > 0 {
+		argsJoined = " " + strings.Join(args, " ") // Separate between command and first arg
+	}
+
+	return fmt.Sprintf("**/%s%s**: %s", c.Properties().Name, argsJoined, description)
 }

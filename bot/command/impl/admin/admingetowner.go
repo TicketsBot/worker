@@ -6,6 +6,7 @@ import (
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -19,27 +20,30 @@ func (AdminGetOwnerCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("guild_id", "ID of the guild to get the owner of", interaction.OptionTypeString, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminGetOwnerCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
-		return
-	}
+func (c AdminGetOwnerCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
+func (AdminGetOwnerCommand) Execute(ctx command.CommandContext, raw string) {
+	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
-	guild, err := ctx.Worker.GetGuild(guildId)
+	guild, err := ctx.Worker().GetGuild(guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
-	ctx.ReactWithCheck()
+	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
+	ctx.Accept()
 }

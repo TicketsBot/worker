@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/database/translations"
 )
 
 type Properties struct {
@@ -10,9 +10,12 @@ type Properties struct {
 	Description     database.MessageId
 	Aliases         []string
 	PermissionLevel permission.PermissionLevel
-	Children        []Command
+	Children        []Command // TODO: Map
 	PremiumOnly     bool
 	Category        Category
 	AdminOnly       bool
 	HelperOnly      bool
+	InteractionOnly bool
+	MessageOnly     bool
+	Arguments       []Argument
 }

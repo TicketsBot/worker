@@ -9,7 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
-	"strconv"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 	"time"
 )
@@ -25,26 +25,22 @@ func (AdminGenPremiumCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, database.MessageInvalidArgument),
+			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.ReactWithCross()
-		return
-	}
+func (c AdminGenPremiumCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	days, err := strconv.Atoi(ctx.Args[0]); if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
-		ctx.ReactWithCross()
-		return
-	}
-
+func (AdminGenPremiumCommand) Execute(ctx command.CommandContext, length int, amountRaw *int) {
 	amount := 1
-	if len(ctx.Args) == 2 {
-		if a, err := strconv.Atoi(ctx.Args[1]); err == nil {
-			amount = a
-		}
+	if amountRaw != nil {
+		amount = *amountRaw
 	}
 
 	keys := make([]string, 0)
@@ -55,7 +51,7 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 			continue
 		}
 
-		err = dbclient.Client.PremiumKeys.Create(key, time.Hour * 24 * time.Duration(days))
+		err = dbclient.Client.PremiumKeys.Create(key, time.Hour*24*time.Duration(length))
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		} else {
@@ -63,9 +59,10 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 		}
 	}
 
-	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id); if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
-		ctx.ReactWithCross()
+	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
+	if err != nil {
+		ctx.ReplyRaw(utils.Red, "Admin", err.Error())
+		ctx.Reject()
 		return
 	}
 
@@ -76,11 +73,12 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext) {
 	content = strings.TrimSuffix(content, "\n")
 	content += "```"
 
-	_, err = ctx.Worker.CreateMessage(dmChannel.Id, content); if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Admin", err.Error())
-		ctx.ReactWithCross()
+	_, err = ctx.Worker().CreateMessage(dmChannel.Id, content)
+	if err != nil {
+		ctx.ReplyRaw(utils.Red, "Admin", err.Error())
+		ctx.Reject()
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -20,21 +21,22 @@ func (LanguageCommand) Properties() command.Properties {
 		Description:     translations.HelpLanguage,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, translations.MessageLanguageInvalidLanguage),
+		),
 	}
 }
 
-func (l LanguageCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		l.sendInvalidMessage(ctx)
-		return
-	}
+func (c LanguageCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	newLanguage := ctx.Args[0]
-
+// TODO: Show options properly
+func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string) {
 	var valid bool
 	for language, flag := range translations.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
-			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId, language); err != nil {
+			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language); err != nil {
 				ctx.HandleError(err)
 			}
 
@@ -44,11 +46,11 @@ func (l LanguageCommand) Execute(ctx command.CommandContext) {
 	}
 
 	if !valid {
-		l.sendInvalidMessage(ctx)
+		c.sendInvalidMessage(ctx)
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
@@ -64,6 +66,6 @@ func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
 	}
 	list = strings.TrimSuffix(list, "\n")
 
-	ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
-	ctx.ReactWithCross()
+	ctx.ReplyWithFields(utils.Red, "Error", translations.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
+	ctx.Accept()
 }

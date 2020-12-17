@@ -9,7 +9,6 @@ type WorkerErrorContext struct {
 	User        uint64
 	Channel     uint64
 	Shard       int
-	Command     string
 }
 
 func (w WorkerErrorContext) ToMap() map[string]string {
@@ -28,10 +27,6 @@ func (w WorkerErrorContext) ToMap() map[string]string {
 	}
 
 	m["shard"] = strconv.Itoa(w.Shard)
-
-	if w.Command != "" {
-		m["command"] = w.Command
-	}
 
 	return m
 }

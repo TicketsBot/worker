@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
+	"github.com/rxdn/gdl/objects/interaction"
 	"time"
 )
 
@@ -21,55 +22,62 @@ func (PremiumCommand) Properties() command.Properties {
 		Description:     translations.HelpPremium,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewOptionalArgument("key", "Premium key to activate", interaction.OptionTypeString, translations.MessageInvalidPremiumKey),
+		),
 	}
 }
 
-func (PremiumCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		if ctx.PremiumTier > premium.None {
-			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId)
+func (c PremiumCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
+	if key == nil {
+		if ctx.PremiumTier() > premium.None {
+			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId())
 			if err != nil {
-				ctx.ReactWithCross()
+				ctx.Reject()
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				return
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.SendEmbed(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
+				ctx.Reply(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
 				return
 			}
 		}
-		ctx.SendEmbed(utils.Red, "Premium", translations.MessagePremium)
+		ctx.Reply(utils.Red, "Premium", translations.MessagePremium)
 	} else {
-		key, err := uuid.FromString(ctx.Args[0])
+		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
-			ctx.ReactWithCross()
+			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reject()
 			return
 		}
 
-		length, err := dbclient.Client.PremiumKeys.Delete(key)
+		length, err := dbclient.Client.PremiumKeys.Delete(parsed)
 		if err != nil {
-			ctx.ReactWithCross()
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
 		if length == 0 {
-			ctx.SendEmbed(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
-			ctx.ReactWithCross()
+			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reject()
 			return
 		}
 
-		if err := dbclient.Client.UsedKeys.Set(key, ctx.GuildId, ctx.Author.Id); err != nil {
-			ctx.ReactWithCross()
+		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId(), ctx.UserId()); err != nil {
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
-		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId, length); err != nil {
-			ctx.ReactWithCross()
+		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
+			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
@@ -79,8 +87,8 @@ func (PremiumCommand) Execute(ctx command.CommandContext) {
 			FromVoting: false,
 		}
 
-		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId, data); err == nil {
-			ctx.ReactWithCheck()
+		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
+			ctx.Accept()
 		} else {
 			ctx.HandleError(err)
 		}

@@ -17,7 +17,6 @@ func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd) {
 		User:    e.UserId,
 		Channel: e.ChannelId,
 		Shard:   worker.ShardId,
-		Command: "viewstaff",
 	}
 
 	// In DMs

@@ -19,4 +19,6 @@ const (
 		"Support server: https://discord.gg/VtV3rSk\n" +
 		"Commands: Type `t!help`\n " +
 		"Get started by running `t!setup`"
+
+	DeleteAfterSeconds int = 30
 )

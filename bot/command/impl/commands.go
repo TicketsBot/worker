@@ -11,38 +11,39 @@ import (
 	"github.com/TicketsBot/worker/bot/command/impl/tickets"
 )
 
-var Commands = []command.Command{
-	HelpCommand{},
+var Commands = map[string]command.Command{
+	"help": HelpCommand{},
 
-	admin.AdminCommand{},
+	"admin":            admin.AdminCommand{},
+	"registercommands": RegisterCommandsCommand{},
 
-	general.AboutCommand{},
-	general.VoteCommand{},
+	"about": general.AboutCommand{},
+	"vote":  general.VoteCommand{},
 
-	settings.AddAdminCommand{},
-	settings.AddSupportCommand{},
-	settings.BlacklistCommand{},
-	settings.CancelCommand{},
-	settings.LanguageCommand{},
-	settings.PanelCommand{},
-	settings.PremiumCommand{},
-	settings.RemoveAdminCommand{},
-	settings.RemoveSupportCommand{},
-	setup.SetupCommand{},
-	settings.ViewStaffCommand{},
+	"addadmin":      settings.AddAdminCommand{},
+	"addsupport":    settings.AddSupportCommand{},
+	"blacklist":     settings.BlacklistCommand{},
+	"cancel":        settings.CancelCommand{},
+	"language":      settings.LanguageCommand{},
+	"panel":         settings.PanelCommand{},
+	"premium":       settings.PremiumCommand{},
+	"removeadmin":   settings.RemoveAdminCommand{},
+	"removesupport": settings.RemoveSupportCommand{},
+	"setup":         setup.SetupCommand{},
+	"viewstaff":     settings.ViewStaffCommand{},
 
-	settings.SyncCommand{},
-	statistics.StatsCommand{},
+	"sync":  settings.SyncCommand{},
+	"stats": statistics.StatsCommand{},
 
-	tags.ManageTagsCommand{},
-	tags.TagCommand{},
+	"managetags": tags.ManageTagsCommand{},
+	"tag":        tags.TagCommand{},
 
-	tickets.AddCommand{},
-	tickets.ClaimCommand{},
-	tickets.CloseCommand{},
-	tickets.OpenCommand{},
-	tickets.RemoveCommand{},
-	tickets.RenameCommand{},
-	tickets.TransferCommand{},
-	tickets.UnclaimCommand{},
+	"add":      tickets.AddCommand{},
+	"claim":    tickets.ClaimCommand{},
+	"close":    tickets.CloseCommand{},
+	"open":     tickets.OpenCommand{},
+	"remove":   tickets.RemoveCommand{},
+	"rename":   tickets.RenameCommand{},
+	"transfer": tickets.TransferCommand{},
+	"unclaim":  tickets.UnclaimCommand{},
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
-	"strconv"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type LimitSetupCommand struct{}
@@ -18,28 +18,28 @@ func (LimitSetupCommand) Properties() command.Properties {
 		Aliases:         []string{"ticketlimit", "max", "maximum"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("limit", "The maximum amount of tickets a user can have open simultaneously", interaction.OptionTypeInteger, translations.SetupLimitInvalid),
+		),
 	}
 }
 
-func (LimitSetupCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupLimitInvalid)
-		ctx.ReactWithCross()
+func (c LimitSetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (LimitSetupCommand) Execute(ctx command.CommandContext, limit int) {
+	if limit < 1 || limit > 10 {
+		ctx.Reply(utils.Red, "Setup", translations.SetupLimitInvalid)
+		ctx.Reject()
 		return
 	}
 
-	limit, err := strconv.Atoi(ctx.Args[0])
-	if err != nil || limit < 1 || limit > 10 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupLimitInvalid)
-		ctx.ReactWithCross()
-		return
-	}
-
-	if err := dbclient.Client.TicketLimit.Set(ctx.GuildId, uint8(limit)); err != nil {
+	if err := dbclient.Client.TicketLimit.Set(ctx.GuildId(), uint8(limit)); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Setup", translations.SetupLimitComplete, limit)
-	ctx.ReactWithCheck()
+	ctx.Reply(utils.Green, "Setup", translations.SetupLimitComplete, limit)
+	ctx.Accept()
 }

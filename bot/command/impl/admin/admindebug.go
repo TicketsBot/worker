@@ -22,18 +22,23 @@ func (AdminDebugCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
 	}
+}
+
+func (c AdminDebugCommand) GetExecutor() interface{} {
+	return c.Execute
 }
 
 func (AdminDebugCommand) Execute(ctx command.CommandContext) {
 	// Get ticket category
-	categoryId, err := dbclient.Client.ChannelCategory.Get(ctx.GuildId)
+	categoryId, err := dbclient.Client.ChannelCategory.Get(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	// get guild channels
-	channels, err := ctx.Worker.GetGuildChannels(ctx.GuildId); if err != nil {
+	channels, err := ctx.Worker().GetGuildChannels(ctx.GuildId()); if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
@@ -49,13 +54,13 @@ func (AdminDebugCommand) Execute(ctx command.CommandContext) {
 	}
 
 	// get guild object
-	guild, err := ctx.Guild(); if err != nil {
+	guild, err := ctx.Worker().GetGuild(ctx.GuildId()); if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	// Get owner
 	invalidOwner := false
-	owner, err := ctx.Worker.GetGuildMember(ctx.GuildId, guild.OwnerId); if err != nil {
+	owner, err := ctx.Worker().GetGuildMember(ctx.GuildId(), guild.OwnerId); if err != nil {
 		invalidOwner = true
 	}
 
@@ -66,24 +71,15 @@ func (AdminDebugCommand) Execute(ctx command.CommandContext) {
 		ownerFormatted = fmt.Sprintf("%s#%s", owner.User.Username, utils.PadDiscriminator(owner.User.Discriminator))
 	}
 
-	// Get archive channel
-	//archiveChannelChan := make(chan int64)
-	//go database.GetArchiveChannel()
-
 	embed := embed.NewEmbed().
 		SetTitle("Admin").
 		SetColor(int(utils.Green)).
 
-		AddField("Shard", strconv.Itoa(ctx.Worker.ShardId), true).
+		AddField("Shard", strconv.Itoa(ctx.Worker().ShardId), true).
 		AddBlankField(false).
 
 		AddField("Ticket Category", categoryName, true).
 		AddField("Owner", ownerFormatted, true)
 
-	msg, err := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed); if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		return
-	}
-
-	utils.DeleteAfter(utils.SentMessage{Worker: ctx.Worker, Message: &msg}, 30)
+	ctx.ReplyWithEmbed(embed)
 }

@@ -19,6 +19,10 @@ func (PanelCommand) Properties() command.Properties {
 	}
 }
 
+func (c PanelCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (PanelCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "Panel", translations.MessagePanel, ctx.GuildId)
+	ctx.Reply(utils.Green, "Panel", translations.MessagePanel, ctx.GuildId)
 }

@@ -26,6 +26,10 @@ func (HelpCommand) Properties() command.Properties {
 	}
 }
 
+func (c HelpCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (h HelpCommand) Execute(ctx command.CommandContext) {
 	commandCategories := orderedmap.NewOrderedMap()
 
@@ -34,13 +38,19 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		commandCategories.Set(category, nil)
 	}
 
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	for _, cmd := range Commands {
 		// check bot admin / helper only commands
-		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.Author.Id)) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.Author.Id)) {
+		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.UserId())) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.UserId())) {
 			continue
 		}
 
-		if ctx.UserPermissionLevel >= cmd.Properties().PermissionLevel { // only send commands the user has permissions for
+		if permLevel >= cmd.Properties().PermissionLevel { // only send commands the user has permissions for
 			var current []command.Command
 			if commands, ok := commandCategories.Get(cmd.Properties().Category); ok {
 				if commands == nil {
@@ -54,9 +64,6 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 			commandCategories.Set(cmd.Properties().Category, current)
 		}
 	}
-
-	// get prefix
-	prefix := getPrefix(ctx.GuildId)
 
 	embed := embed.NewEmbed().
 		SetColor(int(utils.Green)).
@@ -75,31 +82,31 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
 			for _, cmd := range commands {
-				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId, prefix))
+				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId()))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)
 		}
 	}
 
-	dmChannel, err := ctx.Worker.CreateDM(ctx.Author.Id)
+	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
 
-	if ctx.PremiumTier == premium.None {
-		self, _ := ctx.Worker.Self()
+	if ctx.PremiumTier() == premium.None {
+		self, _ := ctx.Worker().Self()
 		embed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
 	}
 
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
-	_, err = ctx.Worker.CreateMessageEmbed(dmChannel.Id, embed)
+	_, err = ctx.Worker().CreateMessageEmbed(dmChannel.Id, embed)
 	if err == nil {
-		ctx.ReactWithCheck()
+		ctx.Accept()
 	} else {
-		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, "Error", translations.MessageHelpDMFailed)
+		ctx.Reject()
+		ctx.Reply(utils.Red, "Error", translations.MessageHelpDMFailed)
 	}
 }
 

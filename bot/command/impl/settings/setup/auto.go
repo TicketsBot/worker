@@ -3,7 +3,6 @@ package setup
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -28,6 +27,10 @@ func (AutoSetupCommand) Properties() command.Properties {
 	}
 }
 
+func (c AutoSetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 	var supportRoleId, adminRoleId uint64
 	var messageId uint64
@@ -35,31 +38,31 @@ func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 	var messageContent string
 
 	// create roles
-	switch role, err := ctx.Worker.CreateGuildRole(ctx.GuildId, supportRoleData); err {
+	switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), supportRoleData); err {
 	case nil: // an error occurred creating admin role
 		supportRoleId = role.Id
 
 		// set in db
-		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId, role.Id); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId(), role.Id); err != nil {
+			ctx.HandleError(err)
 		}
 
-		switch role, err := ctx.Worker.CreateGuildRole(ctx.GuildId, adminRoleData); err {
+		switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), adminRoleData); err {
 		case nil:
 			adminRoleId = role.Id
 
 			// set in db
-			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId, role.Id); err != nil {
+			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), role.Id); err != nil {
 				ctx.HandleError(err)
 			}
 
-			messageContent = fmt.Sprintf("✅ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoRolesSuccess))
+			messageContent = fmt.Sprintf("✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoRolesSuccess))
 		default:
-			messageContent = fmt.Sprintf("❌ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoRolesFailure))
+			messageContent = fmt.Sprintf("❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoRolesFailure))
 		}
 	default: // an error occurred creating support role
 		failed = true
-		messageContent = fmt.Sprintf("❌ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoRolesFailure))
+		messageContent = fmt.Sprintf("❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoRolesFailure))
 	}
 
 	embed := embed.NewEmbed().
@@ -67,20 +70,20 @@ func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 		SetColor(getColour(failed)).
 		SetDescription(messageContent)
 
-	msg, _ := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed)
+	msg, _ := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
 	messageId = msg.Id
 
 	// create transcripts channel
-	switch transcriptChannel, err := ctx.Worker.CreateGuildChannel(ctx.GuildId, getTranscriptChannelData(ctx.GuildId, supportRoleId, adminRoleId)); err {
+	switch transcriptChannel, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), getTranscriptChannelData(ctx.GuildId(), supportRoleId, adminRoleId)); err {
 	case nil:
-		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoTranscriptChannelSuccess, transcriptChannel.Id))
+		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoTranscriptChannelSuccess, transcriptChannel.Id))
 
-		if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId, transcriptChannel.Id); err != nil {
+		if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), transcriptChannel.Id); err != nil {
 			ctx.HandleError(err)
 		}
 	default:
 		failed = true
-		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoTranscriptChannelFailure))
+		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoTranscriptChannelFailure))
 	}
 
 	// update status
@@ -91,7 +94,7 @@ func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 			Embed: embed,
 		}
 
-		_, _ = ctx.Worker.EditMessage(ctx.ChannelId, messageId, data)
+		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
 	}
 
 	// create category
@@ -100,19 +103,19 @@ func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 		Type: channel.ChannelTypeGuildCategory,
 	}
 
-	switch category, err := ctx.Worker.CreateGuildChannel(ctx.GuildId, categoryData); err {
+	switch category, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), categoryData); err {
 	case nil: // ok
-		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoCategorySuccess))
+		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoCategorySuccess))
 
-		if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId, category.Id); err != nil {
+		if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId(), category.Id); err != nil {
 			ctx.HandleError(err)
 		}
 	default: // error
-		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoCategoryFailure))
+		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoCategoryFailure))
 	}
 
 	{
-		messageContent += fmt.Sprintf("\n%s", i18n.GetMessageFromGuild(ctx.GuildId, translations.SetupAutoCompleted, ctx.GuildId, adminRoleId, supportRoleId))
+		messageContent += fmt.Sprintf("\n%s", i18n.GetMessageFromGuild(ctx.GuildId(), translations.SetupAutoCompleted, ctx.GuildId(), adminRoleId, supportRoleId))
 	}
 
 	// update status
@@ -123,7 +126,7 @@ func (AutoSetupCommand) Execute(ctx command.CommandContext) {
 			Embed: embed,
 		}
 
-		_, _ = ctx.Worker.EditMessage(ctx.ChannelId, messageId, data)
+		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
 	}
 }
 

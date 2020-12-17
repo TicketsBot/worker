@@ -17,10 +17,15 @@ func (AdminGCCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
 	}
+}
+
+func (c AdminGCCommand) GetExecutor() interface{} {
+	return c.Execute
 }
 
 func (AdminGCCommand) Execute(ctx command.CommandContext) {
 	runtime.GC()
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

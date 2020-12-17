@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -18,23 +19,26 @@ func (AdminBlacklistCommand) Properties() command.Properties {
 		Description:     database.HelpAdminBlacklist,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
-		AdminOnly:      true,
+		AdminOnly:       true,
+		MessageOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminBlacklistCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
-		return
-	}
+func (c AdminBlacklistCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
+func (AdminBlacklistCommand) Execute(ctx command.CommandContext, raw string) {
+	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
-	if err := ctx.Worker.LeaveGuild(guildId); err != nil {
+	if err := ctx.Worker().LeaveGuild(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -44,5 +48,5 @@ func (AdminBlacklistCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

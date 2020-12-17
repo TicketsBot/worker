@@ -19,15 +19,19 @@ func (CancelCommand) Properties() command.Properties {
 	}
 }
 
+func (c CancelCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (CancelCommand) Execute(ctx command.CommandContext) {
 	u := setup.FromContext(ctx)
 
 	// Check if the user is in the setup process
 	if !u.InSetup() {
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
 	u.Cancel()
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

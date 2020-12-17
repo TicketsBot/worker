@@ -28,15 +28,19 @@ func (ManageTagsCommand) Properties() command.Properties {
 	}
 }
 
+func (c ManageTagsCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (ManageTagsCommand) Execute(ctx command.CommandContext) {
 	msg := "Select a subcommand:\n"
 
 	children := ManageTagsCommand{}.Properties().Children
 	for _, child := range children {
-		msg += fmt.Sprintf("`%smt %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description))
+		msg += fmt.Sprintf("`/managetags %s` - %s\n", child.Properties().Name, i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description))
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbedRaw(utils.Red, "Error", msg)
+	ctx.ReplyRaw(utils.Red, "Error", msg)
 }

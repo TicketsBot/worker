@@ -22,22 +22,26 @@ func (ViewStaffCommand) Properties() command.Properties {
 	}
 }
 
-func (ViewStaffCommand) Execute(ctx command.CommandContext) {
-	embed := logic.BuildViewStaffMessage(ctx.GuildId, ctx.Worker, 0, ctx.ToErrorContext())
+func (c ViewStaffCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	msg, err := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed)
+func (ViewStaffCommand) Execute(ctx command.CommandContext) {
+	embed := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
+
+	msg, err := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
 	if err != nil {
 		sentry.LogWithContext(err, ctx.ToErrorContext())
 	} else {
-		if err := ctx.Worker.CreateReaction(ctx.ChannelId, msg.Id, "◀️"); err != nil {
+		if err := ctx.Worker().CreateReaction(ctx.ChannelId(), msg.Id, "◀️"); err != nil {
 			ctx.HandleError(err)
 		}
 
-		if err := ctx.Worker.CreateReaction(ctx.ChannelId, msg.Id, "▶️"); err != nil {
+		if err := ctx.Worker().CreateReaction(ctx.ChannelId(), msg.Id, "▶️"); err != nil {
 			ctx.HandleError(err)
 		}
 
-		utils.DeleteAfter(utils.SentMessage{Worker: ctx.Worker, Message: &msg}, 60)
+		utils.DeleteAfter(ctx.Worker(), ctx.ChannelId(), msg.Id, 60)
 	}
 
 	redis.SetPage(redis.Client, msg.Id, 0)

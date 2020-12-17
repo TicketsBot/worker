@@ -15,7 +15,7 @@ import (
  */
 func OnGuildLeave(worker *worker.Context, e *events.GuildDelete) {
 	if e.Unavailable == nil {
-		go statsd.Client.IncrementKey(statsd.LEAVES)
+		go statsd.Client.IncrementKey(statsd.KeyLeaves)
 
 		if worker.IsWhitelabel {
 			if err := dbclient.Client.WhitelabelGuilds.Delete(worker.BotId, e.Guild.Id); err != nil {

@@ -3,7 +3,6 @@ package statistics
 import (
 	"context"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -27,6 +26,10 @@ func (StatsServerCommand) Properties() command.Properties {
 	}
 }
 
+func (c StatsServerCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (StatsServerCommand) Execute(ctx command.CommandContext) {
 	var totalTickets, openTickets int
 
@@ -34,13 +37,13 @@ func (StatsServerCommand) Execute(ctx command.CommandContext) {
 
 	// totalTickets
 	group.Go(func() (err error) {
-		totalTickets, err = dbclient.Client.Tickets.GetTotalTicketCount(ctx.GuildId)
+		totalTickets, err = dbclient.Client.Tickets.GetTotalTicketCount(ctx.GuildId())
 		return
 	})
 
 	// openTickets
 	group.Go(func() error {
-		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId)
+		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 		openTickets = len(tickets)
 		return err
 	})
@@ -50,25 +53,24 @@ func (StatsServerCommand) Execute(ctx command.CommandContext) {
 
 	// total
 	group.Go(func() (err error) {
-		total, err = dbclient.Client.FirstResponseTime.GetAverageAllTime(ctx.GuildId)
+		total, err = dbclient.Client.FirstResponseTime.GetAverageAllTime(ctx.GuildId())
 		return
 	})
 
 	// monthly
 	group.Go(func() (err error) {
-		monthly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId, time.Hour * 24 * 28)
+		monthly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId(), time.Hour * 24 * 28)
 		return
 	})
 
 	// weekly
 	group.Go(func() (err error) {
-		weekly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId, time.Hour * 24 * 7)
+		weekly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId(), time.Hour * 24 * 7)
 		return
 	})
 
 	if err := group.Wait(); err != nil {
-		ctx.ReactWithCross()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 		return
 	}
 
@@ -105,7 +107,6 @@ func (StatsServerCommand) Execute(ctx command.CommandContext) {
 		AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
 		AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
 
-	if m, err := ctx.Worker.CreateMessageEmbed(ctx.ChannelId, embed); err == nil {
-		utils.DeleteAfter(utils.SentMessage{Worker: ctx.Worker, Message: &m}, 60)
-	}
+	ctx.ReplyWithEmbed(embed)
+	ctx.Accept()
 }

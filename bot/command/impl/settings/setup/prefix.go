@@ -6,6 +6,8 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
+	"strings"
 )
 
 type PrefixSetupCommand struct{}
@@ -16,23 +18,28 @@ func (PrefixSetupCommand) Properties() command.Properties {
 		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("prefix", "Characters that come before the command, i.e. t!", interaction.OptionTypeString, translations.SetupPrefixInvalid),
+		),
 	}
 }
 
-func (PrefixSetupCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 || len(ctx.Args[0]) > 8 {
-		ctx.SendEmbed(utils.Red, "Setup", translations.SetupPrefixInvalid)
-		ctx.ReactWithCross()
+func (c PrefixSetupCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (PrefixSetupCommand) Execute(ctx command.CommandContext, prefix string) {
+	if len(prefix) == 0 || len(prefix) > 8 || strings.Contains(prefix, " ") {
+		ctx.Reply(utils.Red, "Setup", translations.SetupPrefixInvalid)
+		ctx.Reject()
 		return
 	}
 
-	prefix := ctx.Args[0]
-	if err := dbclient.Client.Prefix.Set(ctx.GuildId, prefix); err != nil {
+	if err := dbclient.Client.Prefix.Set(ctx.GuildId(), prefix); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.SendEmbed(utils.Green, "Setup", translations.SetupPrefixComplete, prefix, prefix)
-	ctx.ReactWithCheck()
+	ctx.Reply(utils.Green, "Setup", translations.SetupPrefixComplete, prefix, prefix)
+	ctx.Accept()
 }
-

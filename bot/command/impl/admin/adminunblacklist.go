@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -18,19 +19,22 @@ func (AdminUnblacklistCommand) Properties() command.Properties {
 		Description:     database.HelpAdminUnblacklist,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
-		AdminOnly:      true,
+		AdminOnly:       true,
+		MessageOnly:     true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("guild_id", "ID of the guild to unblacklist", interaction.OptionTypeString, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminUnblacklistCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
-		return
-	}
+func (c AdminUnblacklistCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
+func (AdminUnblacklistCommand) Execute(ctx command.CommandContext, raw string) {
+	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
@@ -39,5 +43,5 @@ func (AdminUnblacklistCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

@@ -20,10 +20,23 @@ func (AdminPingCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
 	}
 }
 
+func (c AdminPingCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (AdminPingCommand) Execute(ctx command.CommandContext) {
-	latency := time.Now().Sub(ctx.Timestamp)
-	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("Shard %d latency: `%dms`", ctx.Worker.ShardId, latency))
+	messageContext, ok := ctx.(*command.MessageContext)
+
+	if ok {
+		latency := time.Now().Sub(messageContext.Timestamp)
+		ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("REST latency: `%dms`", latency))
+		ctx.Accept()
+	} else { // TODO: Take interaction ID -> get timestamp
+		ctx.ReplyRaw(utils.Red, "Error", "Latency is not available for interactions")
+		ctx.Reject()
+	}
 }

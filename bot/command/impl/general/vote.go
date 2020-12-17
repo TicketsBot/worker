@@ -19,7 +19,11 @@ func (VoteCommand) Properties() command.Properties {
 	}
 }
 
+func (c VoteCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
 func (VoteCommand) Execute(ctx command.CommandContext) {
-	ctx.SendEmbed(utils.Green, "Vote", translations.MessageVote)
-	ctx.ReactWithCheck()
+	ctx.Reply(utils.Green, "Vote", translations.MessageVote)
+	ctx.Accept()
 }

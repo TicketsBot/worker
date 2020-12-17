@@ -8,6 +8,7 @@ import (
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/integration"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/invite"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -520,4 +521,36 @@ func (ctx *Context) ExecuteWebhook(webhookId uint64, webhookToken string, wait b
 
 func (ctx *Context) GetGuildAuditLog(guildId uint64, data rest.GetGuildAuditLogData) (auditlog.AuditLog, error) {
 	return rest.GetGuildAuditLog(ctx.Token, ctx.RateLimiter, guildId, data)
+}
+
+func (ctx *Context) GetGlobalCommands(applicationId uint64) ([]interaction.ApplicationCommand, error) {
+	return rest.GetGlobalCommands(ctx.Token, ctx.RateLimiter, applicationId)
+}
+
+func (ctx *Context) CreateGlobalCommand(applicationId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.CreateGlobalCommand(ctx.Token, ctx.RateLimiter, applicationId, data)
+}
+
+func (ctx *Context) ModifyGlobalCommand(applicationId, commandId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.ModifyGlobalCommand(ctx.Token, ctx.RateLimiter, applicationId, commandId, data)
+}
+
+func (ctx *Context) DeleteGlobalCommand(applicationId, commandId uint64) error {
+	return rest.DeleteGlobalCommand(ctx.Token, ctx.RateLimiter, applicationId, commandId)
+}
+
+func (ctx *Context) GetGuildCommands(applicationId, guildId uint64) ([]interaction.ApplicationCommand, error) {
+	return rest.GetGuildCommands(ctx.Token, ctx.RateLimiter, applicationId, guildId)
+}
+
+func (ctx *Context) CreateGuildCommand(applicationId, guildId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.CreateGuildCommand(ctx.Token, ctx.RateLimiter, applicationId, guildId, data)
+}
+
+func (ctx *Context) ModifyGuildCommand(applicationId, guildId, commandId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.ModifyGuildCommand(ctx.Token, ctx.RateLimiter, applicationId, guildId, commandId, data)
+}
+
+func (ctx *Context) DeleteGuildCommand(applicationId, guildId, commandId uint64) error {
+	return rest.DeleteGuildCommand(ctx.Token, ctx.RateLimiter, applicationId, guildId, commandId)
 }

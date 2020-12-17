@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
@@ -15,6 +16,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/rxdn/gdl/rest/request"
+	"golang.org/x/sync/errgroup"
 	"os"
 )
 
@@ -72,5 +74,20 @@ func main() {
 	go autoclose.ListenAutoClose(&pgCache)
 
 	fmt.Println("Listening for events...")
-	event.Listen(redis.Client, &pgCache)
+
+	group, _ := errgroup.WithContext(context.Background())
+
+	// listen for events
+	group.Go(func() error {
+		event.ListenEvents(redis.Client, &pgCache)
+		return nil
+	})
+
+	// listen for commands
+	group.Go(func() error {
+		event.ListenCommands(redis.Client, &pgCache)
+		return nil
+	})
+
+	_ = group.Wait()
 }

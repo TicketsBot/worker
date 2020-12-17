@@ -21,23 +21,27 @@ func (AdminCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Children: []command.Command{
 			AdminBlacklistCommand{},
-			AdminCheckPermsCommand{},
+			// AdminCheckPermsCommand{},
 			AdminCheckPremiumCommand{},
-			AdminDebugCommand{},
+			// AdminDebugCommand{},
 			AdminForceCloseCommand{},
-			AdminGCCommand{},
 			AdminGenPremiumCommand{},
 			AdminGetOwnerCommand{},
-			AdminPingCommand{},
+			// AdminPingCommand{},
 			AdminSeedCommand{},
 			AdminSetMessageCommand{},
 			AdminUnblacklistCommand{},
 			AdminUpdateSchemaCommand{},
-			AdminUsersCommand{},
+			// AdminUsersCommand{},
 		},
 		Category:   command.Settings,
 		HelperOnly: true,
+		MessageOnly: true,
 	}
+}
+
+func (c AdminCommand) GetExecutor() interface{} {
+	return c.Execute
 }
 
 func (AdminCommand) Execute(ctx command.CommandContext) {
@@ -45,11 +49,15 @@ func (AdminCommand) Execute(ctx command.CommandContext) {
 
 	children := AdminCommand{}.Properties().Children
 	for _, child := range children {
-		description := i18n.GetMessageFromGuild(ctx.GuildId, child.Properties().Description)
+		if child.Properties().InteractionOnly {
+			continue
+		}
+
+		description := i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description)
 		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, description)
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", msg)
+	ctx.ReplyRaw(utils.Green, "Admin", msg)
 }

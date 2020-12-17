@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -96,12 +97,7 @@ func OnMultiPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 		return
 	}
 
-	// get user object
-	user, err := worker.GetUser(e.UserId)
-	if err != nil {
-		sentry.Error(err)
-		return
-	}
+	panelContext := command.NewPanelContext(worker, e.GuildId, e.ChannelId, e.UserId, premiumTier)
 
-	go logic.OpenTicket(worker, user, e.GuildId, e.ChannelId, e.MessageId, premiumTier > premium.None, nil, panel)
+	go logic.OpenTicket(&panelContext, panel, panel.Title)
 }

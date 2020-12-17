@@ -1,12 +1,12 @@
 package admin
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -20,32 +20,29 @@ func (AdminForceCloseCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
+		MessageOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("guild_id", "ID of the guild of the ticket to close", interaction.OptionTypeString, database.MessageInvalidArgument),
+			command.NewRequiredArgument("ticket_id", "ID of the ticket to close", interaction.OptionTypeInteger, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminForceCloseCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) < 2 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
-		return
-	}
+func (c AdminForceCloseCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
+func (AdminForceCloseCommand) Execute(ctx command.CommandContext, guildRaw string, ticketId int) {
+	guildId, err := strconv.ParseUint(guildRaw, 10, 64)
 	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
-	for i := 1; i < len(ctx.Args); i++ {
-		id, err := strconv.Atoi(ctx.Args[i])
-		if err != nil {
-			ctx.SendEmbedRaw(utils.Red, "Error", fmt.Sprintf("Invalid ticket ID provided: `%s`", ctx.Args[i]))
-			continue
-		}
 
-		if err := dbclient.Client.Tickets.Close(id, guildId); err != nil {
-			ctx.HandleError(err)
-		}
+	if err := dbclient.Client.Tickets.Close(ticketId, guildId); err != nil {
+		ctx.HandleError(err)
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }

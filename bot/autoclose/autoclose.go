@@ -10,7 +10,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/rest/request"
-	"strings"
 )
 
 var AutoCloseReason = "Automatically closed due to inactivity"
@@ -57,7 +56,7 @@ func ListenAutoClose(cache *cache.PgCache) {
 			// get premium status
 			premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
 
-			logic.CloseTicket(worker, ticket.GuildId, *ticket.ChannelId, 0, self, strings.Split(AutoCloseReason, " "), true, premiumTier >= premium.Premium)
+			logic.CloseTicket(worker, ticket.GuildId, *ticket.ChannelId, 0, self, &AutoCloseReason, true, premiumTier >= premium.Premium)
 		}()
 	}
 }

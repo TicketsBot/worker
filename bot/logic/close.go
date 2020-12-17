@@ -14,10 +14,9 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"strconv"
-	"strings"
 )
 
-func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, member member.Member, args []string, fromReaction, isPremium bool) {
+func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, member member.Member, reason *string, fromReaction, isPremium bool) {
 	replyTo := utils.CreateReference(messageId, channelId, guildId)
 
 	// Get ticket struct
@@ -55,11 +54,11 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		return
 	}
 
-	// Create reason
-	reason := strings.Join(args, " ")
-
 	// Check the user is permitted to close the ticket
-	permissionLevel := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
+	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
+	if err != nil {
+		sentry.Error(err)
+	}
 
 	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId); if err != nil {
 		sentry.Error(err)
@@ -155,10 +154,10 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		AddField("Closed By", member.User.Mention(), true).
 		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", guildId, ticket.Id), true)
 
-	if reason == "" {
+	if reason == nil {
 		embed.AddField("Reason", "No reason specified", false)
 	} else {
-		embed.AddField("Reason", reason, false)
+		embed.AddField("Reason", *reason, false)
 	}
 
 	if archiveChannelExists {

@@ -6,6 +6,7 @@ import (
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -19,29 +20,32 @@ func (AdminCheckPremiumCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
+		MessageOnly: true,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("guild_id", "ID of the guild to check premium status for", interaction.OptionTypeString, database.MessageInvalidArgument),
+		),
 	}
 }
 
-func (AdminCheckPremiumCommand) Execute(ctx command.CommandContext) {
-	if len(ctx.Args) == 0 {
-		ctx.SendEmbedRaw(utils.Red, "Error", "No guild ID provided")
-		return
-	}
+func (c AdminCheckPremiumCommand) GetExecutor() interface{} {
+	return c.Execute
+}
 
-	guildId, err := strconv.ParseUint(ctx.Args[0], 10, 64)
+func (AdminCheckPremiumCommand) Execute(ctx command.CommandContext, raw string) {
+	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
-	guild, found := ctx.Worker.Cache.GetGuild(guildId, false)
+	guild, found := ctx.Worker().Cache.GetGuild(guildId, false)
 	if !found {
-		ctx.SendEmbedRaw(utils.Red, "Error", "Guild not found")
+		ctx.ReplyRaw(utils.Red, "Error", "Guild not found")
 		return
 	}
 
 	tier := utils.PremiumClient.GetTierByGuild(guild, false)
 
-	ctx.SendEmbedRaw(utils.Green, "Admin", fmt.Sprintf("`%s` has premium tier %d", guild.Name, tier))
-	ctx.ReactWithCheck()
+	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("`%s` has premium tier %d", guild.Name, tier))
+	ctx.Accept()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type BlacklistCommand struct {
@@ -20,57 +21,67 @@ func (BlacklistCommand) Properties() command.Properties {
 		Aliases:         []string{"unblacklist"},
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,
+		Arguments: command.Arguments(
+			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser, translations.MessageBlacklistNoMembers),
+		),
 	}
 }
 
-func (BlacklistCommand) Execute(ctx command.CommandContext) {
+func (c BlacklistCommand) GetExecutor() interface{} {
+	return c.Execute
+}
+
+func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!blacklist @User`",
 		Inline: false,
 	}
 
-	if len(ctx.Message.Mentions) == 0 {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistNoMembers, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
+	if err != nil {
+		ctx.HandleError(err)
 		return
 	}
 
-	user := ctx.Message.Mentions[0]
-	user.Member.User = user.User
-
-	if ctx.Author.Id == user.Id {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	if ctx.UserId() == member.User.Id {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
 		return
 	}
 
-	if permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker), user.Member, ctx.GuildId) > permission.Everyone {
-		ctx.SendEmbedWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
-		ctx.ReactWithCross()
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		ctx.HandleError(err)
 		return
 	}
 
-	isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId, user.Id)
+	if permLevel > permission.Everyone {
+		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
+		ctx.Reject()
+		return
+	}
+
+	isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), member.User.Id)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		ctx.ReactWithCross()
+		ctx.Reject()
 		return
 	}
 
 	if isBlacklisted {
-		if err := dbclient.Client.Blacklist.Remove(ctx.GuildId, user.Id); err != nil {
+		if err := dbclient.Client.Blacklist.Remove(ctx.GuildId(), member.User.Id); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 	} else {
-		if err := dbclient.Client.Blacklist.Add(ctx.GuildId, user.Id); err != nil {
+		if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.ReactWithCross()
+			ctx.Reject()
 			return
 		}
 	}
 
-	ctx.ReactWithCheck()
+	ctx.Accept()
 }
