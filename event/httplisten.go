@@ -78,6 +78,14 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseW
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
+		marshalled, err := json.Marshal(successResponse)
+		if err != nil { // ???????????????????????????
+			sentry.Error(err)
+			return
+		}
+
+		_, _ = w.Write(marshalled)
+
 		if err := execute(ctx, event.Event); err != nil {
 			marshalled, _ := json.Marshal(event)
 			logrus.Warnf("error executing event: %v (payload: %s)", err, string(marshalled))
@@ -116,6 +124,14 @@ func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.Respons
 			Cache:        cache,
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
+
+		marshalled, err := json.Marshal(successResponse)
+		if err != nil { // ???????????????????????????
+			sentry.Error(err)
+			return
+		}
+
+		_, _ = w.Write(marshalled)
 
 		if err := executeCommand(ctx, command.Event); err != nil {
 			marshalled, _ := json.Marshal(command)
