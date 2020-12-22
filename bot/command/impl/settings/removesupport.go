@@ -5,7 +5,6 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -73,7 +72,7 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext, userId *uint64, 
 			return
 		}
 
-		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), *userId, permcache.Everyone); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), *userId, permcache.Everyone); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -116,7 +115,7 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext, userId *uint64, 
 			return
 		}
 
-		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Everyone); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), role, permcache.Everyone); err != nil {
 			ctx.HandleError(err)
 			return
 		}
