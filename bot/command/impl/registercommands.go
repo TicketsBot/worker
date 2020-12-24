@@ -41,7 +41,7 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext, global *bool)
 			continue
 		}
 
-		option := buildOption(cmd)
+		option := BuildOption(cmd)
 
 		data := rest.CreateCommandData{
 			Name:        option.Name,
@@ -68,7 +68,7 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext, global *bool)
 	ctx.Accept()
 }
 
-func buildOption(cmd command.Command) interaction.ApplicationCommandOption {
+func BuildOption(cmd command.Command) interaction.ApplicationCommandOption {
 	properties := cmd.Properties()
 
 	// Required args must come before optional args
@@ -80,7 +80,7 @@ func buildOption(cmd command.Command) interaction.ApplicationCommandOption {
 			continue
 		}
 
-		option := buildOption(child)
+		option := BuildOption(child)
 
 		if option.Required {
 			required = append(required, option)
