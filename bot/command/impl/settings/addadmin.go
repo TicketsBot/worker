@@ -6,7 +6,6 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -72,7 +71,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 			return
 		}
 
-		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), *userId, permcache.Admin); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), *userId, permcache.Admin); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -117,7 +116,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 				return
 			}
 
-			if err = permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Admin); err != nil {
+			if err = utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), role, permcache.Admin); err != nil {
 				return
 			}
 

@@ -7,7 +7,6 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -73,7 +72,7 @@ func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, rol
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
-		if err := permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), *userId, permcache.Support); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), *userId, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -118,7 +117,7 @@ func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, rol
 				return
 			}
 
-			return permcache.SetCachedPermissionLevel(redis.Client, ctx.GuildId(), role, permcache.Support)
+			return utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), role, permcache.Support)
 		})
 	}
 

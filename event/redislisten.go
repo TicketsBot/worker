@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func ListenEvents(redis *redis.Client, cache *cache.PgCache) {
+func RedisListenEvents(redis *redis.Client, cache *cache.PgCache) {
 	ch := eventforwarding.Listen(redis)
 
 	for event := range ch {
@@ -39,7 +39,7 @@ func ListenEvents(redis *redis.Client, cache *cache.PgCache) {
 	}
 }
 
-func ListenCommands(redis *redis.Client, cache *cache.PgCache) {
+func RedisListenCommands(redis *redis.Client, cache *cache.PgCache) {
 	ch := eventforwarding.ListenCommands(redis)
 
 	for command := range ch {

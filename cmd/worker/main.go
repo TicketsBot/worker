@@ -79,13 +79,19 @@ func main() {
 
 	// listen for events
 	group.Go(func() error {
-		event.ListenEvents(redis.Client, &pgCache)
+		event.RedisListenEvents(redis.Client, &pgCache)
 		return nil
 	})
 
 	// listen for commands
 	group.Go(func() error {
-		event.ListenCommands(redis.Client, &pgCache)
+		event.RedisListenCommands(redis.Client, &pgCache)
+		return nil
+	})
+
+	// listen over http
+	group.Go(func() error {
+		event.HttpListen(redis.Client, &pgCache)
 		return nil
 	})
 

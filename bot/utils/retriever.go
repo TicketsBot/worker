@@ -5,12 +5,12 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	redisclient "github.com/TicketsBot/worker/bot/redis"
-	"github.com/go-redis/redis"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
 )
+
+var cache = permission.NewMemoryCache()
 
 func ToRetriever(worker *worker.Context) permission.Retriever {
 	return WorkerRetriever{
@@ -26,8 +26,8 @@ func (wr WorkerRetriever) Db() *database.Database {
 	return dbclient.Client
 }
 
-func (wr WorkerRetriever) Redis() *redis.Client {
-	return redisclient.Client
+func (wr WorkerRetriever) Cache() permission.PermissionCache {
+	return cache
 }
 
 func (wr WorkerRetriever) IsBotAdmin(userId uint64) bool {
