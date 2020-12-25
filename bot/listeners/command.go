@@ -151,9 +151,9 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		}
 
 		extra := map[string]interface{}{
-			"member_id": e.Member.User.Id,
+			"member_id": strconv.FormatUint(e.Member.User.Id, 10),
 			"level":    userPermissionLevel,
-			"owner_id": guild.OwnerId,
+			"owner_id": strconv.FormatUint(guild.OwnerId, 10),
 		}
 
 		tags := map[string]string{
