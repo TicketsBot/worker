@@ -38,6 +38,8 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		return
 	}
 
+	e.Member.User = e.Author
+
 	var usedPrefix string
 
 	if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
