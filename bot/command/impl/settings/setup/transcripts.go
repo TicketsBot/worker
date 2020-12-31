@@ -30,8 +30,6 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 }
 
 func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uint64) {
-	var transcriptsChannelId uint64
-
 	channels, err := ctx.Worker().GetGuildChannels(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -41,7 +39,7 @@ func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uin
 	// Verify that the channel exists
 	exists := false
 	for _, ch := range channels {
-		if ch.Id == transcriptsChannelId && ch.Type == channel.ChannelTypeGuildText {
+		if ch.Id == channelId && ch.Type == channel.ChannelTypeGuildText {
 			exists = true
 			break
 		}
@@ -53,9 +51,9 @@ func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uin
 		return
 	}
 
-	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), transcriptsChannelId); err == nil {
+	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
 		ctx.Accept()
-		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, transcriptsChannelId)
+		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, channelId)
 	} else {
 		ctx.HandleError(err)
 	}

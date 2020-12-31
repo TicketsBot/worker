@@ -39,7 +39,6 @@ func (AdminForceCloseCommand) Execute(ctx command.CommandContext, guildRaw strin
 		return
 	}
 
-
 	if err := dbclient.Client.Tickets.Close(ticketId, guildId); err != nil {
 		ctx.HandleError(err)
 	}
