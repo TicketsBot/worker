@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -14,6 +15,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"strconv"
+	"time"
 )
 
 func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, member member.Member, reason *string, fromReaction, isPremium bool) {
@@ -28,24 +30,8 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 
 	isTicket := ticket.GuildId != 0
 
-	// Verify this is a ticket or modmail channel
 	// Cannot happen if fromReaction
 	if !isTicket {
-		// check whether this is a modmail channel
-		var isModmail bool
-		{
-			modmailSession, err := dbclient.Client.ModmailSession.GetByChannel(worker.BotId, channelId)
-			if err != nil {
-				sentry.Error(err)
-				return
-			}
-
-			isModmail = modmailSession.GuildId != 0
-		}
-		if isModmail {
-			return
-		}
-
 		if !fromReaction {
 			utils.ReactWithCross(worker, channelId, messageId)
 			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, isPremium)
@@ -60,7 +46,8 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		sentry.Error(err)
 	}
 
-	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId); if err != nil {
+	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId)
+	if err != nil {
 		sentry.Error(err)
 	}
 
@@ -117,8 +104,15 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	}
 
 	// Set ticket state as closed and delete channel
-	if err :=  dbclient.Client.Tickets.Close(ticket.Id, guildId); err != nil {
+	if err := dbclient.Client.Tickets.Close(ticket.Id, guildId); err != nil {
 		sentry.Error(err)
+	}
+
+	// set close reason
+	if reason != nil {
+		if err := dbclient.Client.CloseReason.Set(guildId, ticket.Id, *reason); err != nil {
+			sentry.Error(err)
+		}
 	}
 
 	if _, err := worker.DeleteChannel(channelId); err != nil {
@@ -132,8 +126,16 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		sentry.Error(err)
 	}
 
+	// Save space - delete the webhook
+	go dbclient.Client.Webhooks.Delete(guildId, ticket.Id)
+
+	sendCloseEmbed(worker, member, ticket, reason)
+}
+
+func sendCloseEmbed(worker *worker.Context, member member.Member, ticket database.Ticket, reason *string) {
 	// Send logs to archive channel
-	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(guildId); if err != nil {
+	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(ticket.GuildId)
+	if err != nil {
 		sentry.Error(err)
 	}
 
@@ -144,21 +146,41 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		}
 	}
 
-	// Save space - delete the webhook
-	go dbclient.Client.Webhooks.Delete(guildId, ticket.Id)
+	var formattedReason string
+	if reason == nil {
+		formattedReason = "No reason specified"
+	} else {
+		formattedReason = *reason
+		if len(formattedReason) > 1024 {
+			formattedReason = formattedReason[:1024]
+		}
+	}
+
+	var claimedBy string
+	{
+		claimUserId, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
+		if err != nil {
+			sentry.Error(err)
+		}
+
+		if claimUserId == 0 {
+			claimedBy = "Not claimed"
+		} else {
+			claimedBy = fmt.Sprintf("<@%d>", claimUserId)
+		}
+	}
 
 	embed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(int(utils.Green)).
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
+		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField("Closed By", member.User.Mention(), true).
-		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", guildId, ticket.Id), true)
-
-	if reason == nil {
-		embed.AddField("Reason", "No reason specified", false)
-	} else {
-		embed.AddField("Reason", *reason, false)
-	}
+		AddField("Reason", formattedReason, false).
+		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true).
+		AddField("Open Time", utils.FormatDateTime(ticket.OpenTime), true).
+		AddField("Claimed By", claimedBy, true).
+		SetFooter(fmt.Sprintf("Close Time: %s", utils.FormatDateTime(time.Now())), "")
 
 	if archiveChannelExists {
 		if _, err := worker.CreateMessageEmbed(archiveChannelId, embed); err != nil {
@@ -174,4 +196,3 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		}
 	}
 }
-

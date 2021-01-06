@@ -11,3 +11,8 @@ func FormatTime(interval time.Duration) string {
 
 	return fmt.Sprintf("%dh %02d", hours, minutes)
 }
+
+func FormatDateTime(time time.Time) string {
+	zone, _ := time.Zone()
+	return fmt.Sprintf("%d/%d/%d %d:%d (%s)", time.Day(), time.Month(), time.Year(), time.Hour(), time.Minute(), zone)
+}
