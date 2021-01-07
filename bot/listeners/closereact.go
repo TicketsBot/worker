@@ -109,9 +109,10 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 			return
 		}
 
-		// Add reaction
-		// Error is likely a 403, we can ignore - user can add their own reaction
-		_ = worker.CreateReaction(e.ChannelId, msg.Id, "✅")
+		// Add reaction - error likely 403
+		if err = worker.CreateReaction(e.ChannelId, msg.Id, "✅"); err != nil {
+			sentry.LogWithContext(err, errorContext)
+		}
 	} else {
 		// No need to remove the reaction since we're deleting the channel anyway
 
