@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	"time"
 )
 
 func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
@@ -108,6 +109,8 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 			sentry.LogWithContext(err, errorContext)
 			return
 		}
+
+		time.Sleep(250 * time.Millisecond)
 
 		// Add reaction - error likely 403
 		if err = worker.CreateReaction(e.ChannelId, msg.Id, "✅"); err != nil {
