@@ -50,7 +50,7 @@ func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
