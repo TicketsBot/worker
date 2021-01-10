@@ -6,8 +6,8 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest/request"
 )
 
 type TranscriptsSetupCommand struct{}
@@ -30,27 +30,16 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 }
 
 func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uint64) {
-	channels, err := ctx.Worker().GetGuildChannels(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	// Verify that the channel exists
-	exists := false
-	for _, ch := range channels {
-		if ch.Id == channelId && ch.Type == channel.ChannelTypeGuildText {
-			exists = true
-			break
+	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
+		if restError, ok := err.(*request.RestError); ok && restError.IsClientError() {
+			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
+			ctx.Reject()
+		} else {
+			ctx.HandleError(err)
 		}
-	}
 
-	if !exists {
-		ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
-		ctx.Reject()
 		return
 	}
-
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
 		ctx.Accept()
 		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, channelId)

@@ -43,7 +43,7 @@ func ListenAutoClose(cache *cache.PgCache) {
 			self, err := worker.GetGuildMember(ticket.GuildId, worker.BotId)
 			if err != nil {
 				// We are no longer in the guild and can exclude all tickets
-				if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 403 {
+				if restError, ok := err.(*request.RestError); ok && restError.ErrorCode == 403 {
 					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ticket.GuildId); err != nil {
 						sentry.Error(err)
 					}
