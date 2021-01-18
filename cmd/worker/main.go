@@ -15,10 +15,16 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/rxdn/gdl/rest/request"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 )
 
 func main() {
+	go func() {
+		fmt.Println(http.ListenAndServe(":6060", nil))
+	}()
+
 	utils.ParseBotAdmins()
 	utils.ParseBotHelpers()
 
