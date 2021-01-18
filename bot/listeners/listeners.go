@@ -13,5 +13,5 @@ var Listeners = []interface{}{
 	OnMultiPanelReact,
 	OnPanelReact,
 	OnSetupProgress,
-	//OnViewStaffReact,
+	OnViewStaffReact,
 }
