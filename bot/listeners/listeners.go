@@ -5,7 +5,7 @@ var Listeners = []interface{}{
 	OnCloseConfirm,
 	OnCloseReact,
 	OnCommand,
-	OnFirstResponse,
+	//OnFirstResponse,
 	OnGuildCreate,
 	OnGuildLeave,
 	OnMemberLeave,
@@ -13,5 +13,5 @@ var Listeners = []interface{}{
 	OnMultiPanelReact,
 	OnPanelReact,
 	OnSetupProgress,
-	OnViewStaffReact,
+	//OnViewStaffReact,
 }
