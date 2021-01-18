@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -13,6 +14,12 @@ import (
 func OnFirstResponse(worker *worker.Context, e *events.MessageCreate) {
 	// Make sure this is a guild
 	if e.GuildId == 0 || e.Author.Bot {
+		return
+	}
+
+	// ensure guild is premium
+	premiumTier := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+	if premiumTier < premium.Premium {
 		return
 	}
 
