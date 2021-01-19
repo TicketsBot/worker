@@ -1,7 +1,7 @@
 package listeners
 
 var Listeners = []interface{}{
-	/*OnChannelDelete,
+	OnChannelDelete,
 	OnCloseConfirm,
 	OnCloseReact,
 	OnCommand,
@@ -13,5 +13,5 @@ var Listeners = []interface{}{
 	OnMultiPanelReact,
 	OnPanelReact,
 	OnSetupProgress,
-	OnViewStaffReact,*/
+	OnViewStaffReact,
 }
