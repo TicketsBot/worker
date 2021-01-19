@@ -130,7 +130,7 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 
 		channelCount := 0
 		for _, channel := range channels {
-			if channel.ParentId == category {
+			if uint64(channel.ParentId) == category {
 				channelCount++
 			}
 		}

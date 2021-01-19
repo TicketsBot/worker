@@ -10,6 +10,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
 	"time"
 )
@@ -151,8 +152,8 @@ func ReactWithCross(worker *worker.Context, channelId, messageId uint64) {
 	}
 }
 
-func PadDiscriminator(discrim uint16) string {
-	return fmt.Sprintf("%04d", discrim)
+func PadDiscriminator(discrim user.Discriminator) string {
+	return fmt.Sprintf("%04d", uint16(discrim))
 }
 
 func CreateReference(messageId, channelId, guildId uint64) *message.MessageReference {

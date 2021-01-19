@@ -1,7 +1,6 @@
 package event
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/worker"
@@ -12,7 +11,7 @@ import (
 	"reflect"
 )
 
-func execute(ctx *worker.Context, event json.RawMessage) error {
+func execute(ctx *worker.Context, event []byte) error {
 	var payload payloads.Payload
 	if err := json.Unmarshal(event, &payload); err != nil {
 		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))

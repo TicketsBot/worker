@@ -30,12 +30,6 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 		sentry.Error(err)
 	}
 
-	if worker.IsWhitelabel {
-		if err := dbclient.Client.WhitelabelGuilds.Add(worker.BotId, e.Guild.Id); err != nil {
-			sentry.Error(err)
-		}
-	}
-
 	if time.Now().Sub(e.JoinedAt) < time.Minute {
 		go statsd.Client.IncrementKey(statsd.KeyJoins)
 

@@ -1,7 +1,6 @@
 package event
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	translations "github.com/TicketsBot/database/translations"
@@ -15,7 +14,7 @@ import (
 	"strconv"
 )
 
-func executeCommand(ctx *worker.Context, payload json.RawMessage) error {
+func executeCommand(ctx *worker.Context, payload []byte) error {
 	var data interaction.Interaction
 	if err := json.Unmarshal(payload, &data); err != nil {
 		fmt.Println(err.Error())
