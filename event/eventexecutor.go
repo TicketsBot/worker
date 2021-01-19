@@ -27,18 +27,9 @@ func execute(ctx *worker.Context, event []byte) error {
 		return fmt.Errorf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event))
 	}
 
-	for _, listener := range listeners.Listeners {
-		fn := reflect.TypeOf(listener)
-		if fn.NumIn() != 2 {
-			continue
-		}
-
-		ptr := fn.In(1)
-		if ptr.Kind() != reflect.Ptr {
-			continue
-		}
-
-		if ptr.Elem() == dataType {
+	listeners, ok := listeners.Listeners[events.EventType(payload.EventName)]
+	if ok { // Verify we have listeners registered for this event type
+		for _, listener := range listeners {
 			go reflect.ValueOf(listener).Call([]reflect.Value{
 				reflect.ValueOf(ctx),
 				data,
@@ -51,4 +42,3 @@ func execute(ctx *worker.Context, event []byte) error {
 
 	return nil
 }
-
