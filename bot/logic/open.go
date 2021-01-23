@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
+	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -150,7 +151,7 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		return
 	}
 
-	overwrites := CreateOverwrites(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId)
+	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId)
 
 	// Create ticket name
 	var name string
@@ -363,7 +364,7 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	//}
 }
 
-func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {
+func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
 		User:  userId,
@@ -402,14 +403,16 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 	}
 
 	// Add the sender & self
-	allowedUsers = append(allowedUsers, selfId, userId)
+	allowedUsers = append(allowedUsers, userId)
 
 	for _, member := range allowedUsers {
 		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
-			allow = append(allow, permission.ManageWebhooks)
+			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
+				allow = append(allow, permission.ManageWebhooks)
+			}
 		}
 
 		overwrites = append(overwrites, channel.PermissionOverwrite{

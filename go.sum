@@ -4,8 +4,8 @@ github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919 h1:XkT+R
 github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919/go.mod h1:wOLgx3HgFylGaLs8p0RzVh1jNwqYwq9rtYU9gRYhgx4=
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df h1:e9JUSOqEYxeADqxAoNGeREuHwxcG2Yu2jojHBB4aWek=
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df/go.mod h1:YrggAZACJ3Lz08rvgbEuhMPdrXIQcxk1PtJdxmI3j34=
-github.com/TicketsBot/common v0.0.0-20201222195753-3dd751ebabf8 h1:gdDSNLZW3LHKs6dKC/GxZdspB4/iM9iLTRGNu+XjZkw=
-github.com/TicketsBot/common v0.0.0-20201222195753-3dd751ebabf8/go.mod h1:KVuvTmhUhMBVTMmjEpSzitKnODu6wMkFa3pK/W2NuiY=
+github.com/TicketsBot/common v0.0.0-20210118172556-0b20b84f7df4 h1:H3RWxspHhktpJwWY35Bwh0CIF4jQkZNFUtjFiehWO14=
+github.com/TicketsBot/common v0.0.0-20210118172556-0b20b84f7df4/go.mod h1:KVuvTmhUhMBVTMmjEpSzitKnODu6wMkFa3pK/W2NuiY=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20210106171550-992a749cd82a h1:MIB1gTG5OFrSosCyU1RdWZwp44otSZ7htyIjZIYdC0k=
