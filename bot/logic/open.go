@@ -409,7 +409,7 @@ func CreateOverwrites(guildId, userId, selfId uint64) (overwrites []channel.Perm
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
-			allow = append(allow, permission.ManageWebhooks, permission.ManageRoles)
+			allow = append(allow, permission.ManageWebhooks)
 		}
 
 		overwrites = append(overwrites, channel.PermissionOverwrite{

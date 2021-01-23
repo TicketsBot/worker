@@ -77,7 +77,7 @@ func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
 		return
 	}
 
-	if permissionLevel >= permcache.Everyone {
+	if permissionLevel > permcache.Everyone {
 		ctx.Reply(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
 		ctx.Reject()
 		return
