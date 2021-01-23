@@ -403,7 +403,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64) (o
 	}
 
 	// Add the sender & self
-	allowedUsers = append(allowedUsers, userId)
+	allowedUsers = append(allowedUsers, userId, selfId)
 
 	for _, member := range allowedUsers {
 		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
