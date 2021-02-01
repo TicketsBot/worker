@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
@@ -35,6 +36,8 @@ func main() {
 	}); err != nil {
 		fmt.Println(err.Error())
 	}
+
+	sentry.Error(errors.New("test"))
 
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")

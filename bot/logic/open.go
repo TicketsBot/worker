@@ -142,8 +142,6 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		}
 	}
 
-	ctx.Accept()
-
 	// Create channel
 	id, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
 	if err != nil {
@@ -196,6 +194,8 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 
 		return
 	}
+
+	ctx.Accept()
 
 	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ctx.GuildId(), channel.Id, ctx.UserId(), ctx.PremiumTier() > premium.None, subject, panel, id)
 	if err != nil {
