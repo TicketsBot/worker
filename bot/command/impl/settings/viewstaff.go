@@ -27,7 +27,7 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 }
 
 func (ViewStaffCommand) Execute(ctx command.CommandContext) {
-	embed := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
+	embed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
 
 	msg, err := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
 	if err != nil {

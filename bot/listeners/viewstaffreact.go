@@ -48,8 +48,13 @@ func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd) {
 		return
 	}
 
+	embed, isBlank := logic.BuildViewStaffMessage(e.GuildId, worker, page, errorContext)
+	if isBlank {
+		return
+	}
+
 	_, err := worker.EditMessage(e.ChannelId, e.MessageId, rest.EditMessageData{
-		Embed: logic.BuildViewStaffMessage(e.GuildId, worker, page, errorContext),
+		Embed: embed,
 	})
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)

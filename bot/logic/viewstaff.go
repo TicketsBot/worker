@@ -13,13 +13,14 @@ import (
 // each msg is
 const perField = 16
 
-func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, errorContext sentry.ErrorContext) *embed.Embed {
+func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, errorContext sentry.ErrorContext) (*embed.Embed, bool) {
 	self, _ := worker.Self()
+	isBlank := true
 
 	embed := embed.NewEmbed().
 		SetColor(int(utils.Green)).
 		SetTitle("Staff").
-		SetFooter(fmt.Sprintf("Page %d", page + 1), self.AvatarUrl(256))
+		SetFooter(fmt.Sprintf("Page %d", page+1), self.AvatarUrl(256))
 
 	// Add field for admin users
 	{
@@ -46,6 +47,7 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 			content = strings.TrimSuffix(content, "\n")
 
 			embed.AddField("Admin Users", content, true)
+			isBlank = false
 		}
 	}
 
@@ -74,6 +76,7 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 			content = strings.TrimSuffix(content, "\n")
 
 			embed.AddField("Admin Roles", content, true)
+			isBlank = false
 		}
 	}
 
@@ -104,6 +107,7 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 			content = strings.TrimSuffix(content, "\n")
 
 			embed.AddField("Support Representatives", content, true)
+			isBlank = false
 		}
 	}
 
@@ -132,8 +136,9 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 			content = strings.TrimSuffix(content, "\n")
 
 			embed.AddField("Support Roles", content, true)
+			isBlank = false
 		}
 	}
 
-	return embed
+	return embed, isBlank
 }
