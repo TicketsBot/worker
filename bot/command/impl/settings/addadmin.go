@@ -144,7 +144,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
-			if restError, ok := err.(*request.RestError); ok && restError.ErrorCode == 404 {
+			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
 				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
 					ctx.HandleError(err)
 					return

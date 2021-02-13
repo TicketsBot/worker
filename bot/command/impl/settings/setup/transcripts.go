@@ -31,7 +31,7 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 
 func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uint64) {
 	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
-		if restError, ok := err.(*request.RestError); ok && restError.IsClientError() {
+		if restError, ok := err.(request.RestError); ok && restError.IsClientError() {
 			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)
 			ctx.Reject()
 		} else {
