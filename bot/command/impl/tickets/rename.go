@@ -58,5 +58,5 @@ func (RenameCommand) Execute(ctx command.CommandContext, name string) {
 		return
 	}
 
-	ctx.Reply(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId)
+	ctx.Reply(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId())
 }
