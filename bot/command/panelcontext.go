@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -8,10 +9,12 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/rest/request"
 )
 
 type PanelContext struct {
@@ -73,9 +76,42 @@ func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-// TODO: DM user
-func (ctx *PanelContext) reply(content *embed.Embed) {}
-func (ctx *PanelContext) replyRaw(content string)    {}
+func (ctx *PanelContext) openDm() (channel.Channel, bool) {
+	ch, err := ctx.Worker().CreateDM(ctx.UserId())
+	if err != nil {
+		// check for 403
+		if err, ok := err.(request.RestError); ok && err.ErrorCode == 403 {
+			return ch, false
+		}
+
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return ch, false
+	}
+
+	return ch, true
+}
+
+func (ctx *PanelContext) reply(content *embed.Embed) {
+	ch, ok := ctx.openDm()
+	if !ok { // Error handled in openDm function
+		return
+	}
+
+	if _, err := ctx.Worker().CreateMessageEmbed(ch.Id, content); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	}
+}
+
+func (ctx *PanelContext) replyRaw(content string) {
+	ch, ok := ctx.openDm()
+	if !ok { // Error handled in openDm function
+		return
+	}
+
+	if _, err := ctx.Worker().CreateMessage(ch.Id, content); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	}
+}
 
 func (ctx *PanelContext) buildEmbed(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
 	return utils.BuildEmbed(ctx.worker, ctx.guildId, colour, title, content, fields, ctx.premium > premium.None, format...)
@@ -86,35 +122,61 @@ func (ctx *PanelContext) buildEmbedRaw(colour utils.Colour, title, content strin
 }
 
 func (ctx *PanelContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+	embed := ctx.buildEmbed(colour, title, content, nil, format...)
+	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed)          {}
-func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) {}
+func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed) {
+	ctx.reply(embed)
+}
+
+func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
+	ctx.reply(embed)
+}
 
 func (ctx *PanelContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+	embed := ctx.buildEmbed(colour, title, content, nil, format...)
+	ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	embed := ctx.buildEmbed(colour, title, content, fields, format...)
+	ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+	embed := ctx.buildEmbed(colour, title, content, fields, format...)
+	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {}
+func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {
+	embed := ctx.buildEmbedRaw(colour, title, content)
+	ctx.reply(embed)
+}
 
-func (ctx *PanelContext) ReplyRawPermanent(colour utils.Colour, title, content string) {}
+func (ctx *PanelContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
+	embed := ctx.buildEmbedRaw(colour, title, content)
+	ctx.reply(embed)}
 
-func (ctx *PanelContext) ReplyPlain(content string) {}
+func (ctx *PanelContext) ReplyPlain(content string) {
+	ctx.replyRaw(content)
+}
 
 func (ctx *PanelContext) Accept() {}
 func (ctx *PanelContext) Reject() {}
 
 func (ctx *PanelContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
+
+	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	ctx.reply(embed)
 }
 
 func (ctx *PanelContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
+
+	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	ctx.reply(embed)
 }
 
 func (ctx *PanelContext) Guild() (guild.Guild, error) {
