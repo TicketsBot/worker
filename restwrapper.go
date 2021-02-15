@@ -165,11 +165,7 @@ func (ctx *Context) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	emojis, err := rest.ListGuildEmojis(ctx.Token, ctx.RateLimiter, guildId)
 
 	if shouldCacheEmoji && err == nil {
-		go func() {
-			for _, emoji := range emojis {
-				ctx.Cache.StoreEmoji(emoji, guildId)
-			}
-		}()
+		go ctx.Cache.StoreEmojis(emojis, guildId)
 	}
 
 	return emojis, err
@@ -249,11 +245,7 @@ func (ctx *Context) GetGuildChannels(guildId uint64) ([]channel.Channel, error) 
 	channels, err := rest.GetGuildChannels(ctx.Token, ctx.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
-		go func() {
-			for _, channel := range channels {
-				ctx.Cache.StoreChannel(channel)
-			}
-		}()
+		go ctx.Cache.StoreChannels(channels)
 	}
 
 	return channels, err
@@ -286,14 +278,19 @@ func (ctx *Context) GetGuildMember(guildId, userId uint64) (member.Member, error
 	return member, err
 }
 
+func (ctx *Context) SearchGuildMembers(guildId uint64, data rest.SearchGuildMembersData) ([]member.Member, error) {
+	members, err := rest.SearchGuildMembers(ctx.Token, ctx.RateLimiter, guildId, data)
+	if err == nil {
+		go ctx.Cache.StoreMembers(members, guildId)
+	}
+
+	return members, err
+}
+
 func (ctx *Context) ListGuildMembers(guildId uint64, data rest.ListGuildMembersData) ([]member.Member, error) {
 	members, err := rest.ListGuildMembers(ctx.Token, ctx.RateLimiter, guildId, data)
 	if err == nil {
-		go func() {
-			for _, member := range members {
-				ctx.Cache.StoreMember(member, guildId)
-			}
-		}()
+		go ctx.Cache.StoreMembers(members, guildId)
 	}
 
 	return members, err
@@ -349,11 +346,7 @@ func (ctx *Context) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 	roles, err := rest.GetGuildRoles(ctx.Token, ctx.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
-		go func() {
-			for _, role := range roles {
-				ctx.Cache.StoreRole(role, guildId)
-			}
-		}()
+		go ctx.Cache.StoreRoles(roles, guildId)
 	}
 
 	return roles, err
