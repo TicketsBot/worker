@@ -192,8 +192,7 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
-
-			AddBlankField(false).
+			AddBlankField(true).
 
 			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
 			AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
