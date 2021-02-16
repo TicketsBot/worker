@@ -102,25 +102,62 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 
 		ctx.ReplyWithEmbed(embed)
 	} else { // Support rep stats
-		var weekly, monthly, total *time.Duration
+		var weeklyAR, monthlyAR, totalAR *time.Duration
+		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets, weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets int
 
 		group, _ := errgroup.WithContext(context.Background())
 
-		// total
+		// totalAR
 		group.Go(func() (err error) {
-			total, err = dbclient.Client.FirstResponseTime.GetAverageAllTimeUser(ctx.GuildId(), userId)
+			totalAR, err = dbclient.Client.FirstResponseTime.GetAverageAllTimeUser(ctx.GuildId(), userId)
 			return
 		})
 
-		// monthly
+		// monthlyAR
 		group.Go(func() (err error) {
-			monthly, err = dbclient.Client.FirstResponseTime.GetAverageUser(ctx.GuildId(), userId, time.Hour*24*28)
+			monthlyAR, err = dbclient.Client.FirstResponseTime.GetAverageUser(ctx.GuildId(), userId, time.Hour*24*28)
 			return
 		})
 
-		// weekly
+		// weeklyAR
 		group.Go(func() (err error) {
-			weekly, err = dbclient.Client.FirstResponseTime.GetAverageUser(ctx.GuildId(), userId, time.Hour*24*7)
+			weeklyAR, err = dbclient.Client.FirstResponseTime.GetAverageUser(ctx.GuildId(), userId, time.Hour*24*7)
+			return
+		})
+
+		// weeklyAnswered
+		group.Go(func() (err error) {
+			weeklyAnsweredTickets, err = dbclient.Client.Participants.GetParticipatedCountInterval(ctx.GuildId(), userId, time.Hour*24*7)
+			return
+		})
+
+		// monthlyAnswered
+		group.Go(func() (err error) {
+			monthlyAnsweredTickets, err = dbclient.Client.Participants.GetParticipatedCountInterval(ctx.GuildId(), userId, time.Hour*24*28)
+			return
+		})
+
+		// totalAnswered
+		group.Go(func() (err error) {
+			totalAnsweredTickets, err = dbclient.Client.Participants.GetParticipatedCount(ctx.GuildId(), userId)
+			return
+		})
+
+		// weeklyTotal
+		group.Go(func() (err error) {
+			weeklyTotalTickets, err = dbclient.Client.Tickets.GetTotalTicketCountInterval(ctx.GuildId(), time.Hour*24*7)
+			return
+		})
+
+		// monthlyTotal
+		group.Go(func() (err error) {
+			monthlyTotalTickets, err = dbclient.Client.Tickets.GetTotalTicketCountInterval(ctx.GuildId(), time.Hour*24*28)
+			return
+		})
+
+		// totalTotal
+		group.Go(func() (err error) {
+			totalTotalTickets, err = dbclient.Client.Tickets.GetTotalTicketCount(ctx.GuildId())
 			return
 		})
 
@@ -131,22 +168,22 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 
 		var totalFormatted, monthlyFormatted, weeklyFormatted string
 
-		if total == nil {
+		if totalAR == nil {
 			totalFormatted = "No data"
 		} else {
-			totalFormatted = utils.FormatTime(*total)
+			totalFormatted = utils.FormatTime(*totalAR)
 		}
 
-		if monthly == nil {
+		if monthlyAR == nil {
 			monthlyFormatted = "No data"
 		} else {
-			monthlyFormatted = utils.FormatTime(*monthly)
+			monthlyFormatted = utils.FormatTime(*monthlyAR)
 		}
 
-		if weekly == nil {
+		if weeklyAR == nil {
 			weeklyFormatted = "No data"
 		} else {
-			weeklyFormatted = utils.FormatTime(*weekly)
+			weeklyFormatted = utils.FormatTime(*weeklyAR)
 		}
 
 		embed := embed.NewEmbed().
@@ -158,9 +195,13 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 
 			AddBlankField(false).
 
-			AddField("Average First Response Time (Total)", totalFormatted, true).
+			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
 			AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
-			AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
+			AddField("Average First Response Time (Total)", totalFormatted, true).
+
+			AddField("Tickets Answered (Weekly)", fmt.Sprintf("%d / %d", weeklyAnsweredTickets, weeklyTotalTickets), true).
+			AddField("Tickets Answered (Monthly)", fmt.Sprintf("%d / %d", monthlyAnsweredTickets, monthlyTotalTickets), true).
+			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true)
 
 		ctx.ReplyWithEmbed(embed)
 	}
