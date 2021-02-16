@@ -2,3 +2,4 @@
 *.iml
 cmd/registercommands/
 cmd/registercommands/main.go
+.env
