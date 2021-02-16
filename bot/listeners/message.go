@@ -43,7 +43,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 		}
 
 		// set participants, for logging
-		if err := dbclient.Client.Participants.Set(e.GuildId, ticket.Id, e.Id); err != nil {
+		if err := dbclient.Client.Participants.Set(e.GuildId, ticket.Id, e.Author.Id); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}
 
