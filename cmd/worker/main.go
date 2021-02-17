@@ -18,6 +18,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"time"
 )
 
 func main() {
@@ -39,6 +40,7 @@ func main() {
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if os.Getenv("DISCORD_PROXY_URL") != "" {
+		request.Client.Timeout = time.Second * 15
 		request.RegisterHook(utils.ProxyHook)
 	}
 
