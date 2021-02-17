@@ -40,7 +40,7 @@ func main() {
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if os.Getenv("DISCORD_PROXY_URL") != "" {
-		request.Client.Timeout = time.Second * 15
+		request.Client.Timeout = time.Second * 30
 		request.RegisterHook(utils.ProxyHook)
 	}
 
