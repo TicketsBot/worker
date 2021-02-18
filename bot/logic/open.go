@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -21,7 +20,6 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
-	"strconv"
 	"sync"
 )
 
