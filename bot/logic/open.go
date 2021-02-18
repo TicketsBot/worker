@@ -20,6 +20,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
+	"sync"
 )
 
 func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject string) {
@@ -149,7 +150,7 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		return
 	}
 
-	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId)
+	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 
 	// Create ticket name
 	var name string
@@ -202,8 +203,13 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		ctx.HandleError(err)
 	}
 
+	var panelId *uint64
+	if panel != nil {
+		panelId = &panel.MessageId
+	}
+
 	// UpdateUser channel in DB
-	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, channel.Id, welcomeMessageId); err != nil {
+	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, channel.Id, welcomeMessageId, panelId); err != nil {
 		ctx.HandleError(err)
 	}
 
@@ -361,10 +367,9 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	if err := dbclient.Client.Webhooks.Create(guildId, ticketId, dbWebhook); err != nil {
 		sentry.Error(err)
 	}
-	//}
 }
 
-func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64) (overwrites []channel.PermissionOverwrite) {
+func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
 		User:  userId,
@@ -382,24 +387,65 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64) (o
 	allowedUsers := make([]uint64, 0)
 	allowedRoles := make([]uint64, 0)
 
-	// Get support reps & admins
-	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
-	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+	// Should we add the default team
+	if panel == nil || panel.WithDefaultTeam {
+		// Get support reps & admins
+		supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+		}
+
+		for _, user := range supportUsers {
+			allowedUsers = append(allowedUsers, user)
+		}
+
+		// Get support roles & admin roles
+		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+		}
+
+		for _, role := range supportRoles {
+			allowedRoles = append(allowedRoles, role)
+		}
 	}
 
-	for _, user := range supportUsers {
-		allowedUsers = append(allowedUsers, user)
-	}
+	// Add other support teams
+	if panel != nil {
+		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.MessageId)
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+		} else {
+			group, _ := errgroup.WithContext(context.Background())
+			mu := sync.Mutex{}
 
-	// Get support roles & admin roles
-	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
-	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
-	}
+			for _, team := range teams {
+				team := team
 
-	for _, role := range supportRoles {
-		allowedRoles = append(allowedRoles, role)
+				group.Go(func() error {
+					members, err := dbclient.Client.SupportTeamMembers.Get(team.Id)
+					if err != nil {
+						return err
+					}
+
+					roles, err := dbclient.Client.SupportTeamRoles.Get(team.Id)
+					if err != nil {
+						return err
+					}
+
+					mu.Lock()
+					defer mu.Unlock()
+					allowedUsers = append(allowedUsers, members...)
+					allowedRoles = append(allowedRoles, roles...)
+
+					return nil
+				})
+			}
+
+			if err := group.Wait(); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		}
 	}
 
 	// Add the sender & self

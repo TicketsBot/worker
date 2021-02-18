@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -70,9 +71,20 @@ func (UnclaimCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
+	// get panel
+	var panel *database.Panel
+	if ticket.PanelId != nil {
+		var derefPanel database.Panel
+		derefPanel, err = dbclient.Client.Panel.Get(*ticket.PanelId)
+
+		if derefPanel.MessageId != 0 {
+			panel = &derefPanel
+		}
+	}
+
 	// Update channel
 	data := rest.ModifyChannelData{
-		PermissionOverwrites: logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId),
+		PermissionOverwrites: logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, panel),
 	}
 
 	if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), data); err != nil {
