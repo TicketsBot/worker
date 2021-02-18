@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -12,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"golang.org/x/sync/errgroup"
+	"strconv"
 )
 
 func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
@@ -33,6 +35,12 @@ func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 
 	// Get panel from DB
 	panel, err := dbclient.Client.Panel.Get(e.MessageId)
+	/// debug start
+	extra := make(map[string]interface{})
+	extra["panel"], _ = json.Marshal(panel)
+	extra["err"] = err
+	sentry.LogWithTags("react debug", extra, map[string]string{"guild_id": strconv.FormatUint(e.GuildId, 10)})
+	/// debug end
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 		return
