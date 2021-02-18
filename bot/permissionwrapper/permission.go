@@ -2,7 +2,6 @@ package permissionwrapper
 
 import (
 	"errors"
-	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/rxdn/gdl/objects/channel"
@@ -34,7 +33,6 @@ func HasPermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint6
 
 func HasPermissions(ctx *worker.Context, guildId, userId uint64, permissions ...permission.Permission) bool {
 	sum, err := GetEffectivePermissions(ctx, guildId, userId)
-	fmt.Println(sum)
 	if err != nil {
 		sentry.Error(err)
 		return false
