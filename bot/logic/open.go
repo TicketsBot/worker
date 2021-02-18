@@ -476,20 +476,5 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		})
 	}
 
-	/// debug start
-	extra := make(map[string]interface{})
-	extra["panel"] = "nil"
-	if panel != nil {
-		extra["panel"], _ = json.Marshal(*panel)
-	}
-	extra["overwrites"], _ = json.Marshal(overwrites)
-	extra["allowed_users"], _ = json.Marshal(allowedUsers)
-	extra["allowed_roles"], _ = json.Marshal(allowedRoles)
-
-	sentry.LogWithTags("overwrites", extra, map[string]string{
-		"guild_id": strconv.FormatUint(guildId, 10),
-	})
-	/// debug end
-
 	return overwrites
 }

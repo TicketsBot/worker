@@ -35,12 +35,6 @@ func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 
 	// Get panel from DB
 	panel, err := dbclient.Client.Panel.Get(e.MessageId)
-	/// debug start
-	extra := make(map[string]interface{})
-	extra["panel"], _ = json.Marshal(panel)
-	extra["err"] = err
-	sentry.LogWithTags("react debug", extra, map[string]string{"guild_id": strconv.FormatUint(e.GuildId, 10)})
-	/// debug end
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 		return
