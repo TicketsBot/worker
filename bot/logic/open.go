@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -20,6 +21,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
+	"strconv"
 	"sync"
 )
 
@@ -395,9 +397,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			sentry.ErrorWithContext(err, errorContext)
 		}
 
-		for _, user := range supportUsers {
-			allowedUsers = append(allowedUsers, user)
-		}
+		allowedUsers = append(allowedUsers, supportUsers...)
 
 		// Get support roles & admin roles
 		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
@@ -405,9 +405,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			sentry.ErrorWithContext(err, errorContext)
 		}
 
-		for _, role := range supportRoles {
-			allowedRoles = append(allowedRoles, role)
-		}
+		allowedRoles = append(allowedUsers, supportRoles...)
 	}
 
 	// Add other support teams
@@ -477,6 +475,21 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			Deny:  0,
 		})
 	}
+
+	/// debug start
+	extra := make(map[string]interface{})
+	extra["panel"] = "nil"
+	if panel != nil {
+		extra["panel"], _ = json.Marshal(*panel)
+	}
+	extra["overwrites"], _ = json.Marshal(overwrites)
+	extra["allowed_users"], _ = json.Marshal(allowedUsers)
+	extra["allowed_roles"], _ = json.Marshal(allowedRoles)
+
+	sentry.LogWithTags("overwrites", extra, map[string]string{
+		"guild_id": strconv.FormatUint(guildId, 10),
+	})
+	/// debug end
 
 	return overwrites
 }
