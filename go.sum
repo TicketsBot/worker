@@ -1,7 +1,5 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
-github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919 h1:XkT+RNcKlGmHIeHQ9etAJkiMcho2tWyT/2Q86JhcuiY=
-github.com/TicketsBot/archiverclient v0.0.0-20200703191016-b27de6fd6919/go.mod h1:wOLgx3HgFylGaLs8p0RzVh1jNwqYwq9rtYU9gRYhgx4=
 github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb h1:HDVF1q3B0nelQewueTuUEZhFW+0Ubjt/XHFboqTFlFg=
 github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb/go.mod h1:wOLgx3HgFylGaLs8p0RzVh1jNwqYwq9rtYU9gRYhgx4=
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df h1:e9JUSOqEYxeADqxAoNGeREuHwxcG2Yu2jojHBB4aWek=
@@ -14,8 +12,6 @@ github.com/TicketsBot/database v0.0.0-20210218231545-9449d57a541c h1:4pRGskLaUfh
 github.com/TicketsBot/database v0.0.0-20210218231545-9449d57a541c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14 h1:wVGMTUIDHLj198ElVIecqGGUiQ6NagUlbQOyfiMTF/Y=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14/go.mod h1:whts8TRxrAF4WuDuEAMllkWA/inKem0NhDEFeyuoOvE=
-github.com/TicketsBot/logarchiver v0.0.0-20200425163447-199b93429026 h1:ppOSTRf5xE2ib15+mytUupdMspwGHpwCyYrgmpQ0qdI=
-github.com/TicketsBot/logarchiver v0.0.0-20200425163447-199b93429026/go.mod h1:whts8TRxrAF4WuDuEAMllkWA/inKem0NhDEFeyuoOvE=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261/go.mod h1:2zPxDAN2TAPpxUPjxszjs3QFKreKrQh5al/R3cMXmYk=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=

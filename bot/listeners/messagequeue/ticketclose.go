@@ -22,6 +22,8 @@ func ListenTicketClose() {
 	go closerelay.Listen(redis.Client, ch)
 
 	for payload := range ch {
+		payload := payload
+
 		go func() {
 			if payload.Reason == "" {
 				payload.Reason = "No reason specified"
@@ -99,9 +101,15 @@ func ListenTicketClose() {
 				return
 			}
 
+			// if ticket didnt open in the first place, no channel ID is assigned.
+			// we should close it here, or it wont get closed at all
 			if ticket.ChannelId == nil {
+				if err := dbclient.Client.Tickets.Close(payload.TicketId, payload.GuildId); err != nil {
+					sentry.ErrorWithContext(err, errorContext)
+				}
 				return
 			}
+
 			logic.CloseTicket(ctx, ticket.GuildId, *ticket.ChannelId, 0, member, &payload.Reason, false, isPremium)
 		}()
 	}
