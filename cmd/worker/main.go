@@ -17,11 +17,14 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 	"net/http"
 	_ "net/http/pprof"
+	"runtime/debug"
 	"os"
 	"time"
 )
 
 func main() {
+	debug.SetGCPercent(-1)
+	
 	go func() {
 		fmt.Println(http.ListenAndServe(":6060", nil))
 	}()
