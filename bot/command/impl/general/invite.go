@@ -7,23 +7,23 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 )
 
-type AboutCommand struct {
+type InviteCommand struct {
 }
 
-func (AboutCommand) Properties() command.Properties {
+func (InviteCommand) Properties() command.Properties {
 	return command.Properties{
-		Name:            "about",
-		Description:     translations.HelpAbout,
+		Name:            "invite",
+		Description:     translations.MessageHelpInvite,
 		PermissionLevel: permission.Everyone,
 		Category:        command.General,
 		MainBotOnly:     true,
 	}
 }
 
-func (c AboutCommand) GetExecutor() interface{} {
+func (c InviteCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AboutCommand) Execute(ctx command.CommandContext) {
-	ctx.Reply(utils.Green, "About", translations.MessageAbout)
+func (InviteCommand) Execute(ctx command.CommandContext) {
+	ctx.Reply(utils.Green, "Invite", translations.MessageInvite)
 }

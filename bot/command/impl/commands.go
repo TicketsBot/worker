@@ -17,8 +17,9 @@ var Commands = map[string]command.Command{
 	"admin":            admin.AdminCommand{},
 	"registercommands": RegisterCommandsCommand{},
 
-	"about": general.AboutCommand{},
-	"vote":  general.VoteCommand{},
+	"about":  general.AboutCommand{},
+	"invite": general.InviteCommand{},
+	"vote":   general.VoteCommand{},
 
 	"addadmin":      settings.AddAdminCommand{},
 	"addsupport":    settings.AddSupportCommand{},

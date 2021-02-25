@@ -120,6 +120,11 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 		return
 	}
 
+	properties := c.Properties()
+	if properties.MainBotOnly && worker.IsWhitelabel {
+		return
+	}
+
 	var blacklisted bool
 	var premiumTier premium.PremiumTier
 	var userPermissionLevel permcache.PermissionLevel
@@ -181,7 +186,6 @@ func OnCommand(worker *worker.Context, e *events.MessageCreate) {
 
 	ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
-	properties := c.Properties()
 	if properties.PermissionLevel > userPermissionLevel {
 		ctx.Reject()
 		ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)

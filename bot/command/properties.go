@@ -17,5 +17,6 @@ type Properties struct {
 	HelperOnly      bool
 	InteractionOnly bool
 	MessageOnly     bool
+	MainBotOnly     bool
 	Arguments       []Argument
 }

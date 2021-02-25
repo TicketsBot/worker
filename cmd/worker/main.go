@@ -33,6 +33,7 @@ func main() {
 	if err := sentry.Initialise(sentry.Options{
 		Dsn:     os.Getenv("WORKER_SENTRY_DSN"),
 		Project: "tickets-bot",
+		Debug:   os.Getenv("WORKER_SENTRY_DEBUG") != "",
 	}); err != nil {
 		fmt.Println(err.Error())
 	}
