@@ -27,6 +27,7 @@ func (AdminCommand) Properties() command.Properties {
 			AdminForceCloseCommand{},
 			AdminGenPremiumCommand{},
 			AdminGetOwnerCommand{},
+			AdminRecacheCommand{},
 			// AdminPingCommand{},
 			AdminSeedCommand{},
 			AdminSetMessageCommand{},
