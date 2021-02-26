@@ -59,4 +59,6 @@ func (AdminRecacheCommand) Execute(ctx command.CommandContext, providedGuildId *
 		ctx.HandleError(err)
 		return
 	}
+
+	ctx.Accept()
 }
