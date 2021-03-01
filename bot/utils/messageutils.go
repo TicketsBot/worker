@@ -158,24 +158,27 @@ func PadDiscriminator(discrim user.Discriminator) string {
 
 func CreateReference(messageId, channelId, guildId uint64) *message.MessageReference {
 	return &message.MessageReference{
-		MessageId: messageId,
-		ChannelId: channelId,
-		GuildId:   guildId,
+		MessageId:       messageId,
+		ChannelId:       channelId,
+		GuildId:         guildId,
+		FailIfNotExists: false,
 	}
 }
 
 func CreateReferenceFromEvent(ev *events.MessageCreate) *message.MessageReference {
 	return &message.MessageReference{
-		MessageId: ev.Id,
-		ChannelId: ev.ChannelId,
-		GuildId:   ev.GuildId,
+		MessageId:       ev.Id,
+		ChannelId:       ev.ChannelId,
+		GuildId:         ev.GuildId,
+		FailIfNotExists: false,
 	}
 }
 
 func CreateReferenceFromMessage(msg message.Message) *message.MessageReference {
 	return &message.MessageReference{
-		MessageId: msg.Id,
-		ChannelId: msg.ChannelId,
-		GuildId:   msg.GuildId,
+		MessageId:       msg.Id,
+		ChannelId:       msg.ChannelId,
+		GuildId:         msg.GuildId,
+		FailIfNotExists: false,
 	}
 }

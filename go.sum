@@ -205,8 +205,8 @@ github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1 h1:jOKXGHwm7R2bCSbP8ntoT/
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e h1:PlCz91DgXLLPpKHOxt+tZqVm4icUhWBZWuNlfEqjh/E=
 github.com/rxdn/gdl v0.0.0-20200925114730-3a808c6d330e/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
-github.com/rxdn/gdl v0.0.0-20210226111308-41272ca05fd5 h1:9SfUeHY35WPg9502Xh4U3EgAtBw0S6Lrib7xA7on0Gk=
-github.com/rxdn/gdl v0.0.0-20210226111308-41272ca05fd5/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
+github.com/rxdn/gdl v0.0.0-20210301221508-d84ed0db0f5c h1:ogi/o6Idpmxfdm0lC7S7GdmGZfV341LmKb2oQETp48w=
+github.com/rxdn/gdl v0.0.0-20210301221508-d84ed0db0f5c/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=
