@@ -50,7 +50,7 @@ func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
 	}
 
 	// User stats
-	if permLevel == 0 {
+	if permLevel == permission.Everyone {
 		var isBlacklisted bool
 		var totalTickets int
 		var openTickets int
