@@ -24,5 +24,5 @@ func (c PanelCommand) GetExecutor() interface{} {
 }
 
 func (PanelCommand) Execute(ctx command.CommandContext) {
-	ctx.Reply(utils.Green, "Panel", translations.MessagePanel, ctx.GuildId)
+	ctx.Reply(utils.Green, "Panel", translations.MessagePanel, ctx.GuildId())
 }
