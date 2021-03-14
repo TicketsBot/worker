@@ -57,7 +57,7 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 			return
 		}
 
-		length, err := dbclient.Client.PremiumKeys.Delete(parsed)
+		length, premiumTypeRaw, err := dbclient.Client.PremiumKeys.Delete(parsed)
 		if err != nil {
 			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -70,20 +70,30 @@ func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
 			return
 		}
 
+		premiumType := premium.PremiumTier(premiumTypeRaw)
+
 		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId(), ctx.UserId()); err != nil {
 			ctx.Reject()
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
-		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
-			ctx.Reject()
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			return
+		if premiumType == premium.Premium {
+			if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
+				ctx.HandleError(err)
+				ctx.Reject()
+				return
+			}
+		} else if premiumType == premium.Whitelabel {
+			if err := dbclient.Client.WhitelabelUsers.Add(ctx.UserId(), length); err != nil {
+				ctx.HandleError(err)
+				ctx.Reject()
+				return
+			}
 		}
 
 		data := premium.CachedTier{
-			Tier:       int(premium.Premium),
+			Tier:       premiumTypeRaw,
 			FromVoting: false,
 		}
 
