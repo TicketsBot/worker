@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
@@ -25,10 +26,11 @@ func (AdminGenPremiumCommand) Properties() command.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly: true,
+		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, database.MessageInvalidArgument),
 			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, database.MessageInvalidArgument),
+			command.NewOptionalArgument("whitelabel", "Should the keys be for premium or whitelabel", interaction.OptionTypeBoolean, database.MessageInvalidArgument),
 		),
 	}
 }
@@ -37,10 +39,15 @@ func (c AdminGenPremiumCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminGenPremiumCommand) Execute(ctx command.CommandContext, length int, amountRaw *int) {
+func (AdminGenPremiumCommand) Execute(ctx command.CommandContext, length int, amountRaw *int, whitelabel *bool) {
 	amount := 1
 	if amountRaw != nil {
 		amount = *amountRaw
+	}
+
+	tier := premium.Premium
+	if whitelabel != nil && *whitelabel  {
+		tier = premium.Whitelabel
 	}
 
 	keys := make([]string, 0)
@@ -51,7 +58,7 @@ func (AdminGenPremiumCommand) Execute(ctx command.CommandContext, length int, am
 			continue
 		}
 
-		err = dbclient.Client.PremiumKeys.Create(key, time.Hour*24*time.Duration(length))
+		err = dbclient.Client.PremiumKeys.Create(key, time.Hour*24*time.Duration(length), int(tier))
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		} else {
