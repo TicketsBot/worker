@@ -94,19 +94,19 @@ func ListenTicketClose() {
 				RateLimiter:  rateLimiter,
 			}
 
-			// Get the member object
-			member, err := ctx.GetGuildMember(ticket.GuildId, payload.UserId)
-			if err != nil {
-				sentry.LogWithContext(err, errorContext)
-				return
-			}
-
 			// if ticket didnt open in the first place, no channel ID is assigned.
 			// we should close it here, or it wont get closed at all
 			if ticket.ChannelId == nil {
 				if err := dbclient.Client.Tickets.Close(payload.TicketId, payload.GuildId); err != nil {
 					sentry.ErrorWithContext(err, errorContext)
 				}
+				return
+			}
+
+			// Get the member object
+			member, err := ctx.GetGuildMember(ticket.GuildId, payload.UserId)
+			if err != nil {
+				sentry.LogWithContext(err, errorContext)
 				return
 			}
 
