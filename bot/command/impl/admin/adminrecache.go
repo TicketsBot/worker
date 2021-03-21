@@ -5,6 +5,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/rxdn/gdl/objects/interaction"
+	"strconv"
 )
 
 type AdminRecacheCommand struct {
@@ -28,10 +29,15 @@ func (c AdminRecacheCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminRecacheCommand) Execute(ctx command.CommandContext, providedGuildId *uint64) {
+func (AdminRecacheCommand) Execute(ctx command.CommandContext, providedGuildId *string) {
 	var guildId uint64
 	if providedGuildId != nil {
-		guildId = *providedGuildId
+		var err error
+		guildId, err = strconv.ParseUint(*providedGuildId, 10, 64)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	} else {
 		guildId = ctx.GuildId()
 	}
