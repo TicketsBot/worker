@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
@@ -16,8 +17,8 @@ import (
 type PremiumCommand struct {
 }
 
-func (PremiumCommand) Properties() command.Properties {
-	return command.Properties{
+func (PremiumCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "premium",
 		Description:     translations.HelpPremium,
 		PermissionLevel: permission.Admin,
@@ -32,7 +33,7 @@ func (c PremiumCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (PremiumCommand) Execute(ctx command.CommandContext, key *string) {
+func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 	if key == nil {
 		if ctx.PremiumTier() > premium.None {
 			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId())

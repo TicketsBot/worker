@@ -3,7 +3,7 @@ package setup
 import (
 	"fmt"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 )
 
 type SetupUser struct {
@@ -17,7 +17,7 @@ func (s *SetupUser) ToString() string {
 	return fmt.Sprintf("%d:%d:%d", s.Guild, s.User, s.Channel)
 }
 
-func FromContext(ctx command.CommandContext) SetupUser {
+func FromContext(ctx registry.CommandContext) SetupUser {
 	return SetupUser{
 		Guild:   ctx.GuildId(),
 		User:    ctx.UserId(),

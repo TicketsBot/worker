@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -13,8 +14,8 @@ import (
 type ViewStaffCommand struct {
 }
 
-func (ViewStaffCommand) Properties() command.Properties {
-	return command.Properties{
+func (ViewStaffCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "viewstaff",
 		Description:     translations.HelpViewStaff,
 		PermissionLevel: permission.Everyone,
@@ -26,7 +27,7 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ViewStaffCommand) Execute(ctx command.CommandContext) {
+func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
 	embed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
 
 	msg, err := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)

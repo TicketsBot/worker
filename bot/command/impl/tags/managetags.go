@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
@@ -13,13 +14,13 @@ import (
 type ManageTagsCommand struct {
 }
 
-func (ManageTagsCommand) Properties() command.Properties {
-	return command.Properties{
+func (ManageTagsCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "managetags",
 		Description:     translations.HelpManageTags,
 		Aliases:         []string{"managecannedresponse", "managecannedresponses", "editcannedresponse", "editcannedresponses", "ecr", "managetags", "mcr", "managetag", "mt"},
 		PermissionLevel: permission.Support,
-		Children: []command.Command{
+		Children: []registry.Command{
 			ManageTagsAddCommand{},
 			ManageTagsDeleteCommand{},
 			ManageTagsListCommand{},
@@ -32,7 +33,7 @@ func (c ManageTagsCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ManageTagsCommand) Execute(ctx command.CommandContext) {
+func (ManageTagsCommand) Execute(ctx registry.CommandContext) {
 	msg := "Select a subcommand:\n"
 
 	children := ManageTagsCommand{}.Properties().Children

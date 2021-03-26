@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -13,8 +14,8 @@ import (
 type AdminForceCloseCommand struct {
 }
 
-func (AdminForceCloseCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminForceCloseCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "forceclose",
 		Description:     database.HelpAdminForceClose,
 		PermissionLevel: permission.Everyone,
@@ -32,7 +33,7 @@ func (c AdminForceCloseCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminForceCloseCommand) Execute(ctx command.CommandContext, guildRaw string, ticketId int) {
+func (AdminForceCloseCommand) Execute(ctx registry.CommandContext, guildRaw string, ticketId int) {
 	guildId, err := strconv.ParseUint(guildRaw, 10, 64)
 	if err != nil {
 		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")

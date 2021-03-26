@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
@@ -13,13 +14,13 @@ import (
 type AdminCommand struct {
 }
 
-func (AdminCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "admin",
 		Description:     database.HelpAdmin,
 		Aliases:         []string{"a"},
 		PermissionLevel: permission.Everyone,
-		Children: []command.Command{
+		Children: []registry.Command{
 			AdminBlacklistCommand{},
 			// AdminCheckPermsCommand{},
 			AdminCheckPremiumCommand{},
@@ -45,7 +46,7 @@ func (c AdminCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminCommand) Execute(ctx command.CommandContext) {
+func (AdminCommand) Execute(ctx registry.CommandContext) {
 	msg := "Select a subcommand:\n"
 
 	children := AdminCommand{}.Properties().Children

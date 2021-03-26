@@ -5,13 +5,14 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 )
 
 type AdminCheckPermsCommand struct {
 }
 
-func (AdminCheckPermsCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminCheckPermsCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "checkperms",
 		Description:     database.HelpAdminCheckPerms,
 		Aliases:         []string{"cp"},
@@ -26,7 +27,7 @@ func (c AdminCheckPermsCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminCheckPermsCommand) Execute(ctx command.CommandContext) {
+func (AdminCheckPermsCommand) Execute(ctx registry.CommandContext) {
 	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)

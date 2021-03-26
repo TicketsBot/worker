@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -13,8 +14,8 @@ import (
 type AdminBlacklistCommand struct {
 }
 
-func (AdminBlacklistCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminBlacklistCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "blacklist",
 		Description:     database.HelpAdminBlacklist,
 		PermissionLevel: permission.Everyone,
@@ -31,7 +32,7 @@ func (c AdminBlacklistCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminBlacklistCommand) Execute(ctx command.CommandContext, raw string) {
+func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
 		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")

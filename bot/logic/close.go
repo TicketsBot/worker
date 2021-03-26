@@ -127,7 +127,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 
 	if _, err := worker.DeleteChannel(channelId); err != nil {
 		// Check if we should exclude this from autoclose
-		if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 403 {
+		if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
 			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}

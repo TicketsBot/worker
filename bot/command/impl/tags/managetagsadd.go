@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -14,8 +15,8 @@ import (
 type ManageTagsAddCommand struct {
 }
 
-func (ManageTagsAddCommand) Properties() command.Properties {
-	return command.Properties{
+func (ManageTagsAddCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "add",
 		Description:     translations.HelpTagAdd,
 		Aliases:         []string{"new", "create"},
@@ -33,7 +34,7 @@ func (c ManageTagsAddCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ManageTagsAddCommand) Execute(ctx command.CommandContext, tagId, content string) {
+func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!managetags add [TagID] [Tag contents]`",

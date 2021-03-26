@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -17,8 +18,8 @@ import (
 type AutoSetupCommand struct {
 }
 
-func (AutoSetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (AutoSetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "auto",
 		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
@@ -31,7 +32,7 @@ func (c AutoSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AutoSetupCommand) Execute(ctx command.CommandContext) {
+func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	var supportRoleId, adminRoleId uint64
 	var messageId uint64
 	var failed bool

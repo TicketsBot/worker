@@ -6,7 +6,9 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -19,10 +21,11 @@ import (
 )
 
 type AddSupportCommand struct {
+	Registry registry.Registry
 }
 
-func (AddSupportCommand) Properties() command.Properties {
-	return command.Properties{
+func (AddSupportCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "addsupport",
 		Description:     translations.HelpAddSupport,
 		Aliases:         []string{"addsuport"},
@@ -40,7 +43,7 @@ func (c AddSupportCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!addsupport @User`\n`t!addsupport @Role`\n`t!addsupport role name`",
@@ -126,6 +129,13 @@ func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, rol
 		return
 	}
 
+	logic.UpdateCommandPermissions(ctx, c.Registry)
+	updateChannelPermissions(ctx, userId, roles)
+
+	ctx.Accept()
+}
+
+func updateChannelPermissions(ctx registry.CommandContext, userId *uint64, roles []uint64) {
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -141,7 +151,7 @@ func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, rol
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
-			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
+			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
 				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
 					ctx.HandleError(err)
 					return
@@ -185,6 +195,4 @@ func (AddSupportCommand) Execute(ctx command.CommandContext, userId *uint64, rol
 			return
 		}
 	}
-
-	ctx.Accept()
 }

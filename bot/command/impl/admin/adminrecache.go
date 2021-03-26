@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
@@ -11,8 +12,8 @@ import (
 type AdminRecacheCommand struct {
 }
 
-func (AdminRecacheCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminRecacheCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "recache",
 		Description:     translations.HelpAdmin,
 		PermissionLevel: permission.Everyone,
@@ -29,7 +30,7 @@ func (c AdminRecacheCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminRecacheCommand) Execute(ctx command.CommandContext, providedGuildId *string) {
+func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId *string) {
 	var guildId uint64
 	if providedGuildId != nil {
 		var err error

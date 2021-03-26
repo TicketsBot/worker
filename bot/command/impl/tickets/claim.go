@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -13,8 +14,8 @@ import (
 type ClaimCommand struct {
 }
 
-func (ClaimCommand) Properties() command.Properties {
-	return command.Properties{
+func (ClaimCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "claim",
 		Description:     translations.HelpClaim,
 		PermissionLevel: permission.Support,
@@ -26,7 +27,7 @@ func (c ClaimCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ClaimCommand) Execute(ctx command.CommandContext) {
+func (ClaimCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
 		ctx.HandleError(err)

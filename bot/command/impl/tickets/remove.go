@@ -4,6 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -14,8 +15,8 @@ import (
 type RemoveCommand struct {
 }
 
-func (RemoveCommand) Properties() command.Properties {
-	return command.Properties{
+func (RemoveCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "remove",
 		Description:     translations.HelpRemove,
 		PermissionLevel: permcache.Everyone,
@@ -30,7 +31,7 @@ func (c RemoveCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (RemoveCommand) Execute(ctx command.CommandContext, userId uint64) {
+func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	/*usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!remove @User`",

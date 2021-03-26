@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -15,8 +16,8 @@ import (
 type SyncCommand struct {
 }
 
-func (SyncCommand) Properties() command.Properties {
-	return command.Properties{
+func (SyncCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "sync",
 		Description:     translations.HelpSync,
 		PermissionLevel: permission.Admin,
@@ -28,7 +29,7 @@ func (c SyncCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (s SyncCommand) Execute(ctx command.CommandContext) {
+func (s SyncCommand) Execute(ctx registry.CommandContext) {
 	if !utils.IsBotHelper(ctx.UserId()) {
 		if s.isInCooldown(ctx.GuildId()) {
 			ctx.ReplyRaw(utils.Red, "Sync", "This command is currently in cooldown")
@@ -65,7 +66,7 @@ func (s SyncCommand) addCooldown(guildId uint64) {
 	redis.Client.Set(key, "1", cooldown)
 }
 
-func processDeletedTickets(ctx command.CommandContext) (updated int) {
+func processDeletedTickets(ctx registry.CommandContext) (updated int) {
 	tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -92,7 +93,7 @@ func processDeletedTickets(ctx command.CommandContext) (updated int) {
 	return
 }
 
-func processDeletedPanels(ctx command.CommandContext) (removed int) {
+func processDeletedPanels(ctx registry.CommandContext) (removed int) {
 	panels, err := dbclient.Client.Panel.GetByGuild(ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())

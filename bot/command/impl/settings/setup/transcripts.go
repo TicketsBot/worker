@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -12,8 +13,8 @@ import (
 
 type TranscriptsSetupCommand struct{}
 
-func (TranscriptsSetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (TranscriptsSetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "transcripts",
 		Description:     translations.HelpSetup,
 		Aliases:         []string{"transcript", "archives", "archive"},
@@ -29,7 +30,7 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (TranscriptsSetupCommand) Execute(ctx command.CommandContext, channelId uint64) {
+func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId uint64) {
 	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
 		if restError, ok := err.(request.RestError); ok && restError.IsClientError() {
 			ctx.Reply(utils.Red, "Error", translations.SetupTranscriptsInvalid, ctx.ChannelId)

@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -11,8 +12,8 @@ import (
 
 type LimitSetupCommand struct{}
 
-func (LimitSetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (LimitSetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "limit",
 		Description:     translations.HelpSetup,
 		Aliases:         []string{"ticketlimit", "max", "maximum"},
@@ -28,7 +29,7 @@ func (c LimitSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (LimitSetupCommand) Execute(ctx command.CommandContext, limit int) {
+func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 	if limit < 1 || limit > 10 {
 		ctx.Reply(utils.Red, "Setup", translations.SetupLimitInvalid)
 		ctx.Reject()

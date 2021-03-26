@@ -5,7 +5,9 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -14,10 +16,11 @@ import (
 )
 
 type RemoveAdminCommand struct {
+	Registry registry.Registry
 }
 
-func (RemoveAdminCommand) Properties() command.Properties {
-	return command.Properties{
+func (RemoveAdminCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "removeadmin",
 		Description:     translations.HelpRemoveAdmin,
 		PermissionLevel: permcache.Admin,
@@ -35,7 +38,7 @@ func (c RemoveAdminCommand) GetExecutor() interface{} {
 }
 
 // TODO: Remove from existing tickets
-func (RemoveAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!removeadmin @User`\n`t!removeadmin @Role`\n`t!removeadmin role name`",
@@ -119,6 +122,8 @@ func (RemoveAdminCommand) Execute(ctx command.CommandContext, userId *uint64, ro
 			return nil
 		})
 	}
+
+	logic.UpdateCommandPermissions(ctx, c.Registry)
 
 	switch group.Wait() {
 	case nil:

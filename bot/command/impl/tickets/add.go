@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -16,8 +17,8 @@ import (
 type AddCommand struct {
 }
 
-func (AddCommand) Properties() command.Properties {
-	return command.Properties{
+func (AddCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "add",
 		Description:     translations.HelpAdd,
 		PermissionLevel: permcache.Everyone,
@@ -33,7 +34,7 @@ func (c AddCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AddCommand) Execute(ctx command.CommandContext, userId, channelId uint64) {
+func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!add @User #ticket-channel`",

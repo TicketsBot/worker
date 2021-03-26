@@ -1,4 +1,4 @@
-package impl
+package general
 
 import (
 	"github.com/TicketsBot/common/permission"
@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/elliotchance/orderedmap"
@@ -14,10 +15,11 @@ import (
 )
 
 type HelpCommand struct {
+	Registry registry.Registry
 }
 
-func (HelpCommand) Properties() command.Properties {
-	return command.Properties{
+func (HelpCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "help",
 		Description:     translations.HelpHelp,
 		Aliases:         []string{"h"},
@@ -30,7 +32,7 @@ func (c HelpCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (h HelpCommand) Execute(ctx command.CommandContext) {
+func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	commandCategories := orderedmap.NewOrderedMap()
 
 	// initialise map with the correct order of categories
@@ -44,7 +46,7 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		return
 	}
 
-	for _, cmd := range Commands {
+	for _, cmd := range c.Registry {
 		// check bot admin / helper only commands
 		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.UserId())) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.UserId())) {
 			continue
@@ -56,12 +58,12 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		}
 
 		if permLevel >= cmd.Properties().PermissionLevel { // only send commands the user has permissions for
-			var current []command.Command
+			var current []registry.Command
 			if commands, ok := commandCategories.Get(cmd.Properties().Category); ok {
 				if commands == nil {
-					current = make([]command.Command, 0)
+					current = make([]registry.Command, 0)
 				} else {
-					current = commands.([]command.Command)
+					current = commands.([]registry.Command)
 				}
 			}
 			current = append(current, cmd)
@@ -75,19 +77,19 @@ func (h HelpCommand) Execute(ctx command.CommandContext) {
 		SetTitle("Help")
 
 	for _, category := range commandCategories.Keys() {
-		var commands []command.Command
+		var commands []registry.Command
 		if retrieved, ok := commandCategories.Get(category.(command.Category)); ok {
 			if retrieved == nil {
-				commands = make([]command.Command, 0)
+				commands = make([]registry.Command, 0)
 			} else {
-				commands = retrieved.([]command.Command)
+				commands = retrieved.([]registry.Command)
 			}
 		}
 
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
 			for _, cmd := range commands {
-				formatted = append(formatted, command.FormatHelp(cmd, ctx.GuildId()))
+				formatted = append(formatted, registry.FormatHelp(cmd, ctx.GuildId()))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)

@@ -6,7 +6,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/impl"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -14,14 +14,14 @@ import (
 	"strconv"
 )
 
-func executeCommand(ctx *worker.Context, payload []byte) error {
+func executeCommand(ctx *worker.Context, registry registry.Registry, payload []byte) error {
 	var data interaction.Interaction
 	if err := json.Unmarshal(payload, &data); err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
 
-	cmd, ok := impl.Commands[data.Data.Name]
+	cmd, ok := registry[data.Data.Name]
 	if !ok {
 		return fmt.Errorf("command %s does not exist", data.Data.Name)
 	}

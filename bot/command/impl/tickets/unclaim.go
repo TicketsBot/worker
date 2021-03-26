@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -14,8 +15,8 @@ import (
 type UnclaimCommand struct {
 }
 
-func (UnclaimCommand) Properties() command.Properties {
-	return command.Properties{
+func (UnclaimCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "unclaim",
 		Description:     translations.HelpUnclaim,
 		PermissionLevel: permission.Support,
@@ -27,7 +28,7 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (UnclaimCommand) Execute(ctx command.CommandContext) {
+func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
 		ctx.HandleError(err)

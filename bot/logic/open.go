@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -23,7 +23,7 @@ import (
 	"sync"
 )
 
-func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject string) {
+func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -61,7 +61,7 @@ func OpenTicket(ctx command.CommandContext, panel *database.Panel, subject strin
 		if err != nil {
 			useCategory = false
 
-			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
+			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
 				if panel == nil {
 					if err := dbclient.Client.ChannelCategory.Delete(ctx.GuildId()); err != nil {
 						ctx.HandleError(err)

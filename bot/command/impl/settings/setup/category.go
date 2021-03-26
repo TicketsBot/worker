@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -13,8 +14,8 @@ import (
 
 type CategorySetupCommand struct{}
 
-func (CategorySetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (CategorySetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "category",
 		Description:     translations.HelpSetup,
 		Aliases:         []string{"ticketcategory", "cat", "channelcategory"},
@@ -31,7 +32,7 @@ func (c CategorySetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (CategorySetupCommand) Execute(ctx command.CommandContext, categoryId *uint64, categoryName *string) {
+func (CategorySetupCommand) Execute(ctx registry.CommandContext, categoryId *uint64, categoryName *string) {
 	var category channel.Channel
 	if categoryId != nil {
 		var err error

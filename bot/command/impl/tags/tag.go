@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -16,8 +17,8 @@ import (
 type TagCommand struct {
 }
 
-func (TagCommand) Properties() command.Properties {
-	return command.Properties{
+func (TagCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "tag",
 		Description:     translations.HelpTag,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
@@ -33,7 +34,7 @@ func (c TagCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (TagCommand) Execute(ctx command.CommandContext, tagId string) {
+func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!tag [TagID]`",

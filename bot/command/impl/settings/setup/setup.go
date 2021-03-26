@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -15,13 +16,13 @@ import (
 type SetupCommand struct {
 }
 
-func (SetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (SetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "setup",
 		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
-		Children: []command.Command{
+		Children: []registry.Command{
 			EasySetupCommand{},
 			AutoSetupCommand{},
 			PrefixSetupCommand{},
@@ -37,11 +38,11 @@ func (c SetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (c SetupCommand) Execute(ctx command.CommandContext) {
+func (c SetupCommand) Execute(ctx registry.CommandContext) {
 	ctx.ReplyWithFieldsPermanent(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
 }
 
-func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
+func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField {
 	fields := make([]embed.EmbedField, 9)
 
 	group, _ := errgroup.WithContext(context.Background())
@@ -65,7 +66,7 @@ func (SetupCommand) buildFields(ctx command.CommandContext) []embed.EmbedField {
 	return fields
 }
 
-func newFieldFromTranslation(ctx command.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
+func newFieldFromTranslation(ctx registry.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
 	return embed.EmbedField{
 		Name:   name,
 		Value:  i18n.GetMessageFromGuild(ctx.GuildId(), value, format...),
@@ -73,7 +74,7 @@ func newFieldFromTranslation(ctx command.CommandContext, name string, value tran
 	}
 }
 
-func getFieldFunc(ctx command.CommandContext, fields []embed.EmbedField, index int, name string, value translations.MessageId, inline bool, format ...interface{}) func() error {
+func getFieldFunc(ctx registry.CommandContext, fields []embed.EmbedField, index int, name string, value translations.MessageId, inline bool, format ...interface{}) func() error {
 	return func() error {
 		fields[index] = newFieldFromTranslation(ctx, name, value, inline, format...)
 		return nil

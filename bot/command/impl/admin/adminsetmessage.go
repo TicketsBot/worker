@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strconv"
@@ -13,8 +14,8 @@ type AdminSetMessageCommand struct {
 }
 
 // TODO: This is interaction only, but we don't want to show admin cmds
-func (AdminSetMessageCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminSetMessageCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "setmessage",
 		Description:     translations.HelpAdminSetMessage,
 		Aliases:         []string{"sm"},
@@ -38,7 +39,7 @@ func (c AdminSetMessageCommand) GetExecutor() interface{} {
 }
 
 // t!admin sm lang id value
-func (AdminSetMessageCommand) Execute(ctx command.CommandContext) {
+func (AdminSetMessageCommand) Execute(ctx registry.CommandContext) {
 	msgCtx := ctx.(*command.MessageContext)
 
 	if len(msgCtx.Args) < 3 {

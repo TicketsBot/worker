@@ -4,7 +4,9 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -12,13 +14,13 @@ import (
 )
 
 type RemoveSupportCommand struct {
+	Registry registry.Registry
 }
 
-func (RemoveSupportCommand) Properties() command.Properties {
-	return command.Properties{
+func (RemoveSupportCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "removesupport",
 		Description:     translations.HelpRemoveSupport,
-		Aliases:         []string{"removesuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
@@ -34,7 +36,7 @@ func (c RemoveSupportCommand) GetExecutor() interface{} {
 }
 
 // TODO: Remove from existing tickets
-func (RemoveSupportCommand) Execute(ctx command.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!removesupport @User`\n`t!removesupport @Role`\n`t!removesupport role name`",
@@ -120,6 +122,8 @@ func (RemoveSupportCommand) Execute(ctx command.CommandContext, userId *uint64, 
 			return
 		}
 	}
+
+	logic.UpdateCommandPermissions(ctx, c.Registry)
 
 	ctx.Accept()
 }

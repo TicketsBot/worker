@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -14,8 +15,8 @@ import (
 type RenameCommand struct {
 }
 
-func (RenameCommand) Properties() command.Properties {
-	return command.Properties{
+func (RenameCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "rename",
 		Description:     translations.HelpRename,
 		PermissionLevel: permission.Support,
@@ -30,7 +31,7 @@ func (c RenameCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (RenameCommand) Execute(ctx command.CommandContext, name string) {
+func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!rename [ticket-name]`",

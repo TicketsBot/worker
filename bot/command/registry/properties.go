@@ -1,8 +1,9 @@
-package command
+package registry
 
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/command"
 )
 
 type Properties struct {
@@ -12,11 +13,11 @@ type Properties struct {
 	PermissionLevel permission.PermissionLevel
 	Children        []Command // TODO: Map
 	PremiumOnly     bool
-	Category        Category
+	Category        command.Category
 	AdminOnly       bool
 	HelperOnly      bool
 	InteractionOnly bool
 	MessageOnly     bool
 	MainBotOnly     bool
-	Arguments       []Argument
+	Arguments       []command.Argument
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -12,8 +13,8 @@ import (
 
 type PrefixSetupCommand struct{}
 
-func (PrefixSetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (PrefixSetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "prefix",
 		Description:     translations.HelpSetup,
 		PermissionLevel: permission.Admin,
@@ -28,7 +29,7 @@ func (c PrefixSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (PrefixSetupCommand) Execute(ctx command.CommandContext, prefix string) {
+func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 	if len(prefix) == 0 || len(prefix) > 8 || strings.Contains(prefix, " ") {
 		ctx.Reply(utils.Red, "Setup", translations.SetupPrefixInvalid)
 		ctx.Reject()

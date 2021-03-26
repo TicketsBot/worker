@@ -4,14 +4,15 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"runtime"
 )
 
 type AdminGCCommand struct {
 }
 
-func (AdminGCCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminGCCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "gc",
 		Description:     database.HelpAdminGC,
 		PermissionLevel: permission.Everyone,
@@ -25,7 +26,7 @@ func (c AdminGCCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminGCCommand) Execute(ctx command.CommandContext) {
+func (AdminGCCommand) Execute(ctx registry.CommandContext) {
 	runtime.GC()
 	ctx.Accept()
 }

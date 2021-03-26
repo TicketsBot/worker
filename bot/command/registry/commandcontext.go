@@ -1,4 +1,4 @@
-package command
+package registry
 
 import (
 	permcache "github.com/TicketsBot/common/permission"

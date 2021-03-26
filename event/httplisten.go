@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/go-redis/redis"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/rest/ratelimit"
@@ -93,6 +94,9 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseW
 }
 
 func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseWriter, *http.Request) {
+	commandManager := new(manager.CommandManager)
+	commandManager.RegisterCommands()
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		var command eventforwarding.Command
 		if err := json.NewDecoder(r.Body).Decode(&command); err != nil {
@@ -132,7 +136,7 @@ func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.Respons
 
 		_, _ = w.Write(marshalled)
 
-		if err := executeCommand(ctx, command.Event); err != nil {
+		if err := executeCommand(ctx, commandManager.GetCommands(), command.Event); err != nil {
 			marshalled, _ := json.Marshal(command)
 			logrus.Warnf("error executing command: %v (payload: %s)", err, string(marshalled))
 		}

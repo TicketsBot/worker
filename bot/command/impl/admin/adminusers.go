@@ -6,14 +6,15 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 )
 
 type AdminUsersCommand struct {
 }
 
-func (AdminUsersCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminUsersCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "users",
 		Description:     database.HelpAdminUsers,
 		PermissionLevel: permission.Everyone,
@@ -27,7 +28,7 @@ func (c AdminUsersCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminUsersCommand) Execute(ctx command.CommandContext) {
+func (AdminUsersCommand) Execute(ctx registry.CommandContext) {
 	var count int
 
 	query := `SELECT COUNT(DISTINCT "user_id") FROM members;`

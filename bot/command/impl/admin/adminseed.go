@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest"
 )
@@ -12,8 +13,8 @@ import (
 type AdminSeedCommand struct {
 }
 
-func (AdminSeedCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminSeedCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "seed",
 		Description:     database.HelpAdminSeed,
 		PermissionLevel: permission.Everyone,
@@ -27,7 +28,7 @@ func (c AdminSeedCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminSeedCommand) Execute(ctx command.CommandContext) {
+func (AdminSeedCommand) Execute(ctx registry.CommandContext) {
 	var guilds []uint64
 	guilds = []uint64{ctx.GuildId()}
 

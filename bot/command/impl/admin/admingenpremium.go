@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
@@ -18,8 +19,8 @@ import (
 type AdminGenPremiumCommand struct {
 }
 
-func (AdminGenPremiumCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminGenPremiumCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "genpremium",
 		Description:     database.HelpAdminGenPremium,
 		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
@@ -39,7 +40,7 @@ func (c AdminGenPremiumCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminGenPremiumCommand) Execute(ctx command.CommandContext, length int, amountRaw *int, whitelabel *bool) {
+func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, amountRaw *int, whitelabel *bool) {
 	amount := 1
 	if amountRaw != nil {
 		amount = *amountRaw

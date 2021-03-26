@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -14,8 +15,8 @@ import (
 type BlacklistCommand struct {
 }
 
-func (BlacklistCommand) Properties() command.Properties {
-	return command.Properties{
+func (BlacklistCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "blacklist",
 		Description:     translations.HelpBlacklist,
 		Aliases:         []string{"unblacklist"},
@@ -31,7 +32,7 @@ func (c BlacklistCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (BlacklistCommand) Execute(ctx command.CommandContext, userId uint64) {
+func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!blacklist @User`",

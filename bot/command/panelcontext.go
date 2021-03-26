@@ -80,7 +80,7 @@ func (ctx *PanelContext) openDm() (channel.Channel, bool) {
 	ch, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
 		// check for 403
-		if err, ok := err.(request.RestError); ok && err.ErrorCode == 403 {
+		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
 			return ch, false
 		}
 

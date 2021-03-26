@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -11,8 +12,8 @@ import (
 
 type WelcomeMessageSetupCommand struct{}
 
-func (WelcomeMessageSetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (WelcomeMessageSetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "welcomemessage",
 		Description:     translations.HelpSetup,
 		Aliases:         []string{"wm", "welcome"},
@@ -28,7 +29,7 @@ func (c WelcomeMessageSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (WelcomeMessageSetupCommand) Execute(ctx command.CommandContext, message string) {
+func (WelcomeMessageSetupCommand) Execute(ctx registry.CommandContext, message string) {
 	if len(message) > 1024 {
 		ctx.Reply(utils.Red, "Setup", translations.SetupWelcomeMessageInvalid)
 		ctx.Reject()

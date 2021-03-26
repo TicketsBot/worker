@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"time"
 )
@@ -12,8 +13,8 @@ import (
 type AdminPingCommand struct {
 }
 
-func (AdminPingCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminPingCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "ping",
 		Description:     database.HelpAdminPing,
 		Aliases:         []string{"latency"},
@@ -28,7 +29,7 @@ func (c AdminPingCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminPingCommand) Execute(ctx command.CommandContext) {
+func (AdminPingCommand) Execute(ctx registry.CommandContext) {
 	messageContext, ok := ctx.(*command.MessageContext)
 
 	if ok {

@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -15,8 +16,8 @@ import (
 type AdminDebugCommand struct {
 }
 
-func (AdminDebugCommand) Properties() command.Properties {
-	return command.Properties{
+func (AdminDebugCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "debug",
 		Description:     database.HelpAdminDebug,
 		PermissionLevel: permission.Everyone,
@@ -30,7 +31,7 @@ func (c AdminDebugCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminDebugCommand) Execute(ctx command.CommandContext) {
+func (AdminDebugCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket category
 	categoryId, err := dbclient.Client.ChannelCategory.Get(ctx.GuildId())
 	if err != nil {

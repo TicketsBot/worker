@@ -1,10 +1,11 @@
-package impl
+package admin
 
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -12,10 +13,11 @@ import (
 )
 
 type RegisterCommandsCommand struct {
+	Registry registry.Registry
 }
 
-func (RegisterCommandsCommand) Properties() command.Properties {
-	return command.Properties{
+func (RegisterCommandsCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "registercommands",
 		Description:     database.HelpAdmin, // TODO: Register translation
 		Aliases:         []string{"registercmds", "rcmds", "rcmd"},
@@ -33,8 +35,8 @@ func (c RegisterCommandsCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (RegisterCommandsCommand) Execute(ctx command.CommandContext, global *bool) {
-	for _, cmd := range Commands {
+func (c RegisterCommandsCommand) Execute(ctx registry.CommandContext, global *bool) {
+	for _, cmd := range c.Registry {
 		properties := cmd.Properties()
 
 		if properties.MessageOnly {
@@ -68,7 +70,7 @@ func (RegisterCommandsCommand) Execute(ctx command.CommandContext, global *bool)
 	ctx.Accept()
 }
 
-func BuildOption(cmd command.Command) interaction.ApplicationCommandOption {
+func BuildOption(cmd registry.Command) interaction.ApplicationCommandOption {
 	properties := cmd.Properties()
 
 	// Required args must come before optional args

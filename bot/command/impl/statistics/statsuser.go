@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -18,8 +19,8 @@ import (
 type StatsUserCommand struct {
 }
 
-func (StatsUserCommand) Properties() command.Properties {
-	return command.Properties{
+func (StatsUserCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "user",
 		Description:     translations.HelpStats, // TODO: Proper translations
 		Aliases:         []string{"statistics"},
@@ -36,7 +37,7 @@ func (c StatsUserCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (StatsUserCommand) Execute(ctx command.CommandContext, userId uint64) {
+func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
 	if err != nil {
 		ctx.HandleError(err)

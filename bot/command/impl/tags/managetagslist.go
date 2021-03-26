@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
@@ -13,8 +14,8 @@ import (
 type ManageTagsListCommand struct {
 }
 
-func (ManageTagsListCommand) Properties() command.Properties {
-	return command.Properties{
+func (ManageTagsListCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "list",
 		Description:     translations.HelpTagList,
 		PermissionLevel: permission.Support,
@@ -26,7 +27,7 @@ func (c ManageTagsListCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ManageTagsListCommand) Execute(ctx command.CommandContext) {
+func (ManageTagsListCommand) Execute(ctx registry.CommandContext) {
 	ids, err := dbclient.Client.Tag.GetTagIds(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)

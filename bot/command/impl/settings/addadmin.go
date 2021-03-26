@@ -5,7 +5,9 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -18,10 +20,11 @@ import (
 )
 
 type AddAdminCommand struct {
+	Registry registry.Registry
 }
 
-func (AddAdminCommand) Properties() command.Properties {
-	return command.Properties{
+func (AddAdminCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "addadmin",
 		Description:     translations.HelpAddAdmin,
 		PermissionLevel: permcache.Admin,
@@ -38,7 +41,7 @@ func (c AddAdminCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",
@@ -129,6 +132,8 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 		return
 	}
 
+	logic.UpdateCommandPermissions(ctx, c.Registry)
+
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -144,7 +149,7 @@ func (AddAdminCommand) Execute(ctx command.CommandContext, userId *uint64, roleI
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
-			if restError, ok := err.(request.RestError); ok && restError.ErrorCode == 404 {
+			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
 				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
 					ctx.HandleError(err)
 					return

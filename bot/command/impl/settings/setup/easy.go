@@ -4,14 +4,15 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/setup"
 	"github.com/TicketsBot/worker/bot/utils"
 )
 
 type EasySetupCommand struct{}
 
-func (EasySetupCommand) Properties() command.Properties {
-	return command.Properties{
+func (EasySetupCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "ez",
 		Description:     translations.HelpSetupEasy,
 		Aliases:         []string{"easy"},
@@ -25,7 +26,7 @@ func (c EasySetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (EasySetupCommand) Execute(ctx command.CommandContext) {
+func (EasySetupCommand) Execute(ctx registry.CommandContext) {
 	u := setup.FromContext(ctx)
 
 	if u.InSetup() {

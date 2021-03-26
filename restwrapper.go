@@ -547,3 +547,19 @@ func (ctx *Context) ModifyGuildCommand(applicationId, guildId, commandId uint64,
 func (ctx *Context) DeleteGuildCommand(applicationId, guildId, commandId uint64) error {
 	return rest.DeleteGuildCommand(ctx.Token, ctx.RateLimiter, applicationId, guildId, commandId)
 }
+
+func (ctx *Context) GetCommandPermissions(applicationId, guildId, commandId uint64) (rest.CommandWithPermissionsData, error) {
+	return rest.GetCommandPermissions(ctx.Token, ctx.RateLimiter, applicationId, guildId, commandId)
+}
+
+func (ctx *Context) GetBulkCommandPermissions(applicationId, guildId uint64) ([]rest.CommandWithPermissionsData, error) {
+	return rest.GetBulkCommandPermissions(ctx.Token, ctx.RateLimiter, applicationId, guildId)
+}
+
+func (ctx *Context) EditCommandPermissions(applicationId, guildId, commandId uint64, data rest.CommandWithPermissionsData) (rest.CommandWithPermissionsData, error) {
+	return rest.EditCommandPermissions(ctx.Token, ctx.RateLimiter, applicationId, guildId, commandId, data)
+}
+
+func (ctx *Context) EditBulkCommandPermissions(applicationId, guildId uint64, data []rest.CommandWithPermissionsData) ([]rest.CommandWithPermissionsData, error) {
+	return rest.EditBulkCommandPermissions(ctx.Token, ctx.RateLimiter, applicationId, guildId, data)
+}

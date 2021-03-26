@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -14,8 +15,8 @@ import (
 type TransferCommand struct {
 }
 
-func (TransferCommand) Properties() command.Properties {
-	return command.Properties{
+func (TransferCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "transfer",
 		Description:     translations.HelpTransfer,
 		PermissionLevel: permission.Support,
@@ -30,7 +31,7 @@ func (c TransferCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (TransferCommand) Execute(ctx command.CommandContext, userId uint64) {
+func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {

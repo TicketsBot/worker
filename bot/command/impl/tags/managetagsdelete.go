@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -13,8 +14,8 @@ import (
 type ManageTagsDeleteCommand struct {
 }
 
-func (ManageTagsDeleteCommand) Properties() command.Properties {
-	return command.Properties{
+func (ManageTagsDeleteCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "delete",
 		Description:     translations.HelpTagDelete,
 		Aliases:         []string{"del", "rm", "remove"},
@@ -30,7 +31,7 @@ func (c ManageTagsDeleteCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (ManageTagsDeleteCommand) Execute(ctx command.CommandContext, tagId string) {
+func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string) {
 	/*usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!managetags delete [TagID]`",

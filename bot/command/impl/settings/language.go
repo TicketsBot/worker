@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -15,8 +16,8 @@ import (
 type LanguageCommand struct {
 }
 
-func (LanguageCommand) Properties() command.Properties {
-	return command.Properties{
+func (LanguageCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "language",
 		Description:     translations.HelpLanguage,
 		PermissionLevel: permission.Admin,
@@ -32,7 +33,7 @@ func (c LanguageCommand) GetExecutor() interface{} {
 }
 
 // TODO: Show options properly
-func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string) {
+func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string) {
 	var valid bool
 	for language, flag := range translations.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
@@ -53,7 +54,7 @@ func (c LanguageCommand) Execute(ctx command.CommandContext, newLanguage string)
 	ctx.Accept()
 }
 
-func (LanguageCommand) sendInvalidMessage(ctx command.CommandContext) {
+func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	example := embed.EmbedField{
 		Name:   "Example",
 		Value:  fmt.Sprintf("`%slanguage en`\n`%slanguage fr`\n`%slanguage de`", utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX),

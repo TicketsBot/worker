@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 )
@@ -11,13 +12,13 @@ import (
 type StatsCommand struct {
 }
 
-func (StatsCommand) Properties() command.Properties {
-	return command.Properties{
+func (StatsCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "stats",
 		Description:     translations.HelpStats,
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
-		Children: []command.Command{
+		Children: []registry.Command{
 			StatsUserCommand{},
 			StatsServerCommand{},
 		},
@@ -30,7 +31,7 @@ func (c StatsCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (StatsCommand) Execute(ctx command.CommandContext) {
+func (StatsCommand) Execute(ctx registry.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
 		Value:  "`t!stats server`\n`t!stats @User`",

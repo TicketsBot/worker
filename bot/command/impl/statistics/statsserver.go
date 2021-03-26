@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -16,8 +17,8 @@ import (
 type StatsServerCommand struct {
 }
 
-func (StatsServerCommand) Properties() command.Properties {
-	return command.Properties{
+func (StatsServerCommand) Properties() registry.Properties {
+	return registry.Properties{
 		Name:            "server",
 		Description:     translations.HelpStatsServer,
 		PermissionLevel: permission.Support,
@@ -30,7 +31,7 @@ func (c StatsServerCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (StatsServerCommand) Execute(ctx command.CommandContext) {
+func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	var totalTickets, openTickets int
 
 	group, _ := errgroup.WithContext(context.Background())
