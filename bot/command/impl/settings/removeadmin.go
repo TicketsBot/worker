@@ -7,7 +7,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -123,7 +122,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 		})
 	}
 
-	logic.UpdateCommandPermissions(ctx, c.Registry)
+	//logic.UpdateCommandPermissions(ctx, c.Registry)
 
 	switch group.Wait() {
 	case nil:

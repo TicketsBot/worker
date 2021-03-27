@@ -8,7 +8,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -129,7 +128,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		return
 	}
 
-	logic.UpdateCommandPermissions(ctx, c.Registry)
+	//logic.UpdateCommandPermissions(ctx, c.Registry)
 	updateChannelPermissions(ctx, userId, roles)
 
 	ctx.Accept()

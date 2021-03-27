@@ -7,7 +7,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -132,7 +131,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 		return
 	}
 
-	logic.UpdateCommandPermissions(ctx, c.Registry)
+	//logic.UpdateCommandPermissions(ctx, c.Registry)
 
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
