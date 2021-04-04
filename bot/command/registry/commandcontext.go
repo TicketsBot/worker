@@ -36,6 +36,7 @@ type CommandContext interface {
 	ReplyRawPermanent(colour utils.Colour, title, content string)
 
 	ReplyPlain(content string)
+	ReplyPlainPermanent(content string)
 
 	// No functionality on interactions, check / cross reaction on messages
 	Accept()

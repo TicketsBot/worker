@@ -159,6 +159,11 @@ func (ctx *MessageContext) ReplyPlain(content string) {
 	}
 }
 
+func (ctx *MessageContext) ReplyPlainPermanent(content string) {
+	ctx.replyRaw(content)
+}
+
+
 func (ctx *MessageContext) Accept() {
 	utils.ReactWithCheck(ctx.worker, ctx.ChannelId(), ctx.Id)
 }

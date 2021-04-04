@@ -162,6 +162,10 @@ func (ctx *PanelContext) ReplyPlain(content string) {
 	ctx.replyRaw(content)
 }
 
+func (ctx *PanelContext) ReplyPlainPermanent(content string) {
+	ctx.replyRaw(content)
+}
+
 func (ctx *PanelContext) Accept() {}
 func (ctx *PanelContext) Reject() {}
 

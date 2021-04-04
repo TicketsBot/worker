@@ -146,6 +146,10 @@ func (ctx *InteractionContext) ReplyPlain(content string) {
 	ctx.replyRaw(message.SumFlags(message.FlagEphemeral), content)
 }
 
+func (ctx *InteractionContext) ReplyPlainPermanent(content string) {
+	ctx.replyRaw(0, content)
+}
+
 func (ctx *InteractionContext) Accept() {
 	ctx.ReplyPlain("✅")
 }

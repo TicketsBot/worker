@@ -67,7 +67,5 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	// TODO: Delete message if message context
 	//_ = ctx.Worker().DeleteMessage(ctx.ChannelId(), ctx.Id)
 
-	if _, err := ctx.Worker().CreateMessage(ctx.ChannelId(), content); err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-	}
+	ctx.ReplyPlainPermanent(content)
 }
