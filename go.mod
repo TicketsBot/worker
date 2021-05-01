@@ -20,5 +20,3 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
-
-replace github.com/rxdn/gdl => ../../rxdn/gdl
