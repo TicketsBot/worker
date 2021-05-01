@@ -3,14 +3,14 @@ package messagequeue
 import (
 	"fmt"
 	"github.com/TicketsBot/common/closerelay"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"os"
@@ -84,10 +84,10 @@ func ListenTicketClose() {
 			rateLimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, keyPrefix), 1)
 
 			// Get whether the guild is premium for log archiver
-			isPremium := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter) > premium.None
+			premiumTier := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
 
 			// Create worker context
-			ctx := &worker.Context{
+			workerCtx := &worker.Context{
 				Token:        token,
 				IsWhitelabel: botId != 0,
 				Cache:        cache.Client, // TODO: Less hacky
@@ -103,14 +103,10 @@ func ListenTicketClose() {
 				return
 			}
 
-			// Get the member object
-			member, err := ctx.GetGuildMember(ticket.GuildId, payload.UserId)
-			if err != nil {
-				sentry.LogWithContext(err, errorContext)
-				return
-			}
+			// ticket.ChannelId cannot be nil
+			ctx := command.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
 
-			logic.CloseTicket(ctx, ticket.GuildId, *ticket.ChannelId, 0, member, &payload.Reason, false, isPremium)
+			logic.CloseTicket(&ctx, 0, &payload.Reason, true)
 		}()
 	}
 }

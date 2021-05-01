@@ -3,11 +3,9 @@ package general
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
-	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/elliotchance/orderedmap"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -20,11 +18,12 @@ type HelpCommand struct {
 
 func (HelpCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "help",
-		Description:     translations.HelpHelp,
-		Aliases:         []string{"h"},
-		PermissionLevel: permission.Everyone,
-		Category:        command.General,
+		Name:             "help",
+		Description:      translations.HelpHelp,
+		Aliases:          []string{"h"},
+		PermissionLevel:  permission.Everyone,
+		Category:         command.General,
+		DefaultEphemeral: true,
 	}
 }
 
@@ -96,37 +95,11 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 		}
 	}
 
-	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
-	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		return
-	}
-
 	if ctx.PremiumTier() == premium.None {
 		self, _ := ctx.Worker().Self()
 		embed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
 	}
 
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
-	_, err = ctx.Worker().CreateMessageEmbed(dmChannel.Id, embed)
-	if err == nil {
-		ctx.Accept()
-	} else {
-		ctx.Reject()
-		ctx.Reply(utils.Red, "Error", translations.MessageHelpDMFailed)
-	}
-}
-
-func getPrefix(guildId uint64) (prefix string) {
-	var err error
-	prefix, err = dbclient.Client.Prefix.Get(guildId)
-	if err != nil {
-		sentry.Error(err)
-	}
-
-	if prefix == "" {
-		prefix = utils.DEFAULT_PREFIX
-	}
-
-	return
+	ctx.ReplyWithEmbed(embed)
 }

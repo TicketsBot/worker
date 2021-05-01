@@ -7,17 +7,18 @@ import (
 )
 
 type Properties struct {
-	Name            string
-	Description     database.MessageId
-	Aliases         []string
-	PermissionLevel permission.PermissionLevel
-	Children        []Command // TODO: Map
-	PremiumOnly     bool
-	Category        command.Category
-	AdminOnly       bool
-	HelperOnly      bool
-	InteractionOnly bool
-	MessageOnly     bool
-	MainBotOnly     bool
-	Arguments       []command.Argument
+	Name             string
+	Description      database.MessageId
+	Aliases          []string
+	PermissionLevel  permission.PermissionLevel
+	Children         []Command // TODO: Map
+	PremiumOnly      bool
+	Category         command.Category
+	AdminOnly        bool
+	HelperOnly       bool
+	InteractionOnly  bool
+	MessageOnly      bool
+	MainBotOnly      bool
+	Arguments        []command.Argument
+	DefaultEphemeral bool
 }

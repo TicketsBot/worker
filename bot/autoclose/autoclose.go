@@ -1,6 +1,6 @@
 package autoclose
 
-import (
+/*import (
 	"github.com/TicketsBot/common/autoclose"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -10,15 +10,16 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/rest/request"
-)
+)*/
 
-var AutoCloseReason = "Automatically closed due to inactivity"
+const AutoCloseReason = "Automatically closed due to inactivity"
 
-func ListenAutoClose(cache *cache.PgCache) {
+/*func ListenAutoClose(cache *cache.PgCache) {
 	ch := make(chan autoclose.Ticket)
 	go autoclose.Listen(redis.Client, ch)
 
 	for ticket := range ch {
+		ticket := ticket
 		go func() {
 			// get worker
 			worker, err := buildContext(ticket, cache)
@@ -59,4 +60,4 @@ func ListenAutoClose(cache *cache.PgCache) {
 			logic.CloseTicket(worker, ticket.GuildId, *ticket.ChannelId, 0, self, &AutoCloseReason, true, premiumTier >= premium.Premium)
 		}()
 	}
-}
+}*/
