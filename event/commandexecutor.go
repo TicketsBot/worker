@@ -14,16 +14,17 @@ import (
 	"strconv"
 )
 
-func executeCommand(ctx *worker.Context, registry registry.Registry, payload []byte) error {
-	var data interaction.Interaction
-	if err := json.Unmarshal(payload, &data); err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-
+// TODO: Command not found messages
+// (defaultDefer, error)
+func executeCommand(
+	ctx *worker.Context,
+	registry registry.Registry,
+	data interaction.ApplicationCommandInteraction,
+	responseCh chan interaction.ApplicationCommandCallbackData,
+) (bool, error) {
 	cmd, ok := registry[data.Data.Name]
 	if !ok {
-		return fmt.Errorf("command %s does not exist", data.Data.Name)
+		return false, fmt.Errorf("command %s does not exist", data.Data.Name)
 	}
 
 	options := data.Data.Options
@@ -40,7 +41,7 @@ func executeCommand(ctx *worker.Context, registry registry.Registry, payload []b
 		}
 
 		if !found {
-			return fmt.Errorf("subcommand %s does not exist for command %s", subCommand.Name, cmd.Properties().Name)
+			return false, fmt.Errorf("subcommand %s does not exist for command %s", subCommand.Name, cmd.Properties().Name)
 		}
 
 		options = subCommand.Options
@@ -62,7 +63,7 @@ func executeCommand(ctx *worker.Context, registry registry.Registry, payload []b
 				switch argument.Type {
 				case interaction.OptionTypeString:
 					if _, ok := option.Value.(string); !ok {
-						return fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
+						return false, fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
 					}
 
 					args = append(args, option.Value)
@@ -70,14 +71,14 @@ func executeCommand(ctx *worker.Context, registry registry.Registry, payload []b
 				case interaction.OptionTypeInteger:
 					raw, ok := option.Value.(float64)
 					if !ok {
-						return fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
+						return false, fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
 					}
 
 					args = append(args, int(raw))
 
 				case interaction.OptionTypeBoolean:
 					if _, ok := option.Value.(bool); !ok {
-						return fmt.Errorf("option %s of type %d was not a boolean", option.Name, argument.Type)
+						return false, fmt.Errorf("option %s of type %d was not a boolean", option.Name, argument.Type)
 					}
 
 					args = append(args, option.Value)
@@ -90,12 +91,12 @@ func executeCommand(ctx *worker.Context, registry registry.Registry, payload []b
 				case interaction.OptionTypeRole:
 					raw, ok := option.Value.(string)
 					if !ok {
-						return fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
+						return false, fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
 					}
 
 					id, err := strconv.ParseUint(raw, 10, 64)
 					if err != nil {
-						return err
+						return false, err
 					}
 
 					args = append(args, id)
@@ -108,75 +109,80 @@ func executeCommand(ctx *worker.Context, registry registry.Registry, payload []b
 		}
 
 		if !found && argument.Required {
-			return fmt.Errorf("argument %s was missing for command %s", argument.Name, cmd.Properties().Name)
+			return false, fmt.Errorf("argument %s was missing for command %s", argument.Name, cmd.Properties().Name)
 		}
-	}
-
-	// get premium tier
-	premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId, true, ctx.Token, ctx.RateLimiter)
-
-	interactionContext := command.NewInteractionContext(ctx, data, premiumLevel)
-
-	permLevel, err := interactionContext.UserPermissionLevel()
-	if err != nil {
-		interactionContext.HandleError(err)
-		return err
 	}
 
 	properties := cmd.Properties()
-	if properties.PermissionLevel > permLevel {
-		interactionContext.Reject()
-		interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
-		return nil
-	}
 
-	if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
-		interactionContext.Reject()
-		interactionContext.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
-		return nil
-	}
+	go func() {
+		// get premium tier
+		// TODO: guild id null check
+		premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
 
-	if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
-		interactionContext.Reject()
-		interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
-		return nil
-	}
+		interactionContext := command.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
-	if properties.PremiumOnly && premiumLevel == premium.None {
-		interactionContext.Reject()
-		interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
-		return nil
-	}
+		permLevel, err := interactionContext.UserPermissionLevel()
+		if err != nil {
+			interactionContext.HandleError(err)
+			return
+		}
 
-	valueArgs := make([]reflect.Value, len(args)+1)
-	valueArgs[0] = reflect.ValueOf(&interactionContext)
+		if properties.PermissionLevel > permLevel {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			return
+		}
 
-	fn := reflect.TypeOf(cmd.GetExecutor())
-	for i, arg := range args {
-		var value reflect.Value
-		if properties.Arguments[i].Required && arg != nil {
-			value = reflect.ValueOf(arg)
-		} else {
-			if arg == nil {
+		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+			return
+		}
+
+		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			return
+		}
+
+		if properties.PremiumOnly && premiumLevel == premium.None {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			return
+		}
+
+		valueArgs := make([]reflect.Value, len(args)+1)
+		valueArgs[0] = reflect.ValueOf(&interactionContext)
+
+		fn := reflect.TypeOf(cmd.GetExecutor())
+		for i, arg := range args {
+			var value reflect.Value
+			if properties.Arguments[i].Required && arg != nil {
 				value = reflect.ValueOf(arg)
 			} else {
-				value = reflect.New(reflect.TypeOf(arg))
-				tmp := value.Elem()
-				tmp.Set(reflect.ValueOf(arg))
+				if arg == nil {
+					value = reflect.ValueOf(arg)
+				} else {
+					value = reflect.New(reflect.TypeOf(arg))
+					tmp := value.Elem()
+					tmp.Set(reflect.ValueOf(arg))
+				}
 			}
+
+			if !value.IsValid() {
+				value = reflect.New(fn.In(i + 1)).Elem()
+			}
+
+			valueArgs[i+1] = value
 		}
 
-		if !value.IsValid() {
-			value = reflect.New(fn.In(i + 1)).Elem()
-		}
+		// Goroutine because recording metrics is blocking
+		go statsd.Client.IncrementKey(statsd.KeySlashCommands)
+		go statsd.Client.IncrementKey(statsd.KeyCommands)
 
-		valueArgs[i+1] = value
-	}
+		reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
+	}()
 
-	// Goroutine because recording metrics is blocking
-	go statsd.Client.IncrementKey(statsd.KeySlashCommands)
-	go statsd.Client.IncrementKey(statsd.KeyCommands)
-
-	go reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
-	return nil
+	return properties.DefaultEphemeral, nil
 }

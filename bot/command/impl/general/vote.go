@@ -13,10 +13,11 @@ type VoteCommand struct {
 
 func (VoteCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "vote",
-		Description:     translations.HelpVote,
-		PermissionLevel: permission.Everyone,
-		Category:        command.General,
+		Name:             "vote",
+		Description:      translations.HelpVote,
+		PermissionLevel:  permission.Everyone,
+		Category:         command.General,
+		DefaultEphemeral: true,
 	}
 }
 

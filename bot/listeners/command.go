@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"context"
-	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -152,7 +151,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		group.Go(func() (err error) {
 			userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
 			if err != nil {
-				fmt.Println(err.Error())
+				sentry.Error(err)
 				return
 			}
 

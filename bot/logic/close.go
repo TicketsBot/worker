@@ -3,12 +3,12 @@ package logic
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	translations "github.com/TicketsBot/database/translations"
-	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -19,52 +19,51 @@ import (
 	"time"
 )
 
-func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, member member.Member, reason *string, fromReaction, isPremium bool) {
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   guildId,
-		User:    member.User.Id,
-		Channel: channelId,
-		Shard:   worker.ShardId,
-	}
-
-	replyTo := utils.CreateReference(messageId, channelId, guildId)
+func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, fromInteraction bool) {
+	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(channelId)
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 		return
 	}
 
 	isTicket := ticket.GuildId != 0
 
-	// Cannot happen if fromReaction
+	// Cannot happen if fromInteraction
 	if !isTicket {
-		if !fromReaction {
-			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, isPremium)
+		if !fromInteraction {
+			ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+			ctx.Reject()
 		}
 
 		return
 	}
 
 	// Check the user is permitted to close the ticket
-	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), member, guildId)
+	usersCanClose, err := dbclient.Client.UsersCanClose.Get(ctx.GuildId())
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
 		return
 	}
 
-	usersCanClose, err := dbclient.Client.UsersCanClose.Get(guildId)
+	permissionLevel, err := ctx.UserPermissionLevel()
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
+		return
+	}
+
+	member, err := ctx.Member()
+	if err != nil {
+		ctx.HandleError(err)
 		return
 	}
 
 	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
-		if !fromReaction {
-			utils.ReactWithCross(worker, channelId, messageId)
-			utils.SendEmbed(worker, channelId, guildId, replyTo, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, isPremium)
+		if !fromInteraction {
+			ctx.Reply(utils.Red, "Error", translations.MessageCloseNoPermission)
+			ctx.Reject()
 		}
 		return
 	}
@@ -76,8 +75,8 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		return
 	}*/
 
-	if !fromReaction {
-		utils.ReactWithCheck(worker, channelId, messageId)
+	if !fromInteraction {
+		ctx.Accept()
 	}
 
 	// Archive
@@ -86,7 +85,7 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	lastId := uint64(0)
 	count := -1
 	for count != 0 {
-		array, err := worker.GetChannelMessages(channelId, rest.GetChannelMessagesData{
+		array, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
 			Before: lastId,
 			Limit:  100,
 		})
@@ -109,23 +108,23 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 		msgs[i], msgs[j] = msgs[j], msgs[i]
 	}
 
-	if err := utils.ArchiverClient.Store(msgs, guildId, ticket.Id, isPremium); err != nil {
+	if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	// Set ticket state as closed and delete channel
-	if err := dbclient.Client.Tickets.Close(ticket.Id, guildId); err != nil {
+	if err := dbclient.Client.Tickets.Close(ticket.Id, ctx.GuildId()); err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	// set close reason
 	if reason != nil {
-		if err := dbclient.Client.CloseReason.Set(guildId, ticket.Id, *reason); err != nil {
+		if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, *reason); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 
-	if _, err := worker.DeleteChannel(channelId); err != nil {
+	if _, err := ctx.Worker().DeleteChannel(ctx.ChannelId()); err != nil {
 		// Check if we should exclude this from autoclose
 		if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
 			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
@@ -137,12 +136,12 @@ func CloseTicket(worker *worker.Context, guildId, channelId, messageId uint64, m
 	}
 
 	// Save space - delete the webhook
-	go dbclient.Client.Webhooks.Delete(guildId, ticket.Id)
+	go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
 
-	sendCloseEmbed(worker, errorContext, member, ticket, reason)
+	sendCloseEmbed(ctx, errorContext, member, ticket, reason)
 }
 
-func sendCloseEmbed(worker *worker.Context, errorContext sentry.ErrorContext, member member.Member, ticket database.Ticket, reason *string) {
+func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContext, member member.Member, ticket database.Ticket, reason *string) {
 	// Send logs to archive channel
 	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(ticket.GuildId)
 	if err != nil {
@@ -151,7 +150,7 @@ func sendCloseEmbed(worker *worker.Context, errorContext sentry.ErrorContext, me
 
 	var archiveChannelExists bool
 	if archiveChannelId != 0 {
-		if _, err := worker.GetChannel(archiveChannelId); err == nil {
+		if _, err := ctx.Worker().GetChannel(archiveChannelId); err == nil {
 			archiveChannelExists = true
 		}
 	}
@@ -193,15 +192,15 @@ func sendCloseEmbed(worker *worker.Context, errorContext sentry.ErrorContext, me
 		SetFooter(fmt.Sprintf("Close Time: %s", utils.FormatDateTime(time.Now())), "")
 
 	if archiveChannelExists {
-		if _, err := worker.CreateMessageEmbed(archiveChannelId, embed); err != nil {
+		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, embed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 
 	// Notify user and send logs in DMs
-	if dmChannel, err := worker.CreateDM(ticket.UserId); err == nil {
+	if dmChannel, err := ctx.Worker().CreateDM(ticket.UserId); err == nil {
 		// Only send the msg if we could create the channel
-		if _, err := worker.CreateMessageEmbed(dmChannel.Id, embed); err != nil {
+		if _, err := ctx.Worker().CreateMessageEmbed(dmChannel.Id, embed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}

@@ -6,12 +6,17 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/manager"
+	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/rxdn/gdl/cache"
+	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
-	"net/http"
 	"os"
+	"time"
 )
 
 type response struct {
@@ -28,7 +33,7 @@ func newErrorResponse(err error) errorResponse {
 		response: response{
 			Success: false,
 		},
-		Error:    err.Error(),
+		Error: err.Error(),
 	}
 }
 
@@ -37,27 +42,30 @@ var successResponse = response{
 }
 
 func HttpListen(redis *redis.Client, cache *cache.PgCache) {
-	http.HandleFunc("/event", eventHandler(redis, cache))
-	http.HandleFunc("/interaction", commandHandler(redis, cache))
+	router := gin.New()
 
-	if err := http.ListenAndServe(os.Getenv("HTTP_ADDR"), nil); err != nil {
+	// Middleware
+	router.Use(gin.Recovery())
+
+	if gin.Mode() != gin.ReleaseMode {
+		router.Use(gin.Logger())
+	}
+
+	// Routes
+	router.POST("/event", eventHandler(redis, cache))
+	router.POST("/interaction", commandHandler(redis, cache))
+
+	if err := router.Run(os.Getenv("HTTP_ADDR")); err != nil {
 		panic(err)
 	}
 }
 
-func eventHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
+	return func(ctx *gin.Context) {
 		var event eventforwarding.Event
-		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		if err := ctx.BindJSON(&event); err != nil {
 			sentry.Error(err)
-
-			marshalled, err := json.Marshal(newErrorResponse(err))
-			if err != nil { // ???????????????????????????
-				sentry.Error(err)
-				return
-			}
-
-			_, _ = w.Write(marshalled)
+			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
 
@@ -69,7 +77,7 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseW
 			keyPrefix = "ratelimiter:public"
 		}
 
-		ctx := &worker.Context{
+		workerCtx := &worker.Context{
 			Token:        event.BotToken,
 			BotId:        event.BotId,
 			IsWhitelabel: event.IsWhitelabel,
@@ -78,37 +86,23 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseW
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		marshalled, err := json.Marshal(successResponse)
-		if err != nil { // ???????????????????????????
-			sentry.Error(err)
-			return
-		}
+		ctx.AbortWithStatusJSON(200, successResponse)
 
-		_, _ = w.Write(marshalled)
-
-		if err := execute(ctx, event.Event); err != nil {
+		if err := execute(workerCtx, event.Event); err != nil {
 			marshalled, _ := json.Marshal(event)
 			logrus.Warnf("error executing event: %v (payload: %s)", err, string(marshalled))
 		}
 	}
 }
 
-func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.ResponseWriter, *http.Request) {
+func commandHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
 	commandManager := new(manager.CommandManager)
 	commandManager.RegisterCommands()
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(ctx *gin.Context) {
 		var command eventforwarding.Command
-		if err := json.NewDecoder(r.Body).Decode(&command); err != nil {
-			sentry.Error(err)
-
-			marshalled, err := json.Marshal(newErrorResponse(err))
-			if err != nil { // ???????????????????????????
-				sentry.Error(err)
-				return
-			}
-
-			_, _ = w.Write(marshalled)
+		if err := ctx.BindJSON(&command); err != nil {
+			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
 
@@ -120,7 +114,7 @@ func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.Respons
 			keyPrefix = "ratelimiter:public"
 		}
 
-		ctx := &worker.Context{
+		workerCtx := &worker.Context{
 			Token:        command.BotToken,
 			BotId:        command.BotId,
 			IsWhitelabel: command.IsWhitelabel,
@@ -128,17 +122,75 @@ func commandHandler(redis *redis.Client, cache *cache.PgCache) func(http.Respons
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		marshalled, err := json.Marshal(successResponse)
-		if err != nil { // ???????????????????????????
-			sentry.Error(err)
+		var interactionData interaction.ApplicationCommandInteraction
+		if err := json.Unmarshal(command.Event, &interactionData); err != nil {
+			logrus.Warnf("error parsing application command data: %v", err)
 			return
 		}
 
-		_, _ = w.Write(marshalled)
+		responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
-		if err := executeCommand(ctx, commandManager.GetCommands(), command.Event); err != nil {
+		deferDefault, err := executeCommand(workerCtx, commandManager.GetCommands(), interactionData, responseCh)
+		if err != nil {
 			marshalled, _ := json.Marshal(command)
 			logrus.Warnf("error executing command: %v (payload: %s)", err, string(marshalled))
+			return
 		}
+
+		timeout := time.NewTimer(time.Second * 2)
+
+		select {
+		case <-timeout.C:
+			var flags uint
+			if deferDefault {
+				flags = message.SumFlags(message.FlagEphemeral)
+			}
+
+			res := interaction.NewResponseAckWithSource(flags)
+			ctx.JSON(200, res)
+			ctx.Writer.Flush()
+
+			go handleResponseAfterDefer(interactionData, workerCtx, responseCh)
+		case data := <-responseCh:
+			res := interaction.NewResponseChannelMessage(data)
+			ctx.JSON(200, res)
+		}
+	}
+}
+
+func handleResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, workerCtx *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
+	timeout := time.NewTimer(time.Second * 15)
+
+	select {
+	case <-timeout.C:
+		return
+	case data := <-responseCh:
+		restData := rest.WebhookBody{
+			Content:         data.Content,
+			Tts:             data.Tts,
+			Flags:           data.Flags,
+			Embeds:          data.Embeds,
+			AllowedMentions: data.AllowedMentions,
+		}
+
+		if _, err := rest.ExecuteWebhook(interactionData.Token, workerCtx.RateLimiter, workerCtx.BotId, false, restData); err != nil {
+			sentry.LogWithContext(err, buildErrorContext(interactionData))
+			return
+		}
+	}
+}
+
+func buildErrorContext(data interaction.ApplicationCommandInteraction) sentry.ErrorContext {
+	var userId uint64
+	if data.User != nil {
+		userId = data.User.Id
+	} else if data.Member != nil {
+		userId = data.Member.User.Id
+	}
+
+	return errorcontext.WorkerErrorContext{
+		Guild:   data.GuildId.Value,
+		User:    userId,
+		Channel: data.ChannelId,
 	}
 }

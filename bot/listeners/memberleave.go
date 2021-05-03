@@ -1,14 +1,15 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/autoclose"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	gdlUtils "github.com/rxdn/gdl/utils"
 )
 
 // Remove user permissions when they leave
@@ -35,26 +36,11 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 						return
 					}
 
-					// get self member
-					self, err := worker.GetGuildMember(ticket.GuildId, worker.BotId)
-					if err != nil {
-						sentry.Error(err)
-						return
-					}
-
 					// get premium status
 					premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
 
-					logic.CloseTicket(
-						worker,
-						ticket.GuildId,
-						*ticket.ChannelId,
-						0,
-						self,
-						&autoclose.AutoCloseReason,
-						true,
-						premiumTier >= premium.Premium,
-					)
+					ctx := command.NewDashboardContext(worker, e.GuildId, *ticket.ChannelId, e.User.Id, premiumTier)
+					logic.CloseTicket(&ctx, 0, gdlUtils.StrPtr(autoclose.AutoCloseReason), true)
 				}
 			}
 		}

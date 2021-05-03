@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
+	"time"
 )
 
 type AboutCommand struct {
@@ -13,11 +14,12 @@ type AboutCommand struct {
 
 func (AboutCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "about",
-		Description:     translations.HelpAbout,
-		PermissionLevel: permission.Everyone,
-		Category:        command.General,
-		MainBotOnly:     true,
+		Name:             "about",
+		Description:      translations.HelpAbout,
+		PermissionLevel:  permission.Everyone,
+		Category:         command.General,
+		MainBotOnly:      true,
+		DefaultEphemeral: true,
 	}
 }
 
@@ -26,5 +28,6 @@ func (c AboutCommand) GetExecutor() interface{} {
 }
 
 func (AboutCommand) Execute(ctx registry.CommandContext) {
+	time.Sleep(time.Second * 6)
 	ctx.Reply(utils.Green, "About", translations.MessageAbout)
 }

@@ -17,41 +17,41 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 )
 
-type PanelContext struct {
+type DashboardContext struct {
 	worker                     *worker.Context
 	guildId, channelId, userId uint64
 	premium                    premium.PremiumTier
 }
 
-func NewPanelContext(
+func NewDashboardContext(
 	worker *worker.Context,
 	guildId, channelId, userId uint64,
 	premium premium.PremiumTier,
-) PanelContext {
-	return PanelContext{
+) DashboardContext {
+	return DashboardContext{
 		worker,
 		guildId, channelId, userId,
 		premium,
 	}
 }
 
-func (ctx *PanelContext) Worker() *worker.Context {
+func (ctx *DashboardContext) Worker() *worker.Context {
 	return ctx.worker
 }
 
-func (ctx *PanelContext) GuildId() uint64 {
+func (ctx *DashboardContext) GuildId() uint64 {
 	return ctx.guildId
 }
 
-func (ctx *PanelContext) ChannelId() uint64 {
+func (ctx *DashboardContext) ChannelId() uint64 {
 	return ctx.channelId
 }
 
-func (ctx *PanelContext) UserId() uint64 {
+func (ctx *DashboardContext) UserId() uint64 {
 	return ctx.userId
 }
 
-func (ctx *PanelContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
+func (ctx *DashboardContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
 	member, err := ctx.Member()
 	if err != nil {
 		return permcache.Everyone, err
@@ -60,15 +60,15 @@ func (ctx *PanelContext) UserPermissionLevel() (permcache.PermissionLevel, error
 	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), member, ctx.guildId)
 }
 
-func (ctx *PanelContext) PremiumTier() premium.PremiumTier {
+func (ctx *DashboardContext) PremiumTier() premium.PremiumTier {
 	return ctx.premium
 }
 
-func (ctx *PanelContext) IsInteraction() bool {
+func (ctx *DashboardContext) IsInteraction() bool {
 	return true
 }
 
-func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
+func (ctx *DashboardContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
 		Guild:   ctx.guildId,
 		User:    ctx.userId,
@@ -76,7 +76,7 @@ func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *PanelContext) openDm() (channel.Channel, bool) {
+func (ctx *DashboardContext) openDm() (channel.Channel, bool) {
 	ch, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
 		// check for 403
@@ -91,7 +91,7 @@ func (ctx *PanelContext) openDm() (channel.Channel, bool) {
 	return ch, true
 }
 
-func (ctx *PanelContext) reply(content *embed.Embed) {
+func (ctx *DashboardContext) reply(content *embed.Embed) {
 	ch, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
 		return
@@ -102,7 +102,7 @@ func (ctx *PanelContext) reply(content *embed.Embed) {
 	}
 }
 
-func (ctx *PanelContext) replyRaw(content string) {
+func (ctx *DashboardContext) replyRaw(content string) {
 	ch, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
 		return
@@ -113,84 +113,84 @@ func (ctx *PanelContext) replyRaw(content string) {
 	}
 }
 
-func (ctx *PanelContext) buildEmbed(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
+func (ctx *DashboardContext) buildEmbed(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
 	return utils.BuildEmbed(ctx.worker, ctx.guildId, colour, title, content, fields, ctx.premium > premium.None, format...)
 }
 
-func (ctx *PanelContext) buildEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) *embed.Embed {
+func (ctx *DashboardContext) buildEmbedRaw(colour utils.Colour, title, content string, fields ...embed.EmbedField) *embed.Embed {
 	return utils.BuildEmbedRaw(ctx.worker, colour, title, content, fields, ctx.premium > premium.None)
 }
 
-func (ctx *PanelContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+func (ctx *DashboardContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed) {
+func (ctx *DashboardContext) ReplyWithEmbed(embed *embed.Embed) {
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
+func (ctx *DashboardContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
+func (ctx *DashboardContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+func (ctx *DashboardContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
+func (ctx *DashboardContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {
+func (ctx *DashboardContext) ReplyRaw(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
+func (ctx *DashboardContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
 	ctx.reply(embed)}
 
-func (ctx *PanelContext) ReplyPlain(content string) {
+func (ctx *DashboardContext) ReplyPlain(content string) {
 	ctx.replyRaw(content)
 }
 
-func (ctx *PanelContext) ReplyPlainPermanent(content string) {
+func (ctx *DashboardContext) ReplyPlainPermanent(content string) {
 	ctx.replyRaw(content)
 }
 
-func (ctx *PanelContext) Accept() {}
-func (ctx *PanelContext) Reject() {}
+func (ctx *DashboardContext) Accept() {}
+func (ctx *DashboardContext) Reject() {}
 
-func (ctx *PanelContext) HandleError(err error) {
+func (ctx *DashboardContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) HandleWarning(err error) {
+func (ctx *DashboardContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	ctx.reply(embed)
 }
 
-func (ctx *PanelContext) Guild() (guild.Guild, error) {
+func (ctx *DashboardContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.guildId)
 }
 
-func (ctx *PanelContext) Member() (member.Member, error) {
+func (ctx *DashboardContext) Member() (member.Member, error) {
 	return ctx.Worker().GetGuildMember(ctx.guildId, ctx.userId)
 }
 
-func (ctx *PanelContext) User() (user.User, error) {
+func (ctx *DashboardContext) User() (user.User, error) {
 	return ctx.Worker().GetUser(ctx.UserId())
 }

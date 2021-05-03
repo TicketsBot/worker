@@ -13,11 +13,12 @@ type InviteCommand struct {
 
 func (InviteCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "invite",
-		Description:     translations.MessageHelpInvite,
-		PermissionLevel: permission.Everyone,
-		Category:        command.General,
-		MainBotOnly:     true,
+		Name:             "invite",
+		Description:      translations.MessageHelpInvite,
+		PermissionLevel:  permission.Everyone,
+		Category:         command.General,
+		MainBotOnly:      true,
+		DefaultEphemeral: true,
 	}
 }
 

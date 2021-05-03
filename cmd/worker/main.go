@@ -6,7 +6,6 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot"
-	"github.com/TicketsBot/worker/bot/autoclose"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/i18n"
@@ -97,7 +96,7 @@ func main() {
 	}
 
 	go messagequeue.ListenTicketClose()
-	go autoclose.ListenAutoClose(&pgCache)
+	//go autoclose.ListenAutoClose(&pgCache)
 
 	fmt.Println("Listening for events...")
 	event.HttpListen(redis.Client, &pgCache)
