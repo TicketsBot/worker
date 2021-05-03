@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb
 	github.com/TicketsBot/common v0.0.0-20210327143358-41e45f9a20bd
-	github.com/TicketsBot/database v0.0.0-20210326160140-2f4a3d7ac339
+	github.com/TicketsBot/database v0.0.0-20210503114246-e111a8e91cae
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-redis/redis v6.15.8+incompatible

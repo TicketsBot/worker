@@ -27,5 +27,9 @@ func OnGuildLeave(worker *worker.Context, e *events.GuildDelete) {
 		if err := dbclient.Client.AutoCloseExclude.ExcludeAll(e.Guild.Id); err != nil {
 			sentry.Error(err)
 		}
+
+		if err := dbclient.Client.GuildLeaveTime.Set(e.Guild.Id); err != nil {
+			sentry.Error(err)
+		}
 	}
 }

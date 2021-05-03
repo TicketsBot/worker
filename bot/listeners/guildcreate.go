@@ -39,6 +39,10 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 		if inviter := getInviter(worker, e.Guild.Id); inviter != 0 && inviter != e.Guild.OwnerId {
 			sendIntroMessage(worker, e.Guild, inviter)
 		}
+
+		if err := dbclient.Client.GuildLeaveTime.Delete(e.Guild.Id); err != nil {
+			sentry.Error(err)
+		}
 	}
 }
 
