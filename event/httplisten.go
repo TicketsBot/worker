@@ -53,7 +53,7 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 
 	// Routes
 	router.POST("/event", eventHandler(redis, cache))
-	router.POST("/interaction", commandHandler(redis, cache))
+	router.POST("/interaction", interactionHandler(redis, cache))
 
 	if err := router.Run(os.Getenv("HTTP_ADDR")); err != nil {
 		panic(err)
@@ -95,64 +95,78 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 	}
 }
 
-func commandHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
+func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
 	commandManager := new(manager.CommandManager)
 	commandManager.RegisterCommands()
 
 	return func(ctx *gin.Context) {
-		var command eventforwarding.Command
-		if err := ctx.BindJSON(&command); err != nil {
+		var payload eventforwarding.Interaction
+		if err := ctx.BindJSON(&payload); err != nil {
 			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
 
 		var keyPrefix string
 
-		if command.IsWhitelabel {
-			keyPrefix = fmt.Sprintf("ratelimiter:%d", command.BotId)
+		if payload.IsWhitelabel {
+			keyPrefix = fmt.Sprintf("ratelimiter:%d", payload.BotId)
 		} else {
 			keyPrefix = "ratelimiter:public"
 		}
 
 		workerCtx := &worker.Context{
-			Token:        command.BotToken,
-			BotId:        command.BotId,
-			IsWhitelabel: command.IsWhitelabel,
+			Token:        payload.BotToken,
+			BotId:        payload.BotId,
+			IsWhitelabel: payload.IsWhitelabel,
 			Cache:        cache,
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		var interactionData interaction.ApplicationCommandInteraction
-		if err := json.Unmarshal(command.Event, &interactionData); err != nil {
-			logrus.Warnf("error parsing application command data: %v", err)
-			return
-		}
-
-		responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
-
-		deferDefault, err := executeCommand(workerCtx, commandManager.GetCommands(), interactionData, responseCh)
-		if err != nil {
-			marshalled, _ := json.Marshal(command)
-			logrus.Warnf("error executing command: %v (payload: %s)", err, string(marshalled))
-			return
-		}
-
-		timeout := time.NewTimer(time.Second * 2)
-
-		select {
-		case <-timeout.C:
-			var flags uint
-			if deferDefault {
-				flags = message.SumFlags(message.FlagEphemeral)
+		switch payload.InteractionType {
+		case interaction.InteractionTypeApplicationCommand:
+			var interactionData interaction.ApplicationCommandInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
 			}
 
-			res := interaction.NewResponseAckWithSource(flags)
-			ctx.JSON(200, res)
-			ctx.Writer.Flush()
+			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
-			go handleResponseAfterDefer(interactionData, workerCtx, responseCh)
-		case data := <-responseCh:
-			res := interaction.NewResponseChannelMessage(data)
+			deferDefault, err := executeCommand(workerCtx, commandManager.GetCommands(), interactionData, responseCh)
+			if err != nil {
+				marshalled, _ := json.Marshal(payload)
+				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
+				return
+			}
+
+			timeout := time.NewTimer(time.Second * 2)
+
+			select {
+			case <-timeout.C:
+				var flags uint
+				if deferDefault {
+					flags = message.SumFlags(message.FlagEphemeral)
+				}
+
+				res := interaction.NewResponseAckWithSource(flags)
+				ctx.JSON(200, res)
+				ctx.Writer.Flush()
+
+				go handleResponseAfterDefer(interactionData, workerCtx, responseCh)
+			case data := <-responseCh:
+				res := interaction.NewResponseChannelMessage(data)
+				ctx.JSON(200, res)
+			}
+		case interaction.InteractionTypeButton:
+			var interactionData interaction.ButtonInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
+			}
+
+			go handleButtonPress(workerCtx, interactionData)
+
+			res := interaction.NewResponseDeferredMessageUpdate()
 			ctx.JSON(200, res)
 		}
 	}
