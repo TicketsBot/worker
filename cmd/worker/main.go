@@ -41,13 +41,6 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	// Configure HTTP proxy
-	fmt.Println("Configuring proxy...")
-	if os.Getenv("DISCORD_PROXY_URL") != "" {
-		request.Client.Timeout = time.Second * 30
-		request.RegisterHook(utils.ProxyHook)
-	}
-
 	fmt.Println("Connected to Sentry, connect to Redis...")
 	if err := redis.Connect(); err != nil {
 		panic(err)
@@ -81,6 +74,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+	}
+
+	// Configure HTTP proxy
+	fmt.Println("Configuring proxy...")
+	if os.Getenv("DISCORD_PROXY_URL") != "" {
+		request.Client.Timeout = time.Second * 30
+		request.RegisterHook(utils.ProxyHook)
 	}
 
 	fmt.Println("Retrieved command list, initialising microservice clients...")
