@@ -112,7 +112,7 @@ func processDeletedPanels(ctx registry.CommandContext) (removed int) {
 
 			// Message no longer exists
 			go func() {
-				if err := dbclient.Client.Panel.Delete(panel.MessageId); err != nil {
+				if err := dbclient.Client.Panel.Delete(panel.PanelId); err != nil {
 					sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				}
 			}()
