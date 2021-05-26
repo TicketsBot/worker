@@ -8,34 +8,16 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
-	"regexp"
-	"strconv"
-)
-
-var (
-	panelRegex = regexp.MustCompile(`panel_(\d+)`)
 )
 
 func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) {
-	panelRes := panelRegex.FindStringSubmatch(data.Data.CustomId)
-	if len(panelRes) == 2 {
-		panelId, err := strconv.Atoi(panelRes[1])
-		if err != nil {
-			sentry.Error(err) // TODO: Proper context
-			return
-		}
+	panel, ok, err := dbclient.Client.Panel.GetByCustomId(data.GuildId.Value, data.Data.CustomId)
+	if err != nil {
+		sentry.Error(err) // TODO: Proper context
+		return
+	}
 
-		panel, err := dbclient.Client.Panel.GetById(panelId)
-		if err != nil {
-			sentry.Error(err) // TODO: Proper context
-			return
-		}
-
-		// TODO: Log this
-		if panel.PanelId == 0 {
-			return
-		}
-
+	if ok {
 		// TODO: Log this
 		if panel.MessageId != data.Message.Id || panel.GuildId != data.GuildId.Value {
 			return
