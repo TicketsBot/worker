@@ -84,8 +84,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	fmt.Println(3)
 	// create DM channel
-	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
+	//dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
 	fmt.Println(4)
+	var err error
 
 	// target channel for messaging the user
 	// either DMs or the channel where the command was run
@@ -93,12 +94,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	if panel == nil {
 		targetChannel = ctx.ChannelId()
 	} else {
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		targetChannel = dmChannel.Id
+		//targetChannel = dmChannel.Id
 	}
 	fmt.Println(6)
 
@@ -295,7 +291,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 		}
 
-		if dmOnOpen && dmChannel.Id != 0 {
+		if dmOnOpen {
 			ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
 		}
 	}
