@@ -139,7 +139,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := time.NewTimer(time.Second * 2)
+			timeout := time.NewTimer(time.Second * 1)
 
 			select {
 			case <-timeout.C:
