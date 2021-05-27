@@ -80,26 +80,21 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	// create DM channel
-	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
-
-	// target channel for messaging the user
-	// either DMs or the channel where the command was run
 	var targetChannel uint64
-	if panel == nil {
-		targetChannel = ctx.ChannelId()
-	} else {
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		targetChannel = dmChannel.Id
-	}
 
 	// Make sure ticket count is within ticket limit
 	violatesTicketLimit, limit := getTicketLimit(ctx.GuildId(), ctx.UserId())
 	if violatesTicketLimit {
+		// initialise target channel
+		if targetChannel == 0 {
+			var err error
+			targetChannel, err = getErrorTargetChannel(ctx, panel)
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
+		}
+
 		// Notify the user
 		if targetChannel != 0 {
 			ticketsPluralised := "ticket"
@@ -277,7 +272,8 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	// Let the user know the ticket has been opened
 	if panel == nil {
 		ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
-	} else {
+	}
+	/*else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
@@ -286,7 +282,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		if dmOnOpen && dmChannel.Id != 0 {
 			ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
 		}
-	}
+	}*/
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
 
@@ -475,4 +471,19 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	}
 
 	return overwrites
+}
+
+// target channel for messaging the user
+// either DMs or the channel where the command was run
+func getErrorTargetChannel(ctx registry.CommandContext, panel *database.Panel) (uint64, error) {
+	if panel == nil {
+		return ctx.ChannelId(), nil
+	} else {
+		dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
+		if err != nil {
+			return 0, err
+		}
+
+		return dmChannel.Id, nil
+	}
 }
