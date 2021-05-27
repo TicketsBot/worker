@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
@@ -11,19 +12,24 @@ import (
 )
 
 func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) {
+	fmt.Printf("[%d] 1\n", data.Message.Id)
 	panel, ok, err := dbclient.Client.Panel.GetByCustomId(data.GuildId.Value, data.Data.CustomId)
 	if err != nil {
 		sentry.Error(err) // TODO: Proper context
 		return
 	}
+	fmt.Printf("[%d] %s %v\n", data.Message.Id, panel.CustomId, ok)
 
 	if ok {
 		// TODO: Log this
 		if panel.MessageId != data.Message.Id || panel.GuildId != data.GuildId.Value {
+			fmt.Printf("[%d] not matching\n", data.Message.Id)
 			return
 		}
+		fmt.Printf("[%d] matching\n", data.Message.Id)
 
 		// TODO: Log this
+		fmt.Printf("[%d] member nil: %v\n", data.Message.Id, data.Member == nil)
 		if data.Member == nil {
 			return
 		}
