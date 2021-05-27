@@ -24,6 +24,7 @@ import (
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
+	fmt.Println(1)
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -37,6 +38,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
+	fmt.Println(2)
 	// TODO: Re-add permission check
 	/*requiredPerms := []permission.Permission{
 		permission.ManageChannels,
@@ -80,8 +82,10 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
+	fmt.Println(3)
 	// create DM channel
 	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
+	fmt.Println(4)
 
 	// target channel for messaging the user
 	// either DMs or the channel where the command was run
@@ -96,6 +100,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 		targetChannel = dmChannel.Id
 	}
+	fmt.Println(6)
 
 	// Make sure ticket count is within ticket limit
 	violatesTicketLimit, limit := getTicketLimit(ctx.GuildId(), ctx.UserId())
@@ -112,6 +117,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 		return
 	}
+	fmt.Println(7)
 
 	// Generate subject
 	if panel != nil && panel.Title != "" { // If we're using a panel, use the panel title as the subject
@@ -125,6 +131,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			subject = subject[0:255]
 		}
 	}
+	fmt.Println(8)
 
 	// Make sure there's not > 50 channels in a category
 	if useCategory {
@@ -142,6 +149,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return
 		}
 	}
+	fmt.Println(10)
 
 	// Create channel
 	id, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
@@ -149,6 +157,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ctx.HandleError(err)
 		return
 	}
+	fmt.Println(11)
 
 	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 
@@ -160,6 +169,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		namingScheme = database.Id
 		ctx.HandleError(err)
 	}
+	fmt.Println(12)
 
 	if namingScheme == database.Username {
 		user, err := ctx.User()
@@ -183,6 +193,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	if useCategory {
 		data.ParentId = category
 	}
+	fmt.Println(13)
 
 	channel, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
 	if err != nil { // Bot likely doesn't have permission
@@ -195,6 +206,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 		return
 	}
+	fmt.Println(14)
 
 	ctx.Accept()
 

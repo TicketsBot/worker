@@ -35,8 +35,12 @@ func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) 
 		}
 
 		// get premium tier
+		fmt.Printf("[%d] getting premium tier\n", data.Message.Id)
 		premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		fmt.Printf("[%d] got premium tier\n", data.Message.Id)
 		panelCtx := command.NewPanelContext(ctx, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+
+		fmt.Printf("[%d] got ctx\n", data.Message.Id)
 
 		logic.OpenTicket(&panelCtx, &panel, panel.Title)
 
