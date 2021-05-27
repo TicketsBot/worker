@@ -49,9 +49,9 @@ func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 
 		// TODO: Check perms
 		// Remove the reaction from the message
-		if err := worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, emoji); err != nil {
+		/*if err := worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, emoji); err != nil {
 			sentry.LogWithContext(err, errorContext)
-		}
+		}*/
 
 		var blacklisted bool
 		var premiumTier premium.PremiumTier
