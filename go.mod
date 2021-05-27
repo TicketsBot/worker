@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb
-	github.com/TicketsBot/common v0.0.0-20210508230445-142f7765b87f
+	github.com/TicketsBot/common v0.0.0-20210527174309-f7344004ae32
 	github.com/TicketsBot/database v0.0.0-20210526225555-040a69389e53
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20210527124215-63f4791eb845
+	github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect

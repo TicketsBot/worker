@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -21,6 +20,7 @@ type PanelContext struct {
 	worker                     *worker.Context
 	guildId, channelId, userId uint64
 	premium                    premium.PremiumTier
+	dmChannelId                uint64
 }
 
 func NewPanelContext(
@@ -32,6 +32,7 @@ func NewPanelContext(
 		worker,
 		guildId, channelId, userId,
 		premium,
+		0,
 	}
 }
 
@@ -76,19 +77,23 @@ func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *PanelContext) openDm() (channel.Channel, bool) {
-	ch, err := ctx.Worker().CreateDM(ctx.UserId())
-	if err != nil {
-		// check for 403
-		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-			return ch, false
+func (ctx *PanelContext) openDm() (uint64, bool) {
+	if ctx.dmChannelId == 0 {
+		ch, err := ctx.Worker().CreateDM(ctx.UserId())
+		if err != nil {
+			// check for 403
+			if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+				return 0, false
+			}
+
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			return 0, false
 		}
 
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		return ch, false
+		ctx.dmChannelId = ch.Id
 	}
 
-	return ch, true
+	return ctx.dmChannelId, true
 }
 
 func (ctx *PanelContext) reply(content *embed.Embed) {
@@ -97,7 +102,7 @@ func (ctx *PanelContext) reply(content *embed.Embed) {
 		return
 	}
 
-	if _, err := ctx.Worker().CreateMessageEmbed(ch.Id, content); err != nil {
+	if _, err := ctx.Worker().CreateMessageEmbed(ch, content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }
@@ -108,7 +113,7 @@ func (ctx *PanelContext) replyRaw(content string) {
 		return
 	}
 
-	if _, err := ctx.Worker().CreateMessage(ch.Id, content); err != nil {
+	if _, err := ctx.Worker().CreateMessage(ch, content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }
@@ -156,7 +161,8 @@ func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {
 
 func (ctx *PanelContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(embed)}
+	ctx.reply(embed)
+}
 
 func (ctx *PanelContext) ReplyPlain(content string) {
 	ctx.replyRaw(content)

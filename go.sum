@@ -12,6 +12,8 @@ github.com/TicketsBot/common v0.0.0-20210327143358-41e45f9a20bd h1:H3T9MqVnFRhnw
 github.com/TicketsBot/common v0.0.0-20210327143358-41e45f9a20bd/go.mod h1:tXgNWT0+5NKwMqM6BBdi/jwFzeW8UeVZbxa0Mq1MrQ0=
 github.com/TicketsBot/common v0.0.0-20210508230445-142f7765b87f h1:WE161SwW6tHx85EWvsakipyu4VM8bNm1jwrM+gqp4Do=
 github.com/TicketsBot/common v0.0.0-20210508230445-142f7765b87f/go.mod h1:tXgNWT0+5NKwMqM6BBdi/jwFzeW8UeVZbxa0Mq1MrQ0=
+github.com/TicketsBot/common v0.0.0-20210527174309-f7344004ae32 h1:S7gbSsOIEQIHuvkmq60GX0Nsrp2lq8YpvQIzGboxUjA=
+github.com/TicketsBot/common v0.0.0-20210527174309-f7344004ae32/go.mod h1:df3N6ni5xhKtisqCDBQV3FcaHIs40+qblhg17T2zF9w=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20210224145232-a4ca54f9e764 h1:G0DIonsnfZv+HNHDX3X5AOHJ+9oNKFwDd1/r/OqeukQ=
@@ -248,6 +250,8 @@ github.com/rxdn/gdl v0.0.0-20210508224012-e5d9d692adf4 h1:hSdJHoRCi8YBqBvue+bBjJ
 github.com/rxdn/gdl v0.0.0-20210508224012-e5d9d692adf4/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/rxdn/gdl v0.0.0-20210527124215-63f4791eb845 h1:QIN9fUh0f/TzlxYunQwj+k9bE+4JvcHzB0zfDV4G2FI=
 github.com/rxdn/gdl v0.0.0-20210527124215-63f4791eb845/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
+github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a h1:cGEs8l/Zbw+qw0kVVqySH1JkhR0ekl7ISvgblFkLWnc=
+github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=
