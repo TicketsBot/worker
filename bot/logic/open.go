@@ -404,7 +404,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 
 	// Add other support teams
 	if panel != nil {
-		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.MessageId)
+		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		} else {
