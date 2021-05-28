@@ -8,7 +8,10 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/rest"
 	"golang.org/x/sync/errgroup"
 	"strconv"
 	"strings"
@@ -22,7 +25,8 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 	var welcomeMessage string
 	if panel == nil || panel.WelcomeMessage == nil {
 		var err error
-		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(guildId); if err != nil {
+		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(guildId)
+		if err != nil {
 			sentry.Error(err)
 			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
 		}
@@ -32,7 +36,7 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 
 	// %average_response%
 	if isPremium && strings.Contains(welcomeMessage, "%average_response%") {
-		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(guildId, time.Hour * 24 * 7)
+		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(guildId, time.Hour*24*7)
 		if err != nil {
 			sentry.Error(err)
 		} else {
@@ -44,17 +48,29 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 	welcomeMessage = doSubstitutions(welcomeMessage, worker, guildId, userId, channelId, ticketId)
 
 	// Send welcome message
-	if msg, err := SendEmbedWithResponse(worker, channelId, nil, Green, subject, welcomeMessage, nil, 0, isPremium); err == nil {
-		// Add close reaction to the welcome message
-		err := worker.CreateReaction(channelId, msg.Id, "🔒")
-		if err != nil {
-			sentry.Error(err)
-		}
+	embed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
+	data := rest.CreateMessageData{
+		Embed: embed,
+		Components: []component.Component{
+			component.BuildActionRow(component.BuildButton(component.Button{
+				Label:    "Close",
+				CustomId: "close",
+				Style:    component.ButtonStyleDanger,
+				Emoji: emoji.Emoji{
+					Name: "🔒",
+				},
+				Url:      nil,
+				Disabled: false,
+			})),
+		},
+	}
 
-		return msg.Id, err
-	} else {
+	msg, err := worker.CreateMessageComplex(channelId, data)
+	if err != nil {
 		return 0, err
 	}
+
+	return msg.Id, nil
 }
 
 func doSubstitutions(welcomeMessage string, worker *worker.Context, guildId, userId, channelId uint64, ticketId int) string {
