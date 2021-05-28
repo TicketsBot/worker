@@ -74,9 +74,9 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	// get panel
 	var panel *database.Panel
-	if ticket.PanelId != nil {
+	if ticket.PanelMessageId != nil {
 		var derefPanel database.Panel
-		derefPanel, err = dbclient.Client.Panel.Get(*ticket.PanelId)
+		derefPanel, err = dbclient.Client.Panel.Get(*ticket.PanelMessageId)
 
 		if derefPanel.MessageId != 0 {
 			panel = &derefPanel
