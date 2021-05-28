@@ -198,9 +198,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ctx.HandleError(err)
 	}
 
-	var panelId *uint64
+	var panelId *int
 	if panel != nil {
-		panelId = &panel.MessageId
+		panelId = &panel.PanelId
 	}
 
 	// UpdateUser channel in DB
