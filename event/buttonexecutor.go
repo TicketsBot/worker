@@ -31,7 +31,7 @@ func handlePanelButton(ctx *worker.Context, data interaction.ButtonInteraction) 
 
 	if ok {
 		// TODO: Log this
-		if panel.MessageId != data.Message.Id || panel.GuildId != data.GuildId.Value {
+		if panel.GuildId != data.GuildId.Value {
 			return
 		}
 
