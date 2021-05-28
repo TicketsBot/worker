@@ -224,7 +224,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			}
 		} else {
 			// roles
-			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.MessageId)
+			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.PanelId)
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
@@ -234,7 +234,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			}
 
 			// user
-			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.MessageId)
+			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.PanelId)
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
