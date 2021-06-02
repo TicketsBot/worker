@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20210528152706-5da182da93db
+	github.com/rxdn/gdl v0.0.0-20210602135239-d993749b319d
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
