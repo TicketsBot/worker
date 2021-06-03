@@ -94,11 +94,19 @@ func (ctx *DashboardContext) openDm() (uint64, bool) {
 	if err != nil {
 		// check for 403
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+			if err := redis.StoreNullDMChannel(ctx.UserId()); err != nil {
+				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			}
+
 			return 0, false
 		}
 
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return 0, false
+	}
+
+	if err := redis.StoreDMChannel(ctx.UserId(), ch.Id); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
 	return ch.Id, true
