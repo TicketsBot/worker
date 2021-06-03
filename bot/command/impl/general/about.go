@@ -6,7 +6,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
-	"time"
 )
 
 type AboutCommand struct {
@@ -28,6 +27,5 @@ func (c AboutCommand) GetExecutor() interface{} {
 }
 
 func (AboutCommand) Execute(ctx registry.CommandContext) {
-	time.Sleep(time.Second * 6)
 	ctx.Reply(utils.Green, "About", translations.MessageAbout)
 }
