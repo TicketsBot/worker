@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -479,11 +480,11 @@ func getErrorTargetChannel(ctx registry.CommandContext, panel *database.Panel) (
 	if panel == nil {
 		return ctx.ChannelId(), nil
 	} else {
-		dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
-		if err != nil {
-			return 0, err
+		dmChannel, ok := getDmChannel(ctx, ctx.UserId())
+		if !ok {
+			return 0, errors.New("failed to create dm channel")
 		}
 
-		return dmChannel.Id, nil
+		return dmChannel, nil
 	}
 }

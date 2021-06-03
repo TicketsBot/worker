@@ -9,6 +9,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -198,10 +199,38 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	}
 
 	// Notify user and send logs in DMs
-	if dmChannel, err := ctx.Worker().CreateDM(ticket.UserId); err == nil {
-		// Only send the msg if we could create the channel
-		if _, err := ctx.Worker().CreateMessageEmbed(dmChannel.Id, embed); err != nil {
+	dmChannel, ok := getDmChannel(ctx, ticket.UserId)
+	if ok {
+		if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, embed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
+}
+
+func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
+	cachedId, err := redis.GetDMChannel(userId)
+	if err != nil { // We can continue
+		if err != redis.ErrNotCached {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
+	} else { // We have it cached
+		if cachedId == nil {
+			return 0, false
+		} else {
+			return *cachedId, true
+		}
+	}
+
+	ch, err := ctx.Worker().CreateDM(userId)
+	if err != nil {
+		// check for 403
+		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+			return 0, false
+		}
+
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return 0, false
+	}
+
+	return ch.Id, true
 }

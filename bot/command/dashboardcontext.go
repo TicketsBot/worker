@@ -8,8 +8,8 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -76,39 +76,52 @@ func (ctx *DashboardContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *DashboardContext) openDm() (channel.Channel, bool) {
+func (ctx *DashboardContext) openDm() (uint64, bool) {
+	cachedId, err := redis.GetDMChannel(ctx.UserId())
+	if err != nil { // We can continue
+		if err != redis.ErrNotCached {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
+	} else { // We have it cached
+		if cachedId == nil {
+			return 0, false
+		} else {
+			return *cachedId, true
+		}
+	}
+
 	ch, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
 		// check for 403
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-			return ch, false
+			return 0, false
 		}
 
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		return ch, false
+		return 0, false
 	}
 
-	return ch, true
+	return ch.Id, true
 }
 
 func (ctx *DashboardContext) reply(content *embed.Embed) {
-	ch, ok := ctx.openDm()
+	channelId, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
 		return
 	}
 
-	if _, err := ctx.Worker().CreateMessageEmbed(ch.Id, content); err != nil {
+	if _, err := ctx.Worker().CreateMessageEmbed(channelId, content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }
 
 func (ctx *DashboardContext) replyRaw(content string) {
-	ch, ok := ctx.openDm()
+	channelId, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
 		return
 	}
 
-	if _, err := ctx.Worker().CreateMessage(ch.Id, content); err != nil {
+	if _, err := ctx.Worker().CreateMessage(channelId, content); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 }

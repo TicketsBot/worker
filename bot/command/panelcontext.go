@@ -8,6 +8,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
@@ -79,6 +80,19 @@ func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *PanelContext) openDm() (uint64, bool) {
 	if ctx.dmChannelId == 0 {
+		cachedId, err := redis.GetDMChannel(ctx.UserId())
+		if err != nil { // We can continue
+			if err != redis.ErrNotCached {
+				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			}
+		} else { // We have it cached
+			if cachedId == nil {
+				return 0, false
+			} else {
+				return *cachedId, true
+			}
+		}
+
 		ch, err := ctx.Worker().CreateDM(ctx.UserId())
 		if err != nil {
 			// check for 403
