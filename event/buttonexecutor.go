@@ -2,6 +2,7 @@ package event
 
 import (
 	"github.com/TicketsBot/common/sentry"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -43,6 +44,18 @@ func handlePanelButton(ctx *worker.Context, data interaction.ButtonInteraction) 
 		// get premium tier
 		premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
 		panelCtx := command.NewPanelContext(ctx, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+
+		// blacklist check
+		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, data.Member.User.Id)
+		if err != nil {
+			panelCtx.HandleError(err)
+			return
+		}
+
+		if blacklisted {
+			panelCtx.Reply(utils.Red, "Blacklisted", translations.MessageBlacklisted)
+			return
+		}
 
 		logic.OpenTicket(&panelCtx, &panel, panel.Title)
 

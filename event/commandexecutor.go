@@ -1,12 +1,14 @@
 package event
 
 import (
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -149,6 +151,28 @@ func executeCommand(
 		if properties.PremiumOnly && premiumLevel == premium.None {
 			interactionContext.Reject()
 			interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			return
+		}
+
+		var userId uint64
+		if data.Member != nil {
+			userId = data.Member.User.Id
+		} else if data.User != nil {
+			userId = data.User.Id
+		} else { // ??????????????????????????????????
+			interactionContext.HandleError(errors.New("userId was nil"))
+			return
+		}
+
+		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, userId)
+		if err != nil {
+			interactionContext.HandleError(err)
+			return
+		}
+
+		if blacklisted {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Blacklisted", translations.MessageBlacklisted)
 			return
 		}
 
