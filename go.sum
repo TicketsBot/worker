@@ -14,6 +14,8 @@ github.com/TicketsBot/common v0.0.0-20210508230445-142f7765b87f h1:WE161SwW6tHx8
 github.com/TicketsBot/common v0.0.0-20210508230445-142f7765b87f/go.mod h1:tXgNWT0+5NKwMqM6BBdi/jwFzeW8UeVZbxa0Mq1MrQ0=
 github.com/TicketsBot/common v0.0.0-20210527174309-f7344004ae32 h1:S7gbSsOIEQIHuvkmq60GX0Nsrp2lq8YpvQIzGboxUjA=
 github.com/TicketsBot/common v0.0.0-20210527174309-f7344004ae32/go.mod h1:df3N6ni5xhKtisqCDBQV3FcaHIs40+qblhg17T2zF9w=
+github.com/TicketsBot/common v0.0.0-20210604175952-03cfa14c16e1 h1:tevwSse2/lSLlQ2BNXFgnGAZv0QANTWgewfsyWzF7AY=
+github.com/TicketsBot/common v0.0.0-20210604175952-03cfa14c16e1/go.mod h1:wVX+aRKhC57QGFRkDBR8TiJsPycvpeTAsmrFOfVJqtk=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20210224145232-a4ca54f9e764 h1:G0DIonsnfZv+HNHDX3X5AOHJ+9oNKFwDd1/r/OqeukQ=
@@ -52,6 +54,8 @@ github.com/TicketsBot/database v0.0.0-20210528165404-2addee803304 h1:nw3s4ZVAqXH
 github.com/TicketsBot/database v0.0.0-20210528165404-2addee803304/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20210602154329-75920f14ca06 h1:lTibVaUxQ7Jyd0zmI9fyT5NvAkoAaQLV0bNrA+z6Nhk=
 github.com/TicketsBot/database v0.0.0-20210602154329-75920f14ca06/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
+github.com/TicketsBot/database v0.0.0-20210604172320-343ef21cf7e9 h1:pVQhN7SFfEFE4+Qpo9Z6UwKoesJgM9QiR1TJSdLiiNI=
+github.com/TicketsBot/database v0.0.0-20210604172320-343ef21cf7e9/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14 h1:wVGMTUIDHLj198ElVIecqGGUiQ6NagUlbQOyfiMTF/Y=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14/go.mod h1:whts8TRxrAF4WuDuEAMllkWA/inKem0NhDEFeyuoOvE=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
@@ -126,6 +130,8 @@ github.com/jackc/chunkreader v1.0.0/go.mod h1:RT6O25fNZIuasFJRyZ4R/Y2BbhasbmZXF9
 github.com/jackc/chunkreader/v2 v2.0.0/go.mod h1:odVSm741yZoC3dpHEUXIqA9tQRhFrgOHwnPIn9lDKlk=
 github.com/jackc/chunkreader/v2 v2.0.1 h1:i+RDz65UE+mmpjTfyz0MoVTnzeYxroil2G82ki7MGG8=
 github.com/jackc/chunkreader/v2 v2.0.1/go.mod h1:odVSm741yZoC3dpHEUXIqA9tQRhFrgOHwnPIn9lDKlk=
+github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 h1:vr3AYkKovP8uR8AvSGGUK1IDqRa5lAAvEkZG1LKaCRc=
+github.com/jackc/fake v0.0.0-20150926172116-812a484cc733/go.mod h1:WrMFNQdiFJ80sQsxDoMokWK1W5TQtxBFNpzWTD84ibQ=
 github.com/jackc/pgconn v0.0.0-20190420214824-7e0022ef6ba3/go.mod h1:jkELnwuX+w9qN5YIfX0fl88Ehu4XC3keFuOJJk9pcnA=
 github.com/jackc/pgconn v0.0.0-20190824142844-760dd75542eb/go.mod h1:lLjNuW/+OfW9/pnVKPazfWOgNfH2aPem8YQ7ilXGvJE=
 github.com/jackc/pgconn v0.0.0-20190831204454-2fabfa3c18b7/go.mod h1:ZJKsE/KZfsUgOEh9hBm+xYTstcNHg7UPMVJqRfQxq4s=
