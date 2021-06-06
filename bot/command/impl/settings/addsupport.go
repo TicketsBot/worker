@@ -128,6 +128,8 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		return
 	}
 
+	ctx.ReplyRaw(utils.Green, "Add Support", "Support representative added successfully")
+
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 	updateChannelPermissions(ctx, userId, roles)
 
@@ -150,13 +152,17 @@ func updateChannelPermissions(ctx registry.CommandContext, userId *uint64, roles
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
-			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
-				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
-					ctx.HandleError(err)
-					return
-				}
+			if restError, ok := err.(request.RestError); ok {
+				if restError.StatusCode == 404 {
+					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+						ctx.HandleError(err)
+						return
+					}
 
-				continue
+					continue
+				} else if restError.StatusCode == 403 {
+					break
+				}
 			} else {
 				ctx.HandleError(err)
 				return

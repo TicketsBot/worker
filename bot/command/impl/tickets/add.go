@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -81,5 +82,5 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64)
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	ctx.Accept()
+	ctx.ReplyRaw(utils.Green, "Add", fmt.Sprintf("<@%d> has been added to <#%d>", userId, channelId))
 }

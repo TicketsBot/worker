@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -69,9 +70,8 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	if err := dbclient.Client.Tag.Set(ctx.GuildId(), tagId, content); err == nil {
-		ctx.Accept()
+		ctx.ReplyRaw(utils.Green, "Tag", fmt.Sprintf("Tag created - you can use it by running `/tag %s`", tagId))
 	} else {
-		ctx.Reject()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 	}
 }

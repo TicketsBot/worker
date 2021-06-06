@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
@@ -101,5 +102,5 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	ctx.Accept()
+	ctx.ReplyRaw(utils.Green, "Remove", fmt.Sprintf("<@%d> has been removed from <#%d>", userId, ctx.ChannelId()))
 }

@@ -133,6 +133,8 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 
+	ctx.ReplyRaw(utils.Green, "Add Admin", "Admin added successfully")
+
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -149,12 +151,16 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 		if err != nil {
 			// Check if the channel has been deleted
 			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
-				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
-					ctx.HandleError(err)
-					return
-				}
+				if restError.StatusCode == 404 {
+					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+						ctx.HandleError(err)
+						return
+					}
 
-				continue
+					continue
+				} else if restError.StatusCode == 403 {
+					break
+				}
 			} else {
 				ctx.HandleError(err)
 				return
@@ -192,6 +198,4 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 			return
 		}
 	}
-
-	ctx.Accept()
 }

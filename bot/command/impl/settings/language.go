@@ -35,12 +35,15 @@ func (c LanguageCommand) GetExecutor() interface{} {
 // TODO: Show options properly
 func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string) {
 	var valid bool
+	var newFlag string
 	for language, flag := range translations.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
 			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language); err != nil {
 				ctx.HandleError(err)
+				return
 			}
 
+			newFlag = flag
 			valid = true
 			break
 		}
@@ -51,7 +54,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 		return
 	}
 
-	ctx.Accept()
+	ctx.ReplyRaw(utils.Green, "Language", fmt.Sprintf("Server langauge has been changed to %s", newFlag))
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {

@@ -51,7 +51,8 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 	}
 
 	// get guild object
-	guild, err := ctx.Worker().GetGuild(ctx.GuildId()); if err != nil {
+	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
+	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -79,6 +80,8 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 			return
 		}
 	}
+
+	ctx.ReplyRaw(utils.Green, "Remove Admin", "Admin removed successfully")
 
 	var roles []uint64
 	if roleId != nil {

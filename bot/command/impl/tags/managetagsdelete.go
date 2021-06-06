@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -58,9 +59,8 @@ func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string
 	}
 
 	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err == nil {
-		ctx.Accept()
+		ctx.ReplyRaw(utils.Green, "Tag", fmt.Sprintf("Tag `%s` has been deleted", tagId))
 	} else {
-		ctx.Reject()
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 	}
 }

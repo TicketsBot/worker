@@ -41,6 +41,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 
 		return
 	}
+
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
 		ctx.Accept()
 		ctx.Reply(utils.Green, "Setup", translations.SetupTranscriptsComplete, channelId)

@@ -30,7 +30,7 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
 	embed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
 
-	msg, err := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
+	msg, err := ctx.ReplyWithEmbedPermanent(embed)
 	if err != nil {
 		sentry.LogWithContext(err, ctx.ToErrorContext())
 	} else {

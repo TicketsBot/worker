@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	translations "github.com/TicketsBot/database/translations"
@@ -72,17 +73,18 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	if isBlacklisted {
 		if err := dbclient.Client.Blacklist.Remove(ctx.GuildId(), member.User.Id); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.Reject()
+			ctx.HandleError(err)
 			return
 		}
+
+
+		ctx.ReplyRaw(utils.Green, "Blacklist", fmt.Sprintf("<@%d> has been unblacklisted", member.User.Id))
 	} else {
 		if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.Reject()
+			ctx.HandleError(err)
 			return
 		}
-	}
 
-	ctx.Accept()
+		ctx.ReplyRaw(utils.Green, "Blacklist", fmt.Sprintf("<@%d> has been blacklisted", member.User.Id))
+	}
 }

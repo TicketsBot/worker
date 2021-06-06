@@ -85,12 +85,12 @@ func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext
 	}
 }
 
-func (ctx *SlashCommandContext) reply(flags uint, content *embed.Embed) {
+func (ctx *SlashCommandContext) reply(flags uint, content *embed.Embed) (message.Message, error) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if hasReplied {
 		// TODO: Should we wait?
-		_, err := ctx.worker.ExecuteWebhook(ctx.worker.BotId, ctx.Interaction.Token, false, rest.WebhookBody{
+		msg, err := ctx.worker.ExecuteWebhook(ctx.worker.BotId, ctx.Interaction.Token, true, rest.WebhookBody{
 			Embeds: []*embed.Embed{content},
 			Flags:  flags,
 		})
@@ -98,11 +98,20 @@ func (ctx *SlashCommandContext) reply(flags uint, content *embed.Embed) {
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
 		}
+
+		if msg == nil {
+			return message.Message{}, errors.New("message was nil")
+		} else {
+			return *msg, err
+		}
 	} else {
 		ctx.responseCh <- interaction.ApplicationCommandCallbackData{
 			Embeds: []*embed.Embed{content},
 			Flags:  flags,
 		}
+
+		// todo: uhm
+		return message.Message{}, nil
 	}
 }
 
@@ -137,40 +146,40 @@ func (ctx *SlashCommandContext) buildEmbedRaw(colour utils.Colour, title, conten
 
 func (ctx *SlashCommandContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyWithEmbed(embed *embed.Embed) {
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
-func (ctx *SlashCommandContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
-	ctx.reply(message.SumFlags(), embed)
+func (ctx *SlashCommandContext) ReplyWithEmbedPermanent(embed *embed.Embed) (message.Message, error) {
+	return ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	ctx.reply(message.SumFlags(), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	ctx.reply(message.SumFlags(), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyRaw(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(message.SumFlags(), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyPlain(content string) {
@@ -193,14 +202,14 @@ func (ctx *SlashCommandContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(message.SumFlags(), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(message.SumFlags(), embed)
+	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
 }
 
 func (ctx *SlashCommandContext) Guild() (guild.Guild, error) {

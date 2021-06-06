@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -99,7 +100,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
-			ctx.Accept()
+			ctx.ReplyRaw(utils.Green, "Premium", fmt.Sprintf("Premium has been activated for **%d** days", int(length.Hours() / 24)))
 		} else {
 			ctx.HandleError(err)
 		}

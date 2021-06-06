@@ -79,6 +79,8 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 		}
 	}
 
+	ctx.ReplyRaw(utils.Green, "Remove Support", "Support Representative removed successfully")
+
 	var roles []uint64
 	if roleId != nil {
 		roles = []uint64{*roleId}

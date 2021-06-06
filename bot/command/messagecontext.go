@@ -85,24 +85,24 @@ func (ctx *MessageContext) ReplyContext() *message.MessageReference {
 	}
 }
 
-func (ctx *MessageContext) reply(content *embed.Embed) (message.Message, bool) {
+func (ctx *MessageContext) reply(content *embed.Embed) (message.Message, error) {
 	msg, err := ctx.worker.CreateMessageEmbedReply(ctx.ChannelId(), content, ctx.ReplyContext())
 
 	if err != nil {
 		sentry.LogWithContext(err, ctx.ToErrorContext())
 	}
 
-	return msg, err == nil
+	return msg, err
 }
 
-func (ctx *MessageContext) replyRaw(content string) (message.Message, bool) {
+func (ctx *MessageContext) replyRaw(content string) (message.Message, error) {
 	msg, err := ctx.worker.CreateMessageReply(ctx.ChannelId(), content, ctx.ReplyContext())
 
 	if err != nil {
 		sentry.LogWithContext(err, ctx.ToErrorContext())
 	}
 
-	return msg, err == nil
+	return msg, err
 }
 
 func (ctx *MessageContext) buildEmbed(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
@@ -114,55 +114,54 @@ func (ctx *MessageContext) buildEmbedRaw(colour utils.Colour, title, content str
 }
 
 func (ctx *MessageContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
-	if msg, ok := ctx.reply(ctx.buildEmbed(colour, title, content, nil, format...)); ok {
+	if msg, err := ctx.reply(ctx.buildEmbed(colour, title, content, nil, format...)); err == nil {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
 }
 
 func (ctx *MessageContext) ReplyWithEmbed(embed *embed.Embed) {
-	if msg, ok := ctx.reply(embed); ok {
+	if msg, err := ctx.reply(embed); err == nil {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
 }
 
-func (ctx *MessageContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
-	ctx.reply(embed)
+func (ctx *MessageContext) ReplyWithEmbedPermanent(embed *embed.Embed) (message.Message, error) {
+	return ctx.reply(embed)
 }
 
 func (ctx *MessageContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
-	ctx.reply(ctx.buildEmbed(colour, title, content, nil, format...))
+	_, _ = ctx.reply(ctx.buildEmbed(colour, title, content, nil, format...))
 }
 
 func (ctx *MessageContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
-	if msg, ok := ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...)); ok {
+	if msg, err := ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...)); err == nil {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
 }
 
 func (ctx *MessageContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
-	ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...))
+	_, _ = ctx.reply(ctx.buildEmbed(colour, title, content, fields, format...))
 }
 
 func (ctx *MessageContext) ReplyRaw(colour utils.Colour, title, content string) {
-	if msg, ok := ctx.reply(ctx.buildEmbedRaw(colour, title, content)); ok {
+	if msg, err := ctx.reply(ctx.buildEmbedRaw(colour, title, content)); err == nil {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
 }
 
 func (ctx *MessageContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
-	ctx.reply(ctx.buildEmbedRaw(colour, title, content))
+	_, _ = ctx.reply(ctx.buildEmbedRaw(colour, title, content))
 }
 
 func (ctx *MessageContext) ReplyPlain(content string) {
-	if msg, ok := ctx.replyRaw(content); ok {
+	if msg, err := ctx.replyRaw(content); err == nil {
 		utils.DeleteAfter(ctx.worker, msg.ChannelId, msg.Id, utils.DeleteAfterSeconds)
 	}
 }
 
 func (ctx *MessageContext) ReplyPlainPermanent(content string) {
-	ctx.replyRaw(content)
+	_, _ = ctx.replyRaw(content)
 }
-
 
 func (ctx *MessageContext) Accept() {
 	utils.ReactWithCheck(ctx.worker, ctx.ChannelId(), ctx.Id)
@@ -176,14 +175,14 @@ func (ctx *MessageContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *MessageContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *MessageContext) Guild() (guild.Guild, error) {

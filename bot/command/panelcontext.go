@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
@@ -11,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -118,15 +120,18 @@ func (ctx *PanelContext) openDm() (uint64, bool) {
 	return ctx.dmChannelId, true
 }
 
-func (ctx *PanelContext) reply(content *embed.Embed) {
+func (ctx *PanelContext) reply(content *embed.Embed) (message.Message, error) {
 	ch, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
-		return
+		return message.Message{}, errors.New("failed to open dm")
 	}
 
-	if _, err := ctx.Worker().CreateMessageEmbed(ch, content); err != nil {
+	msg, err := ctx.Worker().CreateMessageEmbed(ch, content)
+	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
+
+	return msg, err
 }
 
 func (ctx *PanelContext) replyRaw(content string) {
@@ -150,40 +155,40 @@ func (ctx *PanelContext) buildEmbedRaw(colour utils.Colour, title, content strin
 
 func (ctx *PanelContext) Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyWithEmbed(embed *embed.Embed) {
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
-func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) {
-	ctx.reply(embed)
+func (ctx *PanelContext) ReplyWithEmbedPermanent(embed *embed.Embed) (message.Message, error) {
+	return ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyRaw(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) ReplyPlain(content string) {
@@ -201,14 +206,14 @@ func (ctx *PanelContext) HandleError(err error) {
 	sentry.ErrorWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) HandleWarning(err error) {
 	sentry.LogWithContext(err, ctx.ToErrorContext())
 
 	embed := ctx.buildEmbedRaw(utils.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	ctx.reply(embed)
+	_, _ = ctx.reply(embed)
 }
 
 func (ctx *PanelContext) Guild() (guild.Guild, error) {
