@@ -13,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"reflect"
+	"runtime/debug"
 	"strconv"
 )
 
@@ -118,6 +119,15 @@ func executeCommand(
 	properties := cmd.Properties()
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovering panicking goroutine while executing command: %v\n", r)
+				debug.PrintStack()
+
+				fmt.Printf("Command: %s\nArgs: %v\nData: %v\n", cmd.Properties().Name, args, data)
+			}
+		}()
+
 		// get premium tier
 		// TODO: guild id null check
 		premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)

@@ -85,7 +85,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	var targetChannel uint64
 
 	// Make sure ticket count is within ticket limit
-	violatesTicketLimit, limit := getTicketLimit(ctx.GuildId(), ctx.UserId())
+	violatesTicketLimit, limit := getTicketLimit(ctx)
 	if violatesTicketLimit {
 		// initialise target channel
 		if targetChannel == 0 {
