@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -307,7 +308,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 }
 
 // has hit ticket limit, ticket limit
-func getTicketLimit(guildId, userId uint64) (bool, int) {
+func getTicketLimit(ctx registry.CommandContext) (bool, int) {
+	isStaff, err := ctx.UserPermissionLevel()
+	if err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return true, 1 // TODO: Stop flow
+	}
+
+	if isStaff >= permcache.Support {
+		return false, 50
+	}
+
 	var openedTickets []database.Ticket
 	var ticketLimit uint8
 
@@ -315,17 +326,17 @@ func getTicketLimit(guildId, userId uint64) (bool, int) {
 
 	// get ticket limit
 	group.Go(func() (err error) {
-		ticketLimit, err = dbclient.Client.TicketLimit.Get(guildId)
+		ticketLimit, err = dbclient.Client.TicketLimit.Get(ctx.GuildId())
 		return
 	})
 
 	group.Go(func() (err error) {
-		openedTickets, err = dbclient.Client.Tickets.GetOpenByUser(guildId, userId)
+		openedTickets, err = dbclient.Client.Tickets.GetOpenByUser(ctx.GuildId(), ctx.UserId())
 		return
 	})
 
 	if err := group.Wait(); err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return true, 1
 	}
 
