@@ -183,14 +183,14 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	embed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(int(utils.Green)).
+		SetTimestamp(time.Now()).
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
 		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField("Closed By", member.User.Mention(), true).
 		AddField("Reason", formattedReason, false).
 		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true).
-		AddField("Open Time", utils.FormatDateTime(ticket.OpenTime), true).
-		AddField("Claimed By", claimedBy, true).
-		SetFooter(fmt.Sprintf("Close Time: %s", utils.FormatDateTime(time.Now())), "")
+		AddField("Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField("Claimed By", claimedBy, true)
 
 	if archiveChannelExists {
 		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, embed); err != nil {
