@@ -214,17 +214,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	{
 		var content string
 
-		if panel == nil {
-			// Ping @everyone
-			pingEveryone, err := dbclient.Client.PingEveryone.Get(ctx.GuildId())
-			if err != nil {
-				ctx.HandleError(err)
-			}
-
-			if pingEveryone {
-				content = fmt.Sprintf("@everyone")
-			}
-		} else {
+		if panel != nil {
 			// roles
 			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.PanelId)
 			if err != nil {

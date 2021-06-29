@@ -116,6 +116,6 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 		}()
 	} else {
 		ctx := command.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
-		logic.CloseTicket(&ctx, 0, nil, true)
+		logic.CloseTicket(&ctx, nil, true)
 	}
 }

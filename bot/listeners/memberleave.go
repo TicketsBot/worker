@@ -40,7 +40,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 					premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
 
 					ctx := command.NewDashboardContext(worker, e.GuildId, *ticket.ChannelId, e.User.Id, premiumTier)
-					logic.CloseTicket(&ctx, 0, gdlUtils.StrPtr(autoclose.AutoCloseReason), true)
+					logic.CloseTicket(&ctx, gdlUtils.StrPtr(autoclose.AutoCloseReason), true)
 				}
 			}
 		}

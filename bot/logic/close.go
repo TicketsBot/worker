@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, fromInteraction bool) {
+func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bool) {
 	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
@@ -61,7 +61,7 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 		return
 	}
 
-	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
+	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
 		if !fromInteraction {
 			ctx.Reply(utils.Red, "Error", translations.MessageCloseNoPermission)
 			ctx.Reject()

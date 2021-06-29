@@ -13,5 +13,5 @@ func OnCloseConfirm(worker *worker.Context, data interaction.ButtonInteraction) 
 	premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
 
 	ctx := command.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
-	logic.CloseTicket(&ctx, 0, nil, true)
+	logic.CloseTicket(&ctx, nil, true)
 }
