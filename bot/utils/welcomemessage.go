@@ -52,16 +52,19 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 	data := rest.CreateMessageData{
 		Embed: embed,
 		Components: []component.Component{
-			component.BuildActionRow(component.BuildButton(component.Button{
-				Label:    "Close",
-				CustomId: "close",
-				Style:    component.ButtonStyleDanger,
-				Emoji: emoji.Emoji{
-					Name: "🔒",
-				},
-				Url:      nil,
-				Disabled: false,
-			})),
+			component.BuildActionRow(
+				component.BuildButton(component.Button{
+					Label:    "Close",
+					CustomId: "close",
+					Style:    component.ButtonStyleDanger,
+					Emoji:    emoji.Emoji{Name: "🔒"},
+				}),
+				component.BuildButton(component.Button{
+					Label:    "Claim",
+					CustomId: "claim",
+					Style:    component.ButtonStyleSuccess,
+					Emoji:    emoji.Emoji{Name: "🙋‍♂️"},
+				})),
 		},
 	}
 

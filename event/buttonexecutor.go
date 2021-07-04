@@ -18,6 +18,8 @@ func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) 
 		listeners.OnCloseReact(ctx, data)
 	case "close_confirm":
 		listeners.OnCloseConfirm(ctx, data)
+	case "claim":
+		listeners.OnClaimReact(ctx, data)
 	default:
 		handlePanelButton(ctx, data)
 	}
