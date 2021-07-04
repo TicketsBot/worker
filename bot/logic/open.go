@@ -367,6 +367,8 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
+var allowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+
 func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
@@ -416,6 +418,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			for _, team := range teams {
 				team := team
 
+				// TODO: Joins
 				group.Go(func() error {
 					members, err := dbclient.Client.SupportTeamMembers.Get(team.Id)
 					if err != nil {
@@ -446,12 +449,12 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	allowedUsers = append(allowedUsers, userId, selfId)
 
 	for _, member := range allowedUsers {
-		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+		allow := allowedPermissions
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
 			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
-				allow = append(allow, permission.ManageWebhooks)
+				allow = append(allowedPermissions, permission.ManageWebhooks)
 			}
 		}
 
@@ -467,7 +470,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    role,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+			Allow: permission.BuildPermissions(allowedPermissions...),
 			Deny:  0,
 		})
 	}
