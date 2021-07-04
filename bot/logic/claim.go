@@ -48,7 +48,7 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 
 	var newOverwrites []channel.PermissionOverwrite
 	if !claimSettings.SupportCanView {
-		newOverwrites = overwritesCantView(userId, ticket.GuildId, adminUsers, adminRoles)
+		newOverwrites = overwritesCantView(userId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles)
 	} else if !claimSettings.SupportCanType {
 		// TODO: Teams
 		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ticket.GuildId)
@@ -99,7 +99,7 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 			}
 		}
 
-		newOverwrites = overwritesCantType(userId, worker.BotId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles)
+		newOverwrites = overwritesCantType(userId, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles)
 	}
 
 	// Update channel
@@ -115,7 +115,7 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 
 // We should build new overwrites from scratch
 // TODO: Instead of append(), set indices
-func overwritesCantView(claimer, guildId uint64, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
+func overwritesCantView(claimer, openerId, guildId uint64, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
 	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
 		Id:    guildId,
 		Type:  channel.PermissionTypeRole,
@@ -123,7 +123,7 @@ func overwritesCantView(claimer, guildId uint64, adminUsers, adminRoles []uint64
 		Deny:  permission.BuildPermissions(permission.ViewChannel),
 	})
 
-	for _, userId := range append(adminUsers, claimer) {
+	for _, userId := range append(adminUsers, claimer, openerId) {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
@@ -148,7 +148,7 @@ var readOnlyAllowed = []permission.Permission{permission.ViewChannel, permission
 var readOnlyDenied = []permission.Permission{permission.SendMessages, permission.AddReactions}
 
 // support & admins are not mutually exclusive due to support teams
-func overwritesCantType(claimerId, selfId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
+func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
 	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
 		Id:    guildId,
 		Type:  channel.PermissionTypeRole,
@@ -156,7 +156,7 @@ func overwritesCantType(claimerId, selfId, guildId uint64, supportUsers, support
 		Deny:  permission.BuildPermissions(permission.ViewChannel),
 	})
 
-	for _, userId := range append(adminUsers, claimerId, selfId) {
+	for _, userId := range append(adminUsers, claimerId, selfId, openerId) {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,

@@ -32,6 +32,7 @@ func (c AutoSetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
+// TODO: Separate into diff functions
 func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	var supportRoleId, adminRoleId uint64
 	var messageId uint64
