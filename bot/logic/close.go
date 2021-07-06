@@ -21,6 +21,7 @@ import (
 )
 
 func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bool) {
+	var success bool
 	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
@@ -32,7 +33,6 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 	isTicket := ticket.GuildId != 0
 
-	// Cannot happen if fromInteraction
 	if !isTicket {
 		if !fromInteraction {
 			ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
@@ -41,6 +41,14 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 		return
 	}
+
+	defer func() {
+		if !success {
+			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		}
+	}()
 
 	// Check the user is permitted to close the ticket
 	usersCanClose, err := dbclient.Client.UsersCanClose.Get(ctx.GuildId())
@@ -62,6 +70,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	}
 
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
+		fmt.Println(1)
 		if !fromInteraction {
 			ctx.Reply(utils.Red, "Error", translations.MessageCloseNoPermission)
 			ctx.Reject()
@@ -94,7 +103,14 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 		count = len(array)
 		if err != nil {
 			count = 0
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
+
+			// First rest interaction, check for 403
+			if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+				if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
+					sentry.ErrorWithContext(err, errorContext)
+				}
+			}
 		}
 
 		if count > 0 {
@@ -115,13 +131,17 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 	// Set ticket state as closed and delete channel
 	if err := dbclient.Client.Tickets.Close(ticket.Id, ctx.GuildId()); err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
+		return
 	}
+
+	success = true
 
 	// set close reason
 	if reason != nil {
 		if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, *reason); err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			ctx.HandleError(err)
+			return
 		}
 	}
 
@@ -133,7 +153,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 			}
 		}
 
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
+		return
 	}
 
 	// Save space - delete the webhook
@@ -208,6 +229,11 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 }
 
 func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
+	// Hack for autoclose
+	if ctx.Worker().BotId == userId {
+		return 0, false
+	}
+
 	cachedId, err := redis.GetDMChannel(userId)
 	if err != nil { // We can continue
 		if err != redis.ErrNotCached {

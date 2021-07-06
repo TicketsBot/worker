@@ -1,28 +1,29 @@
-package autoclose
+package messagequeue
 
-/*import (
+import (
 	"github.com/TicketsBot/common/autoclose"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/worker/bot/cache"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/cache"
-	"github.com/rxdn/gdl/rest/request"
-)*/
+	gdlUtils "github.com/rxdn/gdl/utils"
+)
 
 const AutoCloseReason = "Automatically closed due to inactivity"
 
-/*func ListenAutoClose(cache *cache.PgCache) {
+func ListenAutoClose() {
 	ch := make(chan autoclose.Ticket)
 	go autoclose.Listen(redis.Client, ch)
 
 	for ticket := range ch {
 		ticket := ticket
+
 		go func() {
 			// get worker
-			worker, err := buildContext(ticket, cache)
+			worker, err := buildContext(ticket, cache.Client)
 			if err != nil {
 				sentry.Error(err)
 				return
@@ -35,29 +36,16 @@ const AutoCloseReason = "Automatically closed due to inactivity"
 				return
 			}
 
-			// verify ticket exists + prevent potential panic
+			// query already checks, but just to be sure
 			if ticket.ChannelId == nil {
-				return
-			}
-
-			// get self member
-			self, err := worker.GetGuildMember(ticket.GuildId, worker.BotId)
-			if err != nil {
-				// We are no longer in the guild and can exclude all tickets
-				if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
-					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ticket.GuildId); err != nil {
-						sentry.Error(err)
-					}
-				}
-
-				sentry.Error(err)
 				return
 			}
 
 			// get premium status
 			premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
 
-			logic.CloseTicket(worker, ticket.GuildId, *ticket.ChannelId, 0, self, &AutoCloseReason, true, premiumTier >= premium.Premium)
+			ctx := command.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
+			logic.CloseTicket(&ctx, gdlUtils.StrPtr(AutoCloseReason), true)
 		}()
 	}
-}*/
+}

@@ -3,9 +3,9 @@ package listeners
 import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/autoclose"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -40,7 +40,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 					premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
 
 					ctx := command.NewDashboardContext(worker, e.GuildId, *ticket.ChannelId, e.User.Id, premiumTier)
-					logic.CloseTicket(&ctx, gdlUtils.StrPtr(autoclose.AutoCloseReason), true)
+					logic.CloseTicket(&ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason), true)
 				}
 			}
 		}
