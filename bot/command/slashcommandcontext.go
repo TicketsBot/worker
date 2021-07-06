@@ -159,7 +159,7 @@ func (ctx *SlashCommandContext) ReplyWithEmbedPermanent(embed *embed.Embed) (mes
 
 func (ctx *SlashCommandContext) ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, nil, format...)
-	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
@@ -169,7 +169,7 @@ func (ctx *SlashCommandContext) ReplyWithFields(colour utils.Colour, title strin
 
 func (ctx *SlashCommandContext) ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := ctx.buildEmbed(colour, title, content, fields, format...)
-	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyRaw(colour utils.Colour, title, content string) {
@@ -179,7 +179,7 @@ func (ctx *SlashCommandContext) ReplyRaw(colour utils.Colour, title, content str
 
 func (ctx *SlashCommandContext) ReplyRawPermanent(colour utils.Colour, title, content string) {
 	embed := ctx.buildEmbedRaw(colour, title, content)
-	_, _  = ctx.reply(message.SumFlags(message.FlagEphemeral), embed)
+	_, _  = ctx.reply(message.SumFlags(), embed)
 }
 
 func (ctx *SlashCommandContext) ReplyPlain(content string) {
