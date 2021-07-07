@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	gdlUtils "github.com/rxdn/gdl/utils"
@@ -19,8 +20,9 @@ func ListenAutoClose() {
 	go autoclose.Listen(redis.Client, ch)
 
 	for ticket := range ch {
-		ticket := ticket
+		statsd.Client.IncrementKey(statsd.AutoClose)
 
+		ticket := ticket
 		go func() {
 			// get worker
 			worker, err := buildContext(ticket, cache.Client)
