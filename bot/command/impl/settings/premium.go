@@ -11,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
+	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"time"
 )
@@ -45,7 +46,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.Reply(utils.Red, "Premium", translations.MessageAlreadyPremium, expiry.UTC().String())
+				ctx.Reply(utils.Red, "Premium", translations.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
 				return
 			}
 		}
