@@ -104,7 +104,9 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		ctx.ReplyWithEmbed(embed)
 	} else { // Support rep stats
 		var weeklyAR, monthlyAR, totalAR *time.Duration
-		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets, weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets int
+		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets,
+		weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets,
+		weeklyClaimedTickets, monthlyClaimedTickets, totalClaimedTickets int
 
 		group, _ := errgroup.WithContext(context.Background())
 
@@ -162,6 +164,24 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		})
 
+		// weeklyClaimed
+		group.Go(func() (err error) {
+			weeklyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(ctx.GuildId(), userId, time.Hour*24*7)
+			return
+		})
+
+		// monthlyClaimed
+		group.Go(func() (err error) {
+			monthlyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(ctx.GuildId(), userId, time.Hour*24*28)
+			return
+		})
+
+		// totalClaimed
+		group.Go(func() (err error) {
+			totalClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedCount(ctx.GuildId(), userId)
+			return
+		})
+
 		if err := group.Wait(); err != nil {
 			ctx.HandleError(err)
 			return
@@ -201,7 +221,11 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 			AddField("Tickets Answered (Weekly)", fmt.Sprintf("%d / %d", weeklyAnsweredTickets, weeklyTotalTickets), true).
 			AddField("Tickets Answered (Monthly)", fmt.Sprintf("%d / %d", monthlyAnsweredTickets, monthlyTotalTickets), true).
-			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true)
+			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true).
+
+			AddField("Claimed Tickets (Weekly)", strconv.Itoa(weeklyClaimedTickets), true).
+			AddField("Claimed Tickets (Monthly)", strconv.Itoa(monthlyClaimedTickets), true).
+			AddField("Claimed Tickets (Total)", strconv.Itoa(totalClaimedTickets), true)
 
 		ctx.ReplyWithEmbed(embed)
 	}
