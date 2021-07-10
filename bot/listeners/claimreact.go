@@ -36,7 +36,7 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 	}
 
 	if permissionLevel < permission.Support {
-		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, premiumTier > premium.None)
+		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", translations.MessageNoPermission, nil, 30, premiumTier > premium.None)
 		//ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
 		return
 	}
