@@ -2,7 +2,7 @@ package settings
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/setup"
@@ -14,7 +14,7 @@ type CancelCommand struct {
 func (CancelCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "cancel",
-		Description:     translations.HelpCancel,
+		Description:     i18n.HelpCancel,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

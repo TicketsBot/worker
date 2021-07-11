@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strconv"
 )
@@ -17,7 +18,7 @@ type AdminSetMessageCommand struct {
 func (AdminSetMessageCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "setmessage",
-		Description:     translations.HelpAdminSetMessage,
+		Description:     i18n.HelpAdminSetMessage,
 		Aliases:         []string{"sm"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
@@ -27,9 +28,9 @@ func (AdminSetMessageCommand) Properties() registry.Properties {
 		 * Multiple strings, do manual arg parsing
 		 *
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("language", "Language", interaction.OptionTypeString, translations.MessageInvalidArgument),
-			command.NewRequiredArgument("id", "ID of the message to update", interaction.OptionTypeInteger, translations.MessageInvalidArgument),
-			command.NewRequiredArgument("value", "New value for the message", interaction.OptionTypeString, translations.MessageInvalidArgument),
+			command.NewRequiredArgument("language", "Language", interaction.OptionTypeString, i18n.MessageInvalidArgument),
+			command.NewRequiredArgument("id", "ID of the message to update", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),
+			command.NewRequiredArgument("value", "New value for the message", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),*/
 	}
 }

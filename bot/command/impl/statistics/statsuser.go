@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -22,13 +22,13 @@ type StatsUserCommand struct {
 func (StatsUserCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "user",
-		Description:     translations.HelpStats, // TODO: Proper translations
+		Description:     i18n.HelpStats, // TODO: Proper translations
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User whose statistics to retrieve", interaction.OptionTypeUser, translations.MessageInvalidUser),
+			command.NewRequiredArgument("user", "User whose statistics to retrieve", interaction.OptionTypeUser, i18n.MessageInvalidUser),
 		),
 	}
 }

@@ -2,10 +2,10 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -18,11 +18,11 @@ type RenameCommand struct {
 func (RenameCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "rename",
-		Description:     translations.HelpRename,
+		Description:     i18n.HelpRename,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("name", "New name for the ticket", interaction.OptionTypeString, translations.MessageRenameMissingName),
+			command.NewRequiredArgument("name", "New name for the ticket", interaction.OptionTypeString, i18n.MessageRenameMissingName),
 		),
 	}
 }
@@ -46,7 +46,7 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.ReplyWithFields(utils.Red, "Rename", translations.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Rename", i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -59,5 +59,5 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 		return
 	}
 
-	ctx.Reply(utils.Green, "Rename", translations.MessageRenamed, ctx.ChannelId())
+	ctx.Reply(utils.Green, "Rename", i18n.MessageRenamed, ctx.ChannelId())
 }

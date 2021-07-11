@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"strconv"
@@ -19,7 +19,7 @@ type AdminDebugCommand struct {
 func (AdminDebugCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "debug",
-		Description:     database.HelpAdminDebug,
+		Description:     i18n.HelpAdminDebug,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

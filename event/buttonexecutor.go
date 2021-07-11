@@ -2,7 +2,7 @@ package event
 
 import (
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -55,7 +55,7 @@ func handlePanelButton(ctx *worker.Context, data interaction.ButtonInteraction) 
 		}
 
 		if blacklisted {
-			panelCtx.Reply(utils.Red, "Blacklisted", translations.MessageBlacklisted)
+			panelCtx.Reply(utils.Red, "Blacklisted", i18n.MessageBlacklisted)
 			return
 		}
 

@@ -5,7 +5,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/manager"
@@ -192,25 +192,25 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		if properties.PermissionLevel > userPermissionLevel {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumTier == premium.None {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			ctx.Reply(utils.Red, "Premium Only Command", i18n.MessagePremium)
 			return
 		}
 

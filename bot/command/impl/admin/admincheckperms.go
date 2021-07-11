@@ -3,9 +3,9 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 )
 
 type AdminCheckPermsCommand struct {
@@ -14,7 +14,7 @@ type AdminCheckPermsCommand struct {
 func (AdminCheckPermsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "checkperms",
-		Description:     database.HelpAdminCheckPerms,
+		Description:     i18n.HelpAdminCheckPerms,
 		Aliases:         []string{"cp"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

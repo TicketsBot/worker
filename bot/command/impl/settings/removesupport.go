@@ -2,7 +2,7 @@ package settings
 
 import (
 	permcache "github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -19,13 +19,13 @@ type RemoveSupportCommand struct {
 func (RemoveSupportCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "removesupport",
-		Description:     translations.HelpRemoveSupport,
+		Description:     i18n.HelpRemoveSupport,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("user", "User to remove the support representative permission from", interaction.OptionTypeUser, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgument("role", "Role to remove the support representative permission from", interaction.OptionTypeRole, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to remove the support representative permission from", interaction.OptionTypeString, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("user", "User to remove the support representative permission from", interaction.OptionTypeUser, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("role", "Role to remove the support representative permission from", interaction.OptionTypeRole, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to remove the support representative permission from", interaction.OptionTypeString, i18n.MessageAddAdminNoMembers),
 		),
 	}
 }
@@ -43,7 +43,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -57,13 +57,13 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 	if userId != nil {
 		if guild.OwnerId == *userId {
-			ctx.Reply(utils.Red, "Error", translations.MessageOwnerMustBeAdmin)
+			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == *userId {
-			ctx.Reply(utils.Red, "Error", translations.MessageRemoveStaffSelf)
+			ctx.Reply(utils.Red, "Error", i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
@@ -105,7 +105,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

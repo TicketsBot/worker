@@ -5,6 +5,7 @@ import (
 	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
 )
@@ -17,7 +18,7 @@ func (WelcomeMessageStage) State() State {
 }
 
 func (WelcomeMessageStage) Prompt() database.MessageId {
-	return database.SetupWelcomeMessage
+	return i18n.SetupWelcomeMessage
 }
 
 func (WelcomeMessageStage) Default() string {

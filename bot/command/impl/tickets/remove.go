@@ -3,10 +3,10 @@ package tickets
 import (
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -19,11 +19,11 @@ type RemoveCommand struct {
 func (RemoveCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "remove",
-		Description:     translations.HelpRemove,
+		Description:     i18n.HelpRemove,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User to remove from the current ticket", interaction.OptionTypeUser, translations.MessageRemoveAdminNoMembers),
+			command.NewRequiredArgument("user", "User to remove from the current ticket", interaction.OptionTypeUser, i18n.MessageRemoveAdminNoMembers),
 		),
 	}
 }
@@ -48,7 +48,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify that the current channel is a real ticket
 	if ticket.UserId == 0 {
-		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -61,7 +61,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify that the user is allowed to modify the ticket
 	if selfPermissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
-		ctx.Reply(utils.Red, "Error", translations.MessageRemoveNoPermission)
+		ctx.Reply(utils.Red, "Error", i18n.MessageRemoveNoPermission)
 		ctx.Reject()
 		return
 	}
@@ -80,7 +80,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel > permcache.Everyone {
-		ctx.Reply(utils.Red, "Error", translations.MessageRemoveCannotRemoveStaff)
+		ctx.Reply(utils.Red, "Error", i18n.MessageRemoveCannotRemoveStaff)
 		ctx.Reject()
 		return
 	}

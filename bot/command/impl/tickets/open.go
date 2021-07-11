@@ -2,7 +2,7 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -15,12 +15,12 @@ type OpenCommand struct {
 func (OpenCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "open",
-		Description:     translations.HelpOpen,
+		Description:     i18n.HelpOpen,
 		Aliases:         []string{"new"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, translations.MessageInvalidArgument), // TODO: Better invalid message
+			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, i18n.MessageInvalidArgument), // TODO: Better invalid message
 		),
 	}
 }

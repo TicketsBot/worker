@@ -4,7 +4,7 @@ import (
 	"context"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -26,14 +26,14 @@ type AddSupportCommand struct {
 func (AddSupportCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "addsupport",
-		Description:     translations.HelpAddSupport,
+		Description:     i18n.HelpAddSupport,
 		Aliases:         []string{"addsuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("user", "User to apply the support representative permission to", interaction.OptionTypeUser, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgument("role", "Role to apply the support representative permission to", interaction.OptionTypeRole, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to apply the support representative permission to", interaction.OptionTypeString, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("user", "User to apply the support representative permission to", interaction.OptionTypeUser, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("role", "Role to apply the support representative permission to", interaction.OptionTypeRole, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to apply the support representative permission to", interaction.OptionTypeString, i18n.MessageAddAdminNoMembers),
 		),
 	}
 }
@@ -50,7 +50,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -66,7 +66,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		}
 
 		if guild.OwnerId == *userId {
-			ctx.Reply(utils.Red, "Error", translations.MessageOwnerIsAlreadyAdmin)
+			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerIsAlreadyAdmin)
 			return
 		}
 
@@ -103,7 +103,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

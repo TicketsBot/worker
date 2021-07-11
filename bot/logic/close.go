@@ -6,9 +6,9 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -35,7 +35,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 	if !isTicket {
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 			ctx.Reject()
 		}
 
@@ -72,7 +72,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
 		fmt.Println(1)
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", translations.MessageCloseNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageCloseNoPermission)
 			ctx.Reject()
 		}
 		return

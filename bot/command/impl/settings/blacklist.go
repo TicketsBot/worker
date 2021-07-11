@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -19,12 +19,12 @@ type BlacklistCommand struct {
 func (BlacklistCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "blacklist",
-		Description:     translations.HelpBlacklist,
+		Description:     i18n.HelpBlacklist,
 		Aliases:         []string{"unblacklist"},
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser, translations.MessageBlacklistNoMembers),
+			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser, i18n.MessageBlacklistNoMembers),
 		),
 	}
 }
@@ -47,7 +47,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if ctx.UserId() == member.User.Id {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -59,7 +59,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permLevel > permission.Everyone {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}

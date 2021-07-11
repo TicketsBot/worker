@@ -4,10 +4,10 @@ import (
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -21,12 +21,12 @@ type AddCommand struct {
 func (AddCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "add",
-		Description:     translations.HelpAdd,
+		Description:     i18n.HelpAdd,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User to add to the ticket", interaction.OptionTypeUser, translations.MessageAddNoMembers),
-			command.NewRequiredArgument("channel", "Channel to add the user to", interaction.OptionTypeChannel, translations.MessageAddNoChannel),
+			command.NewRequiredArgument("user", "User to add to the ticket", interaction.OptionTypeUser, i18n.MessageAddNoMembers),
+			command.NewRequiredArgument("channel", "Channel to add the user to", interaction.OptionTypeChannel, i18n.MessageAddNoChannel),
 		),
 	}
 }
@@ -50,7 +50,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64)
 
 	// 2 in 1: verify guild is the same & the channel is valid
 	if ticket.GuildId != ctx.GuildId() {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -63,7 +63,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64)
 
 	// Verify that the user is allowed to modify the ticket
 	if permissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
-		ctx.Reply(utils.Red, "Error", translations.MessageAddNoPermission)
+		ctx.Reply(utils.Red, "Error", i18n.MessageAddNoPermission)
 		ctx.Reject()
 		return
 	}

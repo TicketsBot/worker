@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
@@ -36,8 +36,8 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 	}
 
 	if permissionLevel < permission.Support {
-		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", translations.MessageNoPermission, nil, 30, premiumTier > premium.None)
-		//ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageNoPermission, nil, 30, premiumTier > premium.None)
+		//ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 		return
 	}
 
@@ -49,8 +49,8 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", translations.MessageNotATicketChannel, nil, 30, premiumTier > premium.None)
-		//ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageNotATicketChannel, nil, 30, premiumTier > premium.None)
+		//ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -60,5 +60,5 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 		return
 	}
 
-	utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Green, "Ticket Claimed", translations.MessageClaimed, nil, 30, premiumTier > premium.None, fmt.Sprintf("<@%d>", data.Member.User.Id))
+	utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Green, "Ticket Claimed", i18n.MessageClaimed, nil, 30, premiumTier > premium.None, fmt.Sprintf("<@%d>", data.Member.User.Id))
 }

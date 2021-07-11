@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -22,11 +22,11 @@ type PremiumCommand struct {
 func (PremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "premium",
-		Description:     translations.HelpPremium,
+		Description:     i18n.HelpPremium,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("key", "Premium key to activate", interaction.OptionTypeString, translations.MessageInvalidPremiumKey),
+			command.NewOptionalArgument("key", "Premium key to activate", interaction.OptionTypeString, i18n.MessageInvalidPremiumKey),
 		),
 	}
 }
@@ -46,16 +46,16 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.Reply(utils.Red, "Premium", translations.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
+				ctx.Reply(utils.Red, "Premium", i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
 				return
 			}
 		}
-		ctx.Reply(utils.Red, "Premium", translations.MessagePremium)
+		ctx.Reply(utils.Red, "Premium", i18n.MessagePremium)
 	} else {
 		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
-			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reply(utils.Red, "Premium", i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}
@@ -68,7 +68,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if length == 0 {
-			ctx.Reply(utils.Red, "Premium", translations.MessageInvalidPremiumKey)
+			ctx.Reply(utils.Red, "Premium", i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}

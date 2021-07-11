@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -81,7 +81,7 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 			}
 
 			if (permissionLevel == permission.Everyone && ticket.UserId != data.Member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, premiumTier > premium.None)
+				utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageCloseNoPermission, nil, 30, premiumTier > premium.None)
 				return
 			}
 		}

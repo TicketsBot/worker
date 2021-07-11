@@ -3,7 +3,7 @@ package statistics
 import (
 	"context"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -20,7 +20,7 @@ type StatsServerCommand struct {
 func (StatsServerCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "server",
-		Description:     translations.HelpStatsServer,
+		Description:     i18n.HelpStatsServer,
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,

@@ -3,7 +3,7 @@ package settings
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -17,7 +17,7 @@ type ViewStaffCommand struct {
 func (ViewStaffCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "viewstaff",
-		Description:     translations.HelpViewStaff,
+		Description:     i18n.HelpViewStaff,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 	}

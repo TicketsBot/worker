@@ -8,11 +8,11 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -104,7 +104,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ticketsPluralised += "s"
 			}
 
-			ctx.Reply(utils.Red, "Error", translations.MessageTicketLimitReached, limit, ticketsPluralised)
+			ctx.Reply(utils.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return
@@ -135,7 +135,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if channelCount >= 50 {
-			ctx.Reply(utils.Red, "Error", translations.MessageTooManyTickets)
+			ctx.Reply(utils.Red, "Error", i18n.MessageTooManyTickets)
 			return
 		}
 	}
@@ -263,7 +263,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
+		ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
 	}
 	/*else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())
@@ -272,7 +272,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
-			ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
+			ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
 		}
 	}*/
 

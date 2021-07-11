@@ -3,7 +3,6 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
@@ -19,14 +18,14 @@ type RegisterCommandsCommand struct {
 func (RegisterCommandsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "registercommands",
-		Description:     database.HelpAdmin, // TODO: Register translation
+		Description:     i18n.HelpAdmin, // TODO: Register translation
 		Aliases:         []string{"registercmds", "rcmds", "rcmd"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
 		MessageOnly:     true,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("global", "Register commands globally", interaction.OptionTypeBoolean, database.MessageInvalidArgument),
+			command.NewOptionalArgument("global", "Register commands globally", interaction.OptionTypeBoolean, i18n.MessageInvalidArgument),
 		),
 	}
 }
@@ -118,7 +117,7 @@ func BuildOption(cmd registry.Command) interaction.ApplicationCommandOption {
 	return interaction.ApplicationCommandOption{
 		Type:        interaction.OptionTypeSubCommand,
 		Name:        properties.Name,
-		Description: i18n.GetMessage(database.English, properties.Description),
+		Description: i18n.GetMessage(i18n.English, properties.Description),
 		Default:     false,
 		Required:    false,
 		Choices:     nil,

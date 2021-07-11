@@ -5,6 +5,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
 )
@@ -17,7 +18,7 @@ func (PrefixStage) State() State {
 }
 
 func (PrefixStage) Prompt() translations.MessageId {
-	return translations.SetupPrefix
+	return i18n.SetupPrefix
 }
 
 func (PrefixStage) Default() string {
@@ -28,7 +29,7 @@ func (PrefixStage) Process(worker *worker.Context, msg message.Message) {
 	replyContext := utils.CreateReferenceFromMessage(msg)
 
 	if len(msg.Content) > 8 {
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidPrefix, nil, 15, true, PrefixStage{}.Default())
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageInvalidPrefix, nil, 15, true, PrefixStage{}.Default())
 		return
 	}
 

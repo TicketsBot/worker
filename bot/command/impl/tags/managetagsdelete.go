@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -18,12 +18,12 @@ type ManageTagsDeleteCommand struct {
 func (ManageTagsDeleteCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "delete",
-		Description:     translations.HelpTagDelete,
+		Description:     i18n.HelpTagDelete,
 		Aliases:         []string{"del", "rm", "remove"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("id", "ID of the tag to delete", interaction.OptionTypeString, translations.MessageTagDeleteInvalidArguments),
+			command.NewRequiredArgument("id", "ID of the tag to delete", interaction.OptionTypeString, i18n.MessageTagDeleteInvalidArguments),
 		),
 	}
 }
@@ -54,7 +54,7 @@ func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string
 
 	if !found {
 		ctx.Reject()
-		ctx.Reply(utils.Red, "Error", translations.MessageTagDeleteDoesNotExist, tagId)
+		ctx.Reply(utils.Red, "Error", i18n.MessageTagDeleteDoesNotExist, tagId)
 		return
 	}
 

@@ -3,9 +3,9 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
@@ -17,13 +17,13 @@ type AdminCheckPremiumCommand struct {
 func (AdminCheckPremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "checkpremium",
-		Description:     database.HelpAdminCheckPremium,
+		Description:     i18n.HelpAdminCheckPremium,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
 		MessageOnly: true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("guild_id", "ID of the guild to check premium status for", interaction.OptionTypeString, database.MessageInvalidArgument),
+			command.NewRequiredArgument("guild_id", "ID of the guild to check premium status for", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
 	}
 }

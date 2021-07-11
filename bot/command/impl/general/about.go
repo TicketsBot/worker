@@ -2,7 +2,7 @@ package general
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -14,7 +14,7 @@ type AboutCommand struct {
 func (AboutCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:             "about",
-		Description:      translations.HelpAbout,
+		Description:      i18n.HelpAbout,
 		PermissionLevel:  permission.Everyone,
 		Category:         command.General,
 		MainBotOnly:      true,
@@ -27,5 +27,5 @@ func (c AboutCommand) GetExecutor() interface{} {
 }
 
 func (AboutCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(utils.Green, "About", translations.MessageAbout)
+	ctx.Reply(utils.Green, "About", i18n.MessageAbout)
 }

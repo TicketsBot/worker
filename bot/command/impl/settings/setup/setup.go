@@ -19,7 +19,7 @@ type SetupCommand struct {
 func (SetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "setup",
-		Description:     translations.HelpSetup,
+		Description:     i18n.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children: []registry.Command{
@@ -39,7 +39,7 @@ func (c SetupCommand) GetExecutor() interface{} {
 }
 
 func (c SetupCommand) Execute(ctx registry.CommandContext) {
-	ctx.ReplyWithFieldsPermanent(utils.Green, "Setup", translations.SetupChoose, c.buildFields(ctx))
+	ctx.ReplyWithFieldsPermanent(utils.Green, "Setup", i18n.SetupChoose, c.buildFields(ctx))
 }
 
 func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField {
@@ -47,15 +47,15 @@ func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField 
 
 	group, _ := errgroup.WithContext(context.Background())
 
-	group.Go(getFieldFunc(ctx, fields, 0, "t!setup ez", translations.SetupEasyDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 1, "t!setup auto", translations.SetupAutoDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 2, "Dashboard", translations.SetupDashboardDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 3, "t!setup prefix", translations.SetupPrefixDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 4, "t!setup limit", translations.SetupLimitDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 5, "t!setup welcomemessage", translations.SetupWelcomeMessageDescription, false))
-	group.Go(getFieldFunc(ctx, fields, 6, "t!setup transcripts", translations.SetupTranscriptsDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 7, "t!setup category", translations.SetupCategoryDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 8, "Reaction Panels", translations.SetupReactionPanelsDescription, false, ctx.GuildId))
+	group.Go(getFieldFunc(ctx, fields, 0, "t!setup ez", i18n.SetupEasyDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 1, "t!setup auto", i18n.SetupAutoDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 2, "Dashboard", i18n.SetupDashboardDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 3, "t!setup prefix", i18n.SetupPrefixDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 4, "t!setup limit", i18n.SetupLimitDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 5, "t!setup welcomemessage", i18n.SetupWelcomeMessageDescription, false))
+	group.Go(getFieldFunc(ctx, fields, 6, "t!setup transcripts", i18n.SetupTranscriptsDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 7, "t!setup category", i18n.SetupCategoryDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 8, "Reaction Panels", i18n.SetupReactionPanelsDescription, false, ctx.GuildId))
 
 	// should never happen
 	if err := group.Wait(); err != nil {

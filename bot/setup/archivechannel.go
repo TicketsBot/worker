@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"strings"
@@ -20,7 +21,7 @@ func (ArchiveChannelStage) State() State {
 }
 
 func (ArchiveChannelStage) Prompt() translations.MessageId {
-	return translations.SetupArchiveChannel
+	return i18n.SetupArchiveChannel
 }
 
 func (ArchiveChannelStage) Default() string {
@@ -57,7 +58,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !exists {
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}
@@ -82,7 +83,7 @@ func (ArchiveChannelStage) Process(worker *worker.Context, msg message.Message) 
 		}
 
 		if !found {
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageDisabledLogChannel, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageDisabledLogChannel, nil, 15, true)
 			utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 			return
 		}

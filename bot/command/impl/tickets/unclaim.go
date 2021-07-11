@@ -3,10 +3,10 @@ package tickets
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest"
@@ -18,7 +18,7 @@ type UnclaimCommand struct {
 func (UnclaimCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "unclaim",
-		Description:     translations.HelpUnclaim,
+		Description:     i18n.HelpUnclaim,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}
@@ -37,7 +37,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -49,7 +49,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if whoClaimed == 0 {
-		ctx.Reply(utils.Red, "Error", translations.MessageNotClaimed)
+		ctx.Reply(utils.Red, "Error", i18n.MessageNotClaimed)
 		ctx.Reject()
 		return
 	}
@@ -61,7 +61,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if permissionLevel < permission.Admin && ctx.UserId() != whoClaimed {
-		ctx.Reply(utils.Red, "Error", translations.MessageOnlyClaimerCanUnclaim)
+		ctx.Reply(utils.Red, "Error", i18n.MessageOnlyClaimerCanUnclaim)
 		ctx.Reject()
 		return
 	}
@@ -93,6 +93,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(utils.Green, "Ticket Unclaimed", translations.MessageUnclaimed)
+	ctx.Reply(utils.Green, "Ticket Unclaimed", i18n.MessageUnclaimed)
 	ctx.Accept()
 }

@@ -5,6 +5,7 @@ import (
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"strconv"
@@ -19,7 +20,7 @@ func (TicketLimitStage) State() State {
 }
 
 func (TicketLimitStage) Prompt() translations.MessageId {
-	return translations.SetupTicketLimit
+	return i18n.SetupTicketLimit
 }
 
 // This is not used
@@ -34,7 +35,7 @@ func (TicketLimitStage) Process(worker *worker.Context, msg message.Message) {
 	amount, err := strconv.Atoi(amountRaw)
 	if err != nil || amount > 10 || amount < 1 {
 		amount = 5
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidTicketLimit, nil, 30, true, amount)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageInvalidTicketLimit, nil, 30, true, amount)
 		utils.ReactWithCross(worker, msg.ChannelId, msg.Id)
 	} else {
 		utils.ReactWithCheck(worker, msg.ChannelId, msg.Id)

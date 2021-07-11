@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -21,7 +22,7 @@ func (ChannelCategoryStage) State() State {
 }
 
 func (ChannelCategoryStage) Prompt() translations.MessageId {
-	return translations.SetupChannelCategory
+	return i18n.SetupChannelCategory
 }
 
 func (ChannelCategoryStage) Default() string {
@@ -62,13 +63,13 @@ func (ChannelCategoryStage) Process(worker *worker.Context, msg message.Message)
 
 		category, err := worker.CreateGuildChannel(guild.Id, data); if err != nil {
 			// Likely no permission, default to having no category
-			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageInvalidCategory, nil, 15, true)
+			utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageInvalidCategory, nil, 15, true)
 			return
 		}
 
 		categoryId = category.Id
 
-		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", translations.MessageCreatedCategory, nil, 15, true, category.Name)
+		utils.SendEmbed(worker, msg.ChannelId, msg.GuildId, replyContext, utils.Red, "Error", i18n.MessageCreatedCategory, nil, 15, true, category.Name)
 	}
 
 	if err := dbclient.Client.ChannelCategory.Set(msg.GuildId, categoryId); err == nil {

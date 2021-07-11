@@ -2,7 +2,7 @@ package statistics
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -15,7 +15,7 @@ type StatsCommand struct {
 func (StatsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "stats",
-		Description:     translations.HelpStats,
+		Description:     i18n.HelpStats,
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Children: []registry.Command{
@@ -38,6 +38,6 @@ func (StatsCommand) Execute(ctx registry.CommandContext) {
 		Inline: false,
 	}
 
-	ctx.ReplyWithFields(utils.Red, "Error", translations.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
+	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
 	ctx.Reject()
 }

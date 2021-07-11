@@ -2,9 +2,9 @@ package admin
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
@@ -15,13 +15,13 @@ type AdminRecacheCommand struct {
 func (AdminRecacheCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "recache",
-		Description:     translations.HelpAdmin,
+		Description:     i18n.HelpAdmin,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
 		MessageOnly:     true,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("guildid", "ID of the guild to recache", interaction.OptionTypeString, translations.MessageInvalidArgument),
+			command.NewOptionalArgument("guildid", "ID of the guild to recache", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
 	}
 }

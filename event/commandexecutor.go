@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -142,25 +142,25 @@ func executeCommand(
 
 		if properties.PermissionLevel > permLevel {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumLevel == premium.None {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			interactionContext.Reply(utils.Red, "Premium Only Command", i18n.MessagePremium)
 			return
 		}
 
@@ -182,7 +182,7 @@ func executeCommand(
 
 		if blacklisted {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Blacklisted", translations.MessageBlacklisted)
+			interactionContext.Reply(utils.Red, "Blacklisted", i18n.MessageBlacklisted)
 			return
 		}
 
