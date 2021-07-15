@@ -50,6 +50,12 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 		return
 	}
 
+	if len(name) > 100 {
+		// TODO: i18n
+		ctx.ReplyRaw(utils.Red, "Rename", "Channel names cannot be longer than 100 characters")
+		return
+	}
+
 	data := rest.ModifyChannelData{
 		Name: name,
 	}
