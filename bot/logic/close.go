@@ -70,7 +70,6 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	}
 
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
-		fmt.Println(1)
 		if !fromInteraction {
 			ctx.Reply(utils.Red, "Error", i18n.MessageCloseNoPermission)
 			ctx.Reject()

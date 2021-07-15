@@ -121,7 +121,7 @@ func executeCommand(
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovering panicking goroutine while executing command: %v\n", r)
+				fmt.Printf("Recovering panicking goroutine while executing command %s: %v\n", properties.Name, r)
 				debug.PrintStack()
 
 				fmt.Printf("Command: %s\nArgs: %v\nData: %v\n", cmd.Properties().Name, args, data)
