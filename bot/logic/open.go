@@ -221,7 +221,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ctx.HandleError(err)
 			} else {
 				for _, roleId := range roles {
-					content += fmt.Sprintf("<@&%d>", roleId)
+					if roleId == ctx.GuildId() {
+						content += "@everyone"
+					} else {
+						content += fmt.Sprintf("<@&%d>", roleId)
+					}
 				}
 			}
 
