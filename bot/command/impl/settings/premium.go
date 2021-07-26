@@ -5,10 +5,10 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -96,12 +96,12 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		data := premium.CachedTier{
-			Tier:       premiumTypeRaw,
-			FromVoting: false,
+			Tier:   int8(premiumTypeRaw),
+			Source: premium.SourcePremiumKey,
 		}
 
 		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
-			ctx.ReplyRaw(utils.Green, "Premium", fmt.Sprintf("Premium has been activated for **%d** days", int(length.Hours() / 24)))
+			ctx.ReplyRaw(utils.Green, "Premium", fmt.Sprintf("Premium has been activated for **%d** days", int(length.Hours()/24)))
 		} else {
 			ctx.HandleError(err)
 		}

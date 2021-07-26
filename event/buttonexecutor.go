@@ -44,7 +44,12 @@ func handlePanelButton(ctx *worker.Context, data interaction.ButtonInteraction) 
 		}
 
 		// get premium tier
-		premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		if err != nil {
+			sentry.Error(err)
+			return
+		}
+
 		panelCtx := command.NewPanelContext(ctx, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
 
 		// blacklist check

@@ -1,6 +1,7 @@
 package listeners
 
 import (
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -10,7 +11,11 @@ import (
 
 func OnCloseConfirm(worker *worker.Context, data interaction.ButtonInteraction) {
 	// Get whether the guild is premium
-	premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	if err != nil {
+		sentry.Error(err)
+		return
+	}
 
 	ctx := command.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
 	logic.CloseTicket(&ctx, nil, true)

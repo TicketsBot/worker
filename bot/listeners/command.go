@@ -142,9 +142,9 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		})
 
 		// get premium tier
-		group.Go(func() error {
-			premiumTier = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
-			return nil
+		group.Go(func() (err error) {
+			premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+			return
 		})
 
 		// get permission level

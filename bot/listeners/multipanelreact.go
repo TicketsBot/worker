@@ -83,9 +83,9 @@ func OnMultiPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	})
 
 	// get premium
-	group.Go(func() error {
-		premiumTier = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
-		return nil
+	group.Go(func() (err error) {
+		premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+		return
 	})
 
 	if err := group.Wait(); err != nil {

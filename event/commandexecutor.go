@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
@@ -130,7 +131,11 @@ func executeCommand(
 
 		// get premium tier
 		// TODO: guild id null check
-		premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		premiumLevel, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		if err != nil {
+			sentry.Error(err)
+			return
+		}
 
 		interactionContext := command.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 

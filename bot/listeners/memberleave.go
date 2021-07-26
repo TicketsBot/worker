@@ -37,7 +37,11 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 					}
 
 					// get premium status
-					premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
+					premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
+					if err != nil {
+						sentry.Error(err)
+						return
+					}
 
 					ctx := command.NewDashboardContext(worker, e.GuildId, *ticket.ChannelId, e.User.Id, premiumTier)
 					logic.CloseTicket(&ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason), true)

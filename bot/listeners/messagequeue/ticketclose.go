@@ -84,7 +84,10 @@ func ListenTicketClose() {
 			rateLimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, keyPrefix), 1)
 
 			// Get whether the guild is premium for log archiver
-			premiumTier := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
+			if err != nil {
+
+			}
 
 			// Create worker context
 			workerCtx := &worker.Context{

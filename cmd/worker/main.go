@@ -36,7 +36,7 @@ func main() {
 	if err := sentry.Initialise(sentry.Options{
 		Dsn:     os.Getenv("WORKER_SENTRY_DSN"),
 		Project: "tickets-bot",
-		Debug:   os.Getenv("WORKER_SENTRY_DEBUG") != "",
+		Debug:   os.Getenv("WORKER_DEBUG") != "",
 	}); err != nil {
 		fmt.Println(err.Error())
 	}
@@ -84,7 +84,13 @@ func main() {
 	}
 
 	fmt.Println("Retrieved command list, initialising microservice clients...")
-	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
+	if os.Getenv("WORKER_DEBUG") == "" {
+		utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
+	} else {
+		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
+		utils.PremiumClient = &c
+	}
+
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
 
 	statsd.Client, err = statsd.NewClient()

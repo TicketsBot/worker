@@ -63,7 +63,11 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 	}
 
 	// Get whether the guild is premium
-	premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorContext)
+		return
+	}
 
 	if closeConfirmation {
 		// Make sure user can close;

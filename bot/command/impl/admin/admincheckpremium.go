@@ -45,8 +45,12 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 		return
 	}
 
-	tier := utils.PremiumClient.GetTierByGuild(guild, false)
+	tier, src, err := utils.PremiumClient.GetTierByGuild(guild)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
 
-	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("`%s` has premium tier %d", guild.Name, tier))
+	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
 	ctx.Accept()
 }

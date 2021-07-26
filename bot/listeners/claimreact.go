@@ -26,7 +26,11 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 	}
 
 	// TODO: Create a button context
-	premiumTier := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorCtx)
+		return
+	}
 
 	// Get permission level
 	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), *data.Member, data.GuildId.Value)
