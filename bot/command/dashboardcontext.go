@@ -79,7 +79,7 @@ func (ctx *DashboardContext) ToErrorContext() errorcontext.WorkerErrorContext {
 }
 
 func (ctx *DashboardContext) openDm() (uint64, bool) {
-	cachedId, err := redis.GetDMChannel(ctx.UserId())
+	cachedId, err := redis.GetDMChannel(ctx.UserId(), ctx.Worker().BotId)
 	if err != nil { // We can continue
 		if err != redis.ErrNotCached {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -96,7 +96,7 @@ func (ctx *DashboardContext) openDm() (uint64, bool) {
 	if err != nil {
 		// check for 403
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-			if err := redis.StoreNullDMChannel(ctx.UserId()); err != nil {
+			if err := redis.StoreNullDMChannel(ctx.UserId(), ctx.Worker().BotId); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			}
 
@@ -107,7 +107,7 @@ func (ctx *DashboardContext) openDm() (uint64, bool) {
 		return 0, false
 	}
 
-	if err := redis.StoreDMChannel(ctx.UserId(), ch.Id); err != nil {
+	if err := redis.StoreDMChannel(ctx.UserId(), ch.Id, ctx.Worker().BotId); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 

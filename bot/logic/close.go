@@ -233,7 +233,7 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 		return 0, false
 	}
 
-	cachedId, err := redis.GetDMChannel(userId)
+	cachedId, err := redis.GetDMChannel(userId, ctx.Worker().BotId)
 	if err != nil { // We can continue
 		if err != redis.ErrNotCached {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
@@ -250,7 +250,7 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 	if err != nil {
 		// check for 403
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-			if err := redis.StoreNullDMChannel(userId); err != nil {
+			if err := redis.StoreNullDMChannel(userId, ctx.Worker().BotId); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			}
 
@@ -261,7 +261,7 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 		return 0, false
 	}
 
-	if err := redis.StoreDMChannel(userId, ch.Id); err != nil {
+	if err := redis.StoreDMChannel(userId, ch.Id, ctx.Worker().BotId); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
