@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb
-	github.com/TicketsBot/common v0.0.0-20210727122454-304ff13e33cb
+	github.com/TicketsBot/common v0.0.0-20210727134627-35eb7ed03a44
 	github.com/TicketsBot/database v0.0.0-20210725125137-5540e9ff7484
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
