@@ -103,12 +103,26 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		ctx.ReplyWithEmbed(embed)
 	} else { // Support rep stats
+		group, _ := errgroup.WithContext(context.Background())
+
+		var feedbackRating float32
+		var feedbackCount int
+
+		group.Go(func() (err error) {
+			feedbackRating, err = dbclient.Client.ServiceRatings.GetAverageClaimedBy(ctx.GuildId(), userId)
+			return
+		})
+
+		group.Go(func() (err error) {
+			feedbackCount, err = dbclient.Client.ServiceRatings.GetCountClaimedBy(ctx.GuildId(), userId)
+			return
+		})
+
 		var weeklyAR, monthlyAR, totalAR *time.Duration
 		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets,
 		weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets,
 		weeklyClaimedTickets, monthlyClaimedTickets, totalClaimedTickets int
 
-		group, _ := errgroup.WithContext(context.Background())
 
 		// totalAR
 		group.Go(func() (err error) {
@@ -213,6 +227,10 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
+			AddBlankField(true).
+
+			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
+			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 			AddBlankField(true).
 
 			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
