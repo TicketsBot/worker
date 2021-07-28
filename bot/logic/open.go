@@ -23,6 +23,7 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
 	"sync"
+	"time"
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
@@ -195,14 +196,25 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	ctx.Accept()
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ctx.GuildId(), channel.Id, ctx.UserId(), ctx.PremiumTier() > premium.None, subject, panel, id)
-	if err != nil {
-		ctx.HandleError(err)
-	}
-
 	var panelId *int
 	if panel != nil {
 		panelId = &panel.PanelId
+	}
+
+	ticket := database.Ticket{
+		Id:               id,
+		GuildId:          ctx.GuildId(),
+		ChannelId:        &channel.Id,
+		UserId:           ctx.UserId(),
+		Open:             true,
+		OpenTime:         time.Now(), // will be a bit off, but not used
+		WelcomeMessageId: nil,
+		PanelId:          panelId,
+	}
+
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ticket, ctx.PremiumTier() > premium.None, subject, panel)
+	if err != nil {
+		ctx.HandleError(err)
 	}
 
 	// UpdateUser channel in DB

@@ -26,6 +26,13 @@ func executeCommand(
 	data interaction.ApplicationCommandInteraction,
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) (bool, error) {
+	if data.GuildId.Value == 0 {
+		responseCh <- interaction.ApplicationCommandCallbackData {
+			Content: "Commands in DMs are not currently supported. Please run this command in a server.",
+		}
+		return false, nil
+	}
+
 	cmd, ok := registry[data.Data.Name]
 	if !ok {
 		return false, fmt.Errorf("command %s does not exist", data.Data.Name)

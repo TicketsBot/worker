@@ -10,18 +10,28 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
+	"strings"
 )
 
+// TODO: Better
 func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) {
-	switch data.Data.CustomId {
-	case "close":
-		listeners.OnCloseReact(ctx, data)
-	case "close_confirm":
-		listeners.OnCloseConfirm(ctx, data)
-	case "claim":
-		listeners.OnClaimReact(ctx, data)
-	default:
-		handlePanelButton(ctx, data)
+	if strings.HasPrefix(data.Data.CustomId, "rate_") {
+		listeners.OnRate(ctx, data)
+	} else {
+		if data.GuildId.Value == 0 {
+			return
+		}
+
+		switch data.Data.CustomId {
+		case "close":
+			listeners.OnCloseReact(ctx, data)
+		case "close_confirm":
+			listeners.OnCloseConfirm(ctx, data)
+		case "claim":
+			listeners.OnClaimReact(ctx, data)
+		default:
+			handlePanelButton(ctx, data)
+		}
 	}
 }
 

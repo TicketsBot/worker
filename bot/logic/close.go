@@ -13,6 +13,8 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
@@ -221,8 +223,29 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	// Notify user and send logs in DMs
 	dmChannel, ok := getDmChannel(ctx, ticket.UserId)
 	if ok {
-		if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, embed); err != nil {
+		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx.GuildId())
+		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
+		if !feedbackEnabled {
+			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, embed); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		} else {
+			embed.SetDescription("Please rate the quality of service received with the buttons below")
+
+			data := rest.CreateMessageData{
+				Embed:      embed,
+				Components: []component.Component{
+					buildRatingActionRow(ticket),
+				},
+			}
+
+			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
 		}
 	}
 }
@@ -266,4 +289,30 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 	}
 
 	return ch.Id, true
+}
+
+func buildRatingActionRow(ticket database.Ticket) component.Component {
+	buttons := make([]component.Component, 5)
+
+	for i := 1; i <= 5; i++ {
+		var style component.ButtonStyle
+		if i <= 2 {
+			style = component.ButtonStyleDanger
+		} else if i == 3 {
+			style = component.ButtonStylePrimary
+		} else {
+			style = component.ButtonStyleSuccess
+		}
+
+		buttons[i-1] = component.BuildButton(component.Button{
+			Label:    strconv.Itoa(i),
+			CustomId: fmt.Sprintf("rate_%d_%d_%d", ticket.GuildId, ticket.Id, i),
+			Style:    style,
+			Emoji: emoji.Emoji{
+				Name: "⭐",
+			},
+		})
+	}
+
+	return component.BuildActionRow(buttons...)
 }
