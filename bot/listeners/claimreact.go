@@ -64,5 +64,5 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 		return
 	}
 
-	utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Green, "Ticket Claimed", i18n.MessageClaimed, nil, 30, premiumTier > premium.None, fmt.Sprintf("<@%d>", data.Member.User.Id))
+	utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Green, "Ticket Claimed", i18n.MessageClaimed, nil, -1, premiumTier > premium.None, fmt.Sprintf("<@%d>", data.Member.User.Id))
 }
