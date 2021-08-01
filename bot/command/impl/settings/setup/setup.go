@@ -23,7 +23,6 @@ func (SetupCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children: []registry.Command{
-			EasySetupCommand{},
 			AutoSetupCommand{},
 			PrefixSetupCommand{},
 			WelcomeMessageSetupCommand{},
@@ -47,9 +46,13 @@ func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField 
 
 	group, _ := errgroup.WithContext(context.Background())
 
-	group.Go(getFieldFunc(ctx, fields, 0, "t!setup ez", i18n.SetupEasyDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 1, "t!setup auto", i18n.SetupAutoDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 2, "Dashboard", i18n.SetupDashboardDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 0, "t!setup auto", i18n.SetupAutoDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 1, "Dashboard", i18n.SetupDashboardDescription, true))
+	fields[2] = embed.EmbedField{
+		Name:   "\u200b",
+		Value:  "‎",
+		Inline: true,
+	}
 	group.Go(getFieldFunc(ctx, fields, 3, "t!setup prefix", i18n.SetupPrefixDescription, true))
 	group.Go(getFieldFunc(ctx, fields, 4, "t!setup limit", i18n.SetupLimitDescription, true))
 	group.Go(getFieldFunc(ctx, fields, 5, "t!setup welcomemessage", i18n.SetupWelcomeMessageDescription, false))

@@ -34,7 +34,6 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["addadmin"] = settings.AddAdminCommand{Registry: cm.registry}
 	cm.registry["addsupport"] = settings.AddSupportCommand{Registry: cm.registry}
 	cm.registry["blacklist"] = settings.BlacklistCommand{}
-	cm.registry["cancel"] = settings.CancelCommand{}
 	cm.registry["language"] = settings.LanguageCommand{}
 	cm.registry["panel"] = settings.PanelCommand{}
 	cm.registry["premium"] = settings.PremiumCommand{}
