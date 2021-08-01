@@ -19,6 +19,11 @@ import (
 
 // returns msg id
 func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremium bool, subject string, panel *database.Panel) (uint64, error) {
+	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
+	if err != nil {
+		return 0, err
+	}
+
 	// Send welcome message
 	var welcomeMessage string
 	if panel == nil || panel.WelcomeMessage == nil {
@@ -47,22 +52,29 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 
 	// Send welcome message
 	embed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
+
+	buttons := []component.Component{
+		component.BuildButton(component.Button{
+			Label:    "Close",
+			CustomId: "close",
+			Style:    component.ButtonStyleDanger,
+			Emoji:    emoji.Emoji{Name: "🔒"},
+		}),
+	}
+
+	if !settings.HideClaimButton {
+		buttons = append(buttons, component.BuildButton(component.Button{
+			Label:    "Claim",
+			CustomId: "claim",
+			Style:    component.ButtonStyleSuccess,
+			Emoji:    emoji.Emoji{Name: "🙋‍♂️"},
+		}))
+	}
+
 	data := rest.CreateMessageData{
 		Embed: embed,
 		Components: []component.Component{
-			component.BuildActionRow(
-				component.BuildButton(component.Button{
-					Label:    "Close",
-					CustomId: "close",
-					Style:    component.ButtonStyleDanger,
-					Emoji:    emoji.Emoji{Name: "🔒"},
-				}),
-				component.BuildButton(component.Button{
-					Label:    "Claim",
-					CustomId: "claim",
-					Style:    component.ButtonStyleSuccess,
-					Emoji:    emoji.Emoji{Name: "🙋‍♂️"},
-				})),
+			component.BuildActionRow(buttons...),
 		},
 	}
 
