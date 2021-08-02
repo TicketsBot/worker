@@ -229,7 +229,14 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			return
 		}
 
-		if !feedbackEnabled {
+		// Only offer to take feedback if the user has sent a message
+		hasSentMessage, err := dbclient.Client.Participants.HasParticipated(ctx.GuildId(), ticket.Id, ticket.UserId)
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
+		if !feedbackEnabled || !hasSentMessage {
 			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, embed); err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}
