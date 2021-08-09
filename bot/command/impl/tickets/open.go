@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -30,6 +31,16 @@ func (c OpenCommand) GetExecutor() interface{} {
 }
 
 func (OpenCommand) Execute(ctx registry.CommandContext, providedSubject *string) {
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if settings.DisableOpenCommand {
+		return
+	}
+
 	var subject string
 	if providedSubject != nil {
 		subject = *providedSubject
