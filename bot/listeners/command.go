@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"context"
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -48,6 +49,10 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
 			usedPrefix = utils.DEFAULT_PREFIX
+		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
+			usedPrefix = fmt.Sprintf("<@%d>", worker.BotId)
+		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@!%d>", worker.BotId)) {
+			usedPrefix = fmt.Sprintf("<@!%d>", worker.BotId)
 		} else {
 			// No need to query the custom prefix if we just the default prefix
 			customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
@@ -63,8 +68,11 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			}
 		}
 
-		split := strings.Split(e.Content, " ")
-		root := split[0][len(usedPrefix):]
+		content := strings.TrimPrefix(e.Content, usedPrefix)
+		content = strings.TrimSpace(content)
+
+		split := strings.Split(content, " ")
+		root := split[0]
 
 		args := make([]string, 0)
 		if len(split) > 1 {
