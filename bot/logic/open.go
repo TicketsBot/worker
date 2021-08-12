@@ -15,6 +15,7 @@ import (
 	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -27,6 +28,17 @@ import (
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
+	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if !ok {
+		ctx.ReplyRaw(utils.Red, "Error", "Tickets are being opened too quickly in this server")
+		return
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
