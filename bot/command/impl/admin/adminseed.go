@@ -20,7 +20,7 @@ func (AdminSeedCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly: true,
+		MessageOnly:     true,
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/manager"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -114,7 +115,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			keyPrefix = "ratelimiter:public"
 		}
 
-		workerCtx := &worker.Context{
+		worker := &worker.Context{
 			Token:        payload.BotToken,
 			BotId:        payload.BotId,
 			IsWhitelabel: payload.IsWhitelabel,
@@ -132,7 +133,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
-			deferDefault, err := executeCommand(workerCtx, commandManager.GetCommands(), interactionData, responseCh)
+			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
 			if err != nil {
 				marshalled, _ := json.Marshal(payload)
 				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
@@ -152,7 +153,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				ctx.JSON(200, res)
 				ctx.Writer.Flush()
 
-				go handleResponseAfterDefer(interactionData, workerCtx, responseCh)
+				go handleApplicationCommandResponseAfterDefer(interactionData, worker, responseCh)
 			case data := <-responseCh:
 				res := interaction.NewResponseChannelMessage(data)
 				ctx.JSON(200, res)
@@ -164,15 +165,31 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			go handleButtonPress(workerCtx, interactionData)
+			responseCh := make(chan registry.MessageResponse, 1)
+			canEdit := handleButtonPress(worker, interactionData, responseCh)
+			if !canEdit {
+				res := interaction.NewResponseDeferredMessageUpdate()
+				ctx.JSON(200, res)
+			} else {
+				timeout := time.NewTimer(time.Millisecond * 1)
 
-			res := interaction.NewResponseDeferredMessageUpdate()
-			ctx.JSON(200, res)
+				select {
+				case <-timeout.C:
+					res := interaction.NewResponseDeferredMessageUpdate()
+					ctx.JSON(200, res)
+					ctx.Writer.Flush()
+
+					go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+				case data := <-responseCh:
+					res := interaction.NewResponseUpdateMessage(data.IntoUpdateMessageResponse())
+					ctx.JSON(200, res)
+				}
+			}
 		}
 	}
 }
 
-func handleResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, workerCtx *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
+func handleApplicationCommandResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, worker *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
 	timeout := time.NewTimer(time.Second * 15)
 
 	select {
@@ -187,9 +204,22 @@ func handleResponseAfterDefer(interactionData interaction.ApplicationCommandInte
 			AllowedMentions: data.AllowedMentions,
 		}
 
-		if _, err := rest.ExecuteWebhook(interactionData.Token, workerCtx.RateLimiter, workerCtx.BotId, false, restData); err != nil {
+		if _, err := rest.ExecuteWebhook(interactionData.Token, worker.RateLimiter, worker.BotId, false, restData); err != nil {
 			sentry.LogWithContext(err, buildErrorContext(interactionData))
 			return
+		}
+	}
+}
+
+func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan registry.MessageResponse) {
+	timeout := time.NewTimer(time.Second * 15)
+
+	select {
+	case <-timeout.C:
+		return
+	case data := <-ch:
+		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, data.IntoWebhookBody()); err != nil {
+			fmt.Println(err)
 		}
 	}
 }

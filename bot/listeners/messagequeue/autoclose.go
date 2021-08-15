@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/autoclose"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -50,7 +50,7 @@ func ListenAutoClose() {
 				return
 			}
 
-			ctx := command.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
+			ctx := context.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
 			logic.CloseTicket(&ctx, gdlUtils.StrPtr(AutoCloseReason), true)
 		}()
 	}

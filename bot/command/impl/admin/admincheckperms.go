@@ -19,7 +19,7 @@ func (AdminCheckPermsCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
-		MessageOnly: true,
+		MessageOnly:     true,
 	}
 }
 

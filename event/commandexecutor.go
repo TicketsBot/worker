@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -144,7 +144,7 @@ func executeCommand(
 			return
 		}
 
-		interactionContext := command.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
+		interactionContext := context.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
 		permLevel, err := interactionContext.UserPermissionLevel()
 		if err != nil {

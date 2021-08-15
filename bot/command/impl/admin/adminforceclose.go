@@ -21,7 +21,7 @@ func (AdminForceCloseCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly: true,
+		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild of the ticket to close", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 			command.NewRequiredArgument("ticket_id", "ID of the ticket to close", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),

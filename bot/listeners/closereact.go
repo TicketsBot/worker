@@ -4,13 +4,14 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
@@ -91,15 +92,15 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 		}
 
 		// Send confirmation message
-		embed := utils.BuildEmbedRaw(worker, utils.Green, "Close Confirmation", "Please confirm that you want to close the ticket", nil, premiumTier > premium.None)
+		confirmEmbed := utils.BuildEmbedRaw(worker, utils.Green, "Close Confirmation", "Please confirm that you want to close the ticket", nil, premiumTier > premium.None)
 		msgData := rest.CreateMessageData{
-			Embed: embed,
+			Embeds: []*embed.Embed{confirmEmbed},
 			Components: []component.Component{
 				component.BuildActionRow(component.BuildButton(component.Button{
 					Label:    "Close",
 					CustomId: "close_confirm",
 					Style:    component.ButtonStylePrimary,
-					Emoji:    emoji.Emoji{
+					Emoji: emoji.Emoji{
 						Name: "✔️",
 					},
 					Url:      nil,
@@ -119,7 +120,7 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 			_ = worker.DeleteMessage(msg.ChannelId, msg.Id)
 		}()
 	} else {
-		ctx := command.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+		ctx := context.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
 		logic.CloseTicket(&ctx, nil, true)
 	}
 }

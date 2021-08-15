@@ -35,8 +35,8 @@ func (AdminCommand) Properties() registry.Properties {
 			AdminUpdateSchemaCommand{},
 			// AdminUsersCommand{},
 		},
-		Category:   command.Settings,
-		HelperOnly: true,
+		Category:    command.Settings,
+		HelperOnly:  true,
 		MessageOnly: true,
 	}
 }

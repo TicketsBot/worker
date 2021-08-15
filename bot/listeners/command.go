@@ -6,12 +6,12 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	context2 "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -196,7 +196,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			return
 		}
 
-		ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
+		ctx := context2.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
 		if properties.PermissionLevel > userPermissionLevel {
 			ctx.Reject()

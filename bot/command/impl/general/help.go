@@ -3,9 +3,9 @@ package general
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/elliotchance/orderedmap"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -101,5 +101,5 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
-	ctx.ReplyWithEmbed(embed)
+	_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(embed))
 }

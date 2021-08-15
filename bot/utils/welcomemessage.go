@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/rest"
@@ -51,7 +52,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 	welcomeMessage = doSubstitutions(welcomeMessage, worker, ticket)
 
 	// Send welcome message
-	embed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
+	msgEmbed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{
@@ -72,7 +73,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 	}
 
 	data := rest.CreateMessageData{
-		Embed: embed,
+		Embeds: []*embed.Embed{msgEmbed},
 		Components: []component.Component{
 			component.BuildActionRow(buttons...),
 		},

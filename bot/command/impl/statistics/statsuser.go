@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -90,7 +90,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		}
 
-		embed := embed.NewEmbed().
+		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(int(utils.Green)).
 
@@ -101,7 +101,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 			AddField("Open Tickets", fmt.Sprintf("%d / %d", openTickets, ticketLimit), true)
 
-		ctx.ReplyWithEmbed(embed)
+		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	} else { // Support rep stats
 		group, _ := errgroup.WithContext(context.Background())
 
@@ -221,7 +221,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			weeklyFormatted = utils.FormatTime(*weeklyAR)
 		}
 
-		embed := embed.NewEmbed().
+		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(int(utils.Green)).
 
@@ -245,6 +245,6 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Claimed Tickets (Monthly)", strconv.Itoa(monthlyClaimedTickets), true).
 			AddField("Claimed Tickets (Total)", strconv.Itoa(totalClaimedTickets), true)
 
-		ctx.ReplyWithEmbed(embed)
+		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	}
 }

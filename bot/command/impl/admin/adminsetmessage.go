@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/i18n"
@@ -41,7 +42,7 @@ func (c AdminSetMessageCommand) GetExecutor() interface{} {
 
 // t!admin sm lang id value
 func (AdminSetMessageCommand) Execute(ctx registry.CommandContext) {
-	msgCtx := ctx.(*command.MessageContext)
+	msgCtx := ctx.(*context.MessageContext)
 
 	if len(msgCtx.Args) < 3 {
 		ctx.ReplyRaw(utils.Red, "Error", "t!admin sm lang id value")

@@ -2,10 +2,11 @@ package event
 
 import (
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/listeners"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -14,24 +15,31 @@ import (
 )
 
 // TODO: Better
-func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction) {
+// Returns whether the message may be edited
+func handleButtonPress(ctx *worker.Context, data interaction.ButtonInteraction, responseCh chan registry.MessageResponse) bool {
 	if strings.HasPrefix(data.Data.CustomId, "rate_") {
-		listeners.OnRate(ctx, data)
+		go listeners.OnRate(ctx, data)
+		return false
+	} else if strings.HasPrefix(data.Data.CustomId, "viewstaff_") {
+		go listeners.OnViewStaffClick(ctx, data, responseCh)
+		return true
 	} else {
 		if data.GuildId.Value == 0 {
-			return
+			return false
 		}
 
 		switch data.Data.CustomId {
 		case "close":
-			listeners.OnCloseReact(ctx, data)
+			go listeners.OnCloseReact(ctx, data)
 		case "close_confirm":
-			listeners.OnCloseConfirm(ctx, data)
+			go listeners.OnCloseConfirm(ctx, data)
 		case "claim":
-			listeners.OnClaimReact(ctx, data)
+			go listeners.OnClaimReact(ctx, data)
 		default:
-			handlePanelButton(ctx, data)
+			go handlePanelButton(ctx, data)
 		}
+
+		return false
 	}
 }
 
@@ -60,7 +68,7 @@ func handlePanelButton(ctx *worker.Context, data interaction.ButtonInteraction) 
 			return
 		}
 
-		panelCtx := command.NewPanelContext(ctx, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+		panelCtx := context.NewPanelContext(ctx, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
 
 		// blacklist check
 		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, data.Member.User.Id)

@@ -3,7 +3,7 @@ package listeners
 import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -43,7 +43,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 						return
 					}
 
-					ctx := command.NewAutoCloseContext(worker, e.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
+					ctx := context.NewAutoCloseContext(worker, e.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
 					logic.CloseTicket(&ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason), true)
 				}
 			}

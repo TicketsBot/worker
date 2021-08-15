@@ -3,7 +3,7 @@ package listeners
 import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -17,6 +17,6 @@ func OnCloseConfirm(worker *worker.Context, data interaction.ButtonInteraction) 
 		return
 	}
 
-	ctx := command.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+	ctx := context.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
 	logic.CloseTicket(&ctx, nil, true)
 }

@@ -62,20 +62,20 @@ func (ctx *Context) CreateMessage(channelId uint64, content string) (message.Mes
 
 func (ctx *Context) CreateMessageReply(channelId uint64, content string, reference *message.MessageReference) (message.Message, error) {
 	return ctx.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Content: content,
+		Content:          content,
 		MessageReference: reference,
 	})
 }
 
-func (ctx *Context) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (message.Message, error) {
+func (ctx *Context) CreateMessageEmbed(channelId uint64, embed ...*embed.Embed) (message.Message, error) {
 	return ctx.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Embed: embed,
+		Embeds: embed,
 	})
 }
 
-func (ctx *Context) CreateMessageEmbedReply(channelId uint64, embed *embed.Embed, reference *message.MessageReference) (message.Message, error) {
+func (ctx *Context) CreateMessageEmbedReply(channelId uint64, e *embed.Embed, reference *message.MessageReference) (message.Message, error) {
 	return ctx.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Embed: embed,
+		Embeds:           []*embed.Embed{e},
 		MessageReference: reference,
 	})
 }

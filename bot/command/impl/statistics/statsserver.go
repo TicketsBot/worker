@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"golang.org/x/sync/errgroup"
@@ -109,7 +109,7 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		weeklyFormatted = utils.FormatTime(*weekly)
 	}
 
-	embed := embed.NewEmbed().
+	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
 		SetColor(int(utils.Green)).
 
@@ -125,6 +125,6 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
 		AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
 
-	ctx.ReplyWithEmbed(embed)
+	_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	ctx.Accept()
 }

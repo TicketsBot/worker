@@ -10,11 +10,11 @@ import (
 	"strconv"
 )
 
-var pattern = regexp.MustCompile(`rate_(\d+)_(\d+)_([1-5])`)
+var ratePattern = regexp.MustCompile(`rate_(\d+)_(\d+)_([1-5])`)
 
 // TODO: Proper context
 func OnRate(worker *worker.Context, data interaction.ButtonInteraction) {
-	groups := pattern.FindStringSubmatch(data.Data.CustomId)
+	groups := ratePattern.FindStringSubmatch(data.Data.CustomId)
 	if len(groups) < 4 {
 		return
 	}

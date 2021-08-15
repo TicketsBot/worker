@@ -202,7 +202,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
-	embed := embed.NewEmbed().
+	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(int(utils.Green)).
 		SetTimestamp(time.Now()).
@@ -215,7 +215,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		AddField("Claimed By", claimedBy, true)
 
 	if archiveChannelExists {
-		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, embed); err != nil {
+		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, closeEmbed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
@@ -237,14 +237,14 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 
 		if !feedbackEnabled || !hasSentMessage {
-			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, embed); err != nil {
+			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, closeEmbed); err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}
 		} else {
-			embed.SetDescription("Please rate the quality of service received with the buttons below")
+			closeEmbed.SetDescription("Please rate the quality of service received with the buttons below")
 
 			data := rest.CreateMessageData{
-				Embed:      embed,
+				Embeds: []*embed.Embed{closeEmbed},
 				Components: []component.Component{
 					buildRatingActionRow(ticket),
 				},

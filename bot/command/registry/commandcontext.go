@@ -27,8 +27,9 @@ type CommandContext interface {
 	ToErrorContext() errorcontext.WorkerErrorContext
 
 	Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{})
+	ReplyWith(response MessageResponse) (message.Message, error)
 	ReplyWithEmbed(embed *embed.Embed)
-	ReplyWithEmbedPermanent(embed *embed.Embed) (message.Message, error)
+	ReplyWithEmbedPermanent(embed *embed.Embed)
 	ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{})
 	ReplyWithFields(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{})
 	ReplyWithFieldsPermanent(colour utils.Colour, title string, content translations.MessageId, fields []embed.EmbedField, format ...interface{})
