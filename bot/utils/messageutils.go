@@ -57,7 +57,7 @@ func SendEmbedWithResponse(
 	}
 
 	data := rest.CreateMessageData{
-		Embed:            msgEmbed,
+		Embeds:           []*embed.Embed{msgEmbed},
 		MessageReference: replyTo,
 	}
 

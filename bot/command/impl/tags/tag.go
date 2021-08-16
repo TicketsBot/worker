@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -20,12 +20,12 @@ type TagCommand struct {
 func (TagCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "tag",
-		Description:     translations.HelpTag,
+		Description:     i18n.HelpTag,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, translations.MessageTagInvalidArguments),
+			command.NewRequiredArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, i18n.MessageTagInvalidArguments),
 		),
 	}
 }
@@ -49,7 +49,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	}
 
 	if content == "" {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}

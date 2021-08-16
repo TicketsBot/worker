@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/manager"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -53,7 +54,7 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 
 	// Routes
 	router.POST("/event", eventHandler(redis, cache))
-	router.POST("/interaction", commandHandler(redis, cache))
+	router.POST("/interaction", interactionHandler(redis, cache))
 
 	if err := router.Run(os.Getenv("HTTP_ADDR")); err != nil {
 		panic(err)
@@ -95,70 +96,100 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 	}
 }
 
-func commandHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
+func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
 	commandManager := new(manager.CommandManager)
 	commandManager.RegisterCommands()
 
 	return func(ctx *gin.Context) {
-		var command eventforwarding.Command
-		if err := ctx.BindJSON(&command); err != nil {
+		var payload eventforwarding.Interaction
+		if err := ctx.BindJSON(&payload); err != nil {
 			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
 
 		var keyPrefix string
 
-		if command.IsWhitelabel {
-			keyPrefix = fmt.Sprintf("ratelimiter:%d", command.BotId)
+		if payload.IsWhitelabel {
+			keyPrefix = fmt.Sprintf("ratelimiter:%d", payload.BotId)
 		} else {
 			keyPrefix = "ratelimiter:public"
 		}
 
-		workerCtx := &worker.Context{
-			Token:        command.BotToken,
-			BotId:        command.BotId,
-			IsWhitelabel: command.IsWhitelabel,
+		worker := &worker.Context{
+			Token:        payload.BotToken,
+			BotId:        payload.BotId,
+			IsWhitelabel: payload.IsWhitelabel,
 			Cache:        cache,
 			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
 		}
 
-		var interactionData interaction.ApplicationCommandInteraction
-		if err := json.Unmarshal(command.Event, &interactionData); err != nil {
-			logrus.Warnf("error parsing application command data: %v", err)
-			return
-		}
-
-		responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
-
-		deferDefault, err := executeCommand(workerCtx, commandManager.GetCommands(), interactionData, responseCh)
-		if err != nil {
-			marshalled, _ := json.Marshal(command)
-			logrus.Warnf("error executing command: %v (payload: %s)", err, string(marshalled))
-			return
-		}
-
-		timeout := time.NewTimer(time.Second * 2)
-
-		select {
-		case <-timeout.C:
-			var flags uint
-			if deferDefault {
-				flags = message.SumFlags(message.FlagEphemeral)
+		switch payload.InteractionType {
+		case interaction.InteractionTypeApplicationCommand:
+			var interactionData interaction.ApplicationCommandInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
 			}
 
-			res := interaction.NewResponseAckWithSource(flags)
-			ctx.JSON(200, res)
-			ctx.Writer.Flush()
+			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
-			go handleResponseAfterDefer(interactionData, workerCtx, responseCh)
-		case data := <-responseCh:
-			res := interaction.NewResponseChannelMessage(data)
-			ctx.JSON(200, res)
+			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
+			if err != nil {
+				marshalled, _ := json.Marshal(payload)
+				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
+				return
+			}
+
+			timeout := time.NewTimer(time.Second * 1)
+
+			select {
+			case <-timeout.C:
+				var flags uint
+				if deferDefault {
+					flags = message.SumFlags(message.FlagEphemeral)
+				}
+
+				res := interaction.NewResponseAckWithSource(flags)
+				ctx.JSON(200, res)
+				ctx.Writer.Flush()
+
+				go handleApplicationCommandResponseAfterDefer(interactionData, worker, responseCh)
+			case data := <-responseCh:
+				res := interaction.NewResponseChannelMessage(data)
+				ctx.JSON(200, res)
+			}
+		case interaction.InteractionTypeButton:
+			var interactionData interaction.ButtonInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
+			}
+
+			responseCh := make(chan registry.MessageResponse, 1)
+			canEdit := handleButtonPress(worker, interactionData, responseCh)
+			if !canEdit {
+				res := interaction.NewResponseDeferredMessageUpdate()
+				ctx.JSON(200, res)
+			} else {
+				timeout := time.NewTimer(time.Millisecond * 1)
+
+				select {
+				case <-timeout.C:
+					res := interaction.NewResponseDeferredMessageUpdate()
+					ctx.JSON(200, res)
+					ctx.Writer.Flush()
+
+					go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+				case data := <-responseCh:
+					res := interaction.NewResponseUpdateMessage(data.IntoUpdateMessageResponse())
+					ctx.JSON(200, res)
+				}
+			}
 		}
 	}
 }
 
-func handleResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, workerCtx *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
+func handleApplicationCommandResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, worker *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
 	timeout := time.NewTimer(time.Second * 15)
 
 	select {
@@ -173,9 +204,22 @@ func handleResponseAfterDefer(interactionData interaction.ApplicationCommandInte
 			AllowedMentions: data.AllowedMentions,
 		}
 
-		if _, err := rest.ExecuteWebhook(interactionData.Token, workerCtx.RateLimiter, workerCtx.BotId, false, restData); err != nil {
+		if _, err := rest.ExecuteWebhook(interactionData.Token, worker.RateLimiter, worker.BotId, false, restData); err != nil {
 			sentry.LogWithContext(err, buildErrorContext(interactionData))
 			return
+		}
+	}
+}
+
+func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan registry.MessageResponse) {
+	timeout := time.NewTimer(time.Second * 15)
+
+	select {
+	case <-timeout.C:
+		return
+	case data := <-ch:
+		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, data.IntoWebhookBody()); err != nil {
+			fmt.Println(err)
 		}
 	}
 }

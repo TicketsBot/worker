@@ -3,7 +3,6 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
@@ -17,7 +16,7 @@ type AdminCommand struct {
 func (AdminCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "admin",
-		Description:     database.HelpAdmin,
+		Description:     i18n.HelpAdmin,
 		Aliases:         []string{"a"},
 		PermissionLevel: permission.Everyone,
 		Children: []registry.Command{
@@ -36,8 +35,8 @@ func (AdminCommand) Properties() registry.Properties {
 			AdminUpdateSchemaCommand{},
 			// AdminUsersCommand{},
 		},
-		Category:   command.Settings,
-		HelperOnly: true,
+		Category:    command.Settings,
+		HelperOnly:  true,
 		MessageOnly: true,
 	}
 }

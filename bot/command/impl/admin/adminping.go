@@ -3,9 +3,10 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"time"
 )
@@ -16,12 +17,12 @@ type AdminPingCommand struct {
 func (AdminPingCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "ping",
-		Description:     database.HelpAdminPing,
+		Description:     i18n.HelpAdminPing,
 		Aliases:         []string{"latency"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
-		MessageOnly: true,
+		MessageOnly:     true,
 	}
 }
 
@@ -30,7 +31,7 @@ func (c AdminPingCommand) GetExecutor() interface{} {
 }
 
 func (AdminPingCommand) Execute(ctx registry.CommandContext) {
-	messageContext, ok := ctx.(*command.MessageContext)
+	messageContext, ok := ctx.(*context.MessageContext)
 
 	if ok {
 		latency := time.Now().Sub(messageContext.Timestamp)

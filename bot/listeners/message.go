@@ -61,7 +61,11 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 		}
 	}
 
-	premiumTier := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+	if err != nil {
+		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+		return
+	}
 
 	// proxy msg to web UI
 	if premiumTier > premium.None {

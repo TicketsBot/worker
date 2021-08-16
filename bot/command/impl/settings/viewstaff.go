@@ -2,13 +2,14 @@ package settings
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction/component"
 )
 
 type ViewStaffCommand struct {
@@ -17,7 +18,7 @@ type ViewStaffCommand struct {
 func (ViewStaffCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "viewstaff",
-		Description:     translations.HelpViewStaff,
+		Description:     i18n.HelpViewStaff,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 	}
@@ -28,22 +29,32 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 }
 
 func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
-	embed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
+	msgEmbed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
 
-	msg, err := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
-	if err != nil {
-		sentry.LogWithContext(err, ctx.ToErrorContext())
-	} else {
-		if err := ctx.Worker().CreateReaction(ctx.ChannelId(), msg.Id, "◀️"); err != nil {
-			ctx.HandleError(err)
-		}
-
-		if err := ctx.Worker().CreateReaction(ctx.ChannelId(), msg.Id, "▶️"); err != nil {
-			ctx.HandleError(err)
-		}
-
-		utils.DeleteAfter(ctx.Worker(), ctx.ChannelId(), msg.Id, 60)
+	res := registry.MessageResponse{
+		Embeds: []*embed.Embed{msgEmbed},
+		Flags:  message.SumFlags(message.FlagEphemeral),
+		Components: []component.Component{
+			component.BuildActionRow(
+				component.BuildButton(component.Button{
+					CustomId: "disabled",
+					Style:    component.ButtonStylePrimary,
+					Emoji: emoji.Emoji{
+						Name: "◀️",
+					},
+					Disabled: true,
+				}),
+				component.BuildButton(component.Button{
+					CustomId: "viewstaff_1",
+					Style:    component.ButtonStylePrimary,
+					Emoji: emoji.Emoji{
+						Name: "▶️",
+					},
+					Disabled: false,
+				}),
+			),
+		},
 	}
 
-	redis.SetPage(redis.Client, msg.Id, 0)
+	_, _ = ctx.ReplyWith(res)
 }

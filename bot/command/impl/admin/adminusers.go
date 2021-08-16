@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 )
 
@@ -16,11 +16,11 @@ type AdminUsersCommand struct {
 func (AdminUsersCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "users",
-		Description:     database.HelpAdminUsers,
+		Description:     i18n.HelpAdminUsers,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
-		MessageOnly: true,
+		MessageOnly:     true,
 	}
 }
 

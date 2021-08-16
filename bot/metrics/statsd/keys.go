@@ -13,6 +13,7 @@ const (
 	KeyIdentify      Key = "identify"
 	KeySlashCommands Key = "slash_commands"
 	KeyEvents        Key = "events"
+	AutoClose        Key = "autoclose"
 )
 
 func (k Key) String() string {

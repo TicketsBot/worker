@@ -2,17 +2,20 @@ package logic
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -21,9 +24,21 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
 	"sync"
+	"time"
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
+	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if !ok {
+		ctx.ReplyRaw(utils.Red, "Error", "Tickets are being opened too quickly in this server")
+		return
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -80,26 +95,21 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	// create DM channel
-	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
-
-	// target channel for messaging the user
-	// either DMs or the channel where the command was run
 	var targetChannel uint64
-	if panel == nil {
-		targetChannel = ctx.ChannelId()
-	} else {
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		targetChannel = dmChannel.Id
-	}
 
 	// Make sure ticket count is within ticket limit
-	violatesTicketLimit, limit := getTicketLimit(ctx.GuildId(), ctx.UserId())
+	violatesTicketLimit, limit := getTicketLimit(ctx)
 	if violatesTicketLimit {
+		// initialise target channel
+		if targetChannel == 0 {
+			var err error
+			targetChannel, err = getErrorTargetChannel(ctx, panel)
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
+		}
+
 		// Notify the user
 		if targetChannel != 0 {
 			ticketsPluralised := "ticket"
@@ -107,7 +117,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ticketsPluralised += "s"
 			}
 
-			ctx.Reply(utils.Red, "Error", translations.MessageTicketLimitReached, limit, ticketsPluralised)
+			ctx.Reply(utils.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return
@@ -138,7 +148,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if channelCount >= 50 {
-			ctx.Reply(utils.Red, "Error", translations.MessageTooManyTickets)
+			ctx.Reply(utils.Red, "Error", i18n.MessageTooManyTickets)
 			return
 		}
 	}
@@ -198,14 +208,25 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	ctx.Accept()
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ctx.GuildId(), channel.Id, ctx.UserId(), ctx.PremiumTier() > premium.None, subject, panel, id)
-	if err != nil {
-		ctx.HandleError(err)
+	var panelId *int
+	if panel != nil {
+		panelId = &panel.PanelId
 	}
 
-	var panelId *uint64
-	if panel != nil {
-		panelId = &panel.MessageId
+	ticket := database.Ticket{
+		Id:               id,
+		GuildId:          ctx.GuildId(),
+		ChannelId:        &channel.Id,
+		UserId:           ctx.UserId(),
+		Open:             true,
+		OpenTime:         time.Now(), // will be a bit off, but not used
+		WelcomeMessageId: nil,
+		PanelId:          panelId,
+	}
+
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ticket, ctx.PremiumTier() > premium.None, subject, panel)
+	if err != nil {
+		ctx.HandleError(err)
 	}
 
 	// UpdateUser channel in DB
@@ -217,29 +238,23 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	{
 		var content string
 
-		if panel == nil {
-			// Ping @everyone
-			pingEveryone, err := dbclient.Client.PingEveryone.Get(ctx.GuildId())
-			if err != nil {
-				ctx.HandleError(err)
-			}
-
-			if pingEveryone {
-				content = fmt.Sprintf("@everyone")
-			}
-		} else {
+		if panel != nil {
 			// roles
-			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.MessageId)
+			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.PanelId)
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
 				for _, roleId := range roles {
-					content += fmt.Sprintf("<@&%d>", roleId)
+					if roleId == ctx.GuildId() {
+						content += "@everyone"
+					} else {
+						content += fmt.Sprintf("<@&%d>", roleId)
+					}
 				}
 			}
 
 			// user
-			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.MessageId)
+			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.PanelId)
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
@@ -276,17 +291,18 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
-	} else {
+		ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
+	}
+	/*else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
 		}
 
 		if dmOnOpen && dmChannel.Id != 0 {
-			ctx.Reply(utils.Green, "Ticket", translations.MessageTicketOpened, channel.Mention())
+			ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
 		}
-	}
+	}*/
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
 
@@ -310,7 +326,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 }
 
 // has hit ticket limit, ticket limit
-func getTicketLimit(guildId, userId uint64) (bool, int) {
+func getTicketLimit(ctx registry.CommandContext) (bool, int) {
+	isStaff, err := ctx.UserPermissionLevel()
+	if err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return true, 1 // TODO: Stop flow
+	}
+
+	if isStaff >= permcache.Support {
+		return false, 50
+	}
+
 	var openedTickets []database.Ticket
 	var ticketLimit uint8
 
@@ -318,17 +344,17 @@ func getTicketLimit(guildId, userId uint64) (bool, int) {
 
 	// get ticket limit
 	group.Go(func() (err error) {
-		ticketLimit, err = dbclient.Client.TicketLimit.Get(guildId)
+		ticketLimit, err = dbclient.Client.TicketLimit.Get(ctx.GuildId())
 		return
 	})
 
 	group.Go(func() (err error) {
-		openedTickets, err = dbclient.Client.Tickets.GetOpenByUser(guildId, userId)
+		openedTickets, err = dbclient.Client.Tickets.GetOpenByUser(ctx.GuildId(), ctx.UserId())
 		return
 	})
 
 	if err := group.Wait(); err != nil {
-		sentry.Error(err)
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return true, 1
 	}
 
@@ -369,6 +395,8 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
+var allowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+
 func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
@@ -408,7 +436,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 
 	// Add other support teams
 	if panel != nil {
-		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.MessageId)
+		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		} else {
@@ -418,6 +446,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			for _, team := range teams {
 				team := team
 
+				// TODO: Joins
 				group.Go(func() error {
 					members, err := dbclient.Client.SupportTeamMembers.Get(team.Id)
 					if err != nil {
@@ -448,12 +477,12 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	allowedUsers = append(allowedUsers, userId, selfId)
 
 	for _, member := range allowedUsers {
-		allow := []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+		allow := allowedPermissions
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
 			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
-				allow = append(allow, permission.ManageWebhooks)
+				allow = append(allowedPermissions, permission.ManageWebhooks)
 			}
 		}
 
@@ -469,10 +498,25 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    role,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+			Allow: permission.BuildPermissions(allowedPermissions...),
 			Deny:  0,
 		})
 	}
 
 	return overwrites
+}
+
+// target channel for messaging the user
+// either DMs or the channel where the command was run
+func getErrorTargetChannel(ctx registry.CommandContext, panel *database.Panel) (uint64, error) {
+	if panel == nil {
+		return ctx.ChannelId(), nil
+	} else {
+		dmChannel, ok := getDmChannel(ctx, ctx.UserId())
+		if !ok {
+			return 0, errors.New("failed to create dm channel")
+		}
+
+		return dmChannel, nil
+	}
 }

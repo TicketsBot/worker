@@ -2,15 +2,16 @@ package listeners
 
 import (
 	"context"
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	context2 "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -48,6 +49,10 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
 			usedPrefix = utils.DEFAULT_PREFIX
+		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
+			usedPrefix = fmt.Sprintf("<@%d>", worker.BotId)
+		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@!%d>", worker.BotId)) {
+			usedPrefix = fmt.Sprintf("<@!%d>", worker.BotId)
 		} else {
 			// No need to query the custom prefix if we just the default prefix
 			customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
@@ -63,8 +68,11 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			}
 		}
 
-		split := strings.Split(e.Content, " ")
-		root := split[0][len(usedPrefix):]
+		content := strings.TrimPrefix(e.Content, usedPrefix)
+		content = strings.TrimSpace(content)
+
+		split := strings.Split(content, " ")
+		root := split[0]
 
 		args := make([]string, 0)
 		if len(split) > 1 {
@@ -142,9 +150,9 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		})
 
 		// get premium tier
-		group.Go(func() error {
-			premiumTier = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
-			return nil
+		group.Go(func() (err error) {
+			premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+			return
 		})
 
 		// get permission level
@@ -188,29 +196,29 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			return
 		}
 
-		ctx := command.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
+		ctx := context2.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
 		if properties.PermissionLevel > userPermissionLevel {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumTier == premium.None {
 			ctx.Reject()
-			ctx.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			ctx.Reply(utils.Red, "Premium Only Command", i18n.MessagePremium)
 			return
 		}
 

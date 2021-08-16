@@ -1,66 +1,106 @@
 package listeners
 
 import (
-	"github.com/TicketsBot/common/sentry"
+	"fmt"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/rxdn/gdl/rest"
+	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/objects/interaction/component"
+	"regexp"
+	"strconv"
 )
 
-func OnViewStaffReact(worker *worker.Context, e *events.MessageReactionAdd) {
-	// Create error context for later
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   e.GuildId,
-		User:    e.UserId,
-		Channel: e.ChannelId,
-		Shard:   worker.ShardId,
-	}
+var viewStaffPattern = regexp.MustCompile(`viewstaff_(\d+)`)
 
+func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction, ch chan registry.MessageResponse) {
 	// In DMs
-	if e.GuildId == 0 {
+	if data.GuildId.Value == 0 {
 		return
 	}
 
-	// ignore self
-	if e.UserId == worker.BotId {
+	groups := viewStaffPattern.FindStringSubmatch(data.Data.CustomId)
+	if len(groups) < 2 {
 		return
 	}
 
-	page, isViewStaffMessage := redis.GetPage(redis.Client, e.MessageId)
-	if !isViewStaffMessage {
+	page, err := strconv.Atoi(groups[1])
+	if err != nil {
 		return
 	}
-
-	if e.Emoji.Name == "▶️" {
-		page++
-	} else if e.Emoji.Name == "◀️" {
-		page--
-	} else {
-		return
-	}
-
-	_ = worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, e.Emoji.Name) // TODO: Permission check
 
 	if page < 0 {
 		return
 	}
 
-	embed, isBlank := logic.BuildViewStaffMessage(e.GuildId, worker, page, errorContext)
-	if isBlank {
-		return
+	errorCtx := errorcontext.WorkerErrorContext{
+		Guild:   data.GuildId.Value,
+		User:    utils.ButtonInteractionUser(data),
+		Channel: data.ChannelId,
 	}
 
-	_, err := worker.EditMessage(e.ChannelId, e.MessageId, rest.EditMessageData{
-		Embed: embed,
-	})
-	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
-		return
-	}
+	msgEmbed, isBlank := logic.BuildViewStaffMessage(data.GuildId.Value, worker, page, errorCtx)
+	if !isBlank {
+		ch <- registry.MessageResponse{
+			Embeds: []*embed.Embed{msgEmbed},
+			Components: []component.Component{
+				component.BuildActionRow(
+					component.BuildButton(component.Button{
+						CustomId: fmt.Sprintf("viewstaff_%d", page-1),
+						Style:    component.ButtonStylePrimary,
+						Emoji: emoji.Emoji{
+							Name: "◀️",
+						},
+						Disabled: page <= 0,
+					}),
+					component.BuildButton(component.Button{
+						CustomId: fmt.Sprintf("viewstaff_%d", page+1),
+						Style:    component.ButtonStylePrimary,
+						Emoji: emoji.Emoji{
+							Name: "▶️",
+						},
+						Disabled: false,
+					}),
+				),
+			},
+		}
+	} else {
+		components := data.Message.Components
+		if len(components) == 0 { // Impossible unless whitelabel
+			return
+		}
 
-	// TODO: Race condition? I'm too tired rn
-	redis.SetPage(redis.Client, e.MessageId, page)
+		actionRow, ok := components[0].ComponentData.(component.ActionRow)
+		if !ok {
+			return
+		}
+
+		if len(actionRow.Components) < 2 {
+			return
+		}
+
+		nextButton := actionRow.Components[1].ComponentData.(component.Button)
+		if !ok {
+			return
+		}
+
+		nextButton.Disabled = true
+		actionRow.Components[1].ComponentData = nextButton
+		components[0].ComponentData = actionRow
+
+		// v hacky
+		embeds := make([]*embed.Embed, len(data.Message.Embeds))
+		for i, e := range data.Message.Embeds {
+			embeds[i] = &e
+		}
+
+		ch <- registry.MessageResponse{
+			Embeds:     embeds,
+			Components: components,
+		}
+	}
 }

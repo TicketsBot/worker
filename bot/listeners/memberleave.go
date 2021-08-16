@@ -3,9 +3,9 @@ package listeners
 import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/autoclose"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -37,10 +37,14 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 					}
 
 					// get premium status
-					premiumTier := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
+					premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
+					if err != nil {
+						sentry.Error(err)
+						return
+					}
 
-					ctx := command.NewDashboardContext(worker, e.GuildId, *ticket.ChannelId, e.User.Id, premiumTier)
-					logic.CloseTicket(&ctx, 0, gdlUtils.StrPtr(autoclose.AutoCloseReason), true)
+					ctx := context.NewAutoCloseContext(worker, e.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
+					logic.CloseTicket(&ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason), true)
 				}
 			}
 		}

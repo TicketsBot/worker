@@ -2,10 +2,10 @@ package setup
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -15,12 +15,12 @@ type LimitSetupCommand struct{}
 func (LimitSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "limit",
-		Description:     translations.HelpSetup,
+		Description:     i18n.HelpSetup,
 		Aliases:         []string{"ticketlimit", "max", "maximum"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("limit", "The maximum amount of tickets a user can have open simultaneously", interaction.OptionTypeInteger, translations.SetupLimitInvalid),
+			command.NewRequiredArgument("limit", "The maximum amount of tickets a user can have open simultaneously", interaction.OptionTypeInteger, i18n.SetupLimitInvalid),
 		),
 	}
 }
@@ -31,7 +31,7 @@ func (c LimitSetupCommand) GetExecutor() interface{} {
 
 func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 	if limit < 1 || limit > 10 {
-		ctx.Reply(utils.Red, "Setup", translations.SetupLimitInvalid)
+		ctx.Reply(utils.Red, "Setup", i18n.SetupLimitInvalid)
 		ctx.Reject()
 		return
 	}
@@ -41,6 +41,6 @@ func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 		return
 	}
 
-	ctx.Reply(utils.Green, "Setup", translations.SetupLimitComplete, limit)
+	ctx.Reply(utils.Green, "Setup", i18n.SetupLimitComplete, limit)
 	ctx.Accept()
 }

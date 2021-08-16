@@ -5,10 +5,10 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/gofrs/uuid"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -22,16 +22,16 @@ type AdminGenPremiumCommand struct {
 func (AdminGenPremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "genpremium",
-		Description:     database.HelpAdminGenPremium,
+		Description:     i18n.HelpAdminGenPremium,
 		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
 		MessageOnly:     true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, database.MessageInvalidArgument),
-			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, database.MessageInvalidArgument),
-			command.NewOptionalArgument("whitelabel", "Should the keys be for premium or whitelabel", interaction.OptionTypeBoolean, database.MessageInvalidArgument),
+			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),
+			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),
+			command.NewOptionalArgument("whitelabel", "Should the keys be for premium or whitelabel", interaction.OptionTypeBoolean, i18n.MessageInvalidArgument),
 		),
 	}
 }

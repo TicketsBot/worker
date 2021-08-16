@@ -3,10 +3,10 @@ package tickets
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -18,11 +18,11 @@ type TransferCommand struct {
 func (TransferCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "transfer",
-		Description:     translations.HelpTransfer,
+		Description:     i18n.HelpTransfer,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "Support representative to transfer the ticket to", interaction.OptionTypeUser, translations.MessageInvalidUser),
+			command.NewRequiredArgument("user", "Support representative to transfer the ticket to", interaction.OptionTypeUser, i18n.MessageInvalidUser),
 		),
 	}
 }
@@ -41,7 +41,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+		ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -59,7 +59,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(utils.Red, "Error", translations.MessageInvalidUser)
+		ctx.Reply(utils.Red, "Error", i18n.MessageInvalidUser)
 		ctx.Reject()
 		return
 	}
@@ -70,6 +70,6 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	mention := fmt.Sprintf("<@%d>", userId)
-	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", translations.MessageClaimed, mention)
+	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", i18n.MessageClaimed, mention)
 	ctx.Accept()
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	context2 "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -65,9 +65,9 @@ func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 		})
 
 		// get premium
-		group.Go(func() error {
-			premiumTier = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
-			return nil
+		group.Go(func() (err error) {
+			premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+			return
 		})
 
 		if err := group.Wait(); err != nil {
@@ -79,7 +79,7 @@ func OnPanelReact(worker *worker.Context, e *events.MessageReactionAdd) {
 			return
 		}
 
-		panelContext := command.NewPanelContext(worker, e.GuildId, e.ChannelId, e.UserId, premiumTier)
+		panelContext := context2.NewPanelContext(worker, e.GuildId, e.ChannelId, e.UserId, premiumTier)
 
 		go logic.OpenTicket(&panelContext, &panel, panel.Title)
 	}

@@ -36,16 +36,9 @@ func main() {
 	if err := sentry.Initialise(sentry.Options{
 		Dsn:     os.Getenv("WORKER_SENTRY_DSN"),
 		Project: "tickets-bot",
-		Debug:   os.Getenv("WORKER_SENTRY_DEBUG") != "",
+		Debug:   os.Getenv("WORKER_DEBUG") != "",
 	}); err != nil {
 		fmt.Println(err.Error())
-	}
-
-	// Configure HTTP proxy
-	fmt.Println("Configuring proxy...")
-	if os.Getenv("DISCORD_PROXY_URL") != "" {
-		request.Client.Timeout = time.Second * 30
-		request.RegisterHook(utils.ProxyHook)
 	}
 
 	fmt.Println("Connected to Sentry, connect to Redis...")
@@ -83,8 +76,21 @@ func main() {
 		}
 	}
 
+	// Configure HTTP proxy
+	fmt.Println("Configuring proxy...")
+	if os.Getenv("DISCORD_PROXY_URL") != "" {
+		request.Client.Timeout = time.Second * 30
+		request.RegisterHook(utils.ProxyHook)
+	}
+
 	fmt.Println("Retrieved command list, initialising microservice clients...")
-	utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
+	if os.Getenv("WORKER_DEBUG") == "" {
+		utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
+	} else {
+		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
+		utils.PremiumClient = &c
+	}
+
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
 
 	statsd.Client, err = statsd.NewClient()
@@ -96,7 +102,7 @@ func main() {
 	}
 
 	go messagequeue.ListenTicketClose()
-	//go autoclose.ListenAutoClose(&pgCache)
+	go messagequeue.ListenAutoClose()
 
 	fmt.Println("Listening for events...")
 	event.HttpListen(redis.Client, &pgCache)

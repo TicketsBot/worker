@@ -3,7 +3,6 @@ package tags
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/i18n"
@@ -17,7 +16,7 @@ type ManageTagsCommand struct {
 func (ManageTagsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "managetags",
-		Description:     translations.HelpManageTags,
+		Description:     i18n.HelpManageTags,
 		Aliases:         []string{"managecannedresponse", "managecannedresponses", "editcannedresponse", "editcannedresponses", "ecr", "managetags", "mcr", "managetag", "mt"},
 		PermissionLevel: permission.Support,
 		Children: []registry.Command{
@@ -25,7 +24,7 @@ func (ManageTagsCommand) Properties() registry.Properties {
 			ManageTagsDeleteCommand{},
 			ManageTagsListCommand{},
 		},
-		Category:        command.Tags,
+		Category: command.Tags,
 	}
 }
 

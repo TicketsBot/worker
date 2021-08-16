@@ -3,9 +3,9 @@ package admin
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/rest"
 )
@@ -16,11 +16,11 @@ type AdminSeedCommand struct {
 func (AdminSeedCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "seed",
-		Description:     database.HelpAdminSeed,
+		Description:     i18n.HelpAdminSeed,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly: true,
+		MessageOnly:     true,
 	}
 }
 

@@ -6,12 +6,15 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
@@ -19,7 +22,8 @@ import (
 	"time"
 )
 
-func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, fromInteraction bool) {
+func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bool) {
+	var success bool
 	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
@@ -31,15 +35,22 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 
 	isTicket := ticket.GuildId != 0
 
-	// Cannot happen if fromInteraction
 	if !isTicket {
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", translations.MessageNotATicketChannel)
+			ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
 			ctx.Reject()
 		}
 
 		return
 	}
+
+	defer func() {
+		if !success {
+			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		}
+	}()
 
 	// Check the user is permitted to close the ticket
 	usersCanClose, err := dbclient.Client.UsersCanClose.Get(ctx.GuildId())
@@ -60,9 +71,9 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 		return
 	}
 
-	if (permissionLevel == permission.Everyone && ticket.UserId != member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
+	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", translations.MessageCloseNoPermission)
+			ctx.Reply(utils.Red, "Error", i18n.MessageCloseNoPermission)
 			ctx.Reject()
 		}
 		return
@@ -93,7 +104,14 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 		count = len(array)
 		if err != nil {
 			count = 0
-			sentry.Error(err)
+			sentry.ErrorWithContext(err, errorContext)
+
+			// First rest interaction, check for 403
+			if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+				if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
+					sentry.ErrorWithContext(err, errorContext)
+				}
+			}
 		}
 
 		if count > 0 {
@@ -114,13 +132,17 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 
 	// Set ticket state as closed and delete channel
 	if err := dbclient.Client.Tickets.Close(ticket.Id, ctx.GuildId()); err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
+		return
 	}
+
+	success = true
 
 	// set close reason
 	if reason != nil {
 		if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, *reason); err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			ctx.HandleError(err)
+			return
 		}
 	}
 
@@ -132,7 +154,8 @@ func CloseTicket(ctx registry.CommandContext, messageId uint64, reason *string, 
 			}
 		}
 
-		sentry.ErrorWithContext(err, errorContext)
+		ctx.HandleError(err)
+		return
 	}
 
 	// Save space - delete the webhook
@@ -179,29 +202,124 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
-	embed := embed.NewEmbed().
+	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(int(utils.Green)).
+		SetTimestamp(time.Now()).
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
 		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField("Closed By", member.User.Mention(), true).
 		AddField("Reason", formattedReason, false).
 		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true).
-		AddField("Open Time", utils.FormatDateTime(ticket.OpenTime), true).
-		AddField("Claimed By", claimedBy, true).
-		SetFooter(fmt.Sprintf("Close Time: %s", utils.FormatDateTime(time.Now())), "")
+		AddField("Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField("Claimed By", claimedBy, true)
 
 	if archiveChannelExists {
-		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, embed); err != nil {
+		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, closeEmbed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 
 	// Notify user and send logs in DMs
-	if dmChannel, err := ctx.Worker().CreateDM(ticket.UserId); err == nil {
-		// Only send the msg if we could create the channel
-		if _, err := ctx.Worker().CreateMessageEmbed(dmChannel.Id, embed); err != nil {
+	dmChannel, ok := getDmChannel(ctx, ticket.UserId)
+	if ok {
+		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx.GuildId())
+		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
+		// Only offer to take feedback if the user has sent a message
+		hasSentMessage, err := dbclient.Client.Participants.HasParticipated(ctx.GuildId(), ticket.Id, ticket.UserId)
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
+		if !feedbackEnabled || !hasSentMessage {
+			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, closeEmbed); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		} else {
+			closeEmbed.SetDescription("Please rate the quality of service received with the buttons below")
+
+			data := rest.CreateMessageData{
+				Embeds: []*embed.Embed{closeEmbed},
+				Components: []component.Component{
+					buildRatingActionRow(ticket),
+				},
+			}
+
+			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
 		}
 	}
+}
+
+func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
+	// Hack for autoclose
+	if ctx.Worker().BotId == userId {
+		return 0, false
+	}
+
+	cachedId, err := redis.GetDMChannel(userId, ctx.Worker().BotId)
+	if err != nil { // We can continue
+		if err != redis.ErrNotCached {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
+	} else { // We have it cached
+		if cachedId == nil {
+			return 0, false
+		} else {
+			return *cachedId, true
+		}
+	}
+
+	ch, err := ctx.Worker().CreateDM(userId)
+	if err != nil {
+		// check for 403
+		if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+			if err := redis.StoreNullDMChannel(userId, ctx.Worker().BotId); err != nil {
+				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			}
+
+			return 0, false
+		}
+
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		return 0, false
+	}
+
+	if err := redis.StoreDMChannel(userId, ch.Id, ctx.Worker().BotId); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	}
+
+	return ch.Id, true
+}
+
+func buildRatingActionRow(ticket database.Ticket) component.Component {
+	buttons := make([]component.Component, 5)
+
+	for i := 1; i <= 5; i++ {
+		var style component.ButtonStyle
+		if i <= 2 {
+			style = component.ButtonStyleDanger
+		} else if i == 3 {
+			style = component.ButtonStylePrimary
+		} else {
+			style = component.ButtonStyleSuccess
+		}
+
+		buttons[i-1] = component.BuildButton(component.Button{
+			Label:    strconv.Itoa(i),
+			CustomId: fmt.Sprintf("rate_%d_%d_%d", ticket.GuildId, ticket.Id, i),
+			Style:    style,
+			Emoji: emoji.Emoji{
+				Name: "⭐",
+			},
+		})
+	}
+
+	return component.BuildActionRow(buttons...)
 }

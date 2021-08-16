@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -22,13 +22,13 @@ type StatsUserCommand struct {
 func (StatsUserCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "user",
-		Description:     translations.HelpStats, // TODO: Proper translations
+		Description:     i18n.HelpStats, // TODO: Proper translations
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User whose statistics to retrieve", interaction.OptionTypeUser, translations.MessageInvalidUser),
+			command.NewRequiredArgument("user", "User whose statistics to retrieve", interaction.OptionTypeUser, i18n.MessageInvalidUser),
 		),
 	}
 }
@@ -90,7 +90,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		}
 
-		embed := embed.NewEmbed().
+		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(int(utils.Green)).
 
@@ -101,12 +101,28 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 			AddField("Open Tickets", fmt.Sprintf("%d / %d", openTickets, ticketLimit), true)
 
-		ctx.ReplyWithEmbed(embed)
+		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	} else { // Support rep stats
-		var weeklyAR, monthlyAR, totalAR *time.Duration
-		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets, weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets int
-
 		group, _ := errgroup.WithContext(context.Background())
+
+		var feedbackRating float32
+		var feedbackCount int
+
+		group.Go(func() (err error) {
+			feedbackRating, err = dbclient.Client.ServiceRatings.GetAverageClaimedBy(ctx.GuildId(), userId)
+			return
+		})
+
+		group.Go(func() (err error) {
+			feedbackCount, err = dbclient.Client.ServiceRatings.GetCountClaimedBy(ctx.GuildId(), userId)
+			return
+		})
+
+		var weeklyAR, monthlyAR, totalAR *time.Duration
+		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets,
+		weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets,
+		weeklyClaimedTickets, monthlyClaimedTickets, totalClaimedTickets int
+
 
 		// totalAR
 		group.Go(func() (err error) {
@@ -162,6 +178,24 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		})
 
+		// weeklyClaimed
+		group.Go(func() (err error) {
+			weeklyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(ctx.GuildId(), userId, time.Hour*24*7)
+			return
+		})
+
+		// monthlyClaimed
+		group.Go(func() (err error) {
+			monthlyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(ctx.GuildId(), userId, time.Hour*24*28)
+			return
+		})
+
+		// totalClaimed
+		group.Go(func() (err error) {
+			totalClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedCount(ctx.GuildId(), userId)
+			return
+		})
+
 		if err := group.Wait(); err != nil {
 			ctx.HandleError(err)
 			return
@@ -187,12 +221,16 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			weeklyFormatted = utils.FormatTime(*weeklyAR)
 		}
 
-		embed := embed.NewEmbed().
+		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(int(utils.Green)).
 
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
+			AddBlankField(true).
+
+			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
+			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 			AddBlankField(true).
 
 			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
@@ -201,8 +239,12 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 			AddField("Tickets Answered (Weekly)", fmt.Sprintf("%d / %d", weeklyAnsweredTickets, weeklyTotalTickets), true).
 			AddField("Tickets Answered (Monthly)", fmt.Sprintf("%d / %d", monthlyAnsweredTickets, monthlyTotalTickets), true).
-			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true)
+			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true).
 
-		ctx.ReplyWithEmbed(embed)
+			AddField("Claimed Tickets (Weekly)", strconv.Itoa(weeklyClaimedTickets), true).
+			AddField("Claimed Tickets (Monthly)", strconv.Itoa(monthlyClaimedTickets), true).
+			AddField("Claimed Tickets (Total)", strconv.Itoa(totalClaimedTickets), true)
+
+		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	}
 }

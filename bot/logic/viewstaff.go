@@ -11,7 +11,7 @@ import (
 )
 
 // each msg is
-const perField = 16
+const perField = 8
 
 func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, errorContext sentry.ErrorContext) (*embed.Embed, bool) {
 	self, _ := worker.Self()

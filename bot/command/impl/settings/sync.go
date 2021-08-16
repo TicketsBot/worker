@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"time"
@@ -19,7 +19,7 @@ type SyncCommand struct {
 func (SyncCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "sync",
-		Description:     translations.HelpSync,
+		Description:     i18n.HelpSync,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}
@@ -112,7 +112,7 @@ func processDeletedPanels(ctx registry.CommandContext) (removed int) {
 
 			// Message no longer exists
 			go func() {
-				if err := dbclient.Client.Panel.Delete(panel.MessageId); err != nil {
+				if err := dbclient.Client.Panel.Delete(panel.PanelId); err != nil {
 					sentry.ErrorWithContext(err, ctx.ToErrorContext())
 				}
 			}()

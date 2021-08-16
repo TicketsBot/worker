@@ -3,10 +3,10 @@ package settings
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -19,11 +19,11 @@ type LanguageCommand struct {
 func (LanguageCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "language",
-		Description:     translations.HelpLanguage,
+		Description:     i18n.HelpLanguage,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, translations.MessageLanguageInvalidLanguage),
+			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, i18n.MessageLanguageInvalidLanguage),
 		),
 	}
 }
@@ -35,12 +35,15 @@ func (c LanguageCommand) GetExecutor() interface{} {
 // TODO: Show options properly
 func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string) {
 	var valid bool
-	for language, flag := range translations.Flags {
+	var newFlag string
+	for language, flag := range i18n.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
 			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language); err != nil {
 				ctx.HandleError(err)
+				return
 			}
 
+			newFlag = flag
 			valid = true
 			break
 		}
@@ -51,7 +54,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 		return
 	}
 
-	ctx.Accept()
+	ctx.ReplyRaw(utils.Green, "Language", fmt.Sprintf("Server langauge has been changed to %s", newFlag))
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
@@ -62,11 +65,11 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	}
 
 	var list string
-	for language, flag := range translations.Flags {
+	for language, flag := range i18n.Flags {
 		list += fmt.Sprintf("%s `%s\n`", flag, language)
 	}
 	list = strings.TrimSuffix(list, "\n")
 
-	ctx.ReplyWithFields(utils.Red, "Error", translations.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
+	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
 	ctx.Accept()
 }

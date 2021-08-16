@@ -4,39 +4,37 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/rxdn/gdl/gateway/payloads/events"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/objects/interaction/component"
+	"github.com/rxdn/gdl/rest"
 	"time"
 )
 
-func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
-	// Check the right emoji has been used
-	if e.Emoji.Name != "🔒" {
+func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
+	// TODO: Log this
+	if data.Member == nil {
 		return
 	}
 
 	// Create error context for later
 	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   e.GuildId,
-		User:    e.UserId,
-		Channel: e.ChannelId,
+		Guild:   data.GuildId.Value,
+		User:    data.Member.User.Id,
+		Channel: data.ChannelId,
 		Shard:   worker.ShardId,
 	}
 
-	// In DMs
-	if e.GuildId == 0 {
-		return
-	}
-
 	// Get user object
-	user, err := worker.GetUser(e.UserId)
+	user, err := worker.GetUser(data.Member.User.Id)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 		return
@@ -48,7 +46,8 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 	}
 
 	// Get the ticket properties
-	ticket, err := dbclient.Client.Tickets.GetByChannel(e.ChannelId); if err != nil {
+	ticket, err := dbclient.Client.Tickets.GetByChannel(data.ChannelId)
+	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 		return
 	}
@@ -58,69 +57,70 @@ func OnCloseReact(worker *worker.Context, e *events.MessageReactionAdd) {
 		return
 	}
 
-	// Check that the ticket has a welcome message
-	if ticket.WelcomeMessageId == nil {
-		return
-	}
-
-	// Check that the message being reacted to is the welcome message
-	if e.MessageId != *ticket.WelcomeMessageId {
-		return
-	}
-
-	closeConfirmation, err := dbclient.Client.CloseConfirmation.Get(e.GuildId); if err != nil {
+	closeConfirmation, err := dbclient.Client.CloseConfirmation.Get(data.GuildId.Value)
+	if err != nil {
 		sentry.LogWithContext(err, errorContext)
 		return
 	}
 
 	// Get whether the guild is premium
-	premiumTier := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorContext)
+		return
+	}
 
 	if closeConfirmation {
-		// Remove reaction
-		_ = worker.DeleteUserReaction(e.ChannelId, e.MessageId, e.UserId, e.Emoji.Name) // Error is probably a 403, we can ignore
-
 		// Make sure user can close;
 		// Get user's permissions level
-		permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), *e.Member, e.GuildId)
+		permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), *data.Member, data.GuildId.Value)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
 
 		if permissionLevel == permission.Everyone {
-			usersCanClose, err := dbclient.Client.UsersCanClose.Get(e.GuildId); if err != nil {
+			usersCanClose, err := dbclient.Client.UsersCanClose.Get(data.GuildId.Value)
+			if err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}
 
-			if (permissionLevel == permission.Everyone && ticket.UserId != e.UserId) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				utils.SendEmbed(worker, e.ChannelId, e.GuildId, nil, utils.Red, "Error", translations.MessageCloseNoPermission, nil, 30, premiumTier > premium.None)
+			if (permissionLevel == permission.Everyone && ticket.UserId != data.Member.User.Id) || (permissionLevel == permission.Everyone && !usersCanClose) {
+				utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageCloseNoPermission, nil, 30, premiumTier > premium.None)
 				return
 			}
 		}
 
 		// Send confirmation message
-		msg, err := utils.SendEmbedWithResponse(worker, e.ChannelId, nil, utils.Green, "Close Confirmation", "React with ✅ to confirm you want to close the ticket", nil, 10, premiumTier > premium.None)
+		confirmEmbed := utils.BuildEmbedRaw(worker, utils.Green, "Close Confirmation", "Please confirm that you want to close the ticket", nil, premiumTier > premium.None)
+		msgData := rest.CreateMessageData{
+			Embeds: []*embed.Embed{confirmEmbed},
+			Components: []component.Component{
+				component.BuildActionRow(component.BuildButton(component.Button{
+					Label:    "Close",
+					CustomId: "close_confirm",
+					Style:    component.ButtonStylePrimary,
+					Emoji: emoji.Emoji{
+						Name: "✔️",
+					},
+					Url:      nil,
+					Disabled: false,
+				})),
+			},
+		}
+
+		msg, err := worker.CreateMessageComplex(data.ChannelId, msgData)
 		if err != nil {
-			sentry.LogWithContext(err, errorContext)
+			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
 
-		if err := redis.SetCloseConfirmation(redis.Client, msg.Id, e.UserId); err != nil {
-			sentry.LogWithContext(err, errorContext)
-			return
-		}
-
-		time.Sleep(250 * time.Millisecond)
-
-		// Add reaction - error likely 403
-		if err = worker.CreateReaction(e.ChannelId, msg.Id, "✅"); err != nil {
-			sentry.LogWithContext(err, errorContext)
-		}
+		go func() {
+			time.Sleep(time.Second * 10)
+			_ = worker.DeleteMessage(msg.ChannelId, msg.Id)
+		}()
 	} else {
-		// No need to remove the reaction since we're deleting the channel anyway
-		ctx := command.NewPanelContext(worker, e.GuildId, e.ChannelId, e.UserId, premiumTier)
-		logic.CloseTicket(&ctx, 0, nil, true)
+		ctx := context.NewPanelContext(worker, data.GuildId.Value, data.ChannelId, data.Member.User.Id, premiumTier)
+		logic.CloseTicket(&ctx, nil, true)
 	}
 }
-

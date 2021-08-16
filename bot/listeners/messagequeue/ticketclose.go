@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -84,7 +84,10 @@ func ListenTicketClose() {
 			rateLimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, keyPrefix), 1)
 
 			// Get whether the guild is premium for log archiver
-			premiumTier := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
+			if err != nil {
+
+			}
 
 			// Create worker context
 			workerCtx := &worker.Context{
@@ -104,9 +107,9 @@ func ListenTicketClose() {
 			}
 
 			// ticket.ChannelId cannot be nil
-			ctx := command.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
+			ctx := context.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
 
-			logic.CloseTicket(&ctx, 0, &payload.Reason, true)
+			logic.CloseTicket(&ctx, &payload.Reason, true)
 		}()
 	}
 }

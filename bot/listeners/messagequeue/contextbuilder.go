@@ -1,4 +1,4 @@
-package autoclose
+package messagequeue
 
 import (
 	"fmt"

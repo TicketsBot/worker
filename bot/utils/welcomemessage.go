@@ -7,8 +7,10 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/rxdn/gdl/objects/guild"
-	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction/component"
+	"github.com/rxdn/gdl/rest"
 	"golang.org/x/sync/errgroup"
 	"strconv"
 	"strings"
@@ -17,12 +19,18 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint64, isPremium bool, subject string, panel *database.Panel, ticketId int) (uint64, error) {
+func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremium bool, subject string, panel *database.Panel) (uint64, error) {
+	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
+	if err != nil {
+		return 0, err
+	}
+
 	// Send welcome message
 	var welcomeMessage string
 	if panel == nil || panel.WelcomeMessage == nil {
 		var err error
-		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(guildId); if err != nil {
+		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
+		if err != nil {
 			sentry.Error(err)
 			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
 		}
@@ -32,7 +40,7 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 
 	// %average_response%
 	if isPremium && strings.Contains(welcomeMessage, "%average_response%") {
-		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(guildId, time.Hour * 24 * 7)
+		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(ticket.GuildId, time.Hour*24*7)
 		if err != nil {
 			sentry.Error(err)
 		} else {
@@ -41,117 +49,71 @@ func SendWelcomeMessage(worker *worker.Context, guildId, channelId, userId uint6
 	}
 
 	// variables
-	welcomeMessage = doSubstitutions(welcomeMessage, worker, guildId, userId, channelId, ticketId)
+	welcomeMessage = doSubstitutions(welcomeMessage, worker, ticket)
 
 	// Send welcome message
-	if msg, err := SendEmbedWithResponse(worker, channelId, nil, Green, subject, welcomeMessage, nil, 0, isPremium); err == nil {
-		// Add close reaction to the welcome message
-		err := worker.CreateReaction(channelId, msg.Id, "🔒")
-		if err != nil {
-			sentry.Error(err)
-		}
+	msgEmbed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
 
-		return msg.Id, err
-	} else {
+	buttons := []component.Component{
+		component.BuildButton(component.Button{
+			Label:    "Close",
+			CustomId: "close",
+			Style:    component.ButtonStyleDanger,
+			Emoji:    emoji.Emoji{Name: "🔒"},
+		}),
+	}
+
+	if !settings.HideClaimButton {
+		buttons = append(buttons, component.BuildButton(component.Button{
+			Label:    "Claim",
+			CustomId: "claim",
+			Style:    component.ButtonStyleSuccess,
+			Emoji:    emoji.Emoji{Name: "🙋‍♂️"},
+		}))
+	}
+
+	data := rest.CreateMessageData{
+		Embeds: []*embed.Embed{msgEmbed},
+		Components: []component.Component{
+			component.BuildActionRow(buttons...),
+		},
+	}
+
+	// Should never happen
+	if ticket.ChannelId == nil {
+		return 0, fmt.Errorf("channel is nil")
+	}
+
+	msg, err := worker.CreateMessageComplex(*ticket.ChannelId, data)
+	if err != nil {
 		return 0, err
 	}
+
+	return msg.Id, nil
 }
 
-func doSubstitutions(welcomeMessage string, worker *worker.Context, guildId, userId, channelId uint64, ticketId int) string {
+func doSubstitutions(welcomeMessage string, ctx *worker.Context, ticket database.Ticket) string {
 	var lock sync.Mutex
-
-	// do substitutions that do not require DB lookups first
-
-	// %user%
-	welcomeMessage = strings.Replace(welcomeMessage, "%user%", fmt.Sprintf("<@%d>", userId), -1)
-
-	// %ticket_id%
-	if ticketId > 0 {
-		welcomeMessage = strings.Replace(welcomeMessage, "%ticket_id%", strconv.Itoa(ticketId), -1)
-	}
-
-	// %channel%
-	welcomeMessage = strings.Replace(welcomeMessage, "%channel%", fmt.Sprintf("<#%d>", channelId), -1)
 
 	// do DB lookups in parallel
 	group, _ := errgroup.WithContext(context.Background())
+	for placeholder, f := range substitutions {
+		placeholder := placeholder
+		f := f
 
-	// %username%
-	if strings.Contains(welcomeMessage, "%username%") {
-		group.Go(func() (err error) {
-			var user user.User
-			if user, err = worker.GetUser(userId); err == nil {
-				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%username%", user.Username, -1)
-				lock.Unlock()
-			}
-			return
-		})
-	}
+		formatted := fmt.Sprintf("%%%s%%", placeholder)
 
-	// %server%
-	if strings.Contains(welcomeMessage, "%server%") {
-		group.Go(func() (err error) {
-			var guild guild.Guild
-			if guild, err = worker.GetGuild(guildId); err == nil {
-				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%server%", guild.Name, -1)
-				lock.Unlock()
-			}
-			return
-		})
-	}
+		if strings.Contains(welcomeMessage, formatted) {
+			group.Go(func() error {
+				replacement := f(ctx, ticket)
 
-	// %open_tickets%
-	if strings.Contains(welcomeMessage, "%open_tickets%") {
-		group.Go(func() (err error) {
-			var open []database.Ticket
-			if open, err = dbclient.Client.Tickets.GetGuildOpenTickets(guildId); err == nil {
 				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%open_tickets%", strconv.Itoa(len(open)), -1)
+				welcomeMessage = strings.Replace(welcomeMessage, formatted, replacement, -1)
 				lock.Unlock()
-			}
-			return
-		})
-	}
 
-	// %total_tickets%
-	if strings.Contains(welcomeMessage, "%total_tickets%") {
-		group.Go(func() (err error) {
-			var count int
-			if count, err = dbclient.Client.Tickets.GetTotalTicketCount(guildId); err == nil {
-				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%total_tickets%", strconv.Itoa(count), -1)
-				lock.Unlock()
-			}
-			return
-		})
-	}
-
-	// %user_open_tickets%
-	if strings.Contains(welcomeMessage, "%user_open_tickets%") {
-		group.Go(func() (err error) {
-			var open []database.Ticket
-			if open, err = dbclient.Client.Tickets.GetOpenByUser(guildId, userId); err == nil {
-				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%user_open_tickets%", strconv.Itoa(len(open)), -1)
-				lock.Unlock()
-			}
-			return
-		})
-	}
-
-	// %ticket_limit%
-	if strings.Contains(welcomeMessage, "%ticket_limit%") {
-		group.Go(func() (err error) {
-			var limit uint8
-			if limit, err = dbclient.Client.TicketLimit.Get(guildId); err == nil {
-				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, "%ticket_limit%", strconv.Itoa(int(limit)), -1)
-				lock.Unlock()
-			}
-			return
-		})
+				return nil
+			})
+		}
 	}
 
 	if err := group.Wait(); err != nil {
@@ -159,4 +121,48 @@ func doSubstitutions(welcomeMessage string, worker *worker.Context, guildId, use
 	}
 
 	return welcomeMessage
+}
+
+var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket) string{
+	"user": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<@%d>", ticket.UserId)
+	},
+	"ticket_id": func(ctx *worker.Context, ticket database.Ticket) string {
+		return strconv.Itoa(ticket.Id)
+	},
+	"channel": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<#%d>", ticket.ChannelId)
+	},
+	"username": func(ctx *worker.Context, ticket database.Ticket) string {
+		user, _ := ctx.GetUser(ticket.UserId)
+		return user.Username
+	},
+	"server": func(ctx *worker.Context, ticket database.Ticket) string {
+		guild, _ := ctx.GetGuild(ticket.GuildId)
+		return guild.Name
+	},
+	"open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
+		open, _ := dbclient.Client.Tickets.GetGuildOpenTickets(ticket.GuildId)
+		return strconv.Itoa(len(open))
+	},
+	"total_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
+		total, _ := dbclient.Client.Tickets.GetTotalTicketCount(ticket.GuildId)
+		return strconv.Itoa(total)
+	},
+	"user_open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
+		tickets, _ := dbclient.Client.Tickets.GetOpenByUser(ticket.GuildId, ticket.UserId)
+		return strconv.Itoa(len(tickets))
+	},
+	"ticket_limit": func(ctx *worker.Context, ticket database.Ticket) string {
+		limit, _ := dbclient.Client.TicketLimit.Get(ticket.GuildId)
+		return strconv.Itoa(int(limit))
+	},
+	"rating_count": func(ctx *worker.Context, ticket database.Ticket) string {
+		ratingCount, _ := dbclient.Client.ServiceRatings.GetCount(ticket.GuildId)
+		return strconv.Itoa(ratingCount)
+	},
+	"average_rating": func(ctx *worker.Context, ticket database.Ticket) string {
+		average, _ := dbclient.Client.ServiceRatings.GetAverage(ticket.GuildId)
+		return fmt.Sprintf("%.1f", average)
+	},
 }

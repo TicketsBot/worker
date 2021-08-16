@@ -1,16 +1,20 @@
 package event
 
 import (
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"reflect"
+	"runtime/debug"
 	"strconv"
 )
 
@@ -22,6 +26,13 @@ func executeCommand(
 	data interaction.ApplicationCommandInteraction,
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) (bool, error) {
+	if data.GuildId.Value == 0 {
+		responseCh <- interaction.ApplicationCommandCallbackData {
+			Content: "Commands in DMs are not currently supported. Please run this command in a server.",
+		}
+		return false, nil
+	}
+
 	cmd, ok := registry[data.Data.Name]
 	if !ok {
 		return false, fmt.Errorf("command %s does not exist", data.Data.Name)
@@ -116,11 +127,24 @@ func executeCommand(
 	properties := cmd.Properties()
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovering panicking goroutine while executing command %s: %v\n", properties.Name, r)
+				debug.PrintStack()
+
+				fmt.Printf("Command: %s\nArgs: %v\nData: %v\n", cmd.Properties().Name, args, data)
+			}
+		}()
+
 		// get premium tier
 		// TODO: guild id null check
-		premiumLevel := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		premiumLevel, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+		if err != nil {
+			sentry.Error(err)
+			return
+		}
 
-		interactionContext := command.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
+		interactionContext := context.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
 		permLevel, err := interactionContext.UserPermissionLevel()
 		if err != nil {
@@ -130,25 +154,47 @@ func executeCommand(
 
 		if properties.PermissionLevel > permLevel {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageOwnerOnly)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Error", translations.MessageNoPermission)
+			interactionContext.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumLevel == premium.None {
 			interactionContext.Reject()
-			interactionContext.Reply(utils.Red, "Premium Only Command", translations.MessagePremium)
+			interactionContext.Reply(utils.Red, "Premium Only Command", i18n.MessagePremium)
+			return
+		}
+
+		var userId uint64
+		if data.Member != nil {
+			userId = data.Member.User.Id
+		} else if data.User != nil {
+			userId = data.User.Id
+		} else { // ??????????????????????????????????
+			interactionContext.HandleError(errors.New("userId was nil"))
+			return
+		}
+
+		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, userId)
+		if err != nil {
+			interactionContext.HandleError(err)
+			return
+		}
+
+		if blacklisted {
+			interactionContext.Reject()
+			interactionContext.Reply(utils.Red, "Blacklisted", i18n.MessageBlacklisted)
 			return
 		}
 

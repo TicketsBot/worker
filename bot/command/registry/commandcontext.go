@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -26,6 +27,7 @@ type CommandContext interface {
 	ToErrorContext() errorcontext.WorkerErrorContext
 
 	Reply(colour utils.Colour, title string, content translations.MessageId, format ...interface{})
+	ReplyWith(response MessageResponse) (message.Message, error)
 	ReplyWithEmbed(embed *embed.Embed)
 	ReplyWithEmbedPermanent(embed *embed.Embed)
 	ReplyPermanent(colour utils.Colour, title string, content translations.MessageId, format ...interface{})

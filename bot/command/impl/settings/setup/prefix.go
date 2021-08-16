@@ -2,10 +2,10 @@ package setup
 
 import (
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
@@ -16,11 +16,11 @@ type PrefixSetupCommand struct{}
 func (PrefixSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "prefix",
-		Description:     translations.HelpSetup,
+		Description:     i18n.HelpSetup,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("prefix", "Characters that come before the command, i.e. t!", interaction.OptionTypeString, translations.SetupPrefixInvalid),
+			command.NewRequiredArgument("prefix", "Characters that come before the command, i.e. t!", interaction.OptionTypeString, i18n.SetupPrefixInvalid),
 		),
 	}
 }
@@ -31,7 +31,7 @@ func (c PrefixSetupCommand) GetExecutor() interface{} {
 
 func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 	if len(prefix) == 0 || len(prefix) > 8 || strings.Contains(prefix, " ") {
-		ctx.Reply(utils.Red, "Setup", translations.SetupPrefixInvalid)
+		ctx.Reply(utils.Red, "Setup", i18n.SetupPrefixInvalid)
 		ctx.Reject()
 		return
 	}
@@ -41,6 +41,6 @@ func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 		return
 	}
 
-	ctx.Reply(utils.Green, "Setup", translations.SetupPrefixComplete, prefix, prefix)
+	ctx.Reply(utils.Green, "Setup", i18n.SetupPrefixComplete, prefix, prefix)
 	ctx.Accept()
 }

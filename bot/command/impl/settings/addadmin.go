@@ -3,10 +3,10 @@ package settings
 import (
 	"context"
 	permcache "github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -25,13 +25,13 @@ type AddAdminCommand struct {
 func (AddAdminCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "addadmin",
-		Description:     translations.HelpAddAdmin,
+		Description:     i18n.HelpAddAdmin,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("user", "User to apply the administrator permission to", interaction.OptionTypeUser, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgument("role", "Role to apply the administrator permission to", interaction.OptionTypeRole, translations.MessageAddAdminNoMembers),
-			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to apply the administrator permission to", interaction.OptionTypeString, translations.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("user", "User to apply the administrator permission to", interaction.OptionTypeUser, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgument("role", "Role to apply the administrator permission to", interaction.OptionTypeRole, i18n.MessageAddAdminNoMembers),
+			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to apply the administrator permission to", interaction.OptionTypeString, i18n.MessageAddAdminNoMembers),
 		),
 	}
 }
@@ -48,7 +48,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -64,7 +64,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 		}
 
 		if guild.OwnerId == *userId {
-			ctx.Reply(utils.Red, "Error", translations.MessageOwnerIsAlreadyAdmin)
+			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerIsAlreadyAdmin)
 			return
 		}
 
@@ -102,7 +102,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(utils.Red, "Error", translations.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -133,6 +133,8 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 
+	ctx.ReplyRaw(utils.Green, "Add Admin", "Admin added successfully")
+
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -149,12 +151,16 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 		if err != nil {
 			// Check if the channel has been deleted
 			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
-				if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
-					ctx.HandleError(err)
-					return
-				}
+				if restError.StatusCode == 404 {
+					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+						ctx.HandleError(err)
+						return
+					}
 
-				continue
+					continue
+				} else if restError.StatusCode == 403 {
+					break
+				}
 			} else {
 				ctx.HandleError(err)
 				return
@@ -192,6 +198,4 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 			return
 		}
 	}
-
-	ctx.Accept()
 }

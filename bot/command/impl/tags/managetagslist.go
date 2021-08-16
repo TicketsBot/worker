@@ -3,10 +3,10 @@ package tags
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"strings"
 )
@@ -17,7 +17,7 @@ type ManageTagsListCommand struct {
 func (ManageTagsListCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "list",
-		Description:     translations.HelpTagList,
+		Description:     i18n.HelpTagList,
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 	}
@@ -40,5 +40,5 @@ func (ManageTagsListCommand) Execute(ctx registry.CommandContext) {
 	}
 	joined = strings.TrimSuffix(joined, "\n")
 
-	ctx.Reply(utils.Green, "Tags", translations.MessageTagList, joined, utils.DEFAULT_PREFIX)
+	ctx.Reply(utils.Green, "Tags", i18n.MessageTagList, joined, utils.DEFAULT_PREFIX)
 }

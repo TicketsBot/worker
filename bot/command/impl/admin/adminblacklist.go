@@ -2,10 +2,10 @@ package admin
 
 import (
 	"github.com/TicketsBot/common/permission"
-	database "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
@@ -17,13 +17,13 @@ type AdminBlacklistCommand struct {
 func (AdminBlacklistCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "blacklist",
-		Description:     database.HelpAdminBlacklist,
+		Description:     i18n.HelpAdminBlacklist,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly: true,
+		MessageOnly:     true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, database.MessageInvalidArgument),
+			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
 	}
 }

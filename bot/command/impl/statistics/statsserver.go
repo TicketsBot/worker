@@ -2,11 +2,12 @@ package statistics
 
 import (
 	"context"
+	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"golang.org/x/sync/errgroup"
@@ -20,7 +21,7 @@ type StatsServerCommand struct {
 func (StatsServerCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "server",
-		Description:     translations.HelpStatsServer,
+		Description:     i18n.HelpStatsServer,
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,
@@ -32,9 +33,9 @@ func (c StatsServerCommand) GetExecutor() interface{} {
 }
 
 func (StatsServerCommand) Execute(ctx registry.CommandContext) {
-	var totalTickets, openTickets int
-
 	group, _ := errgroup.WithContext(context.Background())
+
+	var totalTickets, openTickets int
 
 	// totalTickets
 	group.Go(func() (err error) {
@@ -47,6 +48,19 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 		openTickets = len(tickets)
 		return err
+	})
+
+	var feedbackRating float32
+	var feedbackCount int
+
+	group.Go(func() (err error) {
+		feedbackRating, err = dbclient.Client.ServiceRatings.GetAverage(ctx.GuildId())
+		return
+	})
+
+	group.Go(func() (err error) {
+		feedbackCount, err = dbclient.Client.ServiceRatings.GetCount(ctx.GuildId())
+		return
 	})
 
 	// first response times
@@ -95,19 +109,22 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		weeklyFormatted = utils.FormatTime(*weekly)
 	}
 
-	embed := embed.NewEmbed().
+	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
 		SetColor(int(utils.Green)).
 
 		AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 		AddField("Open Tickets", strconv.Itoa(openTickets), true).
+		AddBlankField(true).
 
-		AddBlankField(false).
+		AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
+		AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
+		AddBlankField(true).
 
 		AddField("Average First Response Time (Total)", totalFormatted, true).
 		AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
 		AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
 
-	ctx.ReplyWithEmbed(embed)
+	_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
 	ctx.Accept()
 }
