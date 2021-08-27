@@ -212,8 +212,6 @@ github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1 h1:jOKXGHwm7R2bCSbP8ntoT/
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a h1:cGEs8l/Zbw+qw0kVVqySH1JkhR0ekl7ISvgblFkLWnc=
 github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
-github.com/rxdn/gdl v0.0.0-20210815214716-156e1444aefa h1:Qkn47Gwon0J9vkhNPUWpQQGB5nJTFUOkHbWyzzAuA5M=
-github.com/rxdn/gdl v0.0.0-20210815214716-156e1444aefa/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/rxdn/gdl v0.0.0-20210816102755-d158a03388df h1:KAl4D4DG9gKx3se7yxNWhUUDGfAVYKJfhcmYc9Vkq8Y=
 github.com/rxdn/gdl v0.0.0-20210816102755-d158a03388df/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=

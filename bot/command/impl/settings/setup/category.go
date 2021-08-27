@@ -22,7 +22,7 @@ func (CategorySetupCommand) Properties() registry.Properties {
 		Category:        command.Settings,
 		InteractionOnly: true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgumentMessageOnly("category", "Name of the channel category", interaction.OptionTypeString, i18n.SetupCategoryInvalid),
+			command.NewRequiredArgumentInteractionOnly("category", "Name of the channel category", interaction.OptionTypeChannel, i18n.SetupCategoryInvalid),
 		),
 	}
 }
@@ -31,8 +31,8 @@ func (c CategorySetupCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (CategorySetupCommand) Execute(ctx registry.CommandContext, categoryId uint64) {
-	category, err := ctx.Worker().GetChannel(categoryId)
+func (CategorySetupCommand) Execute(ctx registry.CommandContext, channelId uint64) {
+	category, err := ctx.Worker().GetChannel(channelId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
