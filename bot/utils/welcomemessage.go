@@ -165,4 +165,13 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 		average, _ := dbclient.Client.ServiceRatings.GetAverage(ticket.GuildId)
 		return fmt.Sprintf("%.1f", average)
 	},
+	"time": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<t:%d:t>", time.Now().Unix())
+	},
+	"date": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<t:%d:d>", time.Now().Unix())
+	},
+	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
+	},
 }
