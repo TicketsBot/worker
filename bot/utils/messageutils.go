@@ -52,8 +52,7 @@ func SendEmbedWithResponse(
 	}
 
 	if !isPremium {
-		self, _ := worker.Self()
-		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
+		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
 	data := rest.CreateMessageData{
@@ -97,8 +96,7 @@ func BuildEmbed(
 	}
 
 	if !isPremium {
-		self, _ := worker.Self()
-		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
+		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
 	return msgEmbed
@@ -120,7 +118,7 @@ func BuildEmbedRaw(
 
 	if !isPremium {
 		self, _ := worker.Self()
-		msgEmbed.SetFooter("Powered by ticketsbot.net", self.AvatarUrl(256))
+		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
 	return msgEmbed
