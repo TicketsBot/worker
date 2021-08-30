@@ -117,7 +117,6 @@ func BuildEmbedRaw(
 	}
 
 	if !isPremium {
-		self, _ := worker.Self()
 		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
