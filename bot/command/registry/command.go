@@ -2,7 +2,7 @@ package registry
 
 import (
 	"fmt"
-	"github.com/TicketsBot/worker/bot/i18n"
+	"github.com/TicketsBot/worker/i18n"
 	"strings"
 )
 

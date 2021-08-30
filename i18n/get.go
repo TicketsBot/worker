@@ -2,27 +2,50 @@ package i18n
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/database"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/jackc/pgx/v4"
+	"io/ioutil"
 	"strings"
 )
 
-var messages map[translations.Language]map[translations.MessageId]string
+var messages map[Language]map[MessageId]string
 
-func LoadMessages(db *database.Database) (err error) {
-	messages, err = db.Translations.GetAll()
-	return
+func LoadMessages() {
+	messages = make(map[Language]map[MessageId]string)
+
+	for locale, language := range FullLocales {
+		path := fmt.Sprintf("./locale/%s.json", locale)
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			fmt.Printf("Failed to read locale %s: %s\n", locale, err.Error())
+
+			if locale == "en-GB" { // Required
+				panic(err)
+			}
+		}
+
+		var parsed map[MessageId]string
+		if err := json.Unmarshal(data, &parsed); err != nil {
+			fmt.Printf("Failed to parse locale %s: %s\n", locale, err.Error())
+
+			if locale == "en-GB" { // Required
+				panic(err)
+			}
+		}
+
+		messages[language] = parsed
+	}
 }
 
-func GetMessage(language translations.Language, id translations.MessageId, format ...interface{}) string {
+func GetMessage(language Language, id MessageId, format ...interface{}) string {
 	if messages[language] == nil {
 		if language == English {
-			return "error: lang en is missing"
+			return fmt.Sprintf("Error: translation for %s is missing", id)
 		}
 
 		language = English // default to english
@@ -42,11 +65,13 @@ func GetMessage(language translations.Language, id translations.MessageId, forma
 	return fmt.Sprintf(strings.Replace(value, "\\n", "\n", -1), format...)
 }
 
-func GetMessageFromGuild(guildId uint64, id translations.MessageId, format ...interface{}) string {
-	language, err := dbclient.Client.ActiveLanguage.Get(guildId)
-	if err != nil {
+func GetMessageFromGuild(guildId uint64, id MessageId, format ...interface{}) string {
+	language := English
+	_language, err := dbclient.Client.ActiveLanguage.Get(guildId)
+	if err == nil {
+		language = Language(_language)
+	} else {
 		sentry.Error(err)
-		language = English
 	}
 
 	if language == "" {
@@ -57,7 +82,7 @@ func GetMessageFromGuild(guildId uint64, id translations.MessageId, format ...in
 				language = English
 			} else {
 				var ok bool
-				language, ok = Locales[*preferredLocale]
+				language, ok = DiscordLocales[*preferredLocale]
 
 				if !ok {
 					language = English

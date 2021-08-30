@@ -1,7 +1,7 @@
 package command
 
 import (
-	translations "github.com/TicketsBot/database/translations"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -10,12 +10,12 @@ type Argument struct {
 	Description            string
 	Type                   interaction.ApplicationCommandOptionType
 	Required               bool
-	InvalidMessage         translations.MessageId
+	InvalidMessage         i18n.MessageId
 	MessageCompatible      bool
 	SlashCommandCompatible bool
 }
 
-func NewOptionalArgument(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewOptionalArgument(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,
@@ -27,7 +27,7 @@ func NewOptionalArgument(name, description string, argumentType interaction.Appl
 	}
 }
 
-func NewRequiredArgument(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewRequiredArgument(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,
@@ -39,7 +39,7 @@ func NewRequiredArgument(name, description string, argumentType interaction.Appl
 	}
 }
 
-func NewOptionalArgumentMessageOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewOptionalArgumentMessageOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,
@@ -51,7 +51,7 @@ func NewOptionalArgumentMessageOnly(name, description string, argumentType inter
 	}
 }
 
-func NewRequiredArgumentMessageOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewRequiredArgumentMessageOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,
@@ -63,7 +63,7 @@ func NewRequiredArgumentMessageOnly(name, description string, argumentType inter
 	}
 }
 
-func NewOptionalArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewOptionalArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,
@@ -75,7 +75,7 @@ func NewOptionalArgumentInteractionOnly(name, description string, argumentType i
 	}
 }
 
-func NewRequiredArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage translations.MessageId) Argument {
+func NewRequiredArgumentInteractionOnly(name, description string, argumentType interaction.ApplicationCommandOptionType, invalidMessage i18n.MessageId) Argument {
 	return Argument{
 		Name:                   name,
 		Description:            description,

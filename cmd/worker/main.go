@@ -8,12 +8,12 @@ import (
 	"github.com/TicketsBot/worker/bot"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
@@ -49,9 +49,7 @@ func main() {
 	fmt.Println("Connected to Redis, connect to DB...")
 	dbclient.Connect()
 
-	if err := i18n.LoadMessages(dbclient.Client); err != nil {
-		panic(err)
-	}
+	i18n.LoadMessages()
 
 	fmt.Println("Connected to DB, connect to cache...")
 	pgCache, err := cache.Connect()

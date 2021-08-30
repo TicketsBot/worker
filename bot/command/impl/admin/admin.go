@@ -5,8 +5,8 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/i18n"
 	"strings"
 )
 
@@ -30,7 +30,6 @@ func (AdminCommand) Properties() registry.Properties {
 			AdminRecacheCommand{},
 			// AdminPingCommand{},
 			AdminSeedCommand{},
-			AdminSetMessageCommand{},
 			AdminUnblacklistCommand{},
 			AdminUpdateSchemaCommand{},
 			// AdminUsersCommand{},

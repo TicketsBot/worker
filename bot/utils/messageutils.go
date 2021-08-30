@@ -3,10 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/errorcontext"
-	"github.com/TicketsBot/worker/bot/i18n"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -19,7 +18,7 @@ import (
 func SendEmbed(
 	worker *worker.Context,
 	channelId, guildId uint64, replyTo *message.MessageReference,
-	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
+	colour Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 	format ...interface{},
 ) {
@@ -80,7 +79,7 @@ func SendEmbedWithResponse(
 func BuildEmbed(
 	worker *worker.Context,
 	guildId uint64,
-	colour Colour, title string, messageType translations.MessageId, fields []embed.EmbedField,
+	colour Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
 	isPremium bool,
 	format ...interface{},
 ) *embed.Embed {

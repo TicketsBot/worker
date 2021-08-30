@@ -4,11 +4,10 @@ import (
 	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"golang.org/x/sync/errgroup"
 )
@@ -69,7 +68,7 @@ func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField 
 	return fields
 }
 
-func newFieldFromTranslation(ctx registry.CommandContext, name string, value translations.MessageId, inline bool, format ...interface{}) embed.EmbedField {
+func newFieldFromTranslation(ctx registry.CommandContext, name string, value i18n.MessageId, inline bool, format ...interface{}) embed.EmbedField {
 	return embed.EmbedField{
 		Name:   name,
 		Value:  i18n.GetMessageFromGuild(ctx.GuildId(), value, format...),
@@ -77,7 +76,7 @@ func newFieldFromTranslation(ctx registry.CommandContext, name string, value tra
 	}
 }
 
-func getFieldFunc(ctx registry.CommandContext, fields []embed.EmbedField, index int, name string, value translations.MessageId, inline bool, format ...interface{}) func() error {
+func getFieldFunc(ctx registry.CommandContext, fields []embed.EmbedField, index int, name string, value i18n.MessageId, inline bool, format ...interface{}) func() error {
 	return func() error {
 		fields[index] = newFieldFromTranslation(ctx, name, value, inline, format...)
 		return nil

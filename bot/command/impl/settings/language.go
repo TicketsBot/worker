@@ -3,11 +3,12 @@ package settings
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/i18n"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
@@ -38,7 +39,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 	var newFlag string
 	for language, flag := range i18n.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
-			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language); err != nil {
+			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), translations.Language(language)); err != nil { // TODO: Don't wrap
 				ctx.HandleError(err)
 				return
 			}
@@ -54,7 +55,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 		return
 	}
 
-	ctx.ReplyRaw(utils.Green, "Language", fmt.Sprintf("Server langauge has been changed to %s", newFlag))
+	ctx.ReplyRaw(utils.Green, "Language", fmt.Sprintf("Server language has been changed to %s", newFlag))
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {

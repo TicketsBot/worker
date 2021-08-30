@@ -2,13 +2,13 @@ package registry
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/i18n"
 )
 
 type Properties struct {
 	Name             string
-	Description      database.MessageId
+	Description      i18n.MessageId
 	Aliases          []string
 	PermissionLevel  permission.PermissionLevel
 	Children         []Command // TODO: Map
