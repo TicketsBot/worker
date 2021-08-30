@@ -59,7 +59,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 			Label:    "Close",
 			CustomId: "close",
 			Style:    component.ButtonStyleDanger,
-			Emoji:    emoji.Emoji{Name: "🔒"},
+			Emoji:    &emoji.Emoji{Name: "🔒"},
 		}),
 	}
 
@@ -68,7 +68,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 			Label:    "Claim",
 			CustomId: "claim",
 			Style:    component.ButtonStyleSuccess,
-			Emoji:    emoji.Emoji{Name: "🙋‍♂️"},
+			Emoji:    &emoji.Emoji{Name: "🙋‍♂️"},
 		}))
 	}
 

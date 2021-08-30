@@ -315,7 +315,7 @@ func buildRatingActionRow(ticket database.Ticket) component.Component {
 			Label:    strconv.Itoa(i),
 			CustomId: fmt.Sprintf("rate_%d_%d_%d", ticket.GuildId, ticket.Id, i),
 			Style:    style,
-			Emoji: emoji.Emoji{
+			Emoji: &emoji.Emoji{
 				Name: "⭐",
 			},
 		})

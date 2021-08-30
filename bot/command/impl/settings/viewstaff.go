@@ -39,7 +39,7 @@ func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
 				component.BuildButton(component.Button{
 					CustomId: "disabled",
 					Style:    component.ButtonStylePrimary,
-					Emoji: emoji.Emoji{
+					Emoji: &emoji.Emoji{
 						Name: "◀️",
 					},
 					Disabled: true,
@@ -47,7 +47,7 @@ func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
 				component.BuildButton(component.Button{
 					CustomId: "viewstaff_1",
 					Style:    component.ButtonStylePrimary,
-					Emoji: emoji.Emoji{
+					Emoji: &emoji.Emoji{
 						Name: "▶️",
 					},
 					Disabled: false,

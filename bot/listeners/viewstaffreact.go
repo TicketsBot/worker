@@ -52,7 +52,7 @@ func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction
 					component.BuildButton(component.Button{
 						CustomId: fmt.Sprintf("viewstaff_%d", page-1),
 						Style:    component.ButtonStylePrimary,
-						Emoji: emoji.Emoji{
+						Emoji: &emoji.Emoji{
 							Name: "◀️",
 						},
 						Disabled: page <= 0,
@@ -60,7 +60,7 @@ func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction
 					component.BuildButton(component.Button{
 						CustomId: fmt.Sprintf("viewstaff_%d", page+1),
 						Style:    component.ButtonStylePrimary,
-						Emoji: emoji.Emoji{
+						Emoji: &emoji.Emoji{
 							Name: "▶️",
 						},
 						Disabled: false,

@@ -100,7 +100,7 @@ func OnCloseReact(worker *worker.Context, data interaction.ButtonInteraction) {
 					Label:    "Close",
 					CustomId: "close_confirm",
 					Style:    component.ButtonStylePrimary,
-					Emoji: emoji.Emoji{
+					Emoji: &emoji.Emoji{
 						Name: "✔️",
 					},
 					Url:      nil,
