@@ -31,6 +31,16 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 				sentry.Error(err)
 			} else {
 				for _, ticket := range tickets {
+					isExcluded, err := dbclient.Client.AutoCloseExclude.IsExcluded(e.GuildId, ticket.Id)
+					if err != nil {
+						sentry.Error(err)
+						continue
+					}
+
+					if isExcluded {
+						continue
+					}
+
 					// verify ticket exists + prevent potential panic
 					if ticket.ChannelId == nil {
 						return
