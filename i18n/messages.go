@@ -42,7 +42,8 @@ var (
 	MessageBlacklistSelf      MessageId = "commands.blacklist.self"
 	MessageBlacklistStaff     MessageId = "command.blacklist.staff"
 
-	MessageClaimed MessageId = "commands.claim.success"
+	MessageClaimed           MessageId = "commands.claim.success"
+	MessageClaimNoPermission MessageId = "commands.claim.no_permission"
 
 	MessageHelpDMFailed MessageId = "commands.help.failed"
 
@@ -114,7 +115,6 @@ var (
 	HelpPremium            MessageId = "help.premium"
 	HelpRemoveSupport      MessageId = "help.removesupport"
 	HelpSetup              MessageId = "help.setup"
-	HelpSync               MessageId = "help.sync"
 	HelpViewStaff          MessageId = "help.viewstaff"
 	HelpStats              MessageId = "help.stats"
 	HelpStatsServer        MessageId = "help.statsserver"
@@ -143,9 +143,7 @@ var (
 	HelpAdminBlacklist    MessageId = "help.admin.blacklist"
 	HelpAdminUnblacklist  MessageId = "help.admin.unblacklist"
 
-	HelpSetupEasy                  MessageId = "help.setup.easy"
 	SetupChoose                    MessageId = "setup.info.choose"
-	SetupEasyDescription           MessageId = "setup.info.easy"
 	SetupAutoDescription           MessageId = "setup.info.auto"
 	SetupPrefixDescription         MessageId = "setup.info.prefix"
 	SetupDashboardDescription      MessageId = "setup.info.dashboard"

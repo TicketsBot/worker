@@ -40,13 +40,14 @@ func OnClaimReact(worker *worker.Context, data interaction.ButtonInteraction) {
 	}
 
 	if permissionLevel < permission.Support {
-		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageNoPermission, nil, 30, premiumTier > premium.None)
+		utils.SendEmbed(worker, data.ChannelId, data.GuildId.Value, nil, utils.Red, "Error", i18n.MessageClaimNoPermission, nil, 30, premiumTier > premium.None)
 		//ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
 		return
 	}
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(data.ChannelId); if err != nil {
+	ticket, err := dbclient.Client.Tickets.GetByChannel(data.ChannelId)
+	if err != nil {
 		sentry.ErrorWithContext(err, errorCtx)
 		return
 	}
