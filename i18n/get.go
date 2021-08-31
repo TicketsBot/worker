@@ -45,7 +45,7 @@ func LoadMessages() {
 func GetMessage(language Language, id MessageId, format ...interface{}) string {
 	if messages[language] == nil {
 		if language == English {
-			return fmt.Sprintf("Error: translation for %s is missing", id)
+			return fmt.Sprintf("Error: translations for language `%s` is missing", language)
 		}
 
 		language = English // default to english
@@ -58,46 +58,42 @@ func GetMessage(language Language, id MessageId, format ...interface{}) string {
 			return fmt.Sprintf("error: translation for %d is missing", id)
 		}
 
-		language = English // default to english
-		return GetMessage(language, id, format...)
+		return GetMessage(English, id, format...) // default to English
 	}
 
 	return fmt.Sprintf(strings.Replace(value, "\\n", "\n", -1), format...)
 }
 
 func GetMessageFromGuild(guildId uint64, id MessageId, format ...interface{}) string {
-	language := English
-	_language, err := dbclient.Client.ActiveLanguage.Get(guildId)
-	if err == nil {
-		language = Language(_language)
-	} else {
+	activeLanguage, err := dbclient.Client.ActiveLanguage.Get(guildId)
+	if err != nil {
 		sentry.Error(err)
 	}
 
-	if language == "" {
-		// check preferred locale
-		preferredLocale, err := getPreferredLocale(guildId)
-		if err == nil {
-			if preferredLocale == nil {
-				language = English
-			} else {
-				var ok bool
-				language, ok = DiscordLocales[*preferredLocale]
-
-				if !ok {
-					language = English
-				}
-			}
-		} else {
-			language = English
-
-			if err != pgx.ErrNoRows {
-				sentry.Error(err)
-			}
-		}
+	if activeLanguage != "" {
+		return GetMessage(Language(activeLanguage), id, format...)
 	}
 
-	return GetMessage(language, id, format...)
+	// check preferred locale
+	preferredLocale, err := getPreferredLocale(guildId)
+	if err != nil {
+		if err != pgx.ErrNoRows {
+			sentry.Error(err)
+		}
+
+		return GetMessage(English, id, format...)
+	}
+
+	if preferredLocale == nil {
+		return GetMessage(English, id, format...)
+	} else {
+		language, ok := DiscordLocales[*preferredLocale]
+		if !ok {
+			language = English
+		}
+
+		return GetMessage(language, id, format...)
+	}
 }
 
 func getPreferredLocale(guildId uint64) (locale *string, err error) {

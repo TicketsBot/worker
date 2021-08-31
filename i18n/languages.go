@@ -2,6 +2,10 @@ package i18n
 
 type Language string
 
+func (l Language) String() string {
+	return string(l)
+}
+
 const (
 	Arabic        Language = "ar"
 	Bulgarian     Language = "bg"

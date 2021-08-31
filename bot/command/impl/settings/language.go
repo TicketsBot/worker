@@ -3,7 +3,6 @@ package settings
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	translations "github.com/TicketsBot/database/translations"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -39,7 +38,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 	var newFlag string
 	for language, flag := range i18n.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
-			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), translations.Language(language)); err != nil { // TODO: Don't wrap
+			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language.String()); err != nil { // TODO: Don't wrap
 				ctx.HandleError(err)
 				return
 			}
