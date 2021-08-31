@@ -13,6 +13,7 @@ import (
 )
 
 var messages map[Language]map[MessageId]string
+var coverage map[Language]int
 
 func LoadMessages() {
 	messages = make(map[Language]map[MessageId]string)
@@ -39,6 +40,26 @@ func LoadMessages() {
 		}
 
 		messages[language] = parsed
+	}
+}
+
+func SeedCoverage()  {
+	coverage = make(map[Language]int)
+
+	total := len(messages[English])
+
+	for _, language := range FullLocales {
+		translated := len(messages[language])
+		coverage[language] = translated * 100 / total
+	}
+}
+
+func GetCoverage(language Language) int {
+	coverage, ok := coverage[language]
+	if ok {
+		return coverage
+	} else {
+		return 0
 	}
 }
 

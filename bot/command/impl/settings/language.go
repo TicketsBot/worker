@@ -10,6 +10,8 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/schollz/progressbar/v3"
+	"io/ioutil"
 	"strings"
 )
 
@@ -65,9 +67,32 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	}
 
 	var list string
-	for language, flag := range i18n.Flags {
-		list += fmt.Sprintf("%s `%s\n`", flag, language)
+	for _, language := range i18n.LanguagesAlphabetical {
+		coverage := i18n.GetCoverage(language)
+		if coverage == 0 {
+			continue
+		}
+
+		flag := i18n.Flags[language]
+
+		bar := progressbar.NewOptions(100,
+			progressbar.OptionSetWriter(ioutil.Discard),
+			progressbar.OptionSetWidth(15),
+			progressbar.OptionSetPredictTime(false),
+			progressbar.OptionSetRenderBlankState(true),
+			progressbar.OptionSetTheme(progressbar.Theme{
+				Saucer:        "=",
+				SaucerHead:    ">",
+				SaucerPadding: " ",
+				BarStart:      "[",
+				BarEnd:        "]",
+			}),
+		)
+		_ = bar.Set(coverage)
+
+		list += fmt.Sprintf("%s %s `%s`\n", flag, language, strings.TrimSpace(bar.String()))
 	}
+
 	list = strings.TrimSuffix(list, "\n")
 
 	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)

@@ -50,6 +50,7 @@ func main() {
 	dbclient.Connect()
 
 	i18n.LoadMessages()
+	i18n.SeedCoverage()
 
 	fmt.Println("Connected to DB, connect to cache...")
 	pgCache, err := cache.Connect()
