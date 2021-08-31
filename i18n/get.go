@@ -76,7 +76,7 @@ func GetMessage(language Language, id MessageId, format ...interface{}) string {
 	value, ok := messages[language][id]
 	if !ok || value == "" {
 		if language == English {
-			return fmt.Sprintf("error: translation for %d is missing", id)
+			return fmt.Sprintf("error: translation for `%s` is missing", id)
 		}
 
 		return GetMessage(English, id, format...) // default to English
