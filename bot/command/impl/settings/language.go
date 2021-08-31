@@ -83,7 +83,7 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 		)
 		_ = bar.Set(coverage)
 
-		list += fmt.Sprintf("%s %s `%s`\n", flag, language, strings.TrimSpace(bar.String()))
+		list += fmt.Sprintf("%s **%s** `%s`\n", flag, language, strings.TrimSpace(bar.String()))
 	}
 
 	list = strings.TrimSuffix(list, "\n")
