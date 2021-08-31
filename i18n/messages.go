@@ -63,6 +63,7 @@ var (
 
 	MessageRenamed           MessageId = "commands.rename.success"
 	MessageRenameMissingName MessageId = "commands.rename.missing_name"
+	MessageRenameTooLong     MessageId = "commands.rename.too_long"
 
 	MessageNotClaimed            MessageId = "commands.unclaim.not_claimed"
 	MessageOnlyClaimerCanUnclaim MessageId = "commands.unclaim.not_claimer"
@@ -70,8 +71,8 @@ var (
 
 	MessageDisabledLogChannel MessageId = "setup.disabling_archiving"
 	MessageInvalidCategory    MessageId = "setup.invalid_category"
-	MessageCreatedCategory MessageId = "setup.category_created"
-	MessageInvalidPrefix MessageId = "setup.prefix.invalid"
+	MessageCreatedCategory    MessageId = "setup.category_created"
+	MessageInvalidPrefix      MessageId = "setup.prefix.invalid"
 	MessageInvalidTicketLimit MessageId = "setup.ticket_limit.invalid"
 
 	MessageNotATicketChannel MessageId = "generic.not_ticket"
@@ -129,7 +130,7 @@ var (
 	HelpLanguage          MessageId = "help.language"
 
 	MessageLanguageInvalidLanguage MessageId = "commands.language.invalid"
-	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
+	MessageLanguageHelpWanted      MessageId = "commands.language.help_wanted"
 
 	HelpAdminSetMessage   MessageId = "help.admin.set_message"
 	HelpAdminCheckPremium MessageId = "help.admin.check_premium"

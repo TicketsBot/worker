@@ -40,7 +40,7 @@ func (c RemoveAdminCommand) GetExecutor() interface{} {
 func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!removeadmin @User`\n`t!removeadmin @Role`\n`t!removeadmin role name`",
+		Value:  "`/removeadmin @User`\n`/removeadmin @Role`\n`/removeadmin role name`",
 		Inline: false,
 	}
 

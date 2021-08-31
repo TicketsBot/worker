@@ -38,7 +38,7 @@ func (c RemoveSupportCommand) GetExecutor() interface{} {
 func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!removesupport @User`\n`t!removesupport @Role`\n`t!removesupport role name`",
+		Value:  "`/removesupport @User`\n`/removesupport @Role`\n`/removesupport role name`",
 		Inline: false,
 	}
 

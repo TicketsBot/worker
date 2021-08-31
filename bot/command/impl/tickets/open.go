@@ -21,7 +21,7 @@ func (OpenCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, i18n.MessageInvalidArgument), // TODO: Better invalid message
+			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, "infallible"),
 		),
 	}
 }
