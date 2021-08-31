@@ -48,7 +48,7 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 
 	var newOverwrites []channel.PermissionOverwrite
 	if !claimSettings.SupportCanView {
-		newOverwrites = overwritesCantView(userId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles)
+		newOverwrites = overwritesCantView(userId, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles)
 	} else if !claimSettings.SupportCanType {
 		// TODO: Teams
 		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ticket.GuildId)
@@ -115,7 +115,7 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 
 // We should build new overwrites from scratch
 // TODO: Instead of append(), set indices
-func overwritesCantView(claimer, openerId, guildId uint64, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
+func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
 	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
 		Id:    guildId,
 		Type:  channel.PermissionTypeRole,
@@ -123,7 +123,7 @@ func overwritesCantView(claimer, openerId, guildId uint64, adminUsers, adminRole
 		Deny:  permission.BuildPermissions(permission.ViewChannel),
 	})
 
-	for _, userId := range append(adminUsers, claimer, openerId) {
+	for _, userId := range append(adminUsers, claimer, openerId, selfId) {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
