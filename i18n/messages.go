@@ -129,6 +129,7 @@ var (
 	HelpLanguage          MessageId = "help.language"
 
 	MessageLanguageInvalidLanguage MessageId = "commands.language.invalid"
+	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
 
 	HelpAdminSetMessage   MessageId = "help.admin.set_message"
 	HelpAdminCheckPremium MessageId = "help.admin.check_premium"

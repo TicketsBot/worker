@@ -178,3 +178,27 @@ func CreateReferenceFromMessage(msg message.Message) *message.MessageReference {
 		FailIfNotExists: false,
 	}
 }
+
+func BlankField(inline bool) embed.EmbedField {
+	return embed.EmbedField{
+		Name:   "\u200b",
+		Value:  "‎",
+		Inline: inline,
+	}
+}
+
+func EmbedFieldRaw(name, value string, inline bool) embed.EmbedField {
+	return embed.EmbedField{
+		Name:   name,
+		Value:  value,
+		Inline: inline,
+	}
+}
+
+func EmbedField(guildId uint64, name string, value i18n.MessageId, inline bool, format ...interface{}) embed.EmbedField {
+	return embed.EmbedField{
+		Name:   name,
+		Value:  i18n.GetMessageFromGuild(guildId, value, format...),
+		Inline: inline,
+	}
+}

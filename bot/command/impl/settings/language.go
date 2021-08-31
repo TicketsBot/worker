@@ -8,7 +8,6 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/schollz/progressbar/v3"
 	"io/ioutil"
@@ -60,12 +59,6 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
-	example := embed.EmbedField{
-		Name:   "Example",
-		Value:  fmt.Sprintf("`%slanguage en`\n`%slanguage fr`\n`%slanguage de`", utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX, utils.DEFAULT_PREFIX),
-		Inline: false,
-	}
-
 	var list string
 	for _, language := range i18n.LanguagesAlphabetical {
 		coverage := i18n.GetCoverage(language)
@@ -95,6 +88,9 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 
 	list = strings.TrimSuffix(list, "\n")
 
-	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example), list)
+	example := utils.EmbedFieldRaw("Example", fmt.Sprintf("`/language en`\n`/language fr`\n`/language de`"), true)
+	helpWanted := utils.EmbedField(ctx.GuildId(), "ℹ️ Help Wanted", i18n.MessageLanguageHelpWanted, true)
+
+	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
 	ctx.Accept()
 }
