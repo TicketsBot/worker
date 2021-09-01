@@ -72,10 +72,11 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 	if err == nil && ticket.ChannelId != nil {
 		sendTicketStartedFromMessage(ctx, ticket, msg)
 		addMessageSender(ctx, ticket, msg)
+		sendMovedMessage(ctx, ticket, msg)
 	}
 }
 
-func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message)  {
+func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
 	// Send info message
 	isPremium := ctx.PremiumTier() >= premium.Premium
 
@@ -94,7 +95,7 @@ func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.T
 	}
 }
 
-func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg message.Message)  {
+func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
 	// If the sender was the ticket opener, or staff, they already have access
 	// However, support teams makes this tricky
 	if msg.Author.Id == ticket.UserId {
@@ -123,6 +124,23 @@ func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg m
 	}
 
 	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, overwrite); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+}
+
+func sendMovedMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
+	reference := message.MessageReference{
+		MessageId:       msg.Id,
+		ChannelId:       msg.ChannelId,
+		GuildId:         msg.GuildId,
+		FailIfNotExists: false,
+	}
+
+	isPremium := ctx.PremiumTier() >= premium.Premium
+	msgEmbed := utils.BuildEmbed(ctx.Worker(), ctx.GuildId(), utils.Green, "Ticket", i18n.MessageMovedToTicket, nil, isPremium, *ticket.ChannelId)
+
+	if _, err := ctx.Worker().CreateMessageEmbedReply(msg.ChannelId, msgEmbed, &reference); err != nil {
 		ctx.HandleError(err)
 		return
 	}

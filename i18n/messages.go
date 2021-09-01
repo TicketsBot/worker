@@ -82,6 +82,7 @@ var (
 	MessageTicketLimitReached MessageId = "commands.open.ticket_limit"
 	MessageTooManyTickets     MessageId = "commands.open.too_many_tickets"
 	MessageTicketStartedFrom  MessageId = "commands.open.from"
+	MessageMovedToTicket      MessageId = "commands.open.from.moved"
 
 	MessageAutoCloseConfigure MessageId = "commands.autoclose.configure"
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
