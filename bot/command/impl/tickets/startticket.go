@@ -24,11 +24,12 @@ type StartTicketCommand struct {
 
 func (StartTicketCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "Start Ticket",
-		Type:            interaction.ApplicationCommandTypeMessage,
-		PermissionLevel: permcache.Everyone, // Customisable level
-		Category:        command.Tickets,
-		InteractionOnly: true,
+		Name:             "Start Ticket",
+		Type:             interaction.ApplicationCommandTypeMessage,
+		PermissionLevel:  permcache.Everyone, // Customisable level
+		Category:         command.Tickets,
+		InteractionOnly:  true,
+		DefaultEphemeral: true,
 	}
 }
 
@@ -130,17 +131,17 @@ func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg m
 }
 
 func sendMovedMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
-	reference := message.MessageReference{
+	reference := &message.MessageReference{
 		MessageId:       msg.Id,
-		ChannelId:       msg.ChannelId,
-		GuildId:         msg.GuildId,
+		ChannelId:       ctx.ChannelId(),
+		GuildId:         ctx.GuildId(),
 		FailIfNotExists: false,
 	}
 
 	isPremium := ctx.PremiumTier() >= premium.Premium
 	msgEmbed := utils.BuildEmbed(ctx.Worker(), ctx.GuildId(), utils.Green, "Ticket", i18n.MessageMovedToTicket, nil, isPremium, *ticket.ChannelId)
 
-	if _, err := ctx.Worker().CreateMessageEmbedReply(msg.ChannelId, msgEmbed, &reference); err != nil {
+	if _, err := ctx.Worker().CreateMessageEmbedReply(msg.ChannelId, msgEmbed, reference); err != nil {
 		ctx.HandleError(err)
 		return
 	}
