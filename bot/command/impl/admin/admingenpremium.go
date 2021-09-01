@@ -23,6 +23,7 @@ func (AdminGenPremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "genpremium",
 		Description:     i18n.HelpAdminGenPremium,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

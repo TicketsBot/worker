@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
 )
 
@@ -20,6 +21,7 @@ func (AdminDebugCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "debug",
 		Description:     i18n.HelpAdminDebug,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

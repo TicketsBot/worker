@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -19,6 +20,7 @@ func (SetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "setup",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children: []registry.Command{

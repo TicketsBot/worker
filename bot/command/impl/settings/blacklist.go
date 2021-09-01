@@ -20,6 +20,7 @@ func (BlacklistCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "blacklist",
 		Description:     i18n.HelpBlacklist,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"unblacklist"},
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,

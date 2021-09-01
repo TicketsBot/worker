@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"golang.org/x/sync/errgroup"
 	"strconv"
 	"time"
@@ -22,6 +23,7 @@ func (StatsServerCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "server",
 		Description:     i18n.HelpStatsServer,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,
 		PremiumOnly:     true,

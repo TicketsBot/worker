@@ -27,16 +27,16 @@ import (
 	"time"
 )
 
-func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) {
+func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) (database.Ticket, error) {
 	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
-		return
+		return database.Ticket{}, err
 	}
 
 	if !ok {
 		ctx.ReplyRaw(utils.Red, "Error", "Tickets are being opened too quickly in this server")
-		return
+		return database.Ticket{}, fmt.Errorf("guild ratelimit")
 	}
 
 	// If we're using a panel, then we need to create the ticket in the specified category
@@ -48,7 +48,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		category, err = dbclient.Client.ChannelCategory.Get(ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
-			return
+			return database.Ticket{}, err
 		}
 	}
 
@@ -106,7 +106,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			targetChannel, err = getErrorTargetChannel(ctx, panel)
 			if err != nil {
 				ctx.HandleError(err)
-				return
+				return database.Ticket{}, err
 			}
 		}
 
@@ -120,7 +120,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.Reply(utils.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
-		return
+		return database.Ticket{}, fmt.Errorf("ticket limit reached")
 	}
 
 	// Generate subject
@@ -149,7 +149,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 		if channelCount >= 50 {
 			ctx.Reply(utils.Red, "Error", i18n.MessageTooManyTickets)
-			return
+			return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 		}
 	}
 
@@ -157,7 +157,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	id, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
 	if err != nil {
 		ctx.HandleError(err)
-		return
+		return database.Ticket{}, err
 	}
 
 	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
@@ -175,7 +175,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		user, err := ctx.User()
 		if err != nil {
 			ctx.HandleError(err)
-			return
+			return database.Ticket{}, err
 		}
 
 		name = fmt.Sprintf("ticket-%s", user.Username)
@@ -203,7 +203,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 		}
 
-		return
+		return database.Ticket{}, err
 	}
 
 	ctx.Accept()
@@ -323,6 +323,8 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 		}
 	}()
+
+	return ticket, nil
 }
 
 // has hit ticket limit, ticket limit
@@ -395,7 +397,7 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
-var allowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+var AllowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
 
 func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
@@ -477,12 +479,12 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	allowedUsers = append(allowedUsers, userId, selfId)
 
 	for _, member := range allowedUsers {
-		allow := allowedPermissions
+		allow := AllowedPermissions
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
 			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
-				allow = append(allowedPermissions, permission.ManageWebhooks)
+				allow = append(AllowedPermissions, permission.ManageWebhooks)
 			}
 		}
 
@@ -498,7 +500,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    role,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(allowedPermissions...),
+			Allow: permission.BuildPermissions(AllowedPermissions...),
 			Deny:  0,
 		})
 	}

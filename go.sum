@@ -6,12 +6,6 @@ github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df h1:e9JUSOqEYxeAD
 github.com/TicketsBot/common v0.0.0-20200702195837-7afe5e77d1df/go.mod h1:YrggAZACJ3Lz08rvgbEuhMPdrXIQcxk1PtJdxmI3j34=
 github.com/TicketsBot/common v0.0.0-20210727134627-35eb7ed03a44 h1:h33Z6HOYfpqSa3dF3rREcia7FEfM1/dTxbf7g3erMA0=
 github.com/TicketsBot/common v0.0.0-20210727134627-35eb7ed03a44/go.mod h1:wVX+aRKhC57QGFRkDBR8TiJsPycvpeTAsmrFOfVJqtk=
-github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c h1:fUnoOeC94FxAM4xYqjdctudM9QZSy5BMjGcxRlvYdSM=
-github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
-github.com/TicketsBot/database v0.0.0-20210604172320-343ef21cf7e9 h1:pVQhN7SFfEFE4+Qpo9Z6UwKoesJgM9QiR1TJSdLiiNI=
-github.com/TicketsBot/database v0.0.0-20210604172320-343ef21cf7e9/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
-github.com/TicketsBot/database v0.0.0-20210831115037-01a7dc230fbb h1:9faAPFCfwmL2ky39EACX4Sym+1Av4qaZ8iKX2Z7ojYA=
-github.com/TicketsBot/database v0.0.0-20210831115037-01a7dc230fbb/go.mod h1:A4T2uQFIWC/ttCYpfgv7AkPjR09mMRgzG13lgoV/+aI=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14 h1:wVGMTUIDHLj198ElVIecqGGUiQ6NagUlbQOyfiMTF/Y=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14/go.mod h1:whts8TRxrAF4WuDuEAMllkWA/inKem0NhDEFeyuoOvE=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
@@ -221,8 +215,8 @@ github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1 h1:jOKXGHwm7R2bCSbP8ntoT/
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a h1:cGEs8l/Zbw+qw0kVVqySH1JkhR0ekl7ISvgblFkLWnc=
 github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
-github.com/rxdn/gdl v0.0.0-20210830140125-02253feef960 h1:N6tp8mzc02j5y2/I7iRSnuQkGaXMZKttiXyJZisSnAk=
-github.com/rxdn/gdl v0.0.0-20210830140125-02253feef960/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
+github.com/rxdn/gdl v0.0.0-20210901190929-59c42354a637 h1:EkJfTnCqyJBsv+KsZyeOWJ180ODF+UMKycHDGkqaUrY=
+github.com/rxdn/gdl v0.0.0-20210901190929-59c42354a637/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/progressbar/v3 v3.8.2 h1:2kZJwZCpb+E/V79kGO7daeq+hUwUJW0A5QD1Wv455dA=
 github.com/schollz/progressbar/v3 v3.8.2/go.mod h1:9KHLdyuXczIsyStQwzvW8xiELskmX7fQMaZdN23nAv8=

@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
 )
 
@@ -19,6 +20,7 @@ func (UnclaimCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "unclaim",
 		Description:     i18n.HelpUnclaim,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

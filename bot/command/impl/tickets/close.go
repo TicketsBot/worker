@@ -16,6 +16,7 @@ func (CloseCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "close",
 		Description:     i18n.HelpClose,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(

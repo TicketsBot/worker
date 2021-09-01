@@ -20,6 +20,7 @@ func (RemoveCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "remove",
 		Description:     i18n.HelpRemove,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permcache.Everyone,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(

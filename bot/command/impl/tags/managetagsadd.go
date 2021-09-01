@@ -20,6 +20,7 @@ func (ManageTagsAddCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "add",
 		Description:     i18n.HelpTagAdd,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"new", "create"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,

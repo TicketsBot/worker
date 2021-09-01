@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ func (ManageTagsListCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "list",
 		Description:     i18n.HelpTagList,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 	}

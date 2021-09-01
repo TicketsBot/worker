@@ -22,6 +22,7 @@ func (RemoveAdminCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "removeadmin",
 		Description:     i18n.HelpRemoveAdmin,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(

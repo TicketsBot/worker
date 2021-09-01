@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -17,6 +18,7 @@ func (ManageTagsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "managetags",
 		Description:     i18n.HelpManageTags,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"managecannedresponse", "managecannedresponses", "editcannedresponse", "editcannedresponses", "ecr", "managetags", "mcr", "managetag", "mt"},
 		PermissionLevel: permission.Support,
 		Children: []registry.Command{

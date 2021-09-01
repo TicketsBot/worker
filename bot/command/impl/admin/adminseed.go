@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
 )
 
@@ -17,6 +18,7 @@ func (AdminSeedCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "seed",
 		Description:     i18n.HelpAdminSeed,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,

@@ -9,6 +9,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 )
 
@@ -19,6 +20,7 @@ func (ViewStaffCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "viewstaff",
 		Description:     i18n.HelpViewStaff,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 	}

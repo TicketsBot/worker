@@ -16,6 +16,7 @@ func (AdminRecacheCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "recache",
 		Description:     i18n.HelpAdmin,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

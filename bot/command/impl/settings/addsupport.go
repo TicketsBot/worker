@@ -27,6 +27,7 @@ func (AddSupportCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "addsupport",
 		Description:     i18n.HelpAddSupport,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"addsuport"},
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,

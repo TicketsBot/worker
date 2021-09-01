@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	channel_permissions "github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 )
@@ -21,6 +22,7 @@ func (AutoSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "auto",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children:        nil,

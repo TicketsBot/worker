@@ -23,6 +23,7 @@ func (StatsUserCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "user",
 		Description:     i18n.HelpStats, // TODO: Proper translations
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
 		Category:        command.Statistics,

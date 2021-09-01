@@ -48,6 +48,7 @@ func (c RegisterCommandsCommand) Execute(ctx registry.CommandContext, global *bo
 			Name:        option.Name,
 			Description: option.Description,
 			Options:     option.Options,
+			Type:        properties.Type,
 		}
 
 		var err error

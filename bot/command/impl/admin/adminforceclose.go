@@ -18,6 +18,7 @@ func (AdminForceCloseCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "forceclose",
 		Description:     i18n.HelpAdminForceClose,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,

@@ -18,6 +18,7 @@ func (AdminCheckPremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "checkpremium",
 		Description:     i18n.HelpAdminCheckPremium,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,

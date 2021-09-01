@@ -15,6 +15,10 @@ import (
 	"sync"
 )
 
+var (
+
+)
+
 func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) error {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   ticket.GuildId,
@@ -127,7 +131,7 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(allowedPermissions...),
+			Allow: permission.BuildPermissions(AllowedPermissions...),
 			Deny:  0,
 		})
 	}
@@ -136,7 +140,7 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(allowedPermissions...),
+			Allow: permission.BuildPermissions(AllowedPermissions...),
 			Deny:  0,
 		})
 	}
@@ -160,7 +164,7 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(allowedPermissions...),
+			Allow: permission.BuildPermissions(AllowedPermissions...),
 			Deny:  0,
 		})
 	}
@@ -169,7 +173,7 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(allowedPermissions...),
+			Allow: permission.BuildPermissions(AllowedPermissions...),
 			Deny:  0,
 		})
 	}

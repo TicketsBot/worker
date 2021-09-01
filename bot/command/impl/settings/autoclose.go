@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -17,6 +18,7 @@ func (AutoCloseCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "autoclose",
 		Description:     i18n.HelpAutoClose,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,
 		Children: []registry.Command{

@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 	"time"
 )
 
@@ -18,6 +19,7 @@ func (AdminPingCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "ping",
 		Description:     i18n.HelpAdminPing,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"latency"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

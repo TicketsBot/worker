@@ -21,6 +21,7 @@ func (TagCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "tag",
 		Description:     i18n.HelpTag,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,

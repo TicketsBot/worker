@@ -19,6 +19,7 @@ func (RenameCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "rename",
 		Description:     i18n.HelpRename,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(

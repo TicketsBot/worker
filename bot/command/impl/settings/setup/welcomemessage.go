@@ -16,6 +16,7 @@ func (WelcomeMessageSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "welcomemessage",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"wm", "welcome"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,

@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/elliotchance/orderedmap"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
 )
 
@@ -20,6 +21,7 @@ func (HelpCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:             "help",
 		Description:      i18n.HelpHelp,
+		Type:             interaction.ApplicationCommandTypeChatInput,
 		Aliases:          []string{"h"},
 		PermissionLevel:  permission.Everyone,
 		Category:         command.General,

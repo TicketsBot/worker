@@ -19,6 +19,7 @@ func (ManageTagsDeleteCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "delete",
 		Description:     i18n.HelpTagDelete,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"del", "rm", "remove"},
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,

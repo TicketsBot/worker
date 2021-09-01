@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type AutoCloseConfigureCommand struct {
@@ -13,10 +14,12 @@ type AutoCloseConfigureCommand struct {
 
 func (AutoCloseConfigureCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "configure",
-		Description:     i18n.HelpAutoCloseConfigure,
-		PermissionLevel: permission.Admin,
-		Category:        command.Settings,
+		Name:             "configure",
+		Description:      i18n.HelpAutoCloseConfigure,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Admin,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 

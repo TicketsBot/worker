@@ -18,6 +18,7 @@ func (AdminUnblacklistCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "unblacklist",
 		Description:     i18n.HelpAdminUnblacklist,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,

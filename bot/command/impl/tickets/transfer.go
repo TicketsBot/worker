@@ -19,6 +19,7 @@ func (TransferCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "transfer",
 		Description:     i18n.HelpTransfer,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 		Arguments: command.Arguments(

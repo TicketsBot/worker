@@ -17,6 +17,7 @@ func (OpenCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "open",
 		Description:     i18n.HelpOpen,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"new"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,

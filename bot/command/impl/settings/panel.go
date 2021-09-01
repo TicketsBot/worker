@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type PanelCommand struct {
@@ -15,6 +16,7 @@ func (PanelCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "panel",
 		Description:     i18n.HelpPanel,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 	}

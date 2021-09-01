@@ -17,6 +17,7 @@ func (CategorySetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "category",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"ticketcategory", "cat", "channelcategory"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,

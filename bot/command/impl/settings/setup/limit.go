@@ -16,6 +16,7 @@ func (LimitSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "limit",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"ticketlimit", "max", "maximum"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,

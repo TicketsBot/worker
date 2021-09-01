@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type ClaimCommand struct {
@@ -18,6 +19,7 @@ func (ClaimCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "claim",
 		Description:     i18n.HelpClaim,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
 	}

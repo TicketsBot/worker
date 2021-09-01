@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type AutoCloseExcludeCommand struct {
@@ -14,10 +15,12 @@ type AutoCloseExcludeCommand struct {
 
 func (AutoCloseExcludeCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "exclude",
-		Description:     i18n.HelpAutoCloseExclude,
-		PermissionLevel: permission.Support,
-		Category:        command.Settings,
+		Name:             "exclude",
+		Description:      i18n.HelpAutoCloseExclude,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Support,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 

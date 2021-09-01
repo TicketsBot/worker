@@ -18,6 +18,7 @@ func (AdminBlacklistCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "blacklist",
 		Description:     i18n.HelpAdminBlacklist,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,

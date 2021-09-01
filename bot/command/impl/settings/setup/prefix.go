@@ -17,6 +17,7 @@ func (PrefixSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "prefix",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(

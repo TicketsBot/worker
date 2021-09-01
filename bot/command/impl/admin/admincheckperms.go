@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction"
 )
 
 type AdminCheckPermsCommand struct {
@@ -15,6 +16,7 @@ func (AdminCheckPermsCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "checkperms",
 		Description:     i18n.HelpAdminCheckPerms,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"cp"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,

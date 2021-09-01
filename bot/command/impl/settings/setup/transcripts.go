@@ -17,6 +17,7 @@ func (TranscriptsSetupCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "transcripts",
 		Description:     i18n.HelpSetup,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"transcript", "archives", "archive"},
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,

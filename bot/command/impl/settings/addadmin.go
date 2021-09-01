@@ -26,6 +26,7 @@ func (AddAdminCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "addadmin",
 		Description:     i18n.HelpAddAdmin,
+		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
