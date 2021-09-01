@@ -76,7 +76,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 
 func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message)  {
 	// Send info message
-	isPremium := ctx.PremiumTier() < premium.Premium
+	isPremium := ctx.PremiumTier() >= premium.Premium
 
 	// format
 	messageLink := fmt.Sprintf("https://discord.com/channels/%d/%d/%d", ctx.GuildId(), ctx.ChannelId(), msg.Id)
