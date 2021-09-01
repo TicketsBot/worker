@@ -36,7 +36,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 	}
 
 	// ignore our own messages
-	if e.Author.Id != worker.BotId {
+	if e.Author.Id != worker.BotId && !e.Author.Bot {
 		// set ticket last message, for autoclose
 		if err := dbclient.Client.TicketLastMessage.Set(e.GuildId, ticket.Id, e.Id); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
