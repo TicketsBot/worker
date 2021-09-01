@@ -16,6 +16,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
+	"strings"
 )
 
 type StartTicketCommand struct {
@@ -80,10 +81,11 @@ func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.T
 
 	// format
 	messageLink := fmt.Sprintf("https://discord.com/channels/%d/%d/%d", ctx.GuildId(), ctx.ChannelId(), msg.Id)
+	contentFormatted := strings.ReplaceAll(utils.StringMax(msg.Content, 2048, "..."), "`", "\\`")
 
 	msgEmbed := utils.BuildEmbed(
 		ctx.Worker(), ctx.GuildId(), utils.Green, "Ticket", i18n.MessageTicketStartedFrom, nil, isPremium,
-		messageLink, msg.Author.Id, ctx.ChannelId(), utils.StringMax(msg.Content, 2048, "..."),
+		messageLink, msg.Author.Id, ctx.ChannelId(), contentFormatted,
 	)
 
 	if _, err := ctx.Worker().CreateMessageEmbed(*ticket.ChannelId, msgEmbed); err != nil {
