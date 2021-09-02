@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -113,7 +114,7 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
-		SetColor(int(utils.Green)).
+		SetColor(int(constants.Green)).
 
 		AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 		AddField("Open Tickets", strconv.Itoa(openTickets), true).
@@ -127,6 +128,6 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
 		AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
 
-	_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
+	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	ctx.Accept()
 }

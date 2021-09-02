@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
@@ -59,7 +59,7 @@ func (c RegisterCommandsCommand) Execute(ctx registry.CommandContext, global *bo
 		}
 
 		if err != nil {
-			ctx.ReplyRaw(utils.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
+			ctx.ReplyRaw(constants.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
 			ctx.Reject()
 			return
 		}

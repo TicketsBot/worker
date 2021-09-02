@@ -11,9 +11,10 @@ var (
 
 	MessagePremium MessageId = "commands.premium"
 
-	MessageVote              MessageId = "commands.vote"
-	MessageInvalidArgument   MessageId = "generic.invalid_argument"
-	MessageCloseNoPermission MessageId = "close.no_permission"
+	MessageVote               MessageId = "commands.vote"
+	MessageInvalidArgument    MessageId = "generic.invalid_argument"
+	MessageCloseNoPermission  MessageId = "close.no_permission"
+	MessageCloseReasonTooLong MessageId = "close.reason_too_long"
 
 	MessageTagCreateInvalidArguments MessageId = "commands.tags.create.invalid_arguments"
 	MessageTagCreateTooLong          MessageId = "commands.tags.create.too_long"
@@ -84,6 +85,11 @@ var (
 	MessageTicketStartedFrom  MessageId = "commands.open.from"
 	MessageMovedToTicket      MessageId = "commands.open.from.moved"
 
+	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
+	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"
+	MessageCloseRequestNoPermission MessageId = "commands.close_request.no_permission"
+	MessageCloseRequestDenied       MessageId = "commands.close_request.denied"
+
 	MessageAutoCloseConfigure MessageId = "commands.autoclose.configure"
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
 
@@ -128,6 +134,7 @@ var (
 	HelpAdd                MessageId = "help.add"
 	HelpClaim              MessageId = "help.claim"
 	HelpClose              MessageId = "help.close"
+	HelpCloseRequest       MessageId = "help.close_request"
 	HelpOpen               MessageId = "help.open"
 	HelpRemove             MessageId = "help.remove"
 	HelpRename             MessageId = "help.rename"

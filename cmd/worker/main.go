@@ -102,6 +102,7 @@ func main() {
 
 	go messagequeue.ListenTicketClose()
 	go messagequeue.ListenAutoClose()
+	go messagequeue.ListenCloseRequestTimer()
 
 	fmt.Println("Listening for events...")
 	event.HttpListen(redis.Client, &pgCache)

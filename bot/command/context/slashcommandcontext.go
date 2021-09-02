@@ -2,11 +2,12 @@ package context
 
 import (
 	"errors"
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -59,7 +60,14 @@ func (ctx *SlashCommandContext) ChannelId() uint64 {
 }
 
 func (ctx *SlashCommandContext) UserId() uint64 {
-	return ctx.Interaction.Member.User.Id
+	if ctx.Interaction.Member != nil {
+		return ctx.Interaction.Member.User.Id
+	} else if ctx.Interaction.User != nil {
+		return ctx.Interaction.User.Id
+	} else {
+		sentry.ErrorWithContext(fmt.Errorf("infallible: interaction.member and interaction.user are both null"), ctx.ToErrorContext())
+		return 0
+	}
 }
 
 func (ctx *SlashCommandContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
@@ -86,7 +94,7 @@ func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext
 	}
 }
 
-func (ctx *SlashCommandContext) ReplyWith(response registry.MessageResponse) (message.Message, error) {
+func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if hasReplied {

@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -76,7 +77,7 @@ func (AdminDebugCommand) Execute(ctx registry.CommandContext) {
 
 	embed := embed.NewEmbed().
 		SetTitle("Admin").
-		SetColor(int(utils.Green)).
+		SetColor(int(constants.Green)).
 
 		AddField("Shard", strconv.Itoa(ctx.Worker().ShardId), true).
 		AddBlankField(false).

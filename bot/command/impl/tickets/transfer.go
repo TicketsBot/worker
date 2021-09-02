@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -42,7 +43,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -60,7 +61,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(utils.Red, "Error", i18n.MessageInvalidUser)
+		ctx.Reply(constants.Red, "Error", i18n.MessageInvalidUser)
 		ctx.Reject()
 		return
 	}
@@ -71,6 +72,6 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	mention := fmt.Sprintf("<@%d>", userId)
-	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", i18n.MessageClaimed, mention)
+	ctx.ReplyPermanent(constants.Green, "Ticket Claimed", i18n.MessageClaimed, mention)
 	ctx.Accept()
 }

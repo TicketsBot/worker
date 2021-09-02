@@ -1,0 +1,74 @@
+package handlers
+
+import (
+	"github.com/TicketsBot/worker/bot/button/registry"
+	"github.com/TicketsBot/worker/bot/button/registry/matcher"
+	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/dbclient"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+type RateHandler struct{}
+
+func (h *RateHandler) Matcher() matcher.Matcher {
+	return &matcher.FuncMatcher{
+		Func: func(customId string) bool {
+			return strings.HasPrefix(customId, "rate_")
+		},
+	}
+}
+
+func (h *RateHandler) Properties() registry.Properties {
+	return registry.Properties{
+		Flags: registry.SumFlags(registry.DMsAllowed, registry.CanEdit),
+	}
+}
+
+var ratePattern = regexp.MustCompile(`rate_(\d+)_(\d+)_([1-5])`)
+
+func (h *RateHandler) Execute(ctx *context.ButtonContext) {
+	groups := ratePattern.FindStringSubmatch(ctx.Interaction.Data.CustomId)
+	if len(groups) < 4 {
+		return
+	}
+
+	// Errors are impossible
+	guildId, _ := strconv.ParseUint(groups[1], 10, 64)
+	ticketId, _ := strconv.Atoi(groups[2])
+	ratingRaw, _ := strconv.Atoi(groups[3])
+	rating := uint8(ratingRaw)
+
+	// Get ticket
+	ticket, err := dbclient.Client.Tickets.Get(ticketId, guildId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if ticket.UserId != ctx.InteractionUser().Id || ticket.GuildId != guildId || ticket.Id != ticketId {
+		return
+	}
+
+	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(guildId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if !feedbackEnabled {
+		// TODO: Translate
+		ctx.ReplyRaw(constants.Red, "Error", "This server has feedback disabled")
+		return
+	}
+
+	if err := dbclient.Client.ServiceRatings.Set(guildId, ticketId, rating); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	// TODO: Translate
+	ctx.ReplyRaw(constants.Green, "Success", "Your feedback has been recorded")
+}

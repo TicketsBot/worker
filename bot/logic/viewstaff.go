@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"strings"
 )
@@ -18,7 +18,7 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 	isBlank := true
 
 	embed := embed.NewEmbed().
-		SetColor(int(utils.Green)).
+		SetColor(int(constants.Green)).
 		SetTitle("Staff").
 		SetFooter(fmt.Sprintf("Page %d", page+1), self.AvatarUrl(256))
 

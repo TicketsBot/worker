@@ -5,8 +5,9 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/manager"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	btn_manager "github.com/TicketsBot/worker/bot/button/manager"
+	"github.com/TicketsBot/worker/bot/command"
+	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -97,8 +98,11 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 }
 
 func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
-	commandManager := new(manager.CommandManager)
+	commandManager := new(cmd_manager.CommandManager)
 	commandManager.RegisterCommands()
+
+	buttonManager := btn_manager.NewButtonManager()
+	buttonManager.RegisterCommands()
 
 	return func(ctx *gin.Context) {
 		var payload eventforwarding.Interaction
@@ -165,8 +169,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			responseCh := make(chan registry.MessageResponse, 1)
-			canEdit := handleButtonPress(worker, interactionData, responseCh)
+			responseCh := make(chan command.MessageResponse, 1)
+			canEdit := btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 			if !canEdit {
 				res := interaction.NewResponseDeferredMessageUpdate()
 				ctx.JSON(200, res)
@@ -211,7 +215,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	}
 }
 
-func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan registry.MessageResponse) {
+func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan command.MessageResponse) {
 	timeout := time.NewTimer(time.Second * 15)
 
 	select {

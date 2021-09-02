@@ -4,8 +4,8 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest/request"
@@ -34,7 +34,7 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId uint64) {
 	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
 		if restError, ok := err.(request.RestError); ok && restError.IsClientError() {
-			ctx.Reply(utils.Red, "Error", i18n.SetupTranscriptsInvalid, ctx.ChannelId)
+			ctx.Reply(constants.Red, "Error", i18n.SetupTranscriptsInvalid, ctx.ChannelId)
 			ctx.Reject()
 		} else {
 			ctx.HandleError(err)
@@ -45,7 +45,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
 		ctx.Accept()
-		ctx.Reply(utils.Green, "Setup", i18n.SetupTranscriptsComplete, channelId)
+		ctx.Reply(constants.Green, "Setup", i18n.SetupTranscriptsComplete, channelId)
 	} else {
 		ctx.HandleError(err)
 	}

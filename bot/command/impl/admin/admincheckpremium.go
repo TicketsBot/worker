@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -36,13 +37,13 @@ func (c AdminCheckPremiumCommand) GetExecutor() interface{} {
 func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.ReplyRaw(utils.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(constants.Red, "Error", "Invalid guild ID provided")
 		return
 	}
 
 	guild, found := ctx.Worker().Cache.GetGuild(guildId, false)
 	if !found {
-		ctx.ReplyRaw(utils.Red, "Error", "Guild not found")
+		ctx.ReplyRaw(constants.Red, "Error", "Guild not found")
 		return
 	}
 
@@ -52,6 +53,6 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 		return
 	}
 
-	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
+	ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
 	ctx.Accept()
 }

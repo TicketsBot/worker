@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -93,7 +94,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
-			SetColor(int(utils.Green)).
+			SetColor(int(constants.Green)).
 
 			AddField("Is Admin", "false", true).
 			AddField("Is Support", "false", true).
@@ -102,7 +103,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 			AddField("Open Tickets", fmt.Sprintf("%d / %d", openTickets, ticketLimit), true)
 
-		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
+		_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	} else { // Support rep stats
 		group, _ := errgroup.WithContext(context.Background())
 
@@ -224,7 +225,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
-			SetColor(int(utils.Green)).
+			SetColor(int(constants.Green)).
 
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
@@ -246,6 +247,6 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Claimed Tickets (Monthly)", strconv.Itoa(monthlyClaimedTickets), true).
 			AddField("Claimed Tickets (Total)", strconv.Itoa(totalClaimedTickets), true)
 
-		_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(msgEmbed))
+		_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	}
 }

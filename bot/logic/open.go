@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -35,7 +36,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	if !ok {
-		ctx.ReplyRaw(utils.Red, "Error", "Tickets are being opened too quickly in this server")
+		ctx.ReplyRaw(constants.Red, "Error", "Tickets are being opened too quickly in this server")
 		return database.Ticket{}, fmt.Errorf("guild ratelimit")
 	}
 
@@ -117,7 +118,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ticketsPluralised += "s"
 			}
 
-			ctx.Reply(utils.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
+			ctx.Reply(constants.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return database.Ticket{}, fmt.Errorf("ticket limit reached")
@@ -148,7 +149,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if channelCount >= 50 {
-			ctx.Reply(utils.Red, "Error", i18n.MessageTooManyTickets)
+			ctx.Reply(constants.Red, "Error", i18n.MessageTooManyTickets)
 			return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 		}
 	}
@@ -224,7 +225,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ticket, ctx.PremiumTier() > premium.None, subject, panel)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ticket, ctx.PremiumTier(), subject, panel)
 	if err != nil {
 		ctx.HandleError(err)
 	}
@@ -291,7 +292,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	// Let the user know the ticket has been opened
 	if panel == nil {
-		ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
+		ctx.Reply(constants.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
 	}
 	/*else {
 		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())

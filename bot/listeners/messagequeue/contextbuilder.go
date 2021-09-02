@@ -2,7 +2,7 @@ package messagequeue
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/autoclose"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func buildContext(ticket autoclose.Ticket, cache *cache.PgCache) (ctx *worker.Context, err error) {
+func buildContext(ticket database.Ticket, cache *cache.PgCache) (ctx *worker.Context, err error) {
 	ctx = &worker.Context{
 		Cache: cache,
 	}

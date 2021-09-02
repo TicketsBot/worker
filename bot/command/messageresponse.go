@@ -1,4 +1,4 @@
-package registry
+package command
 
 import (
 	"github.com/rxdn/gdl/objects/channel/embed"

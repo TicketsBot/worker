@@ -3,11 +3,11 @@ package tickets
 import (
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -56,7 +56,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if userPermissionLevel < permcache.PermissionLevel(settings.ContextMenuPermissionLevel) {
-		ctx.Reply(utils.Red, "Error", i18n.MessageNoPermission)
+		ctx.Reply(constants.Red, "Error", i18n.MessageNoPermission)
 		return
 	}
 
@@ -77,16 +77,14 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 	}
 }
 
+// Send info message
 func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
-	// Send info message
-	isPremium := ctx.PremiumTier() >= premium.Premium
-
 	// format
 	messageLink := fmt.Sprintf("https://discord.com/channels/%d/%d/%d", ctx.GuildId(), ctx.ChannelId(), msg.Id)
 	contentFormatted := strings.ReplaceAll(utils.StringMax(msg.Content, 2048, "..."), "`", "\\`")
 
 	msgEmbed := utils.BuildEmbed(
-		ctx.Worker(), ctx.GuildId(), utils.Green, "Ticket", i18n.MessageTicketStartedFrom, nil, isPremium,
+		ctx, constants.Green, "Ticket", i18n.MessageTicketStartedFrom, nil,
 		messageLink, msg.Author.Id, ctx.ChannelId(), contentFormatted,
 	)
 
@@ -138,8 +136,7 @@ func sendMovedMessage(ctx registry.CommandContext, ticket database.Ticket, msg m
 		FailIfNotExists: false,
 	}
 
-	isPremium := ctx.PremiumTier() >= premium.Premium
-	msgEmbed := utils.BuildEmbed(ctx.Worker(), ctx.GuildId(), utils.Green, "Ticket", i18n.MessageMovedToTicket, nil, isPremium, *ticket.ChannelId)
+	msgEmbed := utils.BuildEmbed(ctx, constants.Green, "Ticket", i18n.MessageMovedToTicket, nil, *ticket.ChannelId)
 
 	if _, err := ctx.Worker().CreateMessageEmbedReply(msg.ChannelId, msgEmbed, reference); err != nil {
 		ctx.HandleError(err)

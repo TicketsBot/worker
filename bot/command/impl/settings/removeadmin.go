@@ -5,6 +5,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -46,7 +47,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -60,13 +61,13 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 
 	if userId != nil {
 		if guild.OwnerId == *userId {
-			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerMustBeAdmin)
+			ctx.Reply(constants.Red, "Error", i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == *userId {
-			ctx.Reply(utils.Red, "Error", i18n.MessageRemoveStaffSelf)
+			ctx.Reply(constants.Red, "Error", i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
@@ -82,7 +83,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 		}
 	}
 
-	ctx.ReplyRaw(utils.Green, "Remove Admin", "Admin removed successfully")
+	ctx.ReplyRaw(constants.Green, "Remove Admin", "Admin removed successfully")
 
 	var roles []uint64
 	if roleId != nil {
@@ -102,7 +103,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

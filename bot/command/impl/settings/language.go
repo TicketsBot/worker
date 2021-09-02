@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -56,7 +57,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 		return
 	}
 
-	ctx.ReplyRaw(utils.Green, "Language", fmt.Sprintf("Server language has been changed to %s", newFlag))
+	ctx.ReplyRaw(constants.Green, "Language", fmt.Sprintf("Server language has been changed to %s", newFlag))
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
@@ -92,6 +93,6 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	example := utils.EmbedFieldRaw("Example", fmt.Sprintf("`/language en`\n`/language fr`\n`/language de`"), true)
 	helpWanted := utils.EmbedField(ctx.GuildId(), "ℹ️ Help Wanted", i18n.MessageLanguageHelpWanted, true)
 
-	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
+	ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
 	ctx.Accept()
 }

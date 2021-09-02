@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -27,5 +27,5 @@ func (c PanelCommand) GetExecutor() interface{} {
 }
 
 func (PanelCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(utils.Green, "Panel", i18n.MessagePanel, ctx.GuildId())
+	ctx.Reply(constants.Green, "Panel", i18n.MessagePanel, ctx.GuildId())
 }

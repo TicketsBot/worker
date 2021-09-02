@@ -3,9 +3,11 @@ package utils
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -19,7 +21,7 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremium bool, subject string, panel *database.Panel) (uint64, error) {
+func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel) (uint64, error) {
 	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
 	if err != nil {
 		return 0, err
@@ -39,7 +41,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 	}
 
 	// %average_response%
-	if isPremium && strings.Contains(welcomeMessage, "%average_response%") {
+	if premiumTier > premium.None && strings.Contains(welcomeMessage, "%average_response%") {
 		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(ticket.GuildId, time.Hour*24*7)
 		if err != nil {
 			sentry.Error(err)
@@ -52,7 +54,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, isPremiu
 	welcomeMessage = doSubstitutions(welcomeMessage, worker, ticket)
 
 	// Send welcome message
-	msgEmbed := BuildEmbedRaw(worker, Green, subject, welcomeMessage, nil, isPremium)
+	msgEmbed := BuildEmbedRaw(constants.Green, subject, welcomeMessage, nil, premiumTier)
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{

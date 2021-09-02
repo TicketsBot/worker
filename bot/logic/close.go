@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -37,7 +38,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 	if !isTicket {
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
+			ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
 			ctx.Reject()
 		}
 
@@ -73,7 +74,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
 		if !fromInteraction {
-			ctx.Reply(utils.Red, "Error", i18n.MessageCloseNoPermission)
+			ctx.Reply(constants.Red, "Error", i18n.MessageCloseNoPermission)
 			ctx.Reject()
 		}
 		return
@@ -161,6 +162,10 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	// Save space - delete the webhook
 	go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
 
+	if _, err := dbclient.Client.CloseRequest.Delete(ticket.GuildId, ticket.Id); err != nil {
+		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	}
+
 	sendCloseEmbed(ctx, errorContext, member, ticket, reason)
 }
 
@@ -204,7 +209,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 
 	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
-		SetColor(int(utils.Green)).
+		SetColor(int(constants.Green)).
 		SetTimestamp(time.Now()).
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
 		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).

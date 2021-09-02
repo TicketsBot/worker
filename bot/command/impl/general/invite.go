@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -29,5 +29,5 @@ func (c InviteCommand) GetExecutor() interface{} {
 }
 
 func (InviteCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(utils.Green, "Invite", i18n.MessageInvite)
+	ctx.Reply(constants.Green, "Invite", i18n.MessageInvite)
 }

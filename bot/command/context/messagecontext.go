@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -87,7 +87,7 @@ func (ctx *MessageContext) ReplyContext() *message.MessageReference {
 	}
 }
 
-func (ctx *MessageContext) ReplyWith(response registry.MessageResponse) (message.Message, error) {
+func (ctx *MessageContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	data := response.IntoCreateMessageData()
 	data.MessageReference = ctx.ReplyContext()
 

@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
@@ -42,5 +42,5 @@ func (AutoCloseCommand) Execute(ctx registry.CommandContext) {
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.ReplyRaw(utils.Red, "Error", msg)
+	ctx.ReplyRaw(constants.Red, "Error", msg)
 }

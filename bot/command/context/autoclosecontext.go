@@ -4,7 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
@@ -77,7 +77,7 @@ func (ctx *AutoCloseContext) openDm() (uint64, bool) {
 	return 0, false
 }
 
-func (ctx *AutoCloseContext) ReplyWith(response registry.MessageResponse) (message.Message, error) {
+func (ctx *AutoCloseContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	return message.Message{}, nil
 }
 

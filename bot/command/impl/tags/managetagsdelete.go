@@ -6,8 +6,8 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -55,12 +55,12 @@ func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string
 
 	if !found {
 		ctx.Reject()
-		ctx.Reply(utils.Red, "Error", i18n.MessageTagDeleteDoesNotExist, tagId)
+		ctx.Reply(constants.Red, "Error", i18n.MessageTagDeleteDoesNotExist, tagId)
 		return
 	}
 
 	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err == nil {
-		ctx.ReplyRaw(utils.Green, "Tag", fmt.Sprintf("Tag `%s` has been deleted", tagId))
+		ctx.ReplyRaw(constants.Green, "Tag", fmt.Sprintf("Tag `%s` has been deleted", tagId))
 	} else {
 		ctx.HandleError(err)
 	}

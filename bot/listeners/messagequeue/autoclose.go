@@ -24,15 +24,15 @@ func ListenAutoClose() {
 
 		ticket := ticket
 		go func() {
-			// get worker
-			worker, err := buildContext(ticket, cache.Client)
+			// get ticket
+			ticket, err := dbclient.Client.Tickets.Get(ticket.TicketId, ticket.GuildId)
 			if err != nil {
 				sentry.Error(err)
 				return
 			}
 
-			// get ticket
-			ticket, err := dbclient.Client.Tickets.Get(ticket.TicketId, ticket.GuildId)
+			// get worker
+			worker, err := buildContext(ticket, cache.Client)
 			if err != nil {
 				sentry.Error(err)
 				return

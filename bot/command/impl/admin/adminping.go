@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"time"
@@ -37,10 +37,10 @@ func (AdminPingCommand) Execute(ctx registry.CommandContext) {
 
 	if ok {
 		latency := time.Now().Sub(messageContext.Timestamp)
-		ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("REST latency: `%dms`", latency))
+		ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("REST latency: `%dms`", latency))
 		ctx.Accept()
 	} else { // TODO: Take interaction ID -> get timestamp
-		ctx.ReplyRaw(utils.Red, "Error", "Latency is not available for interactions")
+		ctx.ReplyRaw(constants.Red, "Error", "Latency is not available for interactions")
 		ctx.Reject()
 	}
 }

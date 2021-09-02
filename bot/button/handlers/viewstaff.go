@@ -1,29 +1,40 @@
-package listeners
+package handlers
 
 import (
 	"fmt"
-	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/button/registry"
+	"github.com/TicketsBot/worker/bot/button/registry/matcher"
+	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
-	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"regexp"
 	"strconv"
+	"strings"
 )
+
+type ViewStaffHandler struct{}
+
+func (h *ViewStaffHandler) Matcher() matcher.Matcher {
+	return &matcher.FuncMatcher{
+		Func: func(customId string) bool {
+			return strings.HasPrefix(customId, "viewstaff_")
+		},
+	}
+}
+
+func (h *ViewStaffHandler) Properties() registry.Properties {
+	return registry.Properties{
+		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+	}
+}
 
 var viewStaffPattern = regexp.MustCompile(`viewstaff_(\d+)`)
 
-func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction, ch chan registry.MessageResponse) {
-	// In DMs
-	if data.GuildId.Value == 0 {
-		return
-	}
-
-	groups := viewStaffPattern.FindStringSubmatch(data.Data.CustomId)
+func (h *ViewStaffHandler) Execute(ctx *context.ButtonContext) {
+	groups := viewStaffPattern.FindStringSubmatch(ctx.Interaction.Data.CustomId)
 	if len(groups) < 2 {
 		return
 	}
@@ -37,15 +48,9 @@ func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction
 		return
 	}
 
-	errorCtx := errorcontext.WorkerErrorContext{
-		Guild:   data.GuildId.Value,
-		User:    utils.ButtonInteractionUser(data),
-		Channel: data.ChannelId,
-	}
-
-	msgEmbed, isBlank := logic.BuildViewStaffMessage(data.GuildId.Value, worker, page, errorCtx)
+	msgEmbed, isBlank := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), page, ctx.ToErrorContext())
 	if !isBlank {
-		ch <- registry.MessageResponse{
+		ctx.Edit(command.MessageResponse{
 			Embeds: []*embed.Embed{msgEmbed},
 			Components: []component.Component{
 				component.BuildActionRow(
@@ -67,9 +72,9 @@ func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction
 					}),
 				),
 			},
-		}
+		})
 	} else {
-		components := data.Message.Components
+		components := ctx.Interaction.Message.Components
 		if len(components) == 0 { // Impossible unless whitelabel
 			return
 		}
@@ -93,14 +98,14 @@ func OnViewStaffClick(worker *worker.Context, data interaction.ButtonInteraction
 		components[0].ComponentData = actionRow
 
 		// v hacky
-		embeds := make([]*embed.Embed, len(data.Message.Embeds))
-		for i, e := range data.Message.Embeds {
+		embeds := make([]*embed.Embed, len(ctx.Interaction.Message.Embeds))
+		for i, e := range ctx.Interaction.Message.Embeds {
 			embeds[i] = &e
 		}
 
-		ch <- registry.MessageResponse{
+		ctx.Edit(command.MessageResponse{
 			Embeds:     embeds,
 			Components: components,
-		}
+		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/elliotchance/orderedmap"
@@ -74,7 +75,7 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	embed := embed.NewEmbed().
-		SetColor(int(utils.Green)).
+		SetColor(int(constants.Green)).
 		SetTitle("Help")
 
 	for _, category := range commandCategories.Keys() {
@@ -102,5 +103,5 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	// Explicitly ignore error to fix 403 (Cannot send messages to this user)
-	_, _ = ctx.ReplyWith(registry.NewEphemeralEmbedMessageResponse(embed))
+	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }

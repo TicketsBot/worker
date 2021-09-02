@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -118,7 +118,7 @@ func (ctx *DashboardContext) openDm() (uint64, bool) {
 	return ch.Id, true
 }
 
-func (ctx *DashboardContext) ReplyWith(response registry.MessageResponse) (message.Message, error) {
+func (ctx *DashboardContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	channelId, ok := ctx.openDm()
 	if !ok { // Error handled in openDm function
 		return message.Message{}, errors.New("failed to open dm")

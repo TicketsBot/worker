@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -42,5 +43,5 @@ func (ManageTagsListCommand) Execute(ctx registry.CommandContext) {
 	}
 	joined = strings.TrimSuffix(joined, "\n")
 
-	ctx.Reply(utils.Green, "Tags", i18n.MessageTagList, joined, utils.DEFAULT_PREFIX)
+	ctx.Reply(constants.Green, "Tags", i18n.MessageTagList, joined, utils.DEFAULT_PREFIX)
 }

@@ -5,8 +5,8 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -144,9 +144,9 @@ var (
 
 func getColour(failed bool) int {
 	if failed {
-		return int(utils.Red)
+		return int(constants.Red)
 	} else {
-		return int(utils.Green)
+		return int(constants.Green)
 	}
 }
 

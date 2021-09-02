@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
@@ -34,7 +34,7 @@ func (AdminSeedCommand) Execute(ctx registry.CommandContext) {
 	var guilds []uint64
 	guilds = []uint64{ctx.GuildId()}
 
-	ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
+	ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("Seeding %d guild(s)", len(guilds)))
 
 	// retrieve all guild members
 	var seeded int
@@ -61,9 +61,9 @@ func (AdminSeedCommand) Execute(ctx registry.CommandContext) {
 		seeded++
 
 		if seeded % 10 == 0 {
-			ctx.ReplyRaw(utils.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
+			ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("Seeded %d / %d guilds", seeded, len(guilds)))
 		}
 	}
 
-	ctx.ReplyRaw(utils.Green, "Admin", "Seeding complete")
+	ctx.ReplyRaw(constants.Green, "Admin", "Seeding complete")
 }

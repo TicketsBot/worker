@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -40,6 +41,6 @@ func (StatsCommand) Execute(ctx registry.CommandContext) {
 		Inline: false,
 	}
 
-	ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
+	ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageInvalidArgument, utils.FieldsToSlice(usageEmbed))
 	ctx.Reject()
 }

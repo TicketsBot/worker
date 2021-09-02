@@ -4,8 +4,9 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/errorcontext"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -26,16 +27,16 @@ type CommandContext interface {
 	IsInteraction() bool
 	ToErrorContext() errorcontext.WorkerErrorContext
 
-	Reply(colour utils.Colour, title string, content i18n.MessageId, format ...interface{})
-	ReplyWith(response MessageResponse) (message.Message, error)
+	Reply(colour constants.Colour, title string, content i18n.MessageId, format ...interface{})
+	ReplyWith(response command.MessageResponse) (message.Message, error)
 	ReplyWithEmbed(embed *embed.Embed)
 	ReplyWithEmbedPermanent(embed *embed.Embed)
-	ReplyPermanent(colour utils.Colour, title string, content i18n.MessageId, format ...interface{})
-	ReplyWithFields(colour utils.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
-	ReplyWithFieldsPermanent(colour utils.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyPermanent(colour constants.Colour, title string, content i18n.MessageId, format ...interface{})
+	ReplyWithFields(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyWithFieldsPermanent(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
 
-	ReplyRaw(colour utils.Colour, title, content string)
-	ReplyRawPermanent(colour utils.Colour, title, content string)
+	ReplyRaw(colour constants.Colour, title, content string)
+	ReplyRawPermanent(colour constants.Colour, title, content string)
 
 	ReplyPlain(content string)
 	ReplyPlainPermanent(content string)

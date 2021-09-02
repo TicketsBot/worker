@@ -5,9 +5,9 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -38,7 +38,7 @@ func (ClaimCommand) Execute(ctx registry.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(utils.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -48,6 +48,6 @@ func (ClaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.ReplyPermanent(utils.Green, "Ticket Claimed", i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
+	ctx.ReplyPermanent(constants.Green, "Ticket Claimed", i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
 	ctx.Accept()
 }

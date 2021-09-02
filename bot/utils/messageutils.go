@@ -2,13 +2,17 @@ package utils
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
 	"time"
@@ -18,7 +22,7 @@ import (
 func SendEmbed(
 	worker *worker.Context,
 	channelId, guildId uint64, replyTo *message.MessageReference,
-	colour Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
+	colour constants.Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 	format ...interface{},
 ) {
@@ -29,7 +33,7 @@ func SendEmbed(
 func SendEmbedRaw(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
-	colour Colour, title, content string, fields []embed.EmbedField,
+	colour constants.Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 ) {
 	_, _ = SendEmbedWithResponse(worker, channel, replyTo, colour, title, content, fields, deleteAfter, isPremium)
@@ -38,7 +42,7 @@ func SendEmbedRaw(
 func SendEmbedWithResponse(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
-	colour Colour, title, content string, fields []embed.EmbedField,
+	colour constants.Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 ) (message.Message, error) {
 	msgEmbed := embed.NewEmbed().
@@ -77,13 +81,11 @@ func SendEmbedWithResponse(
 }
 
 func BuildEmbed(
-	worker *worker.Context,
-	guildId uint64,
-	colour Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
-	isPremium bool,
+	ctx registry.CommandContext,
+	colour constants.Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
 	format ...interface{},
 ) *embed.Embed {
-	content := i18n.GetMessageFromGuild(guildId, messageType, format...)
+	content := i18n.GetMessageFromGuild(ctx.GuildId(), messageType, format...)
 
 	msgEmbed := embed.NewEmbed().
 		SetColor(int(colour)).
@@ -94,7 +96,7 @@ func BuildEmbed(
 		msgEmbed.AddField(field.Name, field.Value, field.Inline)
 	}
 
-	if !isPremium {
+	if ctx.PremiumTier() == premium.None {
 		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
@@ -102,9 +104,7 @@ func BuildEmbed(
 }
 
 func BuildEmbedRaw(
-	worker *worker.Context,
-	colour Colour, title, content string, fields []embed.EmbedField,
-	isPremium bool,
+	colour constants.Colour, title, content string, fields []embed.EmbedField, tier premium.PremiumTier,
 ) *embed.Embed {
 	msgEmbed := embed.NewEmbed().
 		SetColor(int(colour)).
@@ -115,7 +115,7 @@ func BuildEmbedRaw(
 		msgEmbed.AddField(field.Name, field.Value, field.Inline)
 	}
 
-	if !isPremium {
+	if tier == premium.None {
 		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 	}
 
@@ -200,5 +200,11 @@ func EmbedField(guildId uint64, name string, value i18n.MessageId, inline bool, 
 		Name:   name,
 		Value:  i18n.GetMessageFromGuild(guildId, value, format...),
 		Inline: inline,
+	}
+}
+
+func BuildEmoji(emote string) *emoji.Emoji {
+	return &emoji.Emoji{
+		Name: emote,
 	}
 }

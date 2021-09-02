@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -51,7 +52,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -67,7 +68,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		}
 
 		if guild.OwnerId == *userId {
-			ctx.Reply(utils.Red, "Error", i18n.MessageOwnerIsAlreadyAdmin)
+			ctx.Reply(constants.Red, "Error", i18n.MessageOwnerIsAlreadyAdmin)
 			return
 		}
 
@@ -104,7 +105,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(utils.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -129,7 +130,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		return
 	}
 
-	ctx.ReplyRaw(utils.Green, "Add Support", "Support representative added successfully")
+	ctx.ReplyRaw(constants.Green, "Add Support", "Support representative added successfully")
 
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 	updateChannelPermissions(ctx, userId, roles)

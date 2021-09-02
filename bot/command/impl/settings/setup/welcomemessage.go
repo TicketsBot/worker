@@ -4,8 +4,8 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
@@ -32,7 +32,7 @@ func (c WelcomeMessageSetupCommand) GetExecutor() interface{} {
 
 func (WelcomeMessageSetupCommand) Execute(ctx registry.CommandContext, message string) {
 	if len(message) > 1024 {
-		ctx.Reply(utils.Red, "Setup", i18n.SetupWelcomeMessageInvalid)
+		ctx.Reply(constants.Red, "Setup", i18n.SetupWelcomeMessageInvalid)
 		ctx.Reject()
 		return
 	}
@@ -42,6 +42,6 @@ func (WelcomeMessageSetupCommand) Execute(ctx registry.CommandContext, message s
 		return
 	}
 
-	ctx.Reply(utils.Green, "Setup", i18n.SetupWelcomeMessageComplete)
+	ctx.Reply(constants.Green, "Setup", i18n.SetupWelcomeMessageComplete)
 	ctx.Accept()
 }

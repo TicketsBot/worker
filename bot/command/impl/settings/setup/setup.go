@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -39,7 +39,7 @@ func (c SetupCommand) GetExecutor() interface{} {
 }
 
 func (c SetupCommand) Execute(ctx registry.CommandContext) {
-	ctx.ReplyWithFieldsPermanent(utils.Green, "Setup", i18n.SetupChoose, c.buildFields(ctx))
+	ctx.ReplyWithFieldsPermanent(constants.Green, "Setup", i18n.SetupChoose, c.buildFields(ctx))
 }
 
 func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField {

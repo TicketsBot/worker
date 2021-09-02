@@ -7,8 +7,8 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/gofrs/uuid"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -70,7 +70,7 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 
 	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
-		ctx.ReplyRaw(utils.Red, "Admin", err.Error())
+		ctx.ReplyRaw(constants.Red, "Admin", err.Error())
 		ctx.Reject()
 		return
 	}
@@ -84,7 +84,7 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 
 	_, err = ctx.Worker().CreateMessage(dmChannel.Id, content)
 	if err != nil {
-		ctx.ReplyRaw(utils.Red, "Admin", err.Error())
+		ctx.ReplyRaw(constants.Red, "Admin", err.Error())
 		ctx.Reject()
 		return
 	}
