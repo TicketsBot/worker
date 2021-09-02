@@ -48,6 +48,10 @@ func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
+	if messageId == 0 {
+		return
+	}
+
 	data := rest.EditMessageData{
 		Embed: utils.BuildEmbed(ctx, constants.Red, "Close Request", i18n.MessageCloseRequestDenied, nil, ctx.UserId()),
 	}
