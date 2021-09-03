@@ -52,5 +52,7 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	logic.CloseTicket(ctx, closeRequest.Reason, true)
+	// Create context for staff member - avoid users cant close issue
+	newCtx := context.NewPanelContext(ctx.Worker(), ctx.GuildId(), ctx.ChannelId(), ticket.UserId, ctx.PremiumTier())
+	logic.CloseTicket(&newCtx, closeRequest.Reason, true)
 }
