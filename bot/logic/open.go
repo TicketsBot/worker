@@ -36,8 +36,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	if !ok {
-		ctx.ReplyRaw(constants.Red, "Error", "Tickets are being opened too quickly in this server")
-		return database.Ticket{}, fmt.Errorf("guild ratelimit")
+		// Message was removed because bot was getting ratelimited
+		//ctx.ReplyRaw(constants.Red, "Error", "Tickets are being opened too quickly in this server")
+		err := fmt.Errorf("guild ratelimited")
+		sentry.LogWithContext(err, ctx.ToErrorContext())
+		return database.Ticket{}, err
 	}
 
 	// If we're using a panel, then we need to create the ticket in the specified category

@@ -16,6 +16,7 @@ import (
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
+	"go.uber.org/atomic"
 )
 
 type ButtonContext struct {
@@ -23,6 +24,7 @@ type ButtonContext struct {
 	worker      *worker.Context
 	Interaction interaction.ButtonInteraction
 	premium     premium.PremiumTier
+	hasReplied  *atomic.Bool
 	editChannel chan command.MessageResponse
 }
 
@@ -36,6 +38,7 @@ func NewButtonContext(
 		worker:      worker,
 		Interaction: interaction,
 		premium:     premium,
+		hasReplied:  atomic.NewBool(false),
 		editChannel: editChannel,
 	}
 
@@ -78,7 +81,7 @@ func (ctx *ButtonContext) IsInteraction() bool {
 func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
 		Guild:   ctx.GuildId(),
-		User:    ctx.Interaction.Member.User.Id,
+		User:    ctx.UserId(),
 		Channel: ctx.ChannelId(),
 	}
 }

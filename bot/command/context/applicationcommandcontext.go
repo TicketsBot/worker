@@ -15,6 +15,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/rest"
 	"go.uber.org/atomic"
 )
 
@@ -98,18 +99,13 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if hasReplied {
-		// TODO: Should we wait?
-		msg, err := ctx.worker.ExecuteWebhook(ctx.worker.BotId, ctx.Interaction.Token, true, response.IntoWebhookBody())
+		msg, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
 
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
 		}
 
-		if msg == nil {
-			return message.Message{}, errors.New("message was nil")
-		} else {
-			return *msg, err
-		}
+		return msg, err
 	} else {
 		ctx.responseCh <- response.IntoApplicationCommandData()
 

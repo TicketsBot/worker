@@ -144,7 +144,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := time.NewTimer(time.Second * 1)
+			timeout := time.NewTimer(time.Millisecond * 1500)
 
 			select {
 			case <-timeout.C:
@@ -208,7 +208,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 			AllowedMentions: data.AllowedMentions,
 		}
 
-		if _, err := rest.ExecuteWebhook(interactionData.Token, worker.RateLimiter, worker.BotId, false, restData); err != nil {
+		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
 			sentry.LogWithContext(err, buildErrorContext(interactionData))
 			return
 		}

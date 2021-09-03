@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -28,17 +29,6 @@ func HandleInteraction(manager *ButtonManager, worker *worker.Context, data inte
 		return false
 	}
 
-	properties := handler.Properties()
-	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
-		// TODO: Message
-		return false
-	}
-
-	if data.GuildId.Value != 0 && !properties.HasFlag(registry.GuildAllowed) {
-		// TODO: Message
-		return false
-	}
-
 	premiumTier, err := getPremiumTier(worker, data)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
@@ -49,6 +39,19 @@ func HandleInteraction(manager *ButtonManager, worker *worker.Context, data inte
 	}
 
 	ctx := context.NewButtonContext(worker, data, premiumTier, editCh)
+	properties := handler.Properties()
+	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
+		// TODO: Translate
+		ctx.ReplyRaw(constants.Red, "Error", "This button must be used in a server")
+		return false
+	}
+
+	if data.GuildId.Value != 0 && !properties.HasFlag(registry.GuildAllowed) {
+		// TODO: Translate
+		ctx.ReplyRaw(constants.Red, "Error", "This button must be used in direct messages")
+		return false
+	}
+
 	go handler.Execute(ctx)
 
 	return properties.HasFlag(registry.CanEdit)
