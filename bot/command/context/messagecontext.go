@@ -75,7 +75,6 @@ func (ctx *MessageContext) ToErrorContext() errorcontext.WorkerErrorContext {
 		Guild:   ctx.GuildId(),
 		User:    ctx.Author.Id,
 		Channel: ctx.ChannelId(),
-		Shard:   ctx.worker.ShardId,
 	}
 }
 

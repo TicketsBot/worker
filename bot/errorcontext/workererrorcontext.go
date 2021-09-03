@@ -8,7 +8,6 @@ type WorkerErrorContext struct {
 	Guild       uint64
 	User        uint64
 	Channel     uint64
-	Shard       int
 }
 
 func (w WorkerErrorContext) ToMap() map[string]string {
@@ -25,8 +24,6 @@ func (w WorkerErrorContext) ToMap() map[string]string {
 	if w.Channel != 0 {
 		m["channel"] = strconv.FormatUint(w.Channel, 10)
 	}
-
-	m["shard"] = strconv.Itoa(w.Shard)
 
 	return m
 }
