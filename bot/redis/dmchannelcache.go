@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/utils"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"strconv"
 	"time"
 )
