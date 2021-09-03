@@ -2,7 +2,8 @@ package redis
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/TicketsBot/common/utils"
+	"github.com/go-redis/redis/v8"
 	"time"
 )
 
@@ -36,7 +37,7 @@ var TicketOpenLimitInterval = time.Second * 30
 func TakeTicketRateLimitToken(client *redis.Client, guildId uint64) (bool, error) {
 	key := fmt.Sprintf("tickets:openratelimit:%d", guildId)
 
-	res, err := script.Run(client, []string{key}, TicketOpenLimit, TicketOpenLimitInterval.Seconds()).Result()
+	res, err := script.Run(utils.DefaultContext(), client, []string{key}, TicketOpenLimit, TicketOpenLimitInterval.Seconds()).Result()
 	if err != nil {
 		return false, err
 	}
