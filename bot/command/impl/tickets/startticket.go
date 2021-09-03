@@ -69,11 +69,34 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ticket, err := logic.OpenTicket(ctx, nil, msg.Content)
-	if err == nil && ticket.ChannelId != nil {
+	var panel *database.Panel
+	if settings.ContextMenuPanel != nil {
+		p, err := dbclient.Client.Panel.GetById(*settings.ContextMenuPanel)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		panel = &p
+	}
+
+	ticket, err := logic.OpenTicket(ctx, panel, msg.Content)
+	if err != nil {
+		// Already handled
+		return
+	}
+
+	if ticket.ChannelId != nil {
 		sendTicketStartedFromMessage(ctx, ticket, msg)
-		addMessageSender(ctx, ticket, msg)
-		sendMovedMessage(ctx, ticket, msg)
+
+		if settings.ContextMenuAddSender {
+			addMessageSender(ctx, ticket, msg)
+			sendMovedMessage(ctx, ticket, msg)
+			if err := dbclient.Client.TicketMembers.Add(ticket.GuildId, ticket.Id, msg.Author.Id); err != nil {
+				ctx.HandleError(err)
+				return
+			}
+		}
 	}
 }
 
