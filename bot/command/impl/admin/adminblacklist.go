@@ -1,13 +1,17 @@
 package admin
 
 import (
+	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"strconv"
 )
 
@@ -40,12 +44,39 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		return
 	}
 
-	if err := ctx.Worker().LeaveGuild(guildId); err != nil {
+	if err := dbclient.Client.ServerBlacklist.Add(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	if err := dbclient.Client.ServerBlacklist.Add(guildId); err != nil {
+	// Check if whitelabel
+	botId, ok, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	var w *worker.Context
+	if ok { // Whitelabel bot
+		// Get bot
+		bot, err := dbclient.Client.Whitelabel.GetByBotId(botId)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		w = &worker.Context{
+			Token:        bot.Token,
+			BotId:        bot.BotId,
+			IsWhitelabel: true,
+			Cache:        ctx.Worker().Cache,
+			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, fmt.Sprintf("ratelimiter:%d", bot.BotId)), 1),
+		}
+	} else { // Public bot
+		w = ctx.Worker()
+	}
+
+	if err := w.LeaveGuild(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
