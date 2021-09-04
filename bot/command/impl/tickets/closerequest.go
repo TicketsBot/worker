@@ -98,17 +98,17 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		format = []interface{}{ctx.UserId(), strings.ReplaceAll(*reason, "`", "\\`")}
 	}
 
-	msgEmbed := utils.BuildEmbed(ctx, constants.Green, "Close Request", messageId, nil, format...)
+	msgEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseRequest, messageId, nil, format...)
 	components := component.BuildActionRow(
 		component.BuildButton(component.Button{
-			Label:    "Accept Close Request",
+			Label:    ctx.GetMessage(i18n.MessageCloseRequestAccept),
 			CustomId: "close_request_accept",
 			Style:    component.ButtonStyleSuccess,
 			Emoji:    utils.BuildEmoji("☑️"),
 		}),
 
 		component.BuildButton(component.Button{
-			Label:    "Deny Close Request",
+			Label:    ctx.GetMessage(i18n.MessageCloseRequestDeny),
 			CustomId: "close_request_deny",
 			Style:    component.ButtonStyleSecondary,
 			Emoji:    utils.BuildEmoji("❌"),

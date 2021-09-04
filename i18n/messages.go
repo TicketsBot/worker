@@ -37,6 +37,7 @@ var (
 	TitleUnclaimed         MessageId = "generic.title.unclaimed"
 	TitleCloseConfirmation MessageId = "generic.title.close_confirmation"
 	TitleHelp              MessageId = "generic.title.help"
+	TitleCloseRequest      MessageId = "generic.title.close_request"
 
 	MessageAbout   MessageId = "commands.about"
 	MessagePremium MessageId = "commands.premium"
@@ -131,6 +132,8 @@ var (
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"
 	MessageCloseRequestNoPermission MessageId = "commands.close_request.no_permission"
 	MessageCloseRequestDenied       MessageId = "commands.close_request.denied"
+	MessageCloseRequestAccept       MessageId = "commands.close_request.accept"
+	MessageCloseRequestDeny         MessageId = "commands.close_request.deny"
 
 	MessageAutoCloseConfigure MessageId = "commands.autoclose.configure"
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
