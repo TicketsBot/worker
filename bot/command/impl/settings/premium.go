@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -48,16 +47,17 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.Reply(constants.Red, "Premium", i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
+				ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
 				return
 			}
 		}
-		ctx.Reply(constants.Red, "Premium", i18n.MessagePremium)
+
+		ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessagePremium)
 	} else {
 		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
-			ctx.Reply(constants.Red, "Premium", i18n.MessageInvalidPremiumKey)
+			ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}
@@ -70,7 +70,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if length == 0 {
-			ctx.Reply(constants.Red, "Premium", i18n.MessageInvalidPremiumKey)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}
@@ -103,7 +103,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
-			ctx.ReplyRaw(constants.Green, "Premium", fmt.Sprintf("Premium has been activated for **%d** days", int(length.Hours()/24)))
+			ctx.Reply(constants.Green, i18n.TitlePremium, i18n.MessagePremiumSuccess, int(length.Hours()/24))
 		} else {
 			ctx.HandleError(err)
 		}

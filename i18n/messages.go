@@ -86,12 +86,11 @@ var (
 	MessageClaimed           MessageId = "commands.claim.success"
 	MessageClaimNoPermission MessageId = "commands.claim.no_permission"
 
-	MessageHelpDMFailed MessageId = "commands.help.failed"
-
 	MessagePanel MessageId = "commands.panel"
 
 	MessageAlreadyPremium    MessageId = "commands.premium.already_premium"
 	MessageInvalidPremiumKey MessageId = "commands.premium.invalid_key"
+	MessagePremiumSuccess    MessageId = "commands.premium.success"
 
 	MessageRemoveAdminNoMembers MessageId = "commands.removeadmin.no_members"
 	MessageRemoveAdminSuccess   MessageId = "commands.removeadmin.success"
@@ -113,12 +112,6 @@ var (
 	MessageNotClaimed            MessageId = "commands.unclaim.not_claimed"
 	MessageOnlyClaimerCanUnclaim MessageId = "commands.unclaim.not_claimer"
 	MessageUnclaimed             MessageId = "commands.unclaim.success"
-
-	MessageDisabledLogChannel MessageId = "setup.disabling_archiving"
-	MessageInvalidCategory    MessageId = "setup.invalid_category"
-	MessageCreatedCategory    MessageId = "setup.category_created"
-	MessageInvalidPrefix      MessageId = "setup.prefix.invalid"
-	MessageInvalidTicketLimit MessageId = "setup.ticket_limit.invalid"
 
 	MessageNotATicketChannel MessageId = "generic.not_ticket"
 	MessageInvalidUser       MessageId = "generic.invalid_user"
