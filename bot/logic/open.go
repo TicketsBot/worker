@@ -96,6 +96,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ticketsPluralised += "s"
 			}
 
+			// TODO: Use translation of tickets
 			ctx.Reply(constants.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 

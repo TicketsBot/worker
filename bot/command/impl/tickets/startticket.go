@@ -107,7 +107,7 @@ func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.T
 	contentFormatted := strings.ReplaceAll(utils.StringMax(msg.Content, 2048, "..."), "`", "\\`")
 
 	msgEmbed := utils.BuildEmbed(
-		ctx, constants.Green, "Ticket", i18n.MessageTicketStartedFrom, nil,
+		ctx, constants.Green, i18n.Ticket, i18n.MessageTicketStartedFrom, nil,
 		messageLink, msg.Author.Id, ctx.ChannelId(), contentFormatted,
 	)
 
@@ -159,7 +159,7 @@ func sendMovedMessage(ctx registry.CommandContext, ticket database.Ticket, msg m
 		FailIfNotExists: false,
 	}
 
-	msgEmbed := utils.BuildEmbed(ctx, constants.Green, "Ticket", i18n.MessageMovedToTicket, nil, *ticket.ChannelId)
+	msgEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.Ticket, i18n.MessageMovedToTicket, nil, *ticket.ChannelId)
 
 	if _, err := ctx.Worker().CreateMessageEmbedReply(msg.ChannelId, msgEmbed, reference); err != nil {
 		ctx.HandleError(err)
