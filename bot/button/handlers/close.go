@@ -70,7 +70,7 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		// Send confirmation message
-		confirmEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil, ctx.PremiumTier())
+		confirmEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil)
 		msgData := command.MessageResponse{
 			Embeds: []*embed.Embed{confirmEmbed},
 			Components: []component.Component{
