@@ -24,6 +24,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
+	"strings"
 	"sync"
 	"time"
 )
@@ -149,6 +150,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ctx.HandleError(err)
 	}
 
+	strTicket := strings.ToLower(ctx.GetMessage(i18n.Ticket))
 	if namingScheme == database.Username {
 		user, err := ctx.User()
 		if err != nil {
@@ -156,9 +158,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, err
 		}
 
-		name = fmt.Sprintf("ticket-%s", user.Username)
+		name = fmt.Sprintf("%s-%s", strTicket, user.Username)
 	} else {
-		name = fmt.Sprintf("ticket-%d", id)
+		name = fmt.Sprintf("%s-%d", strTicket, id)
 	}
 
 	data := rest.CreateChannelData{

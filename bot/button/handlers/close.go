@@ -70,7 +70,6 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		// Send confirmation message
-		// TODO: Translate
 		confirmEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil, ctx.PremiumTier())
 		msgData := command.MessageResponse{
 			Embeds: []*embed.Embed{confirmEmbed},
