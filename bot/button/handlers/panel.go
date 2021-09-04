@@ -44,7 +44,7 @@ func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		if blacklisted {
-			ctx.Reply(constants.Red, "Blacklisted", i18n.MessageBlacklisted)
+			ctx.Reply(constants.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 			return
 		}
 

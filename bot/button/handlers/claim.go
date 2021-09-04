@@ -37,7 +37,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(constants.Red, "Error", i18n.MessageClaimNoPermission)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimNoPermission)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 

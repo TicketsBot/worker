@@ -7,8 +7,10 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction/component"
@@ -21,7 +23,7 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel) (uint64, error) {
+func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel) (uint64, error) {
 	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
 	if err != nil {
 		return 0, err
@@ -51,14 +53,14 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, premiumT
 	}
 
 	// variables
-	welcomeMessage = doSubstitutions(welcomeMessage, worker, ticket)
+	welcomeMessage = doSubstitutions(welcomeMessage, ctx.Worker(), ticket)
 
 	// Send welcome message
 	msgEmbed := BuildEmbedRaw(constants.Green, subject, welcomeMessage, nil, premiumTier)
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{
-			Label:    "Close",
+			Label:    ctx.GetMessage(i18n.TitleClose),
 			CustomId: "close",
 			Style:    component.ButtonStyleDanger,
 			Emoji:    &emoji.Emoji{Name: "🔒"},
@@ -67,7 +69,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, premiumT
 
 	if !settings.HideClaimButton {
 		buttons = append(buttons, component.BuildButton(component.Button{
-			Label:    "Claim",
+			Label:    ctx.GetMessage(i18n.TitleClaim),
 			CustomId: "claim",
 			Style:    component.ButtonStyleSuccess,
 			Emoji:    &emoji.Emoji{Name: "🙋‍♂️"},
@@ -86,7 +88,7 @@ func SendWelcomeMessage(worker *worker.Context, ticket database.Ticket, premiumT
 		return 0, fmt.Errorf("channel is nil")
 	}
 
-	msg, err := worker.CreateMessageComplex(*ticket.ChannelId, data)
+	msg, err := ctx.Worker().CreateMessageComplex(*ticket.ChannelId, data)
 	if err != nil {
 		return 0, err
 	}

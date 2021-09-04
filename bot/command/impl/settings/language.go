@@ -57,7 +57,7 @@ func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string
 		return
 	}
 
-	ctx.ReplyRaw(constants.Green, "Language", fmt.Sprintf("Server language has been changed to %s", newFlag))
+	ctx.Reply(constants.Green, i18n.TitleLanguage, i18n.MessageLanguageSuccess, newFlag)
 }
 
 func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
@@ -93,6 +93,6 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	example := utils.EmbedFieldRaw("Example", fmt.Sprintf("`/language en`\n`/language fr`\n`/language de`"), true)
 	helpWanted := utils.EmbedField(ctx.GuildId(), "ℹ️ Help Wanted", i18n.MessageLanguageHelpWanted, true)
 
-	ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
+	ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
 	ctx.Accept()
 }

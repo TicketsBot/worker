@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/i18n"
 	"regexp"
 	"strconv"
 	"strings"
@@ -59,8 +60,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if !feedbackEnabled {
-		// TODO: Translate
-		ctx.ReplyRaw(constants.Red, "Error", "This server has feedback disabled")
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageFeedbackDisabled)
 		return
 	}
 
@@ -69,6 +69,5 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	// TODO: Translate
-	ctx.ReplyRaw(constants.Green, "Success", "Your feedback has been recorded")
+	ctx.Reply(constants.Green, i18n.Success, i18n.MessageFeedbackSuccess)
 }

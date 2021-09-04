@@ -27,13 +27,13 @@ type CommandContext interface {
 	IsInteraction() bool
 	ToErrorContext() errorcontext.WorkerErrorContext
 
-	Reply(colour constants.Colour, title string, content i18n.MessageId, format ...interface{})
+	Reply(colour constants.Colour, title, content i18n.MessageId, format ...interface{})
 	ReplyWith(response command.MessageResponse) (message.Message, error)
 	ReplyWithEmbed(embed *embed.Embed)
 	ReplyWithEmbedPermanent(embed *embed.Embed)
-	ReplyPermanent(colour constants.Colour, title string, content i18n.MessageId, format ...interface{})
-	ReplyWithFields(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
-	ReplyWithFieldsPermanent(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyPermanent(colour constants.Colour, title, content i18n.MessageId, format ...interface{})
+	ReplyWithFields(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyWithFieldsPermanent(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
 
 	ReplyRaw(colour constants.Colour, title, content string)
 	ReplyRawPermanent(colour constants.Colour, title, content string)
@@ -47,6 +47,8 @@ type CommandContext interface {
 
 	HandleError(err error)
 	HandleWarning(err error)
+
+	GetMessage(messageId i18n.MessageId, format ...interface{}) string
 
 	// Utility functions
 	Guild() (guild.Guild, error)

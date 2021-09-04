@@ -28,6 +28,6 @@ func (c VoteCommand) GetExecutor() interface{} {
 }
 
 func (VoteCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(constants.Green, "Vote", i18n.MessageVote)
+	ctx.Reply(constants.Green, i18n.TitleVote, i18n.MessageVote)
 	ctx.Accept()
 }

@@ -38,7 +38,7 @@ func (ClaimCommand) Execute(ctx registry.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -48,6 +48,6 @@ func (ClaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.ReplyPermanent(constants.Green, "Ticket Claimed", i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
+	ctx.ReplyPermanent(constants.Green, i18n.TitleClaimed, i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
 	ctx.Accept()
 }

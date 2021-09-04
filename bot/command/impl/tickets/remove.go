@@ -1,7 +1,6 @@
 package tickets
 
 import (
-	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -50,7 +49,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify that the current channel is a real ticket
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -63,7 +62,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify that the user is allowed to modify the ticket
 	if selfPermissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
-		ctx.Reply(constants.Red, "Error", i18n.MessageRemoveNoPermission)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageRemoveNoPermission)
 		ctx.Reject()
 		return
 	}
@@ -82,7 +81,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel > permcache.Everyone {
-		ctx.Reply(constants.Red, "Error", i18n.MessageRemoveCannotRemoveStaff)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageRemoveCannotRemoveStaff)
 		ctx.Reject()
 		return
 	}
@@ -104,5 +103,5 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	ctx.ReplyRaw(constants.Green, "Remove", fmt.Sprintf("<@%d> has been removed from <#%d>", userId, ctx.ChannelId()))
+	ctx.Reply(constants.Green, i18n.TitleRemove, i18n.MessageRemoveSuccess, userId, ctx.ChannelId())
 }

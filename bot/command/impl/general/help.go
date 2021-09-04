@@ -49,19 +49,26 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	for _, cmd := range c.Registry {
+		properties := cmd.Properties()
+
 		// check bot admin / helper only commands
-		if (cmd.Properties().AdminOnly && !utils.IsBotAdmin(ctx.UserId())) || (cmd.Properties().HelperOnly && !utils.IsBotHelper(ctx.UserId())) {
+		if (properties.AdminOnly && !utils.IsBotAdmin(ctx.UserId())) || (properties.HelperOnly && !utils.IsBotHelper(ctx.UserId())) {
+			continue
+		}
+
+		// Show slash commands only
+		if properties.Type != interaction.ApplicationCommandTypeChatInput {
 			continue
 		}
 
 		// check whitelabel hidden cmds
-		if cmd.Properties().MainBotOnly && ctx.Worker().IsWhitelabel {
+		if properties.MainBotOnly && ctx.Worker().IsWhitelabel {
 			continue
 		}
 
 		if permLevel >= cmd.Properties().PermissionLevel { // only send commands the user has permissions for
 			var current []registry.Command
-			if commands, ok := commandCategories.Get(cmd.Properties().Category); ok {
+			if commands, ok := commandCategories.Get(properties.Category); ok {
 				if commands == nil {
 					current = make([]registry.Command, 0)
 				} else {
@@ -70,13 +77,13 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 			}
 			current = append(current, cmd)
 
-			commandCategories.Set(cmd.Properties().Category, current)
+			commandCategories.Set(properties.Category, current)
 		}
 	}
 
 	embed := embed.NewEmbed().
 		SetColor(int(constants.Green)).
-		SetTitle("Help")
+		SetTitle(ctx.GetMessage(i18n.TitleHelp))
 
 	for _, category := range commandCategories.Keys() {
 		var commands []registry.Command

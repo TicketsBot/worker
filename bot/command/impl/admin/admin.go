@@ -56,6 +56,5 @@ func (AdminCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
-
-	ctx.ReplyRaw(constants.Green, "Admin", msg)
+	ctx.ReplyRaw(constants.Green, ctx.GetMessage(i18n.Admin), msg)
 }

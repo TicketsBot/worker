@@ -56,7 +56,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if userPermissionLevel < permcache.PermissionLevel(settings.ContextMenuPermissionLevel) {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNoPermission)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
 		return
 	}
 

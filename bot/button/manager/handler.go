@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -41,14 +42,12 @@ func HandleInteraction(manager *ButtonManager, worker *worker.Context, data inte
 	ctx := context.NewButtonContext(worker, data, premiumTier, editCh)
 	properties := handler.Properties()
 	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
-		// TODO: Translate
-		ctx.ReplyRaw(constants.Red, "Error", "This button must be used in a server")
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageButtonGuildOnly)
 		return false
 	}
 
 	if data.GuildId.Value != 0 && !properties.HasFlag(registry.GuildAllowed) {
-		// TODO: Translate
-		ctx.ReplyRaw(constants.Red, "Error", "This button must be used in direct messages")
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageButtonDMOnly)
 		return false
 	}
 

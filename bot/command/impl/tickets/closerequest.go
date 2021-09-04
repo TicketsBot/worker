@@ -60,12 +60,12 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
 	if reason != nil && len(*reason) > 255 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageCloseReasonTooLong)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseReasonTooLong)
 		return
 	}
 

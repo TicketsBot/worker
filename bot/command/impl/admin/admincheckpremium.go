@@ -37,13 +37,13 @@ func (c AdminCheckPremiumCommand) GetExecutor() interface{} {
 func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.ReplyRaw(constants.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
 		return
 	}
 
 	guild, found := ctx.Worker().Cache.GetGuild(guildId, false)
 	if !found {
-		ctx.ReplyRaw(constants.Red, "Error", "Guild not found")
+		ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), "Guild not found")
 		return
 	}
 
@@ -53,6 +53,6 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 		return
 	}
 
-	ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
+	ctx.ReplyRaw(constants.Green, ctx.GetMessage(i18n.Admin), fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
 	ctx.Accept()
 }

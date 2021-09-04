@@ -64,19 +64,19 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 			}
 
 			if (permissionLevel == permission.Everyone && ticket.UserId != ctx.UserId()) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				ctx.Reply(constants.Red, "Error", i18n.MessageCloseNoPermission)
+				ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseNoPermission)
 				return
 			}
 		}
 
 		// Send confirmation message
 		// TODO: Translate
-		confirmEmbed := utils.BuildEmbedRaw(constants.Green, "Close Confirmation", "Please confirm that you want to close the ticket", nil, ctx.PremiumTier())
+		confirmEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil, ctx.PremiumTier())
 		msgData := command.MessageResponse{
 			Embeds: []*embed.Embed{confirmEmbed},
 			Components: []component.Component{
 				component.BuildActionRow(component.BuildButton(component.Button{
-					Label:    "Close",
+					Label:    ctx.GetMessage(i18n.TitleClose),
 					CustomId: "close_confirm",
 					Style:    component.ButtonStylePrimary,
 					Emoji:    utils.BuildEmoji("✔️"),

@@ -48,12 +48,12 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.ReplyWithFields(constants.Red, "Rename", i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, i18n.TitleRename, i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
 	if len(name) > 100 {
-		ctx.Reply(constants.Red, "Rename", i18n.MessageRenameTooLong)
+		ctx.Reply(constants.Red, i18n.TitleRename, i18n.MessageRenameTooLong)
 		return
 	}
 
@@ -66,5 +66,5 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 		return
 	}
 
-	ctx.Reply(constants.Green, "Rename", i18n.MessageRenamed, ctx.ChannelId())
+	ctx.Reply(constants.Green, i18n.TitleRename, i18n.MessageRenamed, ctx.ChannelId())
 }

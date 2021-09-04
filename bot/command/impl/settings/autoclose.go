@@ -42,5 +42,5 @@ func (AutoCloseCommand) Execute(ctx registry.CommandContext) {
 
 	msg = strings.TrimSuffix(msg, "\n")
 
-	ctx.ReplyRaw(constants.Red, "Error", msg)
+	ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), msg)
 }

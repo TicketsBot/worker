@@ -1,7 +1,6 @@
 package tags
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -55,12 +54,12 @@ func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string
 
 	if !found {
 		ctx.Reject()
-		ctx.Reply(constants.Red, "Error", i18n.MessageTagDeleteDoesNotExist, tagId)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageTagDeleteDoesNotExist, tagId)
 		return
 	}
 
 	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err == nil {
-		ctx.ReplyRaw(constants.Green, "Tag", fmt.Sprintf("Tag `%s` has been deleted", tagId))
+		ctx.Reply(constants.Green, i18n.MessageTag, i18n.MessageTagDeleteSuccess, tagId)
 	} else {
 		ctx.HandleError(err)
 	}

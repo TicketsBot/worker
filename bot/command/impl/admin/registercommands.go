@@ -59,7 +59,7 @@ func (c RegisterCommandsCommand) Execute(ctx registry.CommandContext, global *bo
 		}
 
 		if err != nil {
-			ctx.ReplyRaw(constants.Red, "Error", fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
+			ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), fmt.Sprintf("An error occurred while creating command `%s`: ```%v```", properties.Name, err))
 			ctx.Reject()
 			return
 		}

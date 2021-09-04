@@ -29,5 +29,5 @@ func (c InviteCommand) GetExecutor() interface{} {
 }
 
 func (InviteCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(constants.Green, "Invite", i18n.MessageInvite)
+	ctx.Reply(constants.Green, i18n.TitleInvite, i18n.MessageInvite)
 }

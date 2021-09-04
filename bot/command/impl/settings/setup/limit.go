@@ -32,7 +32,7 @@ func (c LimitSetupCommand) GetExecutor() interface{} {
 
 func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 	if limit < 1 || limit > 10 {
-		ctx.Reply(constants.Red, "Setup", i18n.SetupLimitInvalid)
+		ctx.Reply(constants.Red, i18n.TitleSetup, i18n.SetupLimitInvalid)
 		ctx.Reject()
 		return
 	}
@@ -42,6 +42,6 @@ func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 		return
 	}
 
-	ctx.Reply(constants.Green, "Setup", i18n.SetupLimitComplete, limit)
+	ctx.Reply(constants.Green, i18n.TitleSetup, i18n.SetupLimitComplete, limit)
 	ctx.Accept()
 }

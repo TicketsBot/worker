@@ -29,5 +29,5 @@ func (c AboutCommand) GetExecutor() interface{} {
 }
 
 func (AboutCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(constants.Green, "About", i18n.MessageAbout)
+	ctx.Reply(constants.Green, i18n.TitleAbout, i18n.MessageAbout)
 }

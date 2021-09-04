@@ -21,7 +21,7 @@ func NewReplyable(ctx registry.CommandContext) *Replyable {
 	}
 }
 
-func (r *Replyable) buildEmbed(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
+func (r *Replyable) buildEmbed(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) *embed.Embed {
 	return utils.BuildEmbed(r.ctx, colour, title, content, fields, format...)
 }
 
@@ -29,12 +29,12 @@ func (r *Replyable) buildEmbedRaw(colour constants.Colour, title, content string
 	return utils.BuildEmbedRaw(colour, title, content, fields, r.ctx.PremiumTier())
 }
 
-func (r *Replyable) Reply(colour constants.Colour, title string, content i18n.MessageId, format ...interface{}) {
+func (r *Replyable) Reply(colour constants.Colour, title, content i18n.MessageId, format ...interface{}) {
 	embed := r.buildEmbed(colour, title, content, nil, format...)
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }
 
-func (r *Replyable) ReplyPermanent(colour constants.Colour, title string, content i18n.MessageId, format ...interface{}) {
+func (r *Replyable) ReplyPermanent(colour constants.Colour, title, content i18n.MessageId, format ...interface{}) {
 	embed := r.buildEmbed(colour, title, content, nil, format...)
 	_, _ = r.ctx.ReplyWith(command.NewEmbedMessageResponse(embed))
 }
@@ -47,12 +47,12 @@ func (r *Replyable) ReplyWithEmbedPermanent(embed *embed.Embed) {
 	_, _ = r.ctx.ReplyWith(command.NewEmbedMessageResponse(embed))
 }
 
-func (r *Replyable) ReplyWithFields(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) {
+func (r *Replyable) ReplyWithFields(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := r.buildEmbed(colour, title, content, fields, format...)
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }
 
-func (r *Replyable) ReplyWithFieldsPermanent(colour constants.Colour, title string, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) {
+func (r *Replyable) ReplyWithFieldsPermanent(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{}) {
 	embed := r.buildEmbed(colour, title, content, fields, format...)
 	_, _ = r.ctx.ReplyWith(command.NewEmbedMessageResponse(embed))
 }
@@ -78,13 +78,17 @@ func (r *Replyable) ReplyPlainPermanent(content string) {
 func (r *Replyable) HandleError(err error) {
 	sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 
-	embed := r.buildEmbedRaw(constants.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	embed := r.buildEmbedRaw(constants.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }
 
 func (r *Replyable) HandleWarning(err error) {
 	sentry.LogWithContext(err, r.ctx.ToErrorContext())
 
-	embed := r.buildEmbedRaw(constants.Red, "Error", fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	embed := r.buildEmbedRaw(constants.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+}
+
+func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) string {
+	return i18n.GetMessageFromGuild(r.ctx.GuildId(), messageId, format...)
 }

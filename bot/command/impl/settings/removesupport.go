@@ -45,7 +45,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -59,13 +59,13 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 	if userId != nil {
 		if guild.OwnerId == *userId {
-			ctx.Reply(constants.Red, "Error", i18n.MessageOwnerMustBeAdmin)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == *userId {
-			ctx.Reply(constants.Red, "Error", i18n.MessageRemoveStaffSelf)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
@@ -81,7 +81,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 		}
 	}
 
-	ctx.ReplyRaw(constants.Green, "Remove Support", "Support Representative removed successfully")
+	ctx.Reply(constants.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
 
 	var roles []uint64
 	if roleId != nil {
@@ -107,7 +107,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

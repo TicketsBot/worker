@@ -34,7 +34,7 @@ func (c TranscriptsSetupCommand) GetExecutor() interface{} {
 func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId uint64) {
 	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
 		if restError, ok := err.(request.RestError); ok && restError.IsClientError() {
-			ctx.Reply(constants.Red, "Error", i18n.SetupTranscriptsInvalid, ctx.ChannelId)
+			ctx.Reply(constants.Red, i18n.Error, i18n.SetupTranscriptsInvalid, ctx.ChannelId)
 			ctx.Reject()
 		} else {
 			ctx.HandleError(err)
@@ -45,7 +45,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
 		ctx.Accept()
-		ctx.Reply(constants.Green, "Setup", i18n.SetupTranscriptsComplete, channelId)
+		ctx.Reply(constants.Green, i18n.TitleSetup, i18n.SetupTranscriptsComplete, channelId)
 	} else {
 		ctx.HandleError(err)
 	}

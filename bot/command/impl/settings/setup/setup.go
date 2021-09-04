@@ -39,7 +39,7 @@ func (c SetupCommand) GetExecutor() interface{} {
 }
 
 func (c SetupCommand) Execute(ctx registry.CommandContext) {
-	ctx.ReplyWithFieldsPermanent(constants.Green, "Setup", i18n.SetupChoose, c.buildFields(ctx))
+	ctx.ReplyWithFieldsPermanent(constants.Green, i18n.TitleSetup, i18n.SetupChoose, c.buildFields(ctx))
 }
 
 func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField {

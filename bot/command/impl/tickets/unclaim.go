@@ -39,7 +39,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -51,7 +51,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if whoClaimed == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotClaimed)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotClaimed)
 		ctx.Reject()
 		return
 	}
@@ -63,7 +63,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if permissionLevel < permission.Admin && ctx.UserId() != whoClaimed {
-		ctx.Reply(constants.Red, "Error", i18n.MessageOnlyClaimerCanUnclaim)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageOnlyClaimerCanUnclaim)
 		ctx.Reject()
 		return
 	}
@@ -95,6 +95,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(constants.Green, "Ticket Unclaimed", i18n.MessageUnclaimed)
+	ctx.Reply(constants.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
 	ctx.Accept()
 }

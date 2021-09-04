@@ -36,7 +36,7 @@ func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -45,5 +45,5 @@ func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(constants.Green, "Autoclose", i18n.MessageAutoCloseExclude)
+	ctx.Reply(constants.Green, i18n.TitleAutoclose, i18n.MessageAutoCloseExclude)
 }

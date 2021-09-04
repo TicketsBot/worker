@@ -50,7 +50,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -66,7 +66,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 		}
 
 		if guild.OwnerId == *userId {
-			ctx.Reply(constants.Red, "Error", i18n.MessageOwnerIsAlreadyAdmin)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerIsAlreadyAdmin)
 			return
 		}
 
@@ -104,7 +104,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageAddAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -135,7 +135,7 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, ro
 
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 
-	ctx.ReplyRaw(constants.Green, "Add Admin", "Admin added successfully")
+	ctx.Reply(constants.Green, i18n.TitleAddAdmin, i18n.MessageAddAdminSuccess)
 
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 	if err != nil {

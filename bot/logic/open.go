@@ -37,7 +37,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	if !ok {
 		// Message was removed because bot was getting ratelimited
-		//ctx.ReplyRaw(constants.Red, "Error", "Tickets are being opened too quickly in this server")
+		//ctx.ReplyRaw(constants.Red, i18n.Error, "Tickets are being opened too quickly in this server")
 		err := fmt.Errorf("guild ratelimited")
 		sentry.LogWithContext(err, ctx.ToErrorContext())
 		return database.Ticket{}, err
@@ -56,23 +56,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	// TODO: Re-add permission check
-	/*requiredPerms := []permission.Permission{
-		permission.ManageChannels,
-		permission.ManageRoles,
-		permission.ViewChannel,
-		permission.SendMessages,
-		permission.ReadMessageHistory,
-	}
-
-	if !permission.HasPermissions(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), requiredPerms...) {
-		ctx.Reply(utils.Red, "Error", "I am missing the required permissions. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
-		if ctx.ShouldReact {
-			ctx.ReactWithCross()
-		}
-		return
-	}*/
-
 	useCategory := category != 0
 	if useCategory {
 		// Check if the category still exists
@@ -87,15 +70,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 					}
 				} // TODO: Else, set panel category to 0
 			}
-		} else {
-			// TODO: Re-add permission check
-			/*if !permission.HasPermissionsChannel(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), category, requiredPerms...) {
-				ctx.Reply(utils.Red, "Error", "I am missing the required permissions on the ticket category. Please ask the guild owner to assign me permissions to manage channels and manage roles / manage permissions.")
-				if ctx.ShouldReact {
-					ctx.ReactWithCross()
-				}
-				return
-			}*/
 		}
 	}
 
@@ -121,7 +95,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ticketsPluralised += "s"
 			}
 
-			ctx.Reply(constants.Red, "Error", i18n.MessageTicketLimitReached, limit, ticketsPluralised)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return database.Ticket{}, fmt.Errorf("ticket limit reached")
@@ -152,7 +126,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if channelCount >= 50 {
-			ctx.Reply(constants.Red, "Error", i18n.MessageTooManyTickets)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageTooManyTickets)
 			return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 		}
 	}
@@ -228,7 +202,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx.Worker(), ticket, ctx.PremiumTier(), subject, panel)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel)
 	if err != nil {
 		ctx.HandleError(err)
 	}
@@ -294,19 +268,8 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// Let the user know the ticket has been opened
-	if panel == nil {
-		ctx.Reply(constants.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
-	}
-	/*else {
-		dmOnOpen, err := dbclient.Client.DmOnOpen.Get(ctx.GuildId())
-		if err != nil {
-			ctx.HandleError(err)
-		}
-
-		if dmOnOpen && dmChannel.Id != 0 {
-			ctx.Reply(utils.Green, "Ticket", i18n.MessageTicketOpened, channel.Mention())
-		}
-	}*/
+	// Ephemeral reply is ok
+	ctx.Reply(constants.Green, i18n.Ticket, i18n.MessageTicketOpened, channel.Mention())
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
 

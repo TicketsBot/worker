@@ -1,7 +1,6 @@
 package tags
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -47,7 +46,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	// Length check
 	if len(tagId) > 16 {
 		ctx.Reject()
-		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -66,13 +65,13 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	if tagExists {
-		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
+		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
 		ctx.Reject()
 		return
 	}
 
 	if err := dbclient.Client.Tag.Set(ctx.GuildId(), tagId, content); err == nil {
-		ctx.ReplyRaw(constants.Green, "Tag", fmt.Sprintf("Tag created - you can use it by running `/tag %s`", tagId))
+		ctx.Reply(constants.Green, i18n.MessageTag, i18n.MessageTagCreateSuccess, tagId)
 	} else {
 		ctx.HandleError(err)
 	}

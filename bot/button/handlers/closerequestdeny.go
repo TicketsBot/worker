@@ -33,12 +33,12 @@ func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
 	if ctx.UserId() != ticket.UserId {
-		ctx.Reply(constants.Red, "Error", i18n.MessageCloseRequestNoPermission)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseRequestNoPermission)
 		return
 	}
 

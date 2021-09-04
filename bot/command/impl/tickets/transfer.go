@@ -43,7 +43,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, "Error", i18n.MessageNotATicketChannel)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -61,7 +61,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(constants.Red, "Error", i18n.MessageInvalidUser)
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageInvalidUser)
 		ctx.Reject()
 		return
 	}
@@ -71,7 +71,5 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	mention := fmt.Sprintf("<@%d>", userId)
-	ctx.ReplyPermanent(constants.Green, "Ticket Claimed", i18n.MessageClaimed, mention)
-	ctx.Accept()
+	ctx.ReplyPermanent(constants.Green, i18n.TitleClaim, i18n.MessageClaimed, fmt.Sprintf("<@%d>", userId))
 }

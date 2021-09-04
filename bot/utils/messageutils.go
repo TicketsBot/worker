@@ -82,10 +82,11 @@ func SendEmbedWithResponse(
 
 func BuildEmbed(
 	ctx registry.CommandContext,
-	colour constants.Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
+	colour constants.Colour, titleId, contentId i18n.MessageId, fields []embed.EmbedField,
 	format ...interface{},
 ) *embed.Embed {
-	content := i18n.GetMessageFromGuild(ctx.GuildId(), messageType, format...)
+	title := i18n.GetMessageFromGuild(ctx.GuildId(), titleId, format...)
+	content := i18n.GetMessageFromGuild(ctx.GuildId(), contentId, format...)
 
 	msgEmbed := embed.NewEmbed().
 		SetColor(int(colour)).

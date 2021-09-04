@@ -36,7 +36,7 @@ func (c AdminGetOwnerCommand) GetExecutor() interface{} {
 func (AdminGetOwnerCommand) Execute(ctx registry.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.ReplyRaw(constants.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
 		return
 	}
 
@@ -46,6 +46,6 @@ func (AdminGetOwnerCommand) Execute(ctx registry.CommandContext, raw string) {
 		return
 	}
 
-	ctx.ReplyRaw(constants.Green, "Admin", fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
+	ctx.ReplyRaw(constants.Green, ctx.GetMessage(i18n.Admin), fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
 	ctx.Accept()
 }

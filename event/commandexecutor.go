@@ -155,19 +155,19 @@ func executeCommand(
 
 		if properties.PermissionLevel > permLevel {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, "Error", i18n.MessageNoPermission)
+			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, "Error", i18n.MessageOwnerOnly)
+			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, "Error", i18n.MessageNoPermission)
+			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 

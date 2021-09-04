@@ -47,7 +47,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -61,13 +61,13 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 
 	if userId != nil {
 		if guild.OwnerId == *userId {
-			ctx.Reply(constants.Red, "Error", i18n.MessageOwnerMustBeAdmin)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == *userId {
-			ctx.Reply(constants.Red, "Error", i18n.MessageRemoveStaffSelf)
+			ctx.Reply(constants.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
@@ -83,7 +83,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 		}
 	}
 
-	ctx.ReplyRaw(constants.Green, "Remove Admin", "Admin removed successfully")
+	ctx.Reply(constants.Green, i18n.TitleRemoveAdmin, i18n.MessageRemoveAdminSuccess)
 
 	var roles []uint64
 	if roleId != nil {
@@ -103,7 +103,7 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64,
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(constants.Red, "Error", i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

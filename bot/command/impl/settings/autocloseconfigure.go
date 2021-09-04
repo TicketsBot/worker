@@ -28,5 +28,5 @@ func (c AutoCloseConfigureCommand) GetExecutor() interface{} {
 }
 
 func (AutoCloseConfigureCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(constants.Green, "Autoclose", i18n.MessageAutoCloseConfigure, ctx.GuildId())
+	ctx.Reply(constants.Green, i18n.TitleAutoclose, i18n.MessageAutoCloseConfigure, ctx.GuildId())
 }

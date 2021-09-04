@@ -37,7 +37,7 @@ func (c AdminForceCloseCommand) GetExecutor() interface{} {
 func (AdminForceCloseCommand) Execute(ctx registry.CommandContext, guildRaw string, ticketId int) {
 	guildId, err := strconv.ParseUint(guildRaw, 10, 64)
 	if err != nil {
-		ctx.ReplyRaw(constants.Red, "Error", "Invalid guild ID provided")
+		ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
 		return
 	}
 
