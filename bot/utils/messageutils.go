@@ -85,7 +85,7 @@ func BuildEmbed(
 	colour constants.Colour, titleId, contentId i18n.MessageId, fields []embed.EmbedField,
 	format ...interface{},
 ) *embed.Embed {
-	title := i18n.GetMessageFromGuild(ctx.GuildId(), titleId, format...)
+	title := i18n.GetMessageFromGuild(ctx.GuildId(), titleId)
 	content := i18n.GetMessageFromGuild(ctx.GuildId(), contentId, format...)
 
 	msgEmbed := embed.NewEmbed().
