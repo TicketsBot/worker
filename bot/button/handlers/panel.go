@@ -19,7 +19,7 @@ func (h *PanelHandler) Matcher() matcher.Matcher {
 
 func (h *PanelHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
 	}
 }
 

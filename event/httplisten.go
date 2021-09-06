@@ -5,8 +5,8 @@ import (
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/button"
 	btn_manager "github.com/TicketsBot/worker/bot/button/manager"
-	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/gin-gonic/gin"
@@ -162,6 +162,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				res := interaction.NewResponseChannelMessage(data)
 				ctx.JSON(200, res)
 			}
+
 		case interaction.InteractionTypeButton:
 			var interactionData interaction.ButtonInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
@@ -169,25 +170,29 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			responseCh := make(chan command.MessageResponse, 1)
-			canEdit := btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
-			if !canEdit {
+			responseCh := make(chan button.Response, 1)
+			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
+
+			timeout := time.NewTimer(time.Millisecond * 1)
+
+			select {
+			case <-timeout.C:
 				res := interaction.NewResponseDeferredMessageUpdate()
 				ctx.JSON(200, res)
-			} else {
-				timeout := time.NewTimer(time.Second * 1)
+				ctx.Writer.Flush()
 
-				select {
-				case <-timeout.C:
-					res := interaction.NewResponseDeferredMessageUpdate()
-					ctx.JSON(200, res)
-					ctx.Writer.Flush()
+				go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+			case data := <-responseCh:
+				var res interface{}
 
-					go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
-				case data := <-responseCh:
-					res := interaction.NewResponseUpdateMessage(data.IntoUpdateMessageResponse())
-					ctx.JSON(200, res)
+				switch data.Type {
+				case button.ResponseTypeMessage:
+					res = interaction.NewResponseChannelMessage(data.Data.IntoApplicationCommandData())
+				case button.ResponseTypeEdit:
+					res = interaction.NewResponseUpdateMessage(data.Data.IntoUpdateMessageResponse())
 				}
+
+				ctx.JSON(200, res)
 			}
 		}
 	}
@@ -200,10 +205,8 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	case <-timeout.C:
 		return
 	case data := <-responseCh:
-		restData := rest.WebhookBody{
+		restData := rest.WebhookEditBody{
 			Content:         data.Content,
-			Tts:             data.Tts,
-			Flags:           data.Flags,
 			Embeds:          data.Embeds,
 			AllowedMentions: data.AllowedMentions,
 		}
@@ -215,15 +218,23 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	}
 }
 
-func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan command.MessageResponse) {
+func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan button.Response) {
 	timeout := time.NewTimer(time.Second * 15)
 
 	select {
 	case <-timeout.C:
 		return
 	case data := <-ch:
-		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, data.IntoWebhookBody()); err != nil {
-			fmt.Println(err)
+		var err error
+		switch data.Type {
+		case button.ResponseTypeMessage:
+			_, err = rest.CreateFollowupMessage(interactionData.Token, worker.RateLimiter, worker.BotId, data.Data.IntoWebhookBody())
+		case button.ResponseTypeEdit:
+			_, err = rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, data.Data.IntoWebhookEditBody())
+		}
+
+		if err != nil {
+			sentry.Error(err) // TODO: Context
 		}
 	}
 }

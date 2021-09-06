@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -21,25 +22,25 @@ import (
 
 type ButtonContext struct {
 	*Replyable
-	worker      *worker.Context
-	Interaction interaction.ButtonInteraction
-	premium     premium.PremiumTier
-	hasReplied  *atomic.Bool
-	editChannel chan command.MessageResponse
+	worker          *worker.Context
+	Interaction     interaction.ButtonInteraction
+	premium         premium.PremiumTier
+	hasReplied      *atomic.Bool
+	responseChannel chan button.Response
 }
 
 func NewButtonContext(
 	worker *worker.Context,
 	interaction interaction.ButtonInteraction,
 	premium premium.PremiumTier,
-	editChannel chan command.MessageResponse,
+	responseChannel chan button.Response,
 ) *ButtonContext {
 	ctx := ButtonContext{
-		worker:      worker,
-		Interaction: interaction,
-		premium:     premium,
-		hasReplied:  atomic.NewBool(false),
-		editChannel: editChannel,
+		worker:          worker,
+		Interaction:     interaction,
+		premium:         premium,
+		hasReplied:      atomic.NewBool(false),
+		responseChannel: responseChannel,
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
@@ -86,17 +87,30 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
-	msg, err := rest.CreateFollowupMessage(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
-	if err != nil {
-		sentry.LogWithContext(err, ctx.ToErrorContext())
+func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
+	hasReplied := ctx.hasReplied.Swap(true)
+
+	if !hasReplied {
+		ctx.responseChannel <- button.Response{
+			Type: button.ResponseTypeMessage,
+			Data: response,
+		}
+	} else {
+		msg, err = rest.CreateFollowupMessage(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
+		if err != nil {
+			sentry.LogWithContext(err, ctx.ToErrorContext())
+		}
 	}
 
-	return msg, err
+
+	return
 }
 
-func (ctx *ButtonContext) Edit(response command.MessageResponse) {
-	ctx.editChannel <- response
+func (ctx *ButtonContext) Edit(data command.MessageResponse) {
+	ctx.responseChannel <- button.Response{
+		Type: button.ResponseTypeEdit,
+		Data: data,
+	}
 }
 
 func (ctx *ButtonContext) Accept() {}

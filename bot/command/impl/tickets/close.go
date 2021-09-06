@@ -30,5 +30,5 @@ func (c CloseCommand) GetExecutor() interface{} {
 }
 
 func (CloseCommand) Execute(ctx registry.CommandContext, reason *string) {
-	logic.CloseTicket(ctx, reason, false)
+	logic.CloseTicket(ctx, reason)
 }

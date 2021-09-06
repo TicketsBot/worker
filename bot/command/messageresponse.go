@@ -76,12 +76,34 @@ func (r *MessageResponse) IntoWebhookBody() rest.WebhookBody {
 	}
 }
 
-func (r *MessageResponse) IntoUpdateMessageResponse() (res interaction.ResponseUpdateMessageData) {
-	 if r.Content != "" {
-	 	res.Content = &r.Content
-	 }
+func (r *MessageResponse) IntoWebhookEditBody() rest.WebhookEditBody {
+	data := rest.WebhookEditBody{
+		Content:         r.Content,
+		Embeds:          r.Embeds,
+		AllowedMentions: r.AllowedMentions,
+		Components:      r.Components,
+	}
 
-	 res.Embeds = r.Embeds
-	 res.Components = r.Components
-	 return
+	// Discord API doesn't remove if null
+	if data.Components == nil {
+		data.Components = make([]component.Component, 0)
+	}
+
+	return data
+}
+
+func (r *MessageResponse) IntoUpdateMessageResponse() (res interaction.ResponseUpdateMessageData) {
+	if r.Content != "" {
+		res.Content = &r.Content
+	}
+
+	res.Embeds = r.Embeds
+	res.Components = r.Components
+
+	// Discord API doesn't remove if null
+	if res.Components == nil {
+		res.Components = make([]component.Component, 0)
+	}
+
+	return
 }

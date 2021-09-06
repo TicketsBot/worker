@@ -209,3 +209,7 @@ func BuildEmoji(emote string) *emoji.Emoji {
 		Name: emote,
 	}
 }
+
+func Embeds(embeds ...*embed.Embed) []*embed.Embed {
+	return embeds
+}

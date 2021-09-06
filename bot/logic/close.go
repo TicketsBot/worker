@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bool) {
+func CloseTicket(ctx registry.CommandContext, reason *string) {
 	var success bool
 	errorContext := ctx.ToErrorContext()
 
@@ -37,11 +37,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	isTicket := ticket.GuildId != 0
 
 	if !isTicket {
-		if !fromInteraction {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
-			ctx.Reject()
-		}
-
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -73,22 +69,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string, fromInteraction bo
 	}
 
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
-		if !fromInteraction {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseNoPermission)
-			ctx.Reject()
-		}
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
-	}
-
-	// TODO: Re-add permission check
-	/*if !permission.HasPermissions(s, guildId, s.SelfId(), permission.ManageChannels) {
-		ctx.ReactWithCross()
-		ctx.SendEmbed(utils.Red, i18n.Error, "I do not have permission to delete this channel")
-		return
-	}*/
-
-	if !fromInteraction {
-		ctx.Accept()
 	}
 
 	// Archive

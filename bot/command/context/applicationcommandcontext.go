@@ -99,7 +99,7 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if hasReplied {
-		msg, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
+		msg, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
 
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())

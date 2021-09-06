@@ -14,6 +14,7 @@ const (
 	KeySlashCommands Key = "slash_commands"
 	KeyEvents        Key = "events"
 	AutoClose        Key = "autoclose"
+	KeyUnavailable   Key = "unavailable_guilds"
 )
 
 func (k Key) String() string {

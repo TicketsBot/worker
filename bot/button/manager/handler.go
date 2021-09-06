@@ -4,8 +4,8 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/button/registry"
-	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/errorcontext"
@@ -15,7 +15,7 @@ import (
 )
 
 // Returns whether the handler may edit the message
-func HandleInteraction(manager *ButtonManager, worker *worker.Context, data interaction.ButtonInteraction, editCh chan command.MessageResponse) bool {
+func HandleInteraction(manager *ButtonManager, worker *worker.Context, data interaction.ButtonInteraction, responseCh chan button.Response) bool {
 	// Safety checks
 	if data.GuildId.Value != 0 && data.Member == nil {
 		return false
@@ -39,7 +39,7 @@ func HandleInteraction(manager *ButtonManager, worker *worker.Context, data inte
 		return false
 	}
 
-	ctx := context.NewButtonContext(worker, data, premiumTier, editCh)
+	ctx := context.NewButtonContext(worker, data, premiumTier, responseCh)
 	properties := handler.Properties()
 	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
 		ctx.Reply(constants.Red, i18n.Error, i18n.MessageButtonGuildOnly)
