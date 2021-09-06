@@ -144,7 +144,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	// Save space - delete the webhook
 	go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
 
-	if _, err := dbclient.Client.CloseRequest.Delete(ticket.GuildId, ticket.Id); err != nil {
+	if err := dbclient.Client.CloseRequest.Delete(ticket.GuildId, ticket.Id); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 

@@ -5,7 +5,6 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -15,7 +14,6 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
-	"github.com/rxdn/gdl/rest"
 	"strings"
 	"time"
 )
@@ -43,16 +41,6 @@ func (c CloseRequestCommand) GetExecutor() interface{} {
 }
 
 func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int, reason *string) {
-	var interaction interaction.ApplicationCommandInteraction
-	{
-		v, ok := ctx.(*context.SlashCommandContext)
-		if !ok {
-			return
-		}
-
-		interaction = v.Interaction
-	}
-
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -124,13 +112,7 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		Components: []component.Component{components},
 	}
 
-	msg, err := rest.ExecuteWebhook(interaction.Token, ctx.Worker().RateLimiter, interaction.ApplicationId, true, data.IntoWebhookBody())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	if err := dbclient.Client.CloseRequest.SetMessageId(ticket.GuildId, ticket.Id, msg.Id); err != nil {
+	if _, err := ctx.ReplyWith(data); err != nil {
 		ctx.HandleError(err)
 		return
 	}

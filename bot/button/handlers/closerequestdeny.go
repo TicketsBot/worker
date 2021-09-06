@@ -42,13 +42,8 @@ func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	messageId, err := dbclient.Client.CloseRequest.Delete(ctx.GuildId(), ticket.Id)
-	if err != nil {
+	if err := dbclient.Client.CloseRequest.Delete(ctx.GuildId(), ticket.Id); err != nil {
 		ctx.HandleError(err)
-		return
-	}
-
-	if messageId == 0 {
 		return
 	}
 
