@@ -173,7 +173,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
-			timeout := time.NewTimer(time.Millisecond * 1)
+			timeout := time.NewTimer(time.Millisecond * 1500)
 
 			select {
 			case <-timeout.C:

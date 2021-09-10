@@ -102,7 +102,6 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 		}
 	}
 
-
 	return
 }
 
