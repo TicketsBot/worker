@@ -18,6 +18,10 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 		sentry.Error(err)
 	}
 
+	if err := utils.ToRetriever(worker).Cache().DeleteCachedPermissionLevel(e.GuildId, e.User.Id); err != nil {
+		sentry.Error(err)
+	}
+
 	// auto close
 	settings, err := dbclient.Client.AutoClose.Get(e.GuildId)
 	if err != nil {

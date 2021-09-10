@@ -7,6 +7,7 @@ var Listeners = map[events.EventType][]interface{}{
 	events.MESSAGE_CREATE:      {GetCommandListener(), OnMessage},
 	events.GUILD_CREATE:        {OnGuildCreate},
 	events.GUILD_DELETE:        {OnGuildLeave},
+	events.GUILD_MEMBER_UPDATE: {OnMemberUpdate},
 	events.GUILD_MEMBER_REMOVE: {OnMemberLeave},
 	events.GUILD_ROLE_DELETE:   {OnRoleDelete},
 }
