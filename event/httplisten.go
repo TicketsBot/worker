@@ -163,7 +163,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				ctx.JSON(200, res)
 			}
 
-		case interaction.InteractionTypeButton:
+			// Message components
+		case interaction.InteractionTypeMessageComponent:
 			var interactionData interaction.ButtonInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)

@@ -13,10 +13,12 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20210906182609-337cb3c44a4c
+	github.com/rxdn/gdl v0.0.0-20211003133158-3b5935dbf80e
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
+
+replace github.com/TicketsBot/database => ../database

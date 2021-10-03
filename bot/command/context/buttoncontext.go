@@ -106,10 +106,21 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 }
 
 func (ctx *ButtonContext) Edit(data command.MessageResponse) {
-	ctx.responseChannel <- button.Response{
-		Type: button.ResponseTypeEdit,
-		Data: data,
+	hasReplied := ctx.hasReplied.Swap(true)
+
+	if !hasReplied {
+		ctx.responseChannel <- button.Response{
+			Type: button.ResponseTypeEdit,
+			Data: data,
+		}
+	} else {
+		_, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, data.IntoWebhookEditBody())
+		if err != nil {
+			sentry.LogWithContext(err, ctx.ToErrorContext())
+		}
 	}
+
+	return
 }
 
 func (ctx *ButtonContext) Accept() {}

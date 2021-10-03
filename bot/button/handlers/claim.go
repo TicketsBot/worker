@@ -3,15 +3,15 @@ package handlers
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/interaction/component"
 )
 
 type ClaimHandler struct{}
@@ -24,7 +24,7 @@ func (h *ClaimHandler) Matcher() matcher.Matcher {
 
 func (h *ClaimHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
 	}
 }
 
@@ -59,6 +59,19 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	// TODO: Can we use ReplyWith?
-	utils.SendEmbed(ctx.Worker(), ctx.ChannelId(), ctx.GuildId(), nil, constants.Green, "Ticket Claimed", i18n.MessageClaimed, nil, -1, ctx.PremiumTier() > premium.None, fmt.Sprintf("<@%d>", ctx.UserId()))
+	res := command.MessageIntoMessageResponse(ctx.Interaction.Message)
+	if len(res.Components) > 0 && res.Components[0].Type == component.ComponentActionRow {
+		row := res.Components[0].ComponentData.(component.ActionRow)
+		if len(row.Components) > 1 {
+			row.Components = row.Components[:len(row.Components)-1]
+		}
+
+		res.Components[0] = component.Component{
+			Type: component.ComponentActionRow,
+			ComponentData: row,
+		}
+	}
+
+	ctx.Edit(res)
+	ctx.ReplyPermanent(constants.Green, i18n.TitleClaimed, i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
 }

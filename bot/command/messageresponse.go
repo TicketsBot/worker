@@ -107,3 +107,20 @@ func (r *MessageResponse) IntoUpdateMessageResponse() (res interaction.ResponseU
 
 	return
 }
+
+func MessageIntoMessageResponse(msg message.Message) MessageResponse {
+	// TODO: Fix types
+	embeds := make([]*embed.Embed, len(msg.Embeds))
+	for i, embed := range msg.Embeds {
+		embeds[i] = &embed
+	}
+
+	return MessageResponse{
+		Tts:             msg.Tts,
+		Content:         msg.Content,
+		Embeds:          embeds,
+		AllowedMentions: message.AllowedMention{},
+		Flags:           uint(msg.Flags),
+		Components:      msg.Components,
+	}
+}
