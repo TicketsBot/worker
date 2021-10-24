@@ -11,20 +11,28 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 )
 
-type PanelHandler struct{}
+type MultiPanelHandler struct{}
 
-func (h *PanelHandler) Matcher() matcher.Matcher {
-	return &matcher.DefaultMatcher{}
-}
-
-func (h *PanelHandler) Properties() registry.Properties {
-	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+func (h *MultiPanelHandler) Matcher() matcher.Matcher {
+	return &matcher.SimpleMatcher{
+		CustomId: "multipanel",
 	}
 }
 
-func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
-	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx.GuildId(), ctx.InteractionData.CustomId)
+func (h *MultiPanelHandler) Properties() registry.Properties {
+	return registry.Properties{
+		Flags: registry.SumFlags(registry.GuildAllowed),
+	}
+}
+
+func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
+	if len(ctx.InteractionData.Values) == 0 {
+		return
+	}
+
+	panelCustomId := ctx.InteractionData.Values[0]
+
+	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx.GuildId(), panelCustomId)
 	if err != nil {
 		sentry.Error(err) // TODO: Proper context
 		return

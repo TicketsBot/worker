@@ -34,7 +34,7 @@ func (h *ViewStaffHandler) Properties() registry.Properties {
 var viewStaffPattern = regexp.MustCompile(`viewstaff_(\d+)`)
 
 func (h *ViewStaffHandler) Execute(ctx *context.ButtonContext) {
-	groups := viewStaffPattern.FindStringSubmatch(ctx.Interaction.Data.CustomId)
+	groups := viewStaffPattern.FindStringSubmatch(ctx.InteractionData.CustomId)
 	if len(groups) < 2 {
 		return
 	}

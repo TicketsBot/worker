@@ -6,30 +6,40 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 )
 
-type ButtonManager struct {
-	registry registry.Registry
+type ComponentInteractionManager struct {
+	buttonRegistry registry.ButtonRegistry
+	selectRegistry registry.SelectRegistry
 
-	// matching engines
-	simpleMatches  map[string]registry.ButtonHandler
-	funcMatches    map[registry.ButtonHandler]matcher.FuncMatchEngine
-	defaultHandler registry.ButtonHandler
+	// button matching engines
+	buttonSimpleMatches  map[string]registry.ButtonHandler
+	buttonFuncMatches    map[registry.ButtonHandler]matcher.FuncMatchEngine
+	buttonDefaultHandler registry.ButtonHandler
+
+	// select menu matching engines
+	selectSimpleMatches map[string]registry.SelectHandler
+	selectFuncMatches   map[registry.SelectHandler]matcher.FuncMatchEngine
 }
 
-func NewButtonManager() *ButtonManager {
-	return &ButtonManager{
-		registry:       make(registry.Registry, 0),
-		simpleMatches:  make(map[string]registry.ButtonHandler),
-		funcMatches:    make(map[registry.ButtonHandler]matcher.FuncMatchEngine),
-		defaultHandler: nil,
+func NewButtonManager() *ComponentInteractionManager {
+	return &ComponentInteractionManager{
+		buttonRegistry: make(registry.ButtonRegistry, 0),
+		selectRegistry: make(registry.SelectRegistry, 0),
+
+		buttonSimpleMatches:  make(map[string]registry.ButtonHandler),
+		buttonFuncMatches:    make(map[registry.ButtonHandler]matcher.FuncMatchEngine),
+		buttonDefaultHandler: nil,
+
+		selectSimpleMatches: make(map[string]registry.SelectHandler),
+		selectFuncMatches:   make(map[registry.SelectHandler]matcher.FuncMatchEngine),
 	}
 }
 
-func (m *ButtonManager) GetCommands() []registry.ButtonHandler {
-	return m.registry
+func (m *ComponentInteractionManager) GetCommands() []registry.ButtonHandler {
+	return m.buttonRegistry
 }
 
-func (m *ButtonManager) RegisterCommands() {
-	m.registry = append(m.registry,
+func (m *ComponentInteractionManager) RegisterCommands() {
+	m.buttonRegistry = append(m.buttonRegistry,
 		new(handlers.CloseHandler),
 		new(handlers.ClaimHandler),
 		new(handlers.CloseConfirmHandler),
@@ -40,31 +50,62 @@ func (m *ButtonManager) RegisterCommands() {
 		new(handlers.ViewStaffHandler),
 	)
 
-	for _, handler := range m.registry {
+	m.selectRegistry = append(m.selectRegistry,
+		new(handlers.MultiPanelHandler),
+	)
+
+	for _, handler := range m.buttonRegistry {
 		switch engine := handler.Matcher().(type) {
 		case *matcher.SimpleMatcher:
-			m.simpleMatches[engine.CustomId] = handler
+			m.buttonSimpleMatches[engine.CustomId] = handler
 		case *matcher.FuncMatcher:
-			m.funcMatches[handler] = engine.Func
+			m.buttonFuncMatches[handler] = engine.Func
 		case *matcher.DefaultMatcher:
-			m.defaultHandler = handler
+			m.buttonDefaultHandler = handler
+		}
+	}
+
+	for _, handler := range m.selectRegistry {
+		switch engine := handler.Matcher().(type) {
+		case *matcher.SimpleMatcher:
+			m.selectSimpleMatches[engine.CustomId] = handler
+		case *matcher.FuncMatcher:
+			m.selectFuncMatches[handler] = engine.Func
+		case *matcher.DefaultMatcher:
+			panic("default matcher not allowed for select menu")
 		}
 	}
 }
 
-func (m *ButtonManager) Match(customId string) registry.ButtonHandler {
+func (m *ComponentInteractionManager) MatchButton(customId string) registry.ButtonHandler {
 	// Try simple match first
-	handler, ok := m.simpleMatches[customId]
+	handler, ok := m.buttonSimpleMatches[customId]
 	if ok {
 		return handler
 	}
 
-	for handler, f := range m.funcMatches {
+	for handler, f := range m.buttonFuncMatches {
 		if f(customId) {
 			return handler
 		}
 	}
 
 	// Ok to return nil
-	return m.defaultHandler
+	return m.buttonDefaultHandler
+}
+
+func (m *ComponentInteractionManager) MatchSelect(customId string) registry.SelectHandler {
+	// Try simple match first
+	handler, ok := m.selectSimpleMatches[customId]
+	if ok {
+		return handler
+	}
+
+	for handler, f := range m.selectFuncMatches {
+		if f(customId) {
+			return handler
+		}
+	}
+
+	return nil
 }

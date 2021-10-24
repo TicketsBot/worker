@@ -31,7 +31,7 @@ func (h *RateHandler) Properties() registry.Properties {
 var ratePattern = regexp.MustCompile(`rate_(\d+)_(\d+)_([1-5])`)
 
 func (h *RateHandler) Execute(ctx *context.ButtonContext) {
-	groups := ratePattern.FindStringSubmatch(ctx.Interaction.Data.CustomId)
+	groups := ratePattern.FindStringSubmatch(ctx.InteractionData.CustomId)
 	if len(groups) < 4 {
 		return
 	}

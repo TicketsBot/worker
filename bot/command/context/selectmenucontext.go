@@ -20,26 +20,26 @@ import (
 	"go.uber.org/atomic"
 )
 
-type ButtonContext struct {
+type SelectMenuContext struct {
 	*Replyable
 	worker          *worker.Context
 	Interaction     interaction.MessageComponentInteraction
-	InteractionData interaction.ButtonInteractionData
+	InteractionData interaction.SelectMenuInteractionData
 	premium         premium.PremiumTier
 	hasReplied      *atomic.Bool
 	responseChannel chan button.Response
 }
 
-func NewButtonContext(
+func NewSelectMenuContext(
 	worker *worker.Context,
 	interaction interaction.MessageComponentInteraction,
 	premium premium.PremiumTier,
 	responseChannel chan button.Response,
-) *ButtonContext {
-	ctx := ButtonContext{
+) *SelectMenuContext {
+	ctx := SelectMenuContext{
 		worker:          worker,
 		Interaction:     interaction,
-		InteractionData: interaction.Data.AsButton(),
+		InteractionData: interaction.Data.AsSelectMenu(),
 		premium:         premium,
 		hasReplied:      atomic.NewBool(false),
 		responseChannel: responseChannel,
@@ -49,23 +49,23 @@ func NewButtonContext(
 	return &ctx
 }
 
-func (ctx *ButtonContext) Worker() *worker.Context {
+func (ctx *SelectMenuContext) Worker() *worker.Context {
 	return ctx.worker
 }
 
-func (ctx *ButtonContext) GuildId() uint64 {
+func (ctx *SelectMenuContext) GuildId() uint64 {
 	return ctx.Interaction.GuildId.Value // TODO: Null check
 }
 
-func (ctx *ButtonContext) ChannelId() uint64 {
+func (ctx *SelectMenuContext) ChannelId() uint64 {
 	return ctx.Interaction.ChannelId
 }
 
-func (ctx *ButtonContext) UserId() uint64 {
+func (ctx *SelectMenuContext) UserId() uint64 {
 	return ctx.InteractionUser().Id
 }
 
-func (ctx *ButtonContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
+func (ctx *SelectMenuContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
 	if ctx.Interaction.Member == nil {
 		return permcache.Everyone, errors.New("member was nil")
 	}
@@ -73,15 +73,15 @@ func (ctx *ButtonContext) UserPermissionLevel() (permcache.PermissionLevel, erro
 	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), *ctx.Interaction.Member, ctx.GuildId())
 }
 
-func (ctx *ButtonContext) PremiumTier() premium.PremiumTier {
+func (ctx *SelectMenuContext) PremiumTier() premium.PremiumTier {
 	return ctx.premium
 }
 
-func (ctx *ButtonContext) IsInteraction() bool {
+func (ctx *SelectMenuContext) IsInteraction() bool {
 	return true
 }
 
-func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
+func (ctx *SelectMenuContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
 		Guild:   ctx.GuildId(),
 		User:    ctx.UserId(),
@@ -89,7 +89,7 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	}
 }
 
-func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
+func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
@@ -107,7 +107,7 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 	return
 }
 
-func (ctx *ButtonContext) Edit(data command.MessageResponse) {
+func (ctx *SelectMenuContext) Edit(data command.MessageResponse) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
@@ -125,15 +125,15 @@ func (ctx *ButtonContext) Edit(data command.MessageResponse) {
 	return
 }
 
-func (ctx *ButtonContext) Accept() {}
+func (ctx *SelectMenuContext) Accept() {}
 
-func (ctx *ButtonContext) Reject() {}
+func (ctx *SelectMenuContext) Reject() {}
 
-func (ctx *ButtonContext) Guild() (guild.Guild, error) {
+func (ctx *SelectMenuContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.GuildId())
 }
 
-func (ctx *ButtonContext) Member() (member.Member, error) {
+func (ctx *SelectMenuContext) Member() (member.Member, error) {
 	if ctx.GuildId() == 0 {
 		return member.Member{}, fmt.Errorf("button was not clicked in a guild")
 	}
@@ -145,30 +145,30 @@ func (ctx *ButtonContext) Member() (member.Member, error) {
 	}
 }
 
-func (ctx *ButtonContext) InteractionMember() member.Member {
+func (ctx *SelectMenuContext) InteractionMember() member.Member {
 	if ctx.Interaction.Member != nil {
 		return *ctx.Interaction.Member
 	} else {
-		sentry.ErrorWithContext(fmt.Errorf("ButtonContext.InteractionMember was called when Member is nil"), ctx.ToErrorContext())
+		sentry.ErrorWithContext(fmt.Errorf("SelectMenuContext.InteractionMember was called when Member is nil"), ctx.ToErrorContext())
 		return member.Member{}
 	}
 }
 
-func (ctx *ButtonContext) User() (user.User, error) {
+func (ctx *SelectMenuContext) User() (user.User, error) {
 	return ctx.InteractionUser(), nil
 }
 
-func (ctx *ButtonContext) InteractionUser() user.User {
+func (ctx *SelectMenuContext) InteractionUser() user.User {
 	if ctx.Interaction.Member != nil {
 		return ctx.Interaction.Member.User
 	} else if ctx.Interaction.User != nil {
 		return *ctx.Interaction.User
 	} else { // Infallible
-		sentry.ErrorWithContext(fmt.Errorf("infallible: ButtonContext.InteractionUser was called when User is nil"), ctx.ToErrorContext())
+		sentry.ErrorWithContext(fmt.Errorf("infallible: SelectMenuContext.InteractionUser was called when User is nil"), ctx.ToErrorContext())
 		return user.User{}
 	}
 }
 
-func (ctx *ButtonContext) IntoPanelContext() PanelContext {
+func (ctx *SelectMenuContext) IntoPanelContext() PanelContext {
 	return NewPanelContext(ctx.worker, ctx.GuildId(), ctx.ChannelId(), ctx.InteractionUser().Id, ctx.PremiumTier())
 }

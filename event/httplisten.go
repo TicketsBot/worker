@@ -165,7 +165,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			// Message components
 		case interaction.InteractionTypeMessageComponent:
-			var interactionData interaction.ButtonInteraction
+			var interactionData interaction.MessageComponentInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)
 				return
@@ -219,7 +219,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	}
 }
 
-func handleButtonResponseAfterDefer(interactionData interaction.ButtonInteraction, worker *worker.Context, ch chan button.Response) {
+func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, ch chan button.Response) {
 	timeout := time.NewTimer(time.Second * 15)
 
 	select {

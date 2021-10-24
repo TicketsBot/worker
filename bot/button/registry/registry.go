@@ -1,3 +1,6 @@
 package registry
 
-type Registry []ButtonHandler
+type (
+	ButtonRegistry []ButtonHandler
+	SelectRegistry []SelectHandler
+)
