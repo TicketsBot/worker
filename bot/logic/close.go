@@ -102,11 +102,12 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 						sentry.ErrorWithContext(err, errorContext)
 					}
 				}
+
+				break
 			}
 
 			if count > 0 {
 				lastId = array[len(array)-1].Id
-
 				msgs = append(msgs, array...)
 			}
 		}
@@ -116,7 +117,12 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 			msgs[i], msgs[j] = msgs[j], msgs[i]
 		}
 
-		if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
+		err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None)
+		if err == nil {
+			if err := dbclient.Client.Tickets.SetHasTranscript(ctx.GuildId(), ticket.Id, true); err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+			}
+		} else {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
