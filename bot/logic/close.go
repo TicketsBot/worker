@@ -73,44 +73,52 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		return
 	}
 
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	// Archive
-	msgs := make([]message.Message, 0)
+	if settings.StoreTranscripts {
+		msgs := make([]message.Message, 0)
 
-	lastId := uint64(0)
-	count := -1
-	for count != 0 {
-		array, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
-			Before: lastId,
-			Limit:  100,
-		})
+		lastId := uint64(0)
+		count := -1
+		for count != 0 {
+			array, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
+				Before: lastId,
+				Limit:  100,
+			})
 
-		count = len(array)
-		if err != nil {
-			count = 0
-			sentry.ErrorWithContext(err, errorContext)
+			count = len(array)
+			if err != nil {
+				count = 0
+				sentry.ErrorWithContext(err, errorContext)
 
-			// First rest interaction, check for 403
-			if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-				if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
-					sentry.ErrorWithContext(err, errorContext)
+				// First rest interaction, check for 403
+				if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
+						sentry.ErrorWithContext(err, errorContext)
+					}
 				}
+			}
+
+			if count > 0 {
+				lastId = array[len(array)-1].Id
+
+				msgs = append(msgs, array...)
 			}
 		}
 
-		if count > 0 {
-			lastId = array[len(array)-1].Id
-
-			msgs = append(msgs, array...)
+		// Reverse messages
+		for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
+			msgs[i], msgs[j] = msgs[j], msgs[i]
 		}
-	}
 
-	// Reverse messages
-	for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
-		msgs[i], msgs[j] = msgs[j], msgs[i]
-	}
-
-	if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
-		sentry.ErrorWithContext(err, errorContext)
+		if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+		}
 	}
 
 	// Set ticket state as closed and delete channel
@@ -148,10 +156,10 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	sendCloseEmbed(ctx, errorContext, member, ticket, reason)
+	sendCloseEmbed(ctx, errorContext, member, settings, ticket, reason)
 }
 
-func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContext, member member.Member, ticket database.Ticket, reason *string) {
+func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContext, member member.Member, settings database.Settings, ticket database.Ticket, reason *string) {
 	// Send logs to archive channel
 	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(ticket.GuildId)
 	if err != nil {
@@ -196,8 +204,13 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
 		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField("Closed By", member.User.Mention(), true).
-		AddField("Reason", formattedReason, false).
-		AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true).
+		AddField("Reason", formattedReason, false)
+
+	if settings.StoreTranscripts {
+		closeEmbed.AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true)
+	}
+
+	closeEmbed.
 		AddField("Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
 		AddField("Claimed By", claimedBy, true)
 
