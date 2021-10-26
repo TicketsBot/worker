@@ -18,7 +18,7 @@ import (
 type LanguageCommand struct {
 }
 
-func (LanguageCommand) Properties() registry.Properties {
+func (c LanguageCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "language",
 		Description:     i18n.HelpLanguage,
@@ -26,7 +26,7 @@ func (LanguageCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, i18n.MessageLanguageInvalidLanguage),
+			command.NewRequiredAutocompleteableArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, i18n.MessageLanguageInvalidLanguage, c.AutoCompleteHandler),
 		),
 	}
 }
@@ -35,10 +35,10 @@ func (c LanguageCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-// TODO: Show options properly
 func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string) {
 	var valid bool
 	var newFlag string
+
 	for language, flag := range i18n.Flags {
 		if newLanguage == string(language) || newLanguage == flag {
 			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language.String()); err != nil { // TODO: Don't wrap
@@ -95,4 +95,22 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 
 	ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
 	ctx.Accept()
+}
+
+func (c LanguageCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) (choices []interaction.ApplicationCommandOptionChoice) {
+	valLower := strings.ToLower(value)
+	for fullName, code := range i18n.FullNames {
+		if strings.HasPrefix(strings.ToLower(fullName), valLower) || strings.HasPrefix(strings.ToLower(code.String()), valLower) {
+			choices = append(choices, interaction.ApplicationCommandOptionChoice{
+				Name:  fullName,
+				Value: code.String(),
+			})
+		}
+	}
+
+	if len(choices) > 25 {
+		return choices[:25]
+	} else {
+		return choices
+	}
 }
