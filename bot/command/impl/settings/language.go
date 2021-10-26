@@ -99,7 +99,10 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 
 func (c LanguageCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) (choices []interaction.ApplicationCommandOptionChoice) {
 	valLower := strings.ToLower(value)
-	for fullName, code := range i18n.FullNames {
+
+	// Don't iter map in order to keep alphabetical
+	for _, code := range i18n.LanguagesAlphabetical {
+		fullName := i18n.FullNames[code]
 		if strings.HasPrefix(strings.ToLower(fullName), valLower) || strings.HasPrefix(strings.ToLower(code.String()), valLower) {
 			choices = append(choices, interaction.ApplicationCommandOptionChoice{
 				Name:  fullName,
