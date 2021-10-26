@@ -3,6 +3,7 @@ package tickets
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -21,7 +22,7 @@ import (
 type CloseRequestCommand struct {
 }
 
-func (CloseRequestCommand) Properties() registry.Properties {
+func (c CloseRequestCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "closerequest",
 		Description:     i18n.HelpCloseRequest,
@@ -31,7 +32,7 @@ func (CloseRequestCommand) Properties() registry.Properties {
 		InteractionOnly: true,
 		Arguments: command.Arguments(
 			command.NewOptionalArgument("close_delay", "Hours to close the ticket in if the user does not respond", interaction.OptionTypeInteger, "infallible"),
-			command.NewOptionalArgument("reason", "The reason the ticket was closed", interaction.OptionTypeString, "infallible"),
+			command.NewOptionalAutocompleteableArgument("reason", "The reason the ticket was closed", interaction.OptionTypeString, "infallible", c.ReasonAutoCompleteHandler),
 		),
 	}
 }
@@ -116,4 +117,20 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		ctx.HandleError(err)
 		return
 	}
+}
+
+// ReasonAutoCompleteHandler TODO: Per panel
+func (CloseRequestCommand) ReasonAutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
+	reasons, err := dbclient.Client.CloseReason.GetCommon(data.GuildId.Value, value, 10)
+	if err != nil {
+		sentry.Error(err) // TODO: Context
+		return nil
+	}
+
+	choices := make([]interaction.ApplicationCommandOptionChoice, len(reasons))
+	for i, reason := range reasons {
+		choices[i] = utils.StringChoice(reason)
+	}
+
+	return choices
 }
