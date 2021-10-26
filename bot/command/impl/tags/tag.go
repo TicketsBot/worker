@@ -18,7 +18,7 @@ import (
 type TagCommand struct {
 }
 
-func (TagCommand) Properties() registry.Properties {
+func (c TagCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "tag",
 		Description:     i18n.HelpTag,
@@ -27,7 +27,7 @@ func (TagCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Support,
 		Category:        command.Tags,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, i18n.MessageTagInvalidArguments),
+			command.NewRequiredAutocompleteableArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, i18n.MessageTagInvalidArguments, c.AutoCompleteHandler),
 		),
 	}
 }
@@ -70,4 +70,19 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	//_ = ctx.Worker().DeleteMessage(ctx.ChannelId(), ctx.Id)
 
 	ctx.ReplyPlainPermanent(content)
+}
+
+func (TagCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
+	tagIds, err := dbclient.Client.Tag.GetStartingWith(data.GuildId.Value, value, 25)
+	if err != nil {
+		sentry.Error(err) // TODO: Error context
+		return nil
+	}
+
+	choices := make([]interaction.ApplicationCommandOptionChoice, len(tagIds))
+	for i, tagId := range tagIds {
+		choices[i] = utils.StringChoice(tagId)
+	}
+
+	return choices
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/button"
 	btn_manager "github.com/TicketsBot/worker/bot/button/manager"
+	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ import (
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -195,6 +197,78 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 				ctx.JSON(200, res)
 			}
+
+		case interaction.InteractionTypeApplicationCommandAutoComplete:
+			var interactionData interaction.ApplicationCommandAutoCompleteInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
+			}
+
+			cmd, ok := commandManager.GetCommands()[interactionData.Data.Name]
+			if !ok {
+				logrus.Warnf("autocomplete for invalid command: %s", interactionData.Data.Name)
+				return
+			}
+
+			options := interactionData.Data.Options
+			for len(options) > 0 && options[0].Value == nil { // Value and Options are mutually exclusive, value is never present on subcommands
+				subCommand := options[0]
+
+				var found bool
+				for _, child := range cmd.Properties().Children {
+					if child.Properties().Name == subCommand.Name {
+						cmd = child
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					logrus.Warnf("subcommand %s does not exist for command %s", subCommand.Name, cmd.Properties().Name)
+					return
+				}
+
+				options = subCommand.Options
+			}
+
+			value, path, found := findFocusedPath(interactionData.Data.Options, nil)
+			if !found {
+				logrus.Warnf("focused option not found")
+				return
+			}
+
+			if len(path) > 1 {
+			outer:
+				for i := 0; i < len(path)-1; i++ {
+					for _, child := range cmd.Properties().Children {
+						if child.Properties().Name == strings.ToLower(path[i]) {
+							cmd = child
+							continue outer
+						}
+					}
+
+					logrus.Warnf("subcommand %s does not exist for command %s", path[i], cmd.Properties().Name)
+					return
+				}
+			}
+
+			var handler command.AutoCompleteHandler
+			for _, arg := range cmd.Properties().Arguments {
+				if arg.Name == strings.ToLower(path[len(path) - 1]) {
+					handler = arg.AutoCompleteHandler
+				}
+			}
+
+			if handler == nil {
+				logrus.Warnf("autocomplete for argument without handler: %s", path)
+				return
+			}
+
+			choices := handler(interactionData, value)
+			res := interaction.NewApplicationCommandAutoCompleteResultResponse(choices)
+			ctx.JSON(200, res)
+			ctx.Writer.Flush()
 		}
 	}
 }
@@ -253,4 +327,20 @@ func buildErrorContext(data interaction.ApplicationCommandInteraction) sentry.Er
 		User:    userId,
 		Channel: data.ChannelId,
 	}
+}
+
+// TODO: Handle other data types
+func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOption, currentPath []string) (_value string, _path []string, _ok bool) {
+	for _, option := range options {
+		if option.Focused {
+			return fmt.Sprintf("%v", option.Value), append(currentPath, option.Name), true
+		}
+
+		value, path, found := findFocusedPath(option.Options, append(currentPath, option.Name))
+		if found {
+			return value, path, true
+		}
+	}
+
+	return "", nil, false
 }

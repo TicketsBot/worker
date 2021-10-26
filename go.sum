@@ -7,10 +7,10 @@ github.com/TicketsBot/common v0.0.0-20210910205523-7ce93fba6fa5 h1:IfNrgUB35hs+M
 github.com/TicketsBot/common v0.0.0-20210910205523-7ce93fba6fa5/go.mod h1:SVwX6gKkxRCMbp+qwJIgvQiy/Ut0fUddexEqRB/NTzc=
 github.com/TicketsBot/database v0.0.0-20200516170158-fd8a949aec2c/go.mod h1:eky4tBL+IZ0svPgTT0N/9i6j7ygHDQH3784DW+HgfcA=
 github.com/TicketsBot/database v0.0.0-20210902172951-4e1f8ced84b7/go.mod h1:A4T2uQFIWC/ttCYpfgv7AkPjR09mMRgzG13lgoV/+aI=
-github.com/TicketsBot/database v0.0.0-20211025111926-e4c1ec293983 h1:VNP6gNgxQHvHJmVNOk8aQTUtgwDDOLsXgFlQrYc0AgY=
-github.com/TicketsBot/database v0.0.0-20211025111926-e4c1ec293983/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
-github.com/TicketsBot/database v0.0.0-20211025113505-f55f17ff5d69 h1:X2Cq29IQ6GEk3zZ1Fn6mgv9+gK4lZuSorp1d/DCw8N0=
-github.com/TicketsBot/database v0.0.0-20211025113505-f55f17ff5d69/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
+github.com/TicketsBot/database v0.0.0-20211025211939-beea87b7cbb5 h1:BGfGTqDZVkJTIbGdr2FLc2IzCnzFiWSVNuipyMos0/c=
+github.com/TicketsBot/database v0.0.0-20211025211939-beea87b7cbb5/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
+github.com/TicketsBot/database v0.0.0-20211026121407-9205837da649 h1:8jEzpy09B/1thIVcipBZImP6sg8uxU9BjIsEJiwL6XU=
+github.com/TicketsBot/database v0.0.0-20211026121407-9205837da649/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
 github.com/TicketsBot/logarchiver v0.0.0-20200423221245-a3f92edf8c14/go.mod h1:whts8TRxrAF4WuDuEAMllkWA/inKem0NhDEFeyuoOvE=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261/go.mod h1:2zPxDAN2TAPpxUPjxszjs3QFKreKrQh5al/R3cMXmYk=
@@ -234,8 +234,8 @@ github.com/rs/zerolog v1.13.0/go.mod h1:YbFCdg8HfsridGWAh22vktObvhZbQsZXe4/zB0OK
 github.com/rs/zerolog v1.15.0/go.mod h1:xYTKnLHcpfU2225ny5qZjxnj9NvkumZYjJHlAThCjNc=
 github.com/rxdn/gdl v0.0.0-20200522202912-4ae241eb98c1/go.mod h1:2gPBB++1s9Zh11AGM/y84KpmqTyLCnjGwEnt6xRRKL4=
 github.com/rxdn/gdl v0.0.0-20210527173953-25dde613ff0a/go.mod h1:jvcb1N6AdaGx3/e8MoLedO6qSo/+UdA5GGHOA8cnAeU=
-github.com/rxdn/gdl v0.0.0-20211024185942-b8e9140b8054 h1:wrZ6XoQ1D9UgSGDvv6fwGL/f0jFoxEhrIzLXGK9cCx8=
-github.com/rxdn/gdl v0.0.0-20211024185942-b8e9140b8054/go.mod h1:rENs8TxMsoYSJRssegNS/+fy18NCI9EUdCJX8R83PlY=
+github.com/rxdn/gdl v0.0.0-20211025215701-9dd1c92edf60 h1:9oU8ElpmhwZNG/C4Y4NFMsa6tYalN1GhzBGxpOhcHNw=
+github.com/rxdn/gdl v0.0.0-20211025215701-9dd1c92edf60/go.mod h1:rENs8TxMsoYSJRssegNS/+fy18NCI9EUdCJX8R83PlY=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/progressbar/v3 v3.8.2 h1:2kZJwZCpb+E/V79kGO7daeq+hUwUJW0A5QD1Wv455dA=
 github.com/schollz/progressbar/v3 v3.8.2/go.mod h1:9KHLdyuXczIsyStQwzvW8xiELskmX7fQMaZdN23nAv8=
