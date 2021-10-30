@@ -26,9 +26,6 @@ import (
 )
 
 func main() {
-	fmt.Println(channel.ChannelTypeGuildNewsThread)
-	fmt.Println(channel.ChannelTypeGuildPrivateThread)
-	panic("a")
 	go func() {
 		fmt.Println(http.ListenAndServe(":6060", nil))
 	}()
