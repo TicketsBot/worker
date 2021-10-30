@@ -14,7 +14,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
