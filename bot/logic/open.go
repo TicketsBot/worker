@@ -166,22 +166,22 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
-        return database.Ticket{}, err
+		return database.Ticket{}, err
 	}
 
 	guild, err := ctx.Guild()
 	if err != nil {
-        ctx.HandleError(err)
-        return database.Ticket{}, err
-    }
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
 
 	var ch channel.Channel
 	if settings.UseThreads && guild.PremiumTier >= model.PremiumTier2 {
 		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), true)
 		if err != nil {
-            ctx.HandleError(err)
-            return database.Ticket{}, err
-        }
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
 
 		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 		if err != nil {
@@ -208,8 +208,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			Content: content,
 			// Must mention all, or it won't add the members
 			AllowedMentions: message.AllowedMention{
-				Roles: allowedRoles,
-				Users: allowedUsers,
+				Parse: []message.AllowedMentionType{
+					message.EVERYONE,
+				},
 			},
 		}
 
