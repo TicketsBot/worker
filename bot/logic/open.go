@@ -212,16 +212,16 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			},
 		}
 
-		msg, err := ctx.Worker().CreateMessageComplex(ch.Id, data)
+		_, err = ctx.Worker().CreateMessageComplex(ch.Id, data)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
 		}
 
 		// Delete the message
-		if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
+		/*if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
 			ctx.HandleError(err)
-		}
+		}*/
 	} else {
 		overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 
