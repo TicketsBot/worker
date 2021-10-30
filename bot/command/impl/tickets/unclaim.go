@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
 )
@@ -31,6 +32,7 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 }
 
 func (UnclaimCommand) Execute(ctx registry.CommandContext) {
+
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
 		ctx.HandleError(err)
@@ -41,6 +43,18 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	if ticket.UserId == 0 {
 		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
+		return
+	}
+
+	// Check if thread
+	ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if ch.Type == channel.ChannelTypeGuildPrivateThread {
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimThread)
 		return
 	}
 

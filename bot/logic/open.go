@@ -20,6 +20,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
+	model "github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
@@ -140,8 +141,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
-	overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
-
 	// Create ticket name
 	var name string
 
@@ -164,18 +163,82 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		name = fmt.Sprintf("%s-%d", strTicket, id)
 	}
 
-	data := rest.CreateChannelData{
-		Name:                 name,
-		Type:                 channel.ChannelTypeGuildText,
-		Topic:                subject,
-		PermissionOverwrites: overwrites,
-		ParentId:             category,
-	}
-	if useCategory {
-		data.ParentId = category
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+        return database.Ticket{}, err
 	}
 
-	channel, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
+	guild, err := ctx.Guild()
+	if err != nil {
+        ctx.HandleError(err)
+        return database.Ticket{}, err
+    }
+
+	var ch channel.Channel
+	if settings.UseThreads && guild.PremiumTier >= model.PremiumTier2 {
+		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), true)
+		if err != nil {
+            ctx.HandleError(err)
+            return database.Ticket{}, err
+        }
+
+		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
+
+		var content string
+		for _, roleId := range allowedRoles {
+			content += fmt.Sprintf(" <@&%d>", roleId)
+		}
+
+		for _, userId := range allowedUsers {
+			content += fmt.Sprintf(" <@%d>", userId)
+		}
+
+		// TODO: Split into multiple messages
+		if len(content) > 2000 {
+			content = content[:2000]
+		}
+
+		// Add all roles
+		data := rest.CreateMessageData{
+			Content: content,
+			// Hack to bypass omitempty
+			AllowedMentions:  message.AllowedMention{
+				Users: []uint64{0},
+			},
+		}
+
+		msg, err := ctx.Worker().CreateMessageComplex(ch.Id, data)
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
+
+		// Delete the message
+		if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
+			ctx.HandleError(err)
+		}
+	} else {
+		overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+
+		data := rest.CreateChannelData{
+			Name:                 name,
+			Type:                 channel.ChannelTypeGuildText,
+			Topic:                subject,
+			PermissionOverwrites: overwrites,
+			ParentId:             category,
+		}
+		if useCategory {
+			data.ParentId = category
+		}
+
+		ch, err = ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
+	}
+
 	if err != nil { // Bot likely doesn't have permission
 		ctx.HandleError(err)
 
@@ -197,7 +260,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	ticket := database.Ticket{
 		Id:               id,
 		GuildId:          ctx.GuildId(),
-		ChannelId:        &channel.Id,
+		ChannelId:        &ch.Id,
 		UserId:           ctx.UserId(),
 		Open:             true,
 		OpenTime:         time.Now(), // will be a bit off, but not used
@@ -211,7 +274,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// UpdateUser channel in DB
-	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, channel.Id, welcomeMessageId, panelId); err != nil {
+	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, ch.Id, welcomeMessageId, panelId); err != nil {
 		ctx.HandleError(err)
 	}
 
@@ -250,7 +313,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				content = content[:2000]
 			}
 
-			pingMessage, err := ctx.Worker().CreateMessageComplex(channel.Id, rest.CreateMessageData{
+			pingMessage, err := ctx.Worker().CreateMessageComplex(ch.Id, rest.CreateMessageData{
 				Content: content,
 				AllowedMentions: message.AllowedMention{
 					Parse: []message.AllowedMentionType{
@@ -265,19 +328,19 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				ctx.HandleError(err)
 			} else {
 				// error is likely to be a permission error
-				_ = ctx.Worker().DeleteMessage(channel.Id, pingMessage.Id)
+				_ = ctx.Worker().DeleteMessage(ch.Id, pingMessage.Id)
 			}
 		}
 	}
 
 	// Let the user know the ticket has been opened
 	// Ephemeral reply is ok
-	ctx.Reply(constants.Green, i18n.Ticket, i18n.MessageTicketOpened, channel.Mention())
+	ctx.Reply(constants.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
 
 	if ctx.PremiumTier() > premium.None {
-		go createWebhook(ctx.Worker(), id, ctx.GuildId(), channel.Id)
+		go createWebhook(ctx.Worker(), id, ctx.GuildId(), ch.Id)
 	}
 
 	// update cache
@@ -384,7 +447,51 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	})
 
 	// Create list of members & roles who should be added to the ticket
-	allowedUsers := make([]uint64, 0)
+	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, userId, selfId, panel)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorContext)
+		return nil
+	}
+
+	for _, member := range allowedUsers {
+		allow := AllowedPermissions
+
+		// Give ourselves permissions to create webhooks
+		if member == selfId {
+			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
+				allow = append(AllowedPermissions, permission.ManageWebhooks)
+			}
+		}
+
+		overwrites = append(overwrites, channel.PermissionOverwrite{
+			Id:    member,
+			Type:  channel.PermissionTypeMember,
+			Allow: permission.BuildPermissions(allow...),
+			Deny:  0,
+		})
+	}
+
+	for _, role := range allowedRoles {
+		overwrites = append(overwrites, channel.PermissionOverwrite{
+			Id:    role,
+			Type:  channel.PermissionTypeRole,
+			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Deny:  0,
+		})
+	}
+
+	return overwrites
+}
+
+func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel) ([]uint64, []uint64, error) {
+	errorContext := errorcontext.WorkerErrorContext{
+		Guild: guildId,
+		User:  userId,
+	}
+
+	// Create list of members & roles who should be added to the ticket
+	// Add the sender & self
+	allowedUsers := []uint64{userId, selfId}
 	allowedRoles := make([]uint64, 0)
 
 	// Should we add the default team
@@ -440,42 +547,12 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 			}
 
 			if err := group.Wait(); err != nil {
-				sentry.ErrorWithContext(err, errorContext)
+				return nil, nil, err
 			}
 		}
 	}
 
-	// Add the sender & self
-	allowedUsers = append(allowedUsers, userId, selfId)
-
-	for _, member := range allowedUsers {
-		allow := AllowedPermissions
-
-		// Give ourselves permissions to create webhooks
-		if member == selfId {
-			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
-				allow = append(AllowedPermissions, permission.ManageWebhooks)
-			}
-		}
-
-		overwrites = append(overwrites, channel.PermissionOverwrite{
-			Id:    member,
-			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(allow...),
-			Deny:  0,
-		})
-	}
-
-	for _, role := range allowedRoles {
-		overwrites = append(overwrites, channel.PermissionOverwrite{
-			Id:    role,
-			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
-			Deny:  0,
-		})
-	}
-
-	return overwrites
+	return allowedUsers, allowedRoles, nil
 }
 
 // target channel for messaging the user

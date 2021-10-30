@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -45,6 +46,18 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	if ticket.UserId == 0 {
 		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
+		return
+	}
+
+	// Check if thread
+	ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if ch.Type == channel.ChannelTypeGuildPrivateThread {
+		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimThread)
 		return
 	}
 

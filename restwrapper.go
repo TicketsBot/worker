@@ -152,6 +152,56 @@ func (ctx *Context) DeletePinnedChannelMessage(channelId, messageId uint64) erro
 	return rest.DeletePinnedChannelMessage(ctx.Token, ctx.RateLimiter, channelId, messageId)
 }
 
+func (ctx *Context) ListThreadMembers(channelId uint64) ([]channel.ThreadMember, error) {
+	return rest.ListThreadMembers(ctx.Token, ctx.RateLimiter, channelId)
+}
+
+func (ctx *Context) ListActiveThreads(channelId uint64) (rest.ThreadsResponse, error) {
+	return rest.ListActiveThreads(ctx.Token, ctx.RateLimiter, channelId)
+}
+
+func (ctx *Context) ListPublicArchivedThreads(channelId uint64, data rest.ListThreadsData) (rest.ThreadsResponse, error) {
+	return rest.ListPublicArchivedThreads(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+func (ctx *Context) ListPrivateArchivedThreads(channelId uint64, data rest.ListThreadsData) (rest.ThreadsResponse, error) {
+	return rest.ListPrivateArchivedThreads(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+func (ctx *Context) ListJoinedPrivateArchivedThreads(channelId uint64, data rest.ListThreadsData) (rest.ThreadsResponse, error) {
+	return rest.ListPrivateArchivedThreads(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+func (ctx *Context) StartThreadWithMessage(channelId, messageId uint64, data rest.StartThreadWithMessageData) (channel.Channel, error) {
+	return rest.StartThreadWithMessage(ctx.Token, ctx.RateLimiter, channelId, messageId, data)
+}
+
+func (ctx *Context) StartThreadWithoutMessage(channelId, messageId uint64, data rest.StartThreadWithoutMessageData) (channel.Channel, error) {
+	return rest.StartThreadWithoutMessage(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+func (ctx *Context) CreatePublicThread(channelId uint64, name string, autoArchiveDuration uint16) (channel.Channel, error) {
+	data := rest.StartThreadWithoutMessageData{
+		Name:                name,
+		AutoArchiveDuration: autoArchiveDuration,
+		Type:                channel.ChannelTypeGuildPublicThread,
+	}
+
+	return rest.StartThreadWithoutMessage(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+func (ctx *Context) CreatePrivateThread(channelId uint64, name string, autoArchiveDuration uint16, invitable bool) (channel.Channel, error) {
+	data := rest.StartThreadWithoutMessageData{
+		Name:                name,
+		AutoArchiveDuration: autoArchiveDuration,
+		Type:                channel.ChannelTypeGuildPrivateThread,
+		Invitable:           invitable,
+	}
+
+	return rest.StartThreadWithoutMessage(ctx.Token, ctx.RateLimiter, channelId, data)
+}
+
+
 func (ctx *Context) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	shouldCacheEmoji := ctx.Cache.GetOptions().Emojis
 	shouldCacheGuild := ctx.Cache.GetOptions().Guilds

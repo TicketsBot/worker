@@ -86,6 +86,7 @@ var (
 
 	MessageClaimed           MessageId = "commands.claim.success"
 	MessageClaimNoPermission MessageId = "commands.claim.no_permission"
+	MessageClaimThread       MessageId = "commands.claim.thread"
 
 	MessagePanel MessageId = "commands.panel"
 
