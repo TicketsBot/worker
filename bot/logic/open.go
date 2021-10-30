@@ -206,7 +206,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		// Add all roles
 		data := rest.CreateMessageData{
 			Content: content,
-			// Cannot use allowed mentions, or it won't add the embers
+			// Must mention all, or it won't add the members
+			AllowedMentions: message.AllowedMention{
+				Roles: allowedRoles,
+				Users: allowedUsers,
+			},
 		}
 
 		_, err = ctx.Worker().CreateMessageComplex(ch.Id, data)
