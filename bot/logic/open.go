@@ -216,9 +216,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		// Delete the message
-		if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
+		/*if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
 			ctx.HandleError(err)
-		}
+		}*/
 	} else {
 		overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 
