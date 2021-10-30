@@ -209,7 +209,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			// Cannot use allowed mentions, or it won't add the embers
 		}
 
-		msg, err := ctx.Worker().CreateMessageComplex(ch.Id, data)
+		_, err = ctx.Worker().CreateMessageComplex(ch.Id, data)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
