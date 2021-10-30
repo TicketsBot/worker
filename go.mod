@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20211030141751-39afa3380c56
+	github.com/rxdn/gdl v0.0.0-20211030160619-a8772c268ca4
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0

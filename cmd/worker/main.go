@@ -14,6 +14,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
@@ -25,6 +26,9 @@ import (
 )
 
 func main() {
+	fmt.Println(channel.ChannelTypeGuildNewsThread)
+	fmt.Println(channel.ChannelTypeGuildPrivateThread)
+	panic("a")
 	go func() {
 		fmt.Println(http.ListenAndServe(":6060", nil))
 	}()
