@@ -173,8 +173,8 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	}
 
 	var archiveChannelExists bool
-	if archiveChannelId != 0 {
-		if _, err := ctx.Worker().GetChannel(archiveChannelId); err == nil {
+	if archiveChannelId != nil {
+		if _, err := ctx.Worker().GetChannel(*archiveChannelId); err == nil {
 			archiveChannelExists = true
 		}
 	}
@@ -220,8 +220,8 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		AddField("Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
 		AddField("Claimed By", claimedBy, true)
 
-	if archiveChannelExists {
-		if _, err := ctx.Worker().CreateMessageEmbed(archiveChannelId, closeEmbed); err != nil {
+	if archiveChannelExists && archiveChannelId != nil {
+		if _, err := ctx.Worker().CreateMessageEmbed(*archiveChannelId, closeEmbed); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}

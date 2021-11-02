@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -81,7 +82,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	case nil:
 		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoTranscriptChannelSuccess, transcriptChannel.Id))
 
-		if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), transcriptChannel.Id); err != nil {
+		if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.U64Ptr(transcriptChannel.Id)); err != nil {
 			ctx.HandleError(err)
 		}
 	default:

@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest/request"
@@ -43,7 +44,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 		return
 	}
 
-	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), channelId); err == nil {
+	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.U64Ptr(channelId)); err == nil {
 		ctx.Accept()
 		ctx.Reply(constants.Green, i18n.TitleSetup, i18n.SetupTranscriptsComplete, channelId)
 	} else {
