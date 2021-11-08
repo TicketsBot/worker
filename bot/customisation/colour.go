@@ -31,6 +31,11 @@ func GetDefaultColour(colour Colour) int {
 	return defaultColours[colour]
 }
 
+func IsValidColour(colour Colour) bool {
+	_, valid := defaultColours[colour]
+	return valid
+}
+
 func GetColours(guildId uint64) (map[Colour]int, error) {
 	raw, err := dbclient.Client.CustomColours.GetAll(guildId)
 	if err != nil {
