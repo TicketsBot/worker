@@ -19,7 +19,7 @@ const (
 	Blue
 )
 
-var defaultColours = map[Colour]int{
+var DefaultColours = map[Colour]int{
 	Green:  0x2ECC71,
 	Red:    0xFC3F35,
 	Orange: 16740864,
@@ -28,18 +28,18 @@ var defaultColours = map[Colour]int{
 }
 
 func GetDefaultColour(colour Colour) int {
-	return defaultColours[colour]
+	return DefaultColours[colour]
 }
 
 func IsValidColour(colour Colour) bool {
-	_, valid := defaultColours[colour]
+	_, valid := DefaultColours[colour]
 	return valid
 }
 
 func GetColours(guildId uint64) (map[Colour]int, error) {
 	raw, err := dbclient.Client.CustomColours.GetAll(guildId)
 	if err != nil {
-		return defaultColours, err
+		return DefaultColours, err
 	}
 
 	colours := make(map[Colour]int)
@@ -47,7 +47,7 @@ func GetColours(guildId uint64) (map[Colour]int, error) {
         colours[Colour(id)] = hex
     }
 
-	for id, hex := range defaultColours {
+	for id, hex := range DefaultColours {
         if _, ok := colours[id]; !ok {
             colours[id] = hex
         }
