@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -71,7 +71,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 
 	embed := embed.NewEmbed().
 		SetTitle("Setup").
-		SetColor(getColour(failed)).
+		SetColor(getColour(ctx.GuildId(), failed)).
 		SetDescription(messageContent)
 
 	msg, _ := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
@@ -143,12 +143,17 @@ var (
 	}
 )
 
-func getColour(failed bool) int {
+func getColour(guildId uint64, failed bool) int {
+	var colour customisation.Colour
 	if failed {
-		return int(constants.Red)
+		colour = customisation.Red
 	} else {
-		return int(constants.Green)
+		colour = customisation.Green
 	}
+
+	// ignore error, return default
+	hex, _ := customisation.GetColour(guildId, colour)
+	return hex
 }
 
 func getTranscriptChannelData(guildId, supportRoleId, adminRoleId uint64) rest.CreateChannelData {

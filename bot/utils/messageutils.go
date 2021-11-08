@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/gateway/payloads/events"
@@ -22,7 +22,7 @@ import (
 func SendEmbed(
 	worker *worker.Context,
 	channelId, guildId uint64, replyTo *message.MessageReference,
-	colour constants.Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
+	colour customisation.Colour, title string, messageType i18n.MessageId, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 	format ...interface{},
 ) {
@@ -33,7 +33,7 @@ func SendEmbed(
 func SendEmbedRaw(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
-	colour constants.Colour, title, content string, fields []embed.EmbedField,
+	colour customisation.Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 ) {
 	_, _ = SendEmbedWithResponse(worker, channel, replyTo, colour, title, content, fields, deleteAfter, isPremium)
@@ -42,7 +42,7 @@ func SendEmbedRaw(
 func SendEmbedWithResponse(
 	worker *worker.Context,
 	channel uint64, replyTo *message.MessageReference,
-	colour constants.Colour, title, content string, fields []embed.EmbedField,
+	colour customisation.Colour, title, content string, fields []embed.EmbedField,
 	deleteAfter int, isPremium bool,
 ) (message.Message, error) {
 	msgEmbed := embed.NewEmbed().
@@ -82,14 +82,14 @@ func SendEmbedWithResponse(
 
 func BuildEmbed(
 	ctx registry.CommandContext,
-	colour constants.Colour, titleId, contentId i18n.MessageId, fields []embed.EmbedField,
+	colour customisation.Colour, titleId, contentId i18n.MessageId, fields []embed.EmbedField,
 	format ...interface{},
 ) *embed.Embed {
 	title := i18n.GetMessageFromGuild(ctx.GuildId(), titleId)
 	content := i18n.GetMessageFromGuild(ctx.GuildId(), contentId, format...)
 
 	msgEmbed := embed.NewEmbed().
-		SetColor(int(colour)).
+		SetColor(ctx.GetColour(colour)).
 		SetTitle(title).
 		SetDescription(content)
 
@@ -105,10 +105,10 @@ func BuildEmbed(
 }
 
 func BuildEmbedRaw(
-	colour constants.Colour, title, content string, fields []embed.EmbedField, tier premium.PremiumTier,
+	colourHex int, title, content string, fields []embed.EmbedField, tier premium.PremiumTier,
 ) *embed.Embed {
 	msgEmbed := embed.NewEmbed().
-		SetColor(int(colour)).
+		SetColor(colourHex).
 		SetTitle(title).
 		SetDescription(content)
 

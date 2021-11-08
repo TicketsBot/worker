@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -36,7 +36,7 @@ func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -45,5 +45,5 @@ func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleAutoclose, i18n.MessageAutoCloseExclude)
+	ctx.Reply(customisation.Green, i18n.TitleAutoclose, i18n.MessageAutoCloseExclude)
 }

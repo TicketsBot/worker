@@ -31,7 +31,7 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 }
 
 func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
-	msgEmbed, _ := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), 0, ctx.ToErrorContext())
+	msgEmbed, _ := logic.BuildViewStaffMessage(ctx, 0)
 
 	res := command.MessageResponse{
 		Embeds: []*embed.Embed{msgEmbed},

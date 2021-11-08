@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -36,7 +36,7 @@ func (c AdminUnblacklistCommand) GetExecutor() interface{} {
 func (AdminUnblacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
-		ctx.ReplyRaw(constants.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
+		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
 		return
 	}
 

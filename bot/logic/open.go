@@ -10,7 +10,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -38,7 +38,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	if !ok {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageOpenRatelimited)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenRatelimited)
 
 		err := fmt.Errorf("guild ratelimited")
 		sentry.LogWithContext(err, ctx.ToErrorContext())
@@ -98,7 +98,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			}
 
 			// TODO: Use translation of tickets
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
 		}
 
 		return database.Ticket{}, fmt.Errorf("ticket limit reached")
@@ -129,7 +129,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if channelCount >= 50 {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageTooManyTickets)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
 			return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 		}
 	}
@@ -337,7 +337,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	// Let the user know the ticket has been opened
 	// Ephemeral reply is ok
-	ctx.Reply(constants.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
+	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
 

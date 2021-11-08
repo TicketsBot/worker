@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -32,7 +32,7 @@ func (c PrefixSetupCommand) GetExecutor() interface{} {
 
 func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 	if len(prefix) == 0 || len(prefix) > 8 || strings.Contains(prefix, " ") {
-		ctx.Reply(constants.Red, i18n.TitleSetup, i18n.SetupPrefixInvalid)
+		ctx.Reply(customisation.Red, i18n.TitleSetup, i18n.SetupPrefixInvalid)
 		ctx.Reject()
 		return
 	}
@@ -42,6 +42,6 @@ func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleSetup, i18n.SetupPrefixComplete, prefix, prefix)
+	ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupPrefixComplete, prefix, prefix)
 	ctx.Accept()
 }

@@ -3,8 +3,8 @@ package logic
 import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"strings"
@@ -13,20 +13,20 @@ import (
 // each msg is
 const perField = 8
 
-func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, errorContext sentry.ErrorContext) (*embed.Embed, bool) {
-	self, _ := worker.Self()
+func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed, bool) {
 	isBlank := true
 
+	self, _ := ctx.Worker().Self()
 	embed := embed.NewEmbed().
-		SetColor(int(constants.Green)).
+		SetColor(ctx.GetColour(customisation.Green)).
 		SetTitle("Staff").
 		SetFooter(fmt.Sprintf("Page %d", page+1), self.AvatarUrl(256))
 
 	// Add field for admin users
 	{
-		adminUsers, err := dbclient.Client.Permissions.GetAdmins(guildId)
+		adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -53,9 +53,9 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 
 	// Add field for admin roles
 	{
-		adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(guildId)
+		adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -84,9 +84,9 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 
 	// Add field for support representatives
 	{
-		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(guildId)
+		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -113,9 +113,9 @@ func BuildViewStaffMessage(guildId uint64, worker *worker.Context, page int, err
 
 	// Add field for support roles
 	{
-		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(guildId)
+		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ctx.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
 		lower := perField * page

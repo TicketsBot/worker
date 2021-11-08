@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -27,16 +27,16 @@ type CommandContext interface {
 	IsInteraction() bool
 	ToErrorContext() errorcontext.WorkerErrorContext
 
-	Reply(colour constants.Colour, title, content i18n.MessageId, format ...interface{})
+	Reply(colour customisation.Colour, title, content i18n.MessageId, format ...interface{})
 	ReplyWith(response command.MessageResponse) (message.Message, error)
 	ReplyWithEmbed(embed *embed.Embed)
 	ReplyWithEmbedPermanent(embed *embed.Embed)
-	ReplyPermanent(colour constants.Colour, title, content i18n.MessageId, format ...interface{})
-	ReplyWithFields(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
-	ReplyWithFieldsPermanent(colour constants.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyPermanent(colour customisation.Colour, title, content i18n.MessageId, format ...interface{})
+	ReplyWithFields(colour customisation.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
+	ReplyWithFieldsPermanent(colour customisation.Colour, title, content i18n.MessageId, fields []embed.EmbedField, format ...interface{})
 
-	ReplyRaw(colour constants.Colour, title, content string)
-	ReplyRawPermanent(colour constants.Colour, title, content string)
+	ReplyRaw(colour customisation.Colour, title, content string)
+	ReplyRawPermanent(colour customisation.Colour, title, content string)
 
 	ReplyPlain(content string)
 	ReplyPlainPermanent(content string)
@@ -49,6 +49,7 @@ type CommandContext interface {
 	HandleWarning(err error)
 
 	GetMessage(messageId i18n.MessageId, format ...interface{}) string
+	GetColour(colour customisation.Colour) int
 
 	// Utility functions
 	Guild() (guild.Guild, error)

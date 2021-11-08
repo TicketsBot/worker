@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"regexp"
@@ -60,7 +60,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if !feedbackEnabled {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageFeedbackDisabled)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageFeedbackDisabled)
 		return
 	}
 
@@ -69,5 +69,5 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.Success, i18n.MessageFeedbackSuccess)
+	ctx.Reply(customisation.Green, i18n.Success, i18n.MessageFeedbackSuccess)
 }

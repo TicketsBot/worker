@@ -7,7 +7,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -37,7 +37,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	isTicket := ticket.GuildId != 0
 
 	if !isTicket {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -69,7 +69,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	}
 
 	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseNoPermission)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}
 
@@ -205,7 +205,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 
 	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
-		SetColor(int(constants.Green)).
+		SetColor(ctx.GetColour(customisation.Green)).
 		SetTimestamp(time.Now()).
 		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
 		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).

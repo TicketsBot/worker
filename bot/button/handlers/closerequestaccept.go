@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -32,12 +32,12 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
 	if ctx.UserId() != ticket.UserId {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseRequestNoPermission)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseRequestNoPermission)
 		return
 	}
 

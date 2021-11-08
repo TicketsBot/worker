@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -56,5 +56,5 @@ func (AdminCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")
-	ctx.ReplyRaw(constants.Green, ctx.GetMessage(i18n.Admin), msg)
+	ctx.ReplyRaw(customisation.Green, ctx.GetMessage(i18n.Admin), msg)
 }

@@ -48,7 +48,7 @@ func (h *ViewStaffHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	msgEmbed, isBlank := logic.BuildViewStaffMessage(ctx.GuildId(), ctx.Worker(), page, ctx.ToErrorContext())
+	msgEmbed, isBlank := logic.BuildViewStaffMessage(ctx, page)
 	if !isBlank {
 		ctx.Edit(command.MessageResponse{
 			Embeds: []*embed.Embed{msgEmbed},

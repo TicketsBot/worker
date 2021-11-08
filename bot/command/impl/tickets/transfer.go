@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -44,7 +44,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -57,7 +57,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if ch.Type == channel.ChannelTypeGuildPrivateThread {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimThread)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageInvalidUser)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInvalidUser)
 		ctx.Reject()
 		return
 	}
@@ -84,5 +84,5 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	ctx.ReplyPermanent(constants.Green, i18n.TitleClaim, i18n.MessageClaimed, fmt.Sprintf("<@%d>", userId))
+	ctx.ReplyPermanent(customisation.Green, i18n.TitleClaim, i18n.MessageClaimed, fmt.Sprintf("<@%d>", userId))
 }

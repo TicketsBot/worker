@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -94,7 +94,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
-			SetColor(int(constants.Green)).
+			SetColor(ctx.GetColour(customisation.Green)).
 
 			AddField("Is Admin", "false", true).
 			AddField("Is Support", "false", true).
@@ -225,7 +225,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
-			SetColor(int(constants.Green)).
+			SetColor(ctx.GetColour(customisation.Green)).
 
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).

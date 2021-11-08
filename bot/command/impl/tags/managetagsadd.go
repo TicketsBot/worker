@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -46,7 +46,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	// Length check
 	if len(tagId) > 16 {
 		ctx.Reject()
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
@@ -65,13 +65,13 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	if tagExists {
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
 		ctx.Reject()
 		return
 	}
 
 	if err := dbclient.Client.Tag.Set(ctx.GuildId(), tagId, content); err == nil {
-		ctx.Reply(constants.Green, i18n.MessageTag, i18n.MessageTagCreateSuccess, tagId)
+		ctx.Reply(customisation.Green, i18n.MessageTag, i18n.MessageTagCreateSuccess, tagId)
 	} else {
 		ctx.HandleError(err)
 	}

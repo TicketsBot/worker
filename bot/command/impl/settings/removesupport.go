@@ -4,7 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -45,7 +45,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -59,13 +59,13 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 	if userId != nil {
 		if guild.OwnerId == *userId {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == *userId {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
@@ -81,7 +81,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 		}
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
+	ctx.Reply(customisation.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
 
 	var roles []uint64
 	if roleId != nil {
@@ -107,7 +107,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint6
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}

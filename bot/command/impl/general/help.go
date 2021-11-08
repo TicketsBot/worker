@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/elliotchance/orderedmap"
@@ -82,7 +82,7 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	embed := embed.NewEmbed().
-		SetColor(int(constants.Green)).
+		SetColor(ctx.GetColour(customisation.Green)).
 		SetTitle(ctx.GetMessage(i18n.TitleHelp))
 
 	for _, category := range commandCategories.Keys() {

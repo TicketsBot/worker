@@ -4,7 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -48,12 +48,12 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.ReplyWithFields(constants.Red, i18n.TitleRename, i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.TitleRename, i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
 		return
 	}
 
 	if len(name) > 100 {
-		ctx.Reply(constants.Red, i18n.TitleRename, i18n.MessageRenameTooLong)
+		ctx.Reply(customisation.Red, i18n.TitleRename, i18n.MessageRenameTooLong)
 		return
 	}
 
@@ -66,5 +66,5 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleRename, i18n.MessageRenamed, ctx.ChannelId())
+	ctx.Reply(customisation.Green, i18n.TitleRename, i18n.MessageRenamed, ctx.ChannelId())
 }

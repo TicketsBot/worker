@@ -7,7 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -37,7 +37,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if permissionLevel < permission.Support {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimNoPermission)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimNoPermission)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
@@ -73,5 +73,5 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	ctx.Edit(res)
-	ctx.ReplyPermanent(constants.Green, i18n.TitleClaimed, i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
+	ctx.ReplyPermanent(customisation.Green, i18n.TitleClaimed, i18n.MessageClaimed, fmt.Sprintf("<@%d>", ctx.UserId()))
 }

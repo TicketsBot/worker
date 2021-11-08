@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -64,13 +64,13 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 			}
 
 			if (permissionLevel == permission.Everyone && ticket.UserId != ctx.UserId()) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseNoPermission)
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 				return
 			}
 		}
 
 		// Send confirmation message
-		confirmEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil)
+		confirmEmbed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil)
 		msgData := command.MessageResponse{
 			Embeds: []*embed.Embed{confirmEmbed},
 			Components: []component.Component{

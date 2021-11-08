@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -48,7 +48,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if ctx.UserId() == member.User.Id {
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -60,7 +60,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	if permLevel > permission.Everyone {
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -79,13 +79,13 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		}
 
 
-		ctx.Reply(constants.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemove, member.User.Id)
+		ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemove, member.User.Id)
 	} else {
 		if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		ctx.Reply(constants.Green, i18n.TitleBlacklist, i18n.MessageBlacklistAdd, member.User.Id)
+		ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistAdd, member.User.Id)
 	}
 }

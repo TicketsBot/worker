@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -52,7 +52,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 	}
 
 	if userId == nil && roleId == nil && roleName == nil {
-		ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -68,7 +68,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		}
 
 		if guild.OwnerId == *userId {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerIsAlreadyAdmin)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerIsAlreadyAdmin)
 			return
 		}
 
@@ -105,7 +105,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 
 		// Verify a valid role was mentioned
 		if !valid {
-			ctx.ReplyWithFields(constants.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -130,7 +130,7 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, 
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleAddSupport, i18n.MessageAddSupportSuccess)
+	ctx.Reply(customisation.Green, i18n.TitleAddSupport, i18n.MessageAddSupportSuccess)
 
 	//logic.UpdateCommandPermissions(ctx, c.Registry)
 	updateChannelPermissions(ctx, userId, roles)

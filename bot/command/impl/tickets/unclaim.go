@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -41,7 +41,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -54,7 +54,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if ch.Type == channel.ChannelTypeGuildPrivateThread {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageClaimThread)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if whoClaimed == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotClaimed)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotClaimed)
 		ctx.Reject()
 		return
 	}
@@ -77,7 +77,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if permissionLevel < permission.Admin && ctx.UserId() != whoClaimed {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageOnlyClaimerCanUnclaim)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOnlyClaimerCanUnclaim)
 		ctx.Reject()
 		return
 	}
@@ -109,6 +109,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(constants.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
+	ctx.Reply(customisation.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
 	ctx.Accept()
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -56,7 +56,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	welcomeMessage = doSubstitutions(welcomeMessage, ctx.Worker(), ticket)
 
 	// Send welcome message
-	msgEmbed := BuildEmbedRaw(constants.Green, subject, welcomeMessage, nil, premiumTier)
+	msgEmbed := BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, premiumTier)
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{

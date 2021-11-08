@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -114,7 +114,7 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
-		SetColor(int(constants.Green)).
+		SetColor(ctx.GetColour(customisation.Green)).
 
 		AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 		AddField("Open Tickets", strconv.Itoa(openTickets), true).

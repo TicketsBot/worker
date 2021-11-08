@@ -9,7 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/command/context"
 	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -93,12 +93,12 @@ func getPremiumTier(worker *worker.Context, data interaction.MessageComponentInt
 
 func doPropertiesChecks(data interaction.MessageComponentInteraction, ctx cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
 	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageButtonGuildOnly)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonGuildOnly)
 		return false, false
 	}
 
 	if data.GuildId.Value != 0 && !properties.HasFlag(registry.GuildAllowed) {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageButtonDMOnly)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonDMOnly)
 		return false, false
 	}
 

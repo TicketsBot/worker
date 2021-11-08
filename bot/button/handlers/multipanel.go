@@ -5,7 +5,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -52,7 +52,7 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 		}
 
 		if blacklisted {
-			ctx.Reply(constants.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
+			ctx.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 			return
 		}
 

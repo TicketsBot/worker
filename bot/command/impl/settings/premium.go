@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -47,17 +47,17 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 			}
 
 			if expiry.After(time.Now()) {
-				ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
+				ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
 				return
 			}
 		}
 
-		ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessagePremium)
+		ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessagePremium)
 	} else {
 		parsed, err := uuid.FromString(*key)
 
 		if err != nil {
-			ctx.Reply(constants.Red, i18n.TitlePremium, i18n.MessageInvalidPremiumKey)
+			ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}
@@ -70,7 +70,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if length == 0 {
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageInvalidPremiumKey)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInvalidPremiumKey)
 			ctx.Reject()
 			return
 		}
@@ -103,7 +103,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
 		}
 
 		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
-			ctx.Reply(constants.Green, i18n.TitlePremium, i18n.MessagePremiumSuccess, int(length.Hours()/24))
+			ctx.Reply(customisation.Green, i18n.TitlePremium, i18n.MessagePremiumSuccess, int(length.Hours()/24))
 		} else {
 			ctx.HandleError(err)
 		}

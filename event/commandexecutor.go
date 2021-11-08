@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -155,25 +155,25 @@ func executeCommand(
 
 		if properties.PermissionLevel > permLevel {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
+			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageOwnerOnly)
+			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
+			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumLevel == premium.None {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, "Premium Only Command", i18n.MessagePremium)
+			interactionContext.Reply(customisation.Red, "Premium Only Command", i18n.MessagePremium)
 			return
 		}
 
@@ -195,7 +195,7 @@ func executeCommand(
 
 		if blacklisted {
 			interactionContext.Reject()
-			interactionContext.Reply(constants.Red, "Blacklisted", i18n.MessageBlacklisted)
+			interactionContext.Reply(customisation.Red, "Blacklisted", i18n.MessageBlacklisted)
 			return
 		}
 

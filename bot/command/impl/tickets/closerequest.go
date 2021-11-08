@@ -7,7 +7,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -49,12 +49,12 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 	}
 
 	if ticket.Id == 0 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
 	if reason != nil && len(*reason) > 255 {
-		ctx.Reply(constants.Red, i18n.Error, i18n.MessageCloseReasonTooLong)
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseReasonTooLong)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		format = []interface{}{ctx.UserId(), strings.ReplaceAll(*reason, "`", "\\`")}
 	}
 
-	msgEmbed := utils.BuildEmbed(ctx, constants.Green, i18n.TitleCloseRequest, messageId, nil, format...)
+	msgEmbed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleCloseRequest, messageId, nil, format...)
 	components := component.BuildActionRow(
 		component.BuildButton(component.Button{
 			Label:    ctx.GetMessage(i18n.MessageCloseRequestAccept),

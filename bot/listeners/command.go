@@ -10,7 +10,7 @@ import (
 	context2 "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/constants"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -201,25 +201,25 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		if properties.PermissionLevel > userPermissionLevel {
 			ctx.Reject()
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageOwnerOnly)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(e.Author.Id) {
 			ctx.Reject()
-			ctx.Reply(constants.Red, i18n.Error, i18n.MessageNoPermission)
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumTier == premium.None {
 			ctx.Reject()
-			ctx.Reply(constants.Red, i18n.TitlePremiumOnly, i18n.MessagePremium)
+			ctx.Reply(customisation.Red, i18n.TitlePremiumOnly, i18n.MessagePremium)
 			return
 		}
 
@@ -234,7 +234,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 			if argsIndex >= len(args) {
 				if argument.Required {
-					ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+					ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 					return
 				}
 
@@ -252,7 +252,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				value, err := strconv.Atoi(raw)
 				if err != nil {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = (*int)(nil)
@@ -268,7 +268,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				value, err := strconv.ParseBool(raw)
 				if err != nil {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = (*bool)(nil)
@@ -283,7 +283,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				match := userPattern.FindStringSubmatch(args[argsIndex])
 				if len(match) < 2 {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
@@ -296,7 +296,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 					argsIndex++
 				} else {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
@@ -308,7 +308,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				match := channelPattern.FindStringSubmatch(args[argsIndex])
 				if len(match) < 2 {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
@@ -321,7 +321,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 					argsIndex++
 				} else {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
@@ -333,7 +333,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				match := rolePattern.FindStringSubmatch(args[argsIndex])
 				if len(match) < 2 {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
@@ -346,7 +346,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 					argsIndex++
 				} else {
 					if argument.Required {
-						ctx.Reply(constants.Red, i18n.Error, argument.InvalidMessage)
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
 						return
 					} else {
 						parsedArguments[i] = nil
