@@ -56,6 +56,7 @@ func GetColours(guildId uint64) (map[Colour]int, error) {
 	return colours, nil
 }
 
+// TODO: Premium check
 func GetColour(guildId uint64, colourCode Colour) (int, error) {
 	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
 	if err != nil {
@@ -69,7 +70,7 @@ func GetColour(guildId uint64, colourCode Colour) (int, error) {
 	return colour, nil
 }
 
-
+// TODO: Premium check
 func GetColourOrDefault(guildId uint64, colourCode Colour) int {
 	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
 	if err != nil {

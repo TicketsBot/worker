@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -17,9 +18,16 @@ type Replyable struct {
 }
 
 func NewReplyable(ctx registry.CommandContext) *Replyable {
-	colourCodes, err := customisation.GetColours(ctx.GuildId())
-	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	var colourCodes map[customisation.Colour]int
+	if ctx.PremiumTier() > premium.None {
+		var err error
+		colourCodes, err = customisation.GetColours(ctx.GuildId())
+		if err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			colourCodes = customisation.DefaultColours
+		}
+	} else {
+		colourCodes = customisation.DefaultColours
 	}
 
 	return &Replyable{
