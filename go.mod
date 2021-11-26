@@ -3,7 +3,7 @@ module github.com/TicketsBot/worker
 go 1.14
 
 require (
-	github.com/TicketsBot/archiverclient v0.0.0-20210220155137-a562b2f1bbbb
+	github.com/TicketsBot/archiverclient v0.0.0-20211126155247-fb9aac46bd0c
 	github.com/TicketsBot/common v0.0.0-20210910205523-7ce93fba6fa5
 	github.com/TicketsBot/database v0.0.0-20211109153802-24100e383d78
 	github.com/elliotchance/orderedmap v1.2.1
