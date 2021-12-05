@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20211126155247-fb9aac46bd0c
 	github.com/TicketsBot/common v0.0.0-20210910205523-7ce93fba6fa5
-	github.com/TicketsBot/database v0.0.0-20211109153802-24100e383d78
+	github.com/TicketsBot/database v0.0.0-20211203135649-475997f68825
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-redis/redis/v8 v8.11.3
@@ -20,3 +20,5 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
+
+replace github.com/rxdn/gdl => ../../rxdn/gdl

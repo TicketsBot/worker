@@ -1,10 +1,14 @@
 package button
 
-import "github.com/TicketsBot/worker/bot/command"
+import (
+	"github.com/TicketsBot/worker"
+	"github.com/rxdn/gdl/objects/interaction"
+)
 
-type Response struct {
-	Type ResponseType
-	Data command.MessageResponse
+type Response interface {
+	Type() ResponseType
+	Build() interface{} // Returns the interaction response struct
+	HandleDeferred(interactionData interaction.MessageComponentInteraction, worker *worker.Context) error
 }
 
 type ResponseType uint8
@@ -12,4 +16,5 @@ type ResponseType uint8
 const (
 	ResponseTypeMessage ResponseType = iota
 	ResponseTypeEdit
+	ResponseTypeModal
 )

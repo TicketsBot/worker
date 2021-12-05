@@ -22,6 +22,7 @@ import (
 
 type SelectMenuContext struct {
 	*Replyable
+	*MessageComponentExtensions
 	worker          *worker.Context
 	Interaction     interaction.MessageComponentInteraction
 	InteractionData interaction.SelectMenuInteractionData
@@ -46,6 +47,7 @@ func NewSelectMenuContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, responseChannel)
 	return &ctx
 }
 
@@ -93,8 +95,7 @@ func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg m
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
-		ctx.responseChannel <- button.Response{
-			Type: button.ResponseTypeMessage,
+		ctx.responseChannel <- button.ResponseMessage{
 			Data: response,
 		}
 	} else {
@@ -111,8 +112,7 @@ func (ctx *SelectMenuContext) Edit(data command.MessageResponse) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
-		ctx.responseChannel <- button.Response{
-			Type: button.ResponseTypeEdit,
+		ctx.responseChannel <- button.ResponseEdit{
 			Data: data,
 		}
 	} else {

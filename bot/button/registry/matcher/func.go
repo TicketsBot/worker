@@ -6,6 +6,12 @@ type FuncMatcher struct {
 	Func FuncMatchEngine
 }
 
+func NewFuncMatcher(engine FuncMatchEngine) *FuncMatcher {
+	return &FuncMatcher{
+		Func: engine,
+	}
+}
+
 func (m *FuncMatcher) Type() Type {
 	return TypeFunc
 }
