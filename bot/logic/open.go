@@ -31,6 +31,21 @@ import (
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) (database.Ticket, error) {
+	// Make sure ticket count is within ticket limit
+	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
+	violatesTicketLimit, limit := getTicketLimit(ctx)
+	if violatesTicketLimit {
+		// Notify the user
+		ticketsPluralised := "ticket"
+		if limit > 1 {
+			ticketsPluralised += "s"
+		}
+
+		// TODO: Use translation of tickets
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
+		return database.Ticket{}, fmt.Errorf("ticket limit reached")
+	}
+
 	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -73,35 +88,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				} // TODO: Else, set panel category to 0
 			}
 		}
-	}
-
-	var targetChannel uint64
-
-	// Make sure ticket count is within ticket limit
-	violatesTicketLimit, limit := getTicketLimit(ctx)
-	if violatesTicketLimit {
-		// initialise target channel
-		if targetChannel == 0 {
-			var err error
-			targetChannel, err = getErrorTargetChannel(ctx, panel)
-			if err != nil {
-				ctx.HandleError(err)
-				return database.Ticket{}, err
-			}
-		}
-
-		// Notify the user
-		if targetChannel != 0 {
-			ticketsPluralised := "ticket"
-			if limit > 1 {
-				ticketsPluralised += "s"
-			}
-
-			// TODO: Use translation of tickets
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTicketLimitReached, limit, ticketsPluralised)
-		}
-
-		return database.Ticket{}, fmt.Errorf("ticket limit reached")
 	}
 
 	// Generate subject
