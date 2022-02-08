@@ -112,7 +112,7 @@ func (r *Replyable) HandleError(err error) {
 		),
 	}
 
-	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) HandleWarning(err error) {
