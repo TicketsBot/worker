@@ -44,6 +44,7 @@ var (
 
 	MessageVote               MessageId = "commands.vote"
 	MessageInvalidArgument    MessageId = "generic.invalid_argument"
+	MessageJoinSupportServer  MessageId = "generic.join_support_server"
 	MessageCloseNoPermission  MessageId = "close.no_permission"
 	MessageCloseReasonTooLong MessageId = "close.reason_too_long"
 	MessageCloseConfirmation  MessageId = "close.confirmation"

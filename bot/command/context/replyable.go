@@ -10,10 +10,13 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction/component"
+	gdlutils "github.com/rxdn/gdl/utils"
+	"os"
 )
 
 type Replyable struct {
-	ctx registry.CommandContext
+	ctx         registry.CommandContext
 	colourCodes map[customisation.Colour]int
 }
 
@@ -31,7 +34,7 @@ func NewReplyable(ctx registry.CommandContext) *Replyable {
 	}
 
 	return &Replyable{
-		ctx: ctx,
+		ctx:         ctx,
 		colourCodes: colourCodes,
 	}
 }
@@ -98,6 +101,17 @@ func (r *Replyable) HandleError(err error) {
 	sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 
 	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
+	res := command.NewEphemeralEmbedMessageResponse(embed)
+	res.Components = []component.Component{
+		component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label: r.GetMessage(i18n.MessageJoinSupportServer),
+				Style: component.ButtonStyleLink,
+				Url:   gdlutils.StrPtr(os.Getenv("SUPPORT_SERVER_INVITE")),
+			}),
+		),
+	}
+
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }
 
