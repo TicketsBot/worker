@@ -10,9 +10,11 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	gdlutils "github.com/rxdn/gdl/utils"
 	"os"
+	"strings"
 )
 
 type Replyable struct {
@@ -107,7 +109,10 @@ func (r *Replyable) HandleError(err error) {
 			component.BuildButton(component.Button{
 				Label: r.GetMessage(i18n.MessageJoinSupportServer),
 				Style: component.ButtonStyleLink,
-				Url:   gdlutils.StrPtr(os.Getenv("SUPPORT_SERVER_INVITE")),
+				Emoji: &emoji.Emoji{
+					Name: "❓",
+				},
+				Url: gdlutils.StrPtr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
 			}),
 		),
 	}
