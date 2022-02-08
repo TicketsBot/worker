@@ -10,11 +10,6 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
-	"github.com/rxdn/gdl/objects/guild/emoji"
-	"github.com/rxdn/gdl/objects/interaction/component"
-	gdlutils "github.com/rxdn/gdl/utils"
-	"os"
-	"strings"
 )
 
 type Replyable struct {
@@ -104,7 +99,7 @@ func (r *Replyable) HandleError(err error) {
 
 	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
 	res := command.NewEphemeralEmbedMessageResponse(embed)
-	res.Components = []component.Component{
+	/*res.Components = []component.Component{
 		component.BuildActionRow(
 			component.BuildButton(component.Button{
 				Label: r.GetMessage(i18n.MessageJoinSupportServer),
@@ -115,7 +110,7 @@ func (r *Replyable) HandleError(err error) {
 				Url: gdlutils.StrPtr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
 			}),
 		),
-	}
+	}*/
 
 	_, _ = r.ctx.ReplyWith(res)
 }
