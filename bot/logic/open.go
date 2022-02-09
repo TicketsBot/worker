@@ -30,7 +30,7 @@ import (
 	"time"
 )
 
-func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) (database.Ticket, error) {
+func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	// Make sure ticket count is within ticket limit
 	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
 	violatesTicketLimit, limit := getTicketLimit(ctx)
@@ -256,7 +256,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
 	}

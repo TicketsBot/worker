@@ -22,6 +22,7 @@ import (
 
 type ButtonContext struct {
 	*Replyable
+	*MessageComponentExtensions
 	worker          *worker.Context
 	Interaction     interaction.MessageComponentInteraction
 	InteractionData interaction.ButtonInteractionData
@@ -46,6 +47,7 @@ func NewButtonContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, responseChannel)
 	return &ctx
 }
 
@@ -93,8 +95,7 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
-		ctx.responseChannel <- button.Response{
-			Type: button.ResponseTypeMessage,
+		ctx.responseChannel <- button.ResponseMessage{
 			Data: response,
 		}
 	} else {
@@ -111,8 +112,7 @@ func (ctx *ButtonContext) Edit(data command.MessageResponse) {
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if !hasReplied {
-		ctx.responseChannel <- button.Response{
-			Type: button.ResponseTypeEdit,
+		ctx.responseChannel <- button.ResponseEdit{
 			Data: data,
 		}
 	} else {

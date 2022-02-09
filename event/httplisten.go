@@ -186,16 +186,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 				go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
 			case data := <-responseCh:
-				var res interface{}
-
-				switch data.Type {
-				case button.ResponseTypeMessage:
-					res = interaction.NewResponseChannelMessage(data.Data.IntoApplicationCommandData())
-				case button.ResponseTypeEdit:
-					res = interaction.NewResponseUpdateMessage(data.Data.IntoUpdateMessageResponse())
-				}
-
-				ctx.JSON(200, res)
+				ctx.JSON(200, data.Build())
 			}
 
 		case interaction.InteractionTypeApplicationCommandAutoComplete:
@@ -255,7 +246,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			var handler command.AutoCompleteHandler
 			for _, arg := range cmd.Properties().Arguments {
-				if arg.Name == strings.ToLower(path[len(path) - 1]) {
+				if arg.Name == strings.ToLower(path[len(path)-1]) {
 					handler = arg.AutoCompleteHandler
 				}
 			}
@@ -269,6 +260,20 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			res := interaction.NewApplicationCommandAutoCompleteResultResponse(choices)
 			ctx.JSON(200, res)
 			ctx.Writer.Flush()
+
+		case interaction.InteractionTypeModalSubmit:
+			var interactionData interaction.ModalSubmitInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
+			}
+
+			responseCh := make(chan button.Response, 1)
+			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
+
+			// Can't defer a modal submit response
+			data := <-responseCh
+			ctx.JSON(200, data.Build())
 		}
 	}
 }
@@ -300,15 +305,7 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 	case <-timeout.C:
 		return
 	case data := <-ch:
-		var err error
-		switch data.Type {
-		case button.ResponseTypeMessage:
-			_, err = rest.CreateFollowupMessage(interactionData.Token, worker.RateLimiter, worker.BotId, data.Data.IntoWebhookBody())
-		case button.ResponseTypeEdit:
-			_, err = rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, data.Data.IntoWebhookEditBody())
-		}
-
-		if err != nil {
+		if err := data.HandleDeferred(interactionData, worker); err != nil {
 			sentry.Error(err) // TODO: Context
 		}
 	}

@@ -47,5 +47,5 @@ func (OpenCommand) Execute(ctx registry.CommandContext, providedSubject *string)
 		subject = *providedSubject
 	}
 
-	logic.OpenTicket(ctx, nil, subject)
+	logic.OpenTicket(ctx, nil, subject, nil)
 }

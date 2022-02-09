@@ -80,7 +80,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		panel = &p
 	}
 
-	ticket, err := logic.OpenTicket(ctx, panel, msg.Content)
+	ticket, err := logic.OpenTicket(ctx, panel, msg.Content, nil)
 	if err != nil {
 		// Already handled
 		return

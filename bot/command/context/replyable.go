@@ -13,7 +13,7 @@ import (
 )
 
 type Replyable struct {
-	ctx         registry.CommandContext
+	ctx registry.CommandContext
 	colourCodes map[customisation.Colour]int
 }
 
@@ -31,7 +31,7 @@ func NewReplyable(ctx registry.CommandContext) *Replyable {
 	}
 
 	return &Replyable{
-		ctx:         ctx,
+		ctx: ctx,
 		colourCodes: colourCodes,
 	}
 }
