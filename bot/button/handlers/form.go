@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
@@ -26,10 +27,12 @@ func (h *FormHandler) Properties() registry.Properties {
 	}
 }
 
-func (h *FormHandler) Execute(ctx *context.ButtonContext) {
-	customId := strings.TrimPrefix(ctx.InteractionData.CustomId, "form_") // get the custom id that is used in the database
+func (h *FormHandler) Execute(ctx *context.ModalContext) {
+	data := ctx.Interaction.Data
+	customId := strings.TrimPrefix(data.CustomId, "form_") // get the custom id that is used in the database
 
-	panel, ok, err := dbclient.Client.Panel.GetByFormCustomId(ctx.GuildId(), customId)
+	// Form IDs aren't unique to a panel, so we submit the modal with a custom id of `form_panelcustomid`
+	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx.GuildId(), customId)
 	if err != nil {
 		sentry.Error(err) // TODO: Proper context
 		return
@@ -53,7 +56,23 @@ func (h *FormHandler) Execute(ctx *context.ButtonContext) {
 			return
 		}
 
-		_, _ = logic.OpenTicket(ctx, &panel, panel.Title)
+		inputs, err := dbclient.Client.FormInput.GetAllInputsByCustomId(ctx.GuildId())
+		if err != nil {
+            ctx.HandleError(err)
+            return
+        }
+
+		formAnswers := make(map[database.FormInput]string)
+		for _, actionRow := range data.Components {
+			for _, input := range actionRow.Components {
+				questionData, ok := inputs[input.CustomId]
+				if ok { // If form has changed, we can skip
+					formAnswers[questionData] = input.Value
+				}
+			}
+		}
+
+		_, _ = logic.OpenTicket(ctx, &panel, panel.Title, formAnswers)
 
 		return
 	}

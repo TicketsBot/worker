@@ -16,3 +16,9 @@ type SelectHandler interface {
 	Properties() Properties
 	Execute(ctx *context.SelectMenuContext)
 }
+
+type ModalHandler interface {
+	Matcher() matcher.Matcher
+	Properties() Properties
+	Execute(ctx *context.ModalContext)
+}

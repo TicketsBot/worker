@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20211126155247-fb9aac46bd0c
 	github.com/TicketsBot/common v0.0.0-20210910205523-7ce93fba6fa5
-	github.com/TicketsBot/database v0.0.0-20211203135649-475997f68825
+	github.com/TicketsBot/database v0.0.0-20220209151231-c908081f1171
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-redis/redis/v8 v8.11.3
@@ -13,12 +13,10 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
 	github.com/klauspost/compress v1.10.10 // indirect
-	github.com/rxdn/gdl v0.0.0-20211030160619-a8772c268ca4
+	github.com/rxdn/gdl v0.0.0-20220209151849-19fd8c86af50
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
-
-replace github.com/rxdn/gdl => ../../rxdn/gdl

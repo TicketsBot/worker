@@ -28,7 +28,7 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		return false
 	}
 
-	premiumTier, err := getPremiumTier(worker, data)
+	premiumTier, err := getPremiumTier(worker, data.GuildId.Value)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   data.GuildId.Value,
@@ -45,7 +45,7 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		}
 
 		ctx := context.NewButtonContext(worker, data, premiumTier, responseCh)
-		shouldExecute, canEdit := doPropertiesChecks(data, ctx, handler.Properties())
+		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
 			go handler.Execute(ctx)
 		}
@@ -58,7 +58,7 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		}
 
 		ctx := context.NewSelectMenuContext(worker, data, premiumTier, responseCh)
-		shouldExecute, canEdit := doPropertiesChecks(data, ctx, handler.Properties())
+		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
 			go handler.Execute(ctx)
 		}
@@ -73,16 +73,16 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 	}
 }
 
-func getPremiumTier(worker *worker.Context, data interaction.MessageComponentInteraction) (premium.PremiumTier, error) {
+func getPremiumTier(worker *worker.Context, guildId uint64) (premium.PremiumTier, error) {
 	// Psuedo premium if DM command
-	if data.GuildId.Value == 0 {
+	if guildId == 0 {
 		if worker.IsWhitelabel {
 			return premium.Whitelabel, nil
 		} else {
 			return premium.Premium, nil
 		}
 	} else {
-		premiumTier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, worker.Token, worker.RateLimiter)
+		premiumTier, err := utils.PremiumClient.GetTierByGuildId(guildId, true, worker.Token, worker.RateLimiter)
 		if err != nil {
 			return premium.None, err
 		}
@@ -91,13 +91,13 @@ func getPremiumTier(worker *worker.Context, data interaction.MessageComponentInt
 	}
 }
 
-func doPropertiesChecks(data interaction.MessageComponentInteraction, ctx cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
-	if data.GuildId.Value == 0 && !properties.HasFlag(registry.DMsAllowed) {
+func doPropertiesChecks(guildId uint64, ctx cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
+	if guildId == 0 && !properties.HasFlag(registry.DMsAllowed) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonGuildOnly)
 		return false, false
 	}
 
-	if data.GuildId.Value != 0 && !properties.HasFlag(registry.GuildAllowed) {
+	if guildId != 0 && !properties.HasFlag(registry.GuildAllowed) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonDMOnly)
 		return false, false
 	}

@@ -61,10 +61,8 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 			return
 		}
 
-		_, _ = logic.OpenTicket(ctx, &panel, panel.Title)
-
 		if panel.FormId == nil {
-			_, _ = logic.OpenTicket(ctx, &panel, panel.Title)
+			_, _ = logic.OpenTicket(ctx, &panel, panel.Title, nil)
 		} else {
 			form, ok, err := dbclient.Client.Forms.Get(*panel.FormId)
 			if err != nil {
@@ -83,38 +81,40 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 				return
 			}
 
-			components := make([]component.Component, len(inputs))
-			for i, input := range inputs {
-				style := component.TextStyleTypes(input.Style) // wrap
+			if len(inputs) == 0 { // Don't open a blank form
+				_, _ = logic.OpenTicket(ctx, &panel, panel.Title, nil)
+			} else {
+				components := make([]component.Component, len(inputs))
+				for i, input := range inputs {
+					style := component.TextStyleTypes(input.Style) // wrap
 
-				var maxLength uint32
-				if style == component.TextStyleShort {
-					maxLength = 255
-				} else if style == component.TextStyleParagraph {
-					maxLength = 1024 // Max embed field value
+					var maxLength uint32
+					if style == component.TextStyleShort {
+						maxLength = 255
+					} else if style == component.TextStyleParagraph {
+						maxLength = 1024 // Max embed field value
+					}
+
+					components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
+						Style:       component.TextStyleTypes(input.Style),
+						CustomId:    input.CustomId,
+						Label:       input.Label,
+						Placeholder: input.Placeholder,
+						MinLength:   nil,
+						MaxLength:   &maxLength,
+					}))
 				}
 
-				components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
-					Style:       component.TextStyleTypes(input.Style),
-					CustomId:    input.CustomId,
-					Label:       input.Label,
-					Placeholder: input.Placeholder,
-					MinLength:   nil,
-					MaxLength:   &maxLength,
-				}))
-			}
+				modal := button.ResponseModal{
+					Data: interaction.ModalResponseData{
+						CustomId:   fmt.Sprintf("form_%s", panel.CustomId),
+						Title:      form.Title,
+						Components: components,
+					},
+				}
 
-			modal := button.ResponseModal{
-				Data: interaction.ModalResponseData{
-					CustomId:   fmt.Sprintf("form_%s", form.CustomId),
-					Title:      form.Title,
-					Components: components,
-				},
+				ctx.Modal(modal)
 			}
-
-			ctx.Modal(modal)
 		}
-
-		return
 	}
 }

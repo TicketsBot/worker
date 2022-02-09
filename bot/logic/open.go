@@ -30,7 +30,7 @@ import (
 	"time"
 )
 
-func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string) (database.Ticket, error) {
+func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -270,7 +270,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
 	}

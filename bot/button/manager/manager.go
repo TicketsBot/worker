@@ -9,6 +9,7 @@ import (
 type ComponentInteractionManager struct {
 	buttonRegistry registry.ButtonRegistry
 	selectRegistry registry.SelectRegistry
+	modalRegistry  registry.ModalRegistry
 
 	// button matching engines
 	buttonSimpleMatches  map[string]registry.ButtonHandler
@@ -18,12 +19,17 @@ type ComponentInteractionManager struct {
 	// select menu matching engines
 	selectSimpleMatches map[string]registry.SelectHandler
 	selectFuncMatches   map[registry.SelectHandler]matcher.FuncMatchEngine
+
+	// modal matching engines
+	modalSimpleMatches map[string]registry.ModalHandler
+	modalFuncMatches   map[registry.ModalHandler]matcher.FuncMatchEngine
 }
 
 func NewButtonManager() *ComponentInteractionManager {
 	return &ComponentInteractionManager{
 		buttonRegistry: make(registry.ButtonRegistry, 0),
 		selectRegistry: make(registry.SelectRegistry, 0),
+		modalRegistry:  make(registry.ModalRegistry, 0),
 
 		buttonSimpleMatches:  make(map[string]registry.ButtonHandler),
 		buttonFuncMatches:    make(map[registry.ButtonHandler]matcher.FuncMatchEngine),
@@ -31,6 +37,9 @@ func NewButtonManager() *ComponentInteractionManager {
 
 		selectSimpleMatches: make(map[string]registry.SelectHandler),
 		selectFuncMatches:   make(map[registry.SelectHandler]matcher.FuncMatchEngine),
+
+		modalSimpleMatches: make(map[string]registry.ModalHandler),
+		modalFuncMatches:   make(map[registry.ModalHandler]matcher.FuncMatchEngine),
 	}
 }
 
@@ -54,6 +63,10 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 		new(handlers.MultiPanelHandler),
 	)
 
+	m.modalRegistry = append(m.modalRegistry,
+		new(handlers.FormHandler),
+	)
+
 	for _, handler := range m.buttonRegistry {
 		switch engine := handler.Matcher().(type) {
 		case *matcher.SimpleMatcher:
@@ -71,6 +84,17 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 			m.selectSimpleMatches[engine.CustomId] = handler
 		case *matcher.FuncMatcher:
 			m.selectFuncMatches[handler] = engine.Func
+		case *matcher.DefaultMatcher:
+			panic("default matcher not allowed for select menu")
+		}
+	}
+
+	for _, handler := range m.modalRegistry {
+		switch engine := handler.Matcher().(type) {
+		case *matcher.SimpleMatcher:
+			m.modalSimpleMatches[engine.CustomId] = handler
+		case *matcher.FuncMatcher:
+			m.modalFuncMatches[handler] = engine.Func
 		case *matcher.DefaultMatcher:
 			panic("default matcher not allowed for select menu")
 		}
@@ -102,6 +126,22 @@ func (m *ComponentInteractionManager) MatchSelect(customId string) registry.Sele
 	}
 
 	for handler, f := range m.selectFuncMatches {
+		if f(customId) {
+			return handler
+		}
+	}
+
+	return nil
+}
+
+func (m *ComponentInteractionManager) MatchModal(customId string) registry.ModalHandler {
+	// Try simple match first
+	handler, ok := m.modalSimpleMatches[customId]
+	if ok {
+		return handler
+	}
+
+	for handler, f := range m.modalFuncMatches {
 		if f(customId) {
 			return handler
 		}

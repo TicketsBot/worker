@@ -16,6 +16,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/rest"
 	"golang.org/x/sync/errgroup"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,7 +24,7 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel) (uint64, error) {
+func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel, formData map[database.FormInput]string) (uint64, error) {
 	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
 	if err != nil {
 		return 0, err
@@ -56,7 +57,8 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	welcomeMessage = doSubstitutions(welcomeMessage, ctx.Worker(), ticket)
 
 	// Send welcome message
-	msgEmbed := BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, premiumTier)
+	fields := getFormDataFields(formData)
+	msgEmbed := BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, fields, premiumTier)
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{
@@ -178,4 +180,31 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
 	},
+}
+
+func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedField {
+	// Get form inputs in the same order they are presented on the dashboard
+	i := 0
+	inputs := make([]database.FormInput, len(formData))
+	for input := range formData {
+		inputs[i] = input
+		i++
+	}
+
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].Id < inputs[j].Id
+	})
+
+	var fields []embed.EmbedField // Can't use len(formData), as form may have changed since modal was opened
+	for _, input := range inputs {
+		answer, ok := formData[input]
+		if ok {
+			fields = append(fields, embed.EmbedField{
+				Name:  input.Label,
+				Value: answer,
+			})
+		}
+	}
+
+	return fields
 }

@@ -260,6 +260,20 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			res := interaction.NewApplicationCommandAutoCompleteResultResponse(choices)
 			ctx.JSON(200, res)
 			ctx.Writer.Flush()
+
+		case interaction.InteractionTypeModalSubmit:
+			var interactionData interaction.ModalSubmitInteraction
+			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
+				logrus.Warnf("error parsing application payload data: %v", err)
+				return
+			}
+
+			responseCh := make(chan button.Response, 1)
+			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
+
+			// Can't defer a modal submit response
+			data := <-responseCh
+			ctx.JSON(200, data.Build())
 		}
 	}
 }
