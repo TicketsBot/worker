@@ -98,7 +98,21 @@ func (r *Replyable) HandleError(err error) {
 	sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 
 	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+	res := command.NewEphemeralEmbedMessageResponse(embed)
+	/*res.Components = []component.Component{
+		component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label: r.GetMessage(i18n.MessageJoinSupportServer),
+				Style: component.ButtonStyleLink,
+				Emoji: &emoji.Emoji{
+					Name: "❓",
+				},
+				Url: gdlutils.StrPtr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
+			}),
+		),
+	}*/
+
+	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) HandleWarning(err error) {
