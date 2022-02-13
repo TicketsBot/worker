@@ -109,10 +109,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
+	// Channel count checks
+	channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
+
+	// 500 guild limit check
+	if len(channels) >= 500 {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
+        return database.Ticket{}, fmt.Errorf("channel limit reached")
+	}
+
 	// Make sure there's not > 50 channels in a category
 	if useCategory {
-		channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
-
 		categoryChildrenCount := 0
 		for _, channel := range channels {
 			if channel.ParentId.Value == category {
