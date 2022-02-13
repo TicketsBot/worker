@@ -56,9 +56,27 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	// variables
 	welcomeMessage = doSubstitutions(welcomeMessage, ctx.Worker(), ticket)
 
-	// Send welcome message
+	// Build embeds
+	embeds := []*embed.Embed{
+		BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, premiumTier),
+	}
+
+	// Put form fields in a separate embed
 	fields := getFormDataFields(formData)
-	msgEmbed := BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, fields, premiumTier)
+	if len(fields) > 0 {
+		formAnswersEmbed := embed.NewEmbed().
+			SetColor(ctx.GetColour(customisation.Green))
+
+		for _, field := range fields {
+			formAnswersEmbed.AddField(field.Name, field.Value, field.Inline)
+		}
+
+		if premiumTier == premium.None {
+			formAnswersEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
+		}
+
+		embeds = append(embeds, formAnswersEmbed)
+	}
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{
@@ -79,7 +97,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	}
 
 	data := rest.CreateMessageData{
-		Embeds: []*embed.Embed{msgEmbed},
+		Embeds: embeds,
 		Components: []component.Component{
 			component.BuildActionRow(buttons...),
 		},
