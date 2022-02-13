@@ -119,10 +119,11 @@ var (
 	MessageNotATicketChannel MessageId = "generic.not_ticket"
 	MessageInvalidUser       MessageId = "generic.invalid_user"
 
-	MessageTicketLimitReached MessageId = "commands.open.ticket_limit"
-	MessageTooManyTickets     MessageId = "commands.open.too_many_tickets"
-	MessageTicketStartedFrom  MessageId = "commands.open.from"
-	MessageMovedToTicket      MessageId = "commands.open.from.moved"
+	MessageTicketLimitReached       MessageId = "commands.open.ticket_limit"
+	MessageTooManyTickets           MessageId = "commands.open.too_many_tickets"
+	MessageGuildChannelLimitReached MessageId = "commands.open.guild_channel_limit"
+	MessageTicketStartedFrom        MessageId = "commands.open.from"
+	MessageMovedToTicket            MessageId = "commands.open.from.moved"
 
 	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"

@@ -220,6 +220,7 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 			fields = append(fields, embed.EmbedField{
 				Name:  input.Label,
 				Value: answer,
+				Inline: false,
 			})
 		}
 	}

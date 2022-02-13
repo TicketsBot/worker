@@ -103,20 +103,67 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
 	// Make sure there's not > 50 channels in a category
 	if useCategory {
 		channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
-		channelCount := 0
+		categoryChildrenCount := 0
 		for _, channel := range channels {
 			if channel.ParentId.Value == category {
-				channelCount++
+				categoryChildrenCount++
 			}
 		}
 
-		if channelCount >= 50 {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-			return database.Ticket{}, fmt.Errorf("category ticket limit reached")
+		if categoryChildrenCount >= 50 {
+			// Try to use the overflow category if there is one
+			if settings.OverflowEnabled {
+				// If overflow is enabled, and the category id is nil, then use the root of the server
+				if settings.OverflowCategoryId == nil {
+					if len(channels) >= 500 {
+						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
+						return database.Ticket{}, fmt.Errorf("guild channel limit reached")
+					}
+
+					useCategory = false
+				} else {
+					category = *settings.OverflowCategoryId
+
+					// Verify that the overflow category still exists
+					if _, err := ctx.Worker().GetChannel(category); err != nil {
+						if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
+							if err := dbclient.Client.Settings.SetOverflow(ctx.GuildId(), false, nil); err != nil {
+								ctx.HandleError(err)
+								return database.Ticket{}, err
+							}
+						}
+
+						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+						return database.Ticket{}, err
+					}
+
+					// Check that the overflow category still has space
+					overflowCategoryChildrenCount := 0
+					for _, ch := range channels {
+                        if ch.ParentId.Value == *settings.OverflowCategoryId {
+                            overflowCategoryChildrenCount++
+                        }
+                    }
+
+					if overflowCategoryChildrenCount >= 50 {
+						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+                        return database.Ticket{}, fmt.Errorf("overflow category full")
+					}
+				}
+			} else {
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+				return database.Ticket{}, fmt.Errorf("category ticket limit reached")
+			}
 		}
 	}
 
@@ -147,12 +194,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		name = fmt.Sprintf("%s-%s", strTicket, user.Username)
 	} else {
 		name = fmt.Sprintf("%s-%d", strTicket, id)
-	}
-
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
 	}
 
 	guild, err := ctx.Guild()
@@ -218,8 +259,8 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			Type:                 channel.ChannelTypeGuildText,
 			Topic:                subject,
 			PermissionOverwrites: overwrites,
-			ParentId:             category,
 		}
+
 		if useCategory {
 			data.ParentId = category
 		}
