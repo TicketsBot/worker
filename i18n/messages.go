@@ -124,6 +124,7 @@ var (
 	MessageGuildChannelLimitReached MessageId = "commands.open.guild_channel_limit"
 	MessageTicketStartedFrom        MessageId = "commands.open.from"
 	MessageMovedToTicket            MessageId = "commands.open.from.moved"
+	MessageFormMissingInput         MessageId = "commands.open.missing_form_answer"
 
 	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"

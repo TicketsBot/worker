@@ -72,6 +72,22 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 			}
 		}
 
+		// Validate user input
+		for question, answer := range formAnswers {
+			isValid := false
+			for _, c := range answer {
+				if c != rune(' ') && c != rune('\n') {
+					isValid = true
+					break
+				}
+			}
+
+			if !isValid {
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageFormMissingInput, question.Label)
+				return
+			}
+		}
+
 		_, _ = logic.OpenTicket(ctx, &panel, panel.Title, formAnswers)
 
 		return
