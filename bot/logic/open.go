@@ -115,7 +115,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	// 500 guild limit check
 	if len(channels) >= 500 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
-        return database.Ticket{}, fmt.Errorf("channel limit reached")
+		return database.Ticket{}, fmt.Errorf("channel limit reached")
 	}
 
 	// Make sure there's not > 50 channels in a category
@@ -132,11 +132,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			if settings.OverflowEnabled {
 				// If overflow is enabled, and the category id is nil, then use the root of the server
 				if settings.OverflowCategoryId == nil {
-					if len(channels) >= 500 {
-						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
-						return database.Ticket{}, fmt.Errorf("guild channel limit reached")
-					}
-
 					useCategory = false
 				} else {
 					category = *settings.OverflowCategoryId
