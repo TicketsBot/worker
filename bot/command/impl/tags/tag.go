@@ -1,7 +1,6 @@
 package tags
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -12,7 +11,6 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"strings"
 )
 
 type TagCommand struct {
@@ -61,14 +59,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	if ticket.UserId != 0 {
-		mention := fmt.Sprintf("<@%d>", ticket.UserId)
-		content = strings.Replace(content, "%user%", mention, -1)
-	}
-
-	// TODO: Delete message if message context
-	//_ = ctx.Worker().DeleteMessage(ctx.ChannelId(), ctx.Id)
-
+	content = utils.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket)
 	ctx.ReplyPlainPermanent(content)
 }
 

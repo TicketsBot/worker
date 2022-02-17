@@ -54,7 +54,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	}
 
 	// variables
-	welcomeMessage = doSubstitutions(welcomeMessage, ctx.Worker(), ticket)
+	welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
 
 	// Build embeds
 	embeds := []*embed.Embed{
@@ -116,7 +116,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	return msg.Id, nil
 }
 
-func doSubstitutions(welcomeMessage string, ctx *worker.Context, ticket database.Ticket) string {
+func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket) string {
 	var lock sync.Mutex
 
 	// do DB lookups in parallel
@@ -127,12 +127,12 @@ func doSubstitutions(welcomeMessage string, ctx *worker.Context, ticket database
 
 		formatted := fmt.Sprintf("%%%s%%", placeholder)
 
-		if strings.Contains(welcomeMessage, formatted) {
+		if strings.Contains(message, formatted) {
 			group.Go(func() error {
 				replacement := f(ctx, ticket)
 
 				lock.Lock()
-				welcomeMessage = strings.Replace(welcomeMessage, formatted, replacement, -1)
+				message = strings.Replace(message, formatted, replacement, -1)
 				lock.Unlock()
 
 				return nil
@@ -144,7 +144,7 @@ func doSubstitutions(welcomeMessage string, ctx *worker.Context, ticket database
 		sentry.Error(err)
 	}
 
-	return welcomeMessage
+	return message
 }
 
 var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket) string{
