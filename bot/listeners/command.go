@@ -159,31 +159,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		// get permission level
 		group.Go(func() (err error) {
 			userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
-			if err != nil {
-				sentry.Error(err)
-				return
-			}
-
-			// DEBUG START
-			guild, err := worker.GetGuild(e.GuildId)
-			if err != nil {
-				return err
-			}
-
-			extra := map[string]interface{}{
-				"member_id": strconv.FormatUint(e.Member.User.Id, 10),
-				"level":     userPermissionLevel,
-				"owner_id":  strconv.FormatUint(guild.OwnerId, 10),
-			}
-
-			tags := map[string]string{
-				"user_id":  strconv.FormatUint(e.Author.Id, 10),
-				"guild_id": strconv.FormatUint(e.GuildId, 10),
-			}
-
-			sentry.LogWithTags("permission log", extra, tags)
-			// DEBUG END
-			return
+			return err
 		})
 
 		if err := group.Wait(); err != nil {
