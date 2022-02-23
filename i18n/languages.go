@@ -30,6 +30,7 @@ const (
 	Romanian      Language = "ro"
 	Russian       Language = "ru"
 	Swedish       Language = "sv"
+	Thai          Language = "th"
 	Turkish       Language = "tr"
 	Ukrainian     Language = "ua"
 	Vietnamese    Language = "vn"
@@ -61,6 +62,7 @@ var Flags = map[Language]string{
 	Romanian:      "🇷🇴",
 	Russian:       "🇷🇺",
 	Swedish:       "🇸🇪",
+	Thai:          "🇹🇭",
 	Turkish:       "🇹🇷",
 	Ukrainian:     "🇺🇦",
 	Vietnamese:    "🇻🇳",
@@ -68,34 +70,35 @@ var Flags = map[Language]string{
 	ChineseTaiwan: "🇹🇼",
 }
 
-// https://discord.com/developers/docs/dispatch/field-values
+// https://discord.com/developers/docs/reference#locales
 var DiscordLocales = map[string]Language{
 	"en-US": English,
 	"en-GB": English,
+	"bg":    Bulgarian,
 	"zh-CN": Chinese,
 	"zh-TW": ChineseTaiwan,
+	"hr":    Croatian,
 	"cs":    Czech,
 	"da":    Danish,
 	"nl":    Dutch,
+	"fi":    Finnish,
 	"fr":    French,
 	"de":    German,
 	"hu":    Hungarian,
 	"it":    Italian,
 	"ja":    Japanese,
 	"ko":    Korean,
+	"lt":    Lithuanian,
 	"no":    Norwegian,
 	"pl":    Polish,
 	"pt-BR": PortugueseBR,
+	"ro":    Romanian,
 	"ru":    Russian,
 	"es-ES": Spanish,
 	"sv-SE": Swedish,
+	"th":    Thai,
 	"tr":    Turkish,
-	"bg":    Bulgarian,
 	"uk":    Ukrainian,
-	"fi":    Finnish,
-	"hr":    Croatian,
-	"ro":    Romanian,
-	"lt":    Lithuanian,
 }
 
 // Used by CrowdIn
@@ -123,6 +126,7 @@ var FullLocales = map[string]Language{
 	"ro-RO": Romanian,
 	"ru-RU": Russian,
 	"sv-SE": Swedish,
+	"th-TH": Thai,
 	"tr-TR": Turkish,
 	"uk-UA": Ukrainian,
 	"vi-VN": Vietnamese,
@@ -154,6 +158,7 @@ var LanguagesAlphabetical = []Language{
 	Romanian,
 	Russian,
 	Swedish,
+	Thai,
 	Turkish,
 	Ukrainian,
 	Vietnamese,
@@ -185,6 +190,7 @@ var FullNames = map[Language]string{
 	Romanian:      "Romanian",
 	Russian:       "Russian",
 	Swedish:       "Swedish",
+	Thai:          "Thai",
 	Turkish:       "Turkish",
 	Ukrainian:     "Ukrainian",
 	Vietnamese:    "Vietnamese",
