@@ -113,19 +113,14 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
 	// 500 guild limit check
-	if len(channels) >= 500 {
+	if countRealChannels(channels, 0) >= 500 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
 		return database.Ticket{}, fmt.Errorf("channel limit reached")
 	}
 
 	// Make sure there's not > 50 channels in a category
 	if useCategory {
-		categoryChildrenCount := 0
-		for _, channel := range channels {
-			if channel.ParentId.Value == category {
-				categoryChildrenCount++
-			}
-		}
+		categoryChildrenCount := countRealChannels(channels, category)
 
 		if categoryChildrenCount >= 50 {
 			// Try to use the overflow category if there is one
@@ -150,12 +145,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 					}
 
 					// Check that the overflow category still has space
-					overflowCategoryChildrenCount := 0
-					for _, ch := range channels {
-                        if ch.ParentId.Value == *settings.OverflowCategoryId {
-                            overflowCategoryChildrenCount++
-                        }
-                    }
+					overflowCategoryChildrenCount := countRealChannels(channels, *settings.OverflowCategoryId)
 
 					if overflowCategoryChildrenCount >= 50 {
 						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
@@ -599,4 +589,21 @@ func getErrorTargetChannel(ctx registry.CommandContext, panel *database.Panel) (
 
 		return dmChannel, nil
 	}
+}
+
+func countRealChannels(channels []channel.Channel, parentId uint64) int {
+	var count int
+
+	for _, ch := range channels {
+		// Ignore threads
+		if ch.Type == channel.ChannelTypeGuildPublicThread || ch.Type == channel.ChannelTypeGuildPrivateThread || ch.Type == channel.ChannelTypeGuildNewsThread {
+			continue
+		}
+
+		if parentId == 0 || ch.ParentId.Value == parentId {
+			count++
+		}
+	}
+
+	return count
 }
