@@ -15,6 +15,7 @@ const (
 	KeyEvents        Key = "events"
 	AutoClose        Key = "autoclose"
 	KeyUnavailable   Key = "unavailable_guilds"
+	KeyDirectMessage Key = "direct_message"
 )
 
 func (k Key) String() string {

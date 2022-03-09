@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -241,6 +242,8 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
+
+		go statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
 		if !feedbackEnabled || !hasSentMessage {
 			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, closeEmbed); err != nil {
