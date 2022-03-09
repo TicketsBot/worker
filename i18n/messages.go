@@ -48,6 +48,7 @@ var (
 	MessageCloseNoPermission  MessageId = "close.no_permission"
 	MessageCloseReasonTooLong MessageId = "close.reason_too_long"
 	MessageCloseConfirmation  MessageId = "close.confirmation"
+	MessageUseSlashCommands   MessageId = "generic.use_slash_commands"
 
 	MessageTag                       MessageId = "commands.tag.generic"
 	MessageTagCreateInvalidArguments MessageId = "commands.tags.create.invalid_arguments"

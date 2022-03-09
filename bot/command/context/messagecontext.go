@@ -6,8 +6,10 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -86,6 +88,13 @@ func (ctx *MessageContext) ReplyContext() *message.MessageReference {
 	}
 }
 
+func (ctx *MessageContext) Reply(colour customisation.Colour, title, content i18n.MessageId, format ...interface{}) {
+	embed := ctx.Replyable.buildEmbed(colour, title, content, nil, format...)
+	embed.SetFooter(ctx.GetMessage(i18n.MessageUseSlashCommands), ctx.avatarUrl())
+
+	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+}
+
 func (ctx *MessageContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	data := response.IntoCreateMessageData()
 	data.MessageReference = ctx.ReplyContext()
@@ -116,4 +125,13 @@ func (ctx *MessageContext) Member() (member.Member, error) {
 
 func (ctx *MessageContext) User() (user.User, error) {
 	return ctx.Worker().GetUser(ctx.UserId())
+}
+
+func (ctx *MessageContext) avatarUrl() string {
+	self, err := ctx.Worker().Self()
+	if err == nil {
+		return self.AvatarUrl(256)
+	} else {
+		return "https://ticketsbot.net/assets/img/logo.png"
+	}
 }
