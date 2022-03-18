@@ -15,10 +15,6 @@ import (
 	"sync"
 )
 
-var (
-
-)
-
 func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) error {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild:   ticket.GuildId,

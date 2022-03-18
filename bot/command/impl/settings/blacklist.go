@@ -37,7 +37,7 @@ func (c BlacklistCommand) GetExecutor() interface{} {
 func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!blacklist @User`",
+		Value:  "`/blacklist @User`",
 		Inline: false,
 	}
 
@@ -77,7 +77,6 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			ctx.HandleError(err)
 			return
 		}
-
 
 		ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemove, member.User.Id)
 	} else {

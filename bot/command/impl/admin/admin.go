@@ -52,7 +52,7 @@ func (AdminCommand) Execute(ctx registry.CommandContext) {
 		}
 
 		description := i18n.GetMessageFromGuild(ctx.GuildId(), child.Properties().Description)
-		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DEFAULT_PREFIX, child.Properties().Name, description)
+		msg += fmt.Sprintf("`%sadmin %s` - %s\n", utils.DefaultPrefix, child.Properties().Name, description)
 	}
 
 	msg = strings.TrimSuffix(msg, "\n")

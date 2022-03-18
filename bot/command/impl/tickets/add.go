@@ -7,10 +7,8 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
 )
@@ -27,7 +25,6 @@ func (AddCommand) Properties() registry.Properties {
 		Category:        command.Tickets,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user", "User to add to the ticket", interaction.OptionTypeUser, i18n.MessageAddNoMembers),
-			command.NewRequiredArgument("channel", "Channel to add the user to", interaction.OptionTypeChannel, i18n.MessageAddNoChannel),
 		),
 	}
 }
@@ -36,22 +33,16 @@ func (c AddCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64) {
-	usageEmbed := embed.EmbedField{
-		Name:   "Usage",
-		Value:  "`t!add @User #ticket-channel`",
-		Inline: false,
-	}
-
-	ticket, err := dbclient.Client.Tickets.GetByChannel(channelId)
+func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
+	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
 	}
 
-	// 2 in 1: verify guild is the same & the channel is valid
-	if ticket.GuildId != ctx.GuildId() {
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddChannelNotTicket, utils.FieldsToSlice(usageEmbed))
+	// Test valid ticket channel
+	if ticket.Id == 0 {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
 	}
@@ -75,7 +66,8 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64)
 		return
 	}
 
-	if err := ctx.Worker().EditChannelPermissions(channelId, channel.PermissionOverwrite{
+	// ticket.ChannelId cannot be nil, as we get by channel id
+	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, channel.PermissionOverwrite{
 		Id:    userId,
 		Type:  channel.PermissionTypeMember,
 		Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
@@ -83,5 +75,5 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId, channelId uint64)
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	ctx.Reply(customisation.Green, i18n.TitleAdd, i18n.MessageAddSuccess, userId, channelId)
+	ctx.Reply(customisation.Green, i18n.TitleAdd, i18n.MessageAddSuccess, userId, *ticket.ChannelId)
 }

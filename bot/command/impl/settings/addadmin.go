@@ -45,7 +45,7 @@ func (c AddAdminCommand) GetExecutor() interface{} {
 func (c AddAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!addadmin @User`\n`t!addadmin @Role`\n`t!addadmin role name`",
+		Value:  "`/addadmin @User`\n`/addadmin @Role`",
 		Inline: false,
 	}
 

@@ -149,7 +149,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 					if overflowCategoryChildrenCount >= 50 {
 						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-                        return database.Ticket{}, fmt.Errorf("overflow category full")
+						return database.Ticket{}, fmt.Errorf("overflow category full")
 					}
 				}
 			} else {
@@ -451,7 +451,7 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
-var AllowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks}
+var AllowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks, permission.UseSlashCommands}
 
 func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{

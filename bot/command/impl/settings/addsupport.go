@@ -47,7 +47,7 @@ func (c AddSupportCommand) GetExecutor() interface{} {
 func (c AddSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!addsupport @User`\n`t!addsupport @Role`\n`t!addsupport role name`",
+		Value:  "`/addsupport @User`\n`/addsupport @Role`",
 		Inline: false,
 	}
 

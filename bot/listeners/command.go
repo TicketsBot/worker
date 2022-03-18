@@ -48,8 +48,8 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		var usedPrefix string
 
-		if strings.HasPrefix(strings.ToLower(e.Content), utils.DEFAULT_PREFIX) {
-			usedPrefix = utils.DEFAULT_PREFIX
+		if strings.HasPrefix(strings.ToLower(e.Content), utils.DefaultPrefix) {
+			usedPrefix = utils.DefaultPrefix
 		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
 			usedPrefix = fmt.Sprintf("<@%d>", worker.BotId)
 		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@!%d>", worker.BotId)) {
