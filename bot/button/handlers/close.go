@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
@@ -42,6 +41,12 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
+	// This is checked by the close function, but we need to check before showing close confirmation
+	if !utils.CanClose(ctx, ticket) {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
+		return
+	}
+
 	closeConfirmation, err := dbclient.Client.CloseConfirmation.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -49,26 +54,6 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if closeConfirmation {
-		// Make sure user can close;
-		// Get user's permissions level
-		permissionLevel, err := ctx.UserPermissionLevel()
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if permissionLevel == permission.Everyone {
-			usersCanClose, err := dbclient.Client.UsersCanClose.Get(ctx.GuildId())
-			if err != nil {
-				ctx.HandleError(err)
-			}
-
-			if (permissionLevel == permission.Everyone && ticket.UserId != ctx.UserId()) || (permissionLevel == permission.Everyone && !usersCanClose) {
-				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
-				return
-			}
-		}
-
 		// Send confirmation message
 		confirmEmbed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil)
 		msgData := command.MessageResponse{

@@ -85,6 +85,12 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 			Style:    component.ButtonStyleDanger,
 			Emoji:    &emoji.Emoji{Name: "🔒"},
 		}),
+		component.BuildButton(component.Button{
+			Label:    ctx.GetMessage(i18n.TitleCloseWithReason),
+			CustomId: "close_with_reason",
+			Style:    component.ButtonStyleDanger,
+			Emoji:    &emoji.Emoji{Name: "🔒"},
+		}),
 	}
 
 	if !settings.HideClaimButton {

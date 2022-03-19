@@ -2,7 +2,6 @@ package logic
 
 import (
 	"fmt"
-	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -50,27 +49,14 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		}
 	}()
 
-	// Check the user is permitted to close the ticket
-	usersCanClose, err := dbclient.Client.UsersCanClose.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	permissionLevel, err := ctx.UserPermissionLevel()
-	if err != nil {
-		ctx.HandleError(err)
+	if !utils.CanClose(ctx, ticket) {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}
 
 	member, err := ctx.Member()
 	if err != nil {
 		ctx.HandleError(err)
-		return
-	}
-
-	if permissionLevel == permission.Everyone && (ticket.UserId != member.User.Id || !usersCanClose) {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}
 

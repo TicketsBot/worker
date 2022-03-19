@@ -199,7 +199,6 @@ func executeCommand(
 			return
 		}
 
-
 		fn := reflect.TypeOf(cmd.GetExecutor())
 		if len(args) != fn.NumIn() - 1 { // - 1 since command context is provided
 			interactionContext.ReplyRaw(customisation.Red, "Error", "Argument count mismatch: Try creating slash commands again")

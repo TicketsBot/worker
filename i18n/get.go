@@ -30,20 +30,11 @@ func LoadMessages() {
 			}
 		}
 
-		var parsed map[MessageId]string
-		if err := json.Unmarshal(data, &parsed); err != nil {
-			fmt.Printf("Failed to parse locale %s: %s\n", locale, err.Error())
-
-			if locale == "en-GB" { // Required
-				panic(err)
-			}
-		}
-
-		messages[language] = parsed
+		messages[language] = parseCrowdInFile(data)
 	}
 }
 
-func SeedCoverage()  {
+func SeedCoverage() {
 	coverage = make(map[Language]int)
 
 	total := len(messages[English])
@@ -121,4 +112,43 @@ func getPreferredLocale(guildId uint64) (locale *string, err error) {
 	query := `SELECT "data"->'preferred_locale' FROM guilds WHERE "guild_id" = $1;`
 	err = cache.Client.QueryRow(context.Background(), query, guildId).Scan(&locale)
 	return
+}
+
+func parseCrowdInFile(data []byte) map[MessageId]string {
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		fmt.Printf("Failed to parse locale: %s\n", err.Error())
+		return nil
+	}
+
+	return parseCrowdInData("", parsed)
+}
+
+func parseCrowdInData(path string, data map[string]interface{}) map[MessageId]string {
+	parsed := make(map[MessageId]string)
+
+	for key, value := range data {
+		var newPath string
+		if key == "" {
+			newPath = path
+		} else if path == "" {
+			newPath = key
+		} else {
+			newPath = fmt.Sprintf("%s.%s", path, key)
+		}
+
+		s, ok := value.(string)
+		if ok {
+			parsed[MessageId(newPath)] = s
+		} else if m, ok := value.(map[string]interface{}); ok {
+			// TODO: Pass the map down directly
+			for k, v := range parseCrowdInData(newPath, m) {
+				parsed[k] = v
+			}
+		} else {
+			panic(fmt.Sprintf("key %s.%s has unknown type", path, key))
+		}
+	}
+
+	return parsed
 }

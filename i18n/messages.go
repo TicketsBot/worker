@@ -2,6 +2,14 @@ package i18n
 
 type MessageId string
 
+func (m MessageId) Get(language Language, format ...interface{}) string {
+	return GetMessage(language, m, format...)
+}
+
+func (m MessageId) GetFromGuild(guildId uint64, format ...interface{}) string {
+	return GetMessageFromGuild(guildId, m, format...)
+}
+
 // note: %s = a placeholder
 var (
 	MessageNoPermission MessageId = "generic.no_permission"
@@ -11,6 +19,7 @@ var (
 	Success MessageId = "generic.success"
 	Admin   MessageId = "generic.admin"
 	Ticket  MessageId = "generic.ticket"
+	Reason  MessageId = "generic.reason"
 
 	TitlePremiumOnly       MessageId = "generic.title.premium_only"
 	TitleAbout             MessageId = "generic.title.about"
@@ -19,6 +28,7 @@ var (
 	TitleAutoclose         MessageId = "generic.title.autoclose"
 	TitleInvite            MessageId = "generic.title.invite"
 	TitleClose             MessageId = "generic.title.close"
+	TitleCloseWithReason   MessageId = "generic.title.close_with_reason"
 	TitleClaim             MessageId = "generic.title.claim"
 	TitleBlacklist         MessageId = "generic.title.blacklist"
 	TitleBlacklisted       MessageId = "generic.title.blacklisted"
@@ -42,13 +52,14 @@ var (
 	MessageAbout   MessageId = "commands.about"
 	MessagePremium MessageId = "commands.premium"
 
-	MessageVote               MessageId = "commands.vote"
-	MessageInvalidArgument    MessageId = "generic.invalid_argument"
-	MessageJoinSupportServer  MessageId = "generic.join_support_server"
-	MessageCloseNoPermission  MessageId = "close.no_permission"
-	MessageCloseReasonTooLong MessageId = "close.reason_too_long"
-	MessageCloseConfirmation  MessageId = "close.confirmation"
-	MessageUseSlashCommands   MessageId = "generic.use_slash_commands"
+	MessageVote                   MessageId = "commands.vote"
+	MessageInvalidArgument        MessageId = "generic.invalid_argument"
+	MessageJoinSupportServer      MessageId = "generic.join_support_server"
+	MessageCloseNoPermission      MessageId = "close.no_permission"
+	MessageCloseReasonTooLong     MessageId = "close.reason_too_long"
+	MessageCloseReasonPlacehodler MessageId = "close.reason.placeholder"
+	MessageCloseConfirmation      MessageId = "close.confirmation"
+	MessageUseSlashCommands       MessageId = "generic.use_slash_commands"
 
 	MessageTag                       MessageId = "commands.tag.generic"
 	MessageTagCreateInvalidArguments MessageId = "commands.tags.create.invalid_arguments"

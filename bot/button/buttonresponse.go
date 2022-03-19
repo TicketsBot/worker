@@ -17,4 +17,5 @@ const (
 	ResponseTypeMessage ResponseType = iota
 	ResponseTypeEdit
 	ResponseTypeModal
+	ResponseTypeAck
 )

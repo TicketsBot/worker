@@ -20,3 +20,7 @@ func NewMessageComponentExtensions(ctx registry.CommandContext, responseChannel 
 func (e *MessageComponentExtensions) Modal(res button.ResponseModal) {
 	e.responseChannel <- res
 }
+
+func (e *MessageComponentExtensions) Ack() {
+	e.responseChannel <- button.ResponseAck{}
+}

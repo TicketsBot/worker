@@ -50,6 +50,7 @@ func (m *ComponentInteractionManager) GetCommands() []registry.ButtonHandler {
 func (m *ComponentInteractionManager) RegisterCommands() {
 	m.buttonRegistry = append(m.buttonRegistry,
 		new(handlers.CloseHandler),
+		new(handlers.CloseWithReasonModalHandler),
 		new(handlers.ClaimHandler),
 		new(handlers.CloseConfirmHandler),
 		new(handlers.CloseRequestAcceptHandler),
@@ -65,6 +66,7 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 
 	m.modalRegistry = append(m.modalRegistry,
 		new(handlers.FormHandler),
+		new(handlers.CloseWithReasonSubmitHandler),
 	)
 
 	for _, handler := range m.buttonRegistry {
