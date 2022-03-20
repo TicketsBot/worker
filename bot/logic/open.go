@@ -359,6 +359,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
 	go statsd.Client.IncrementKey(statsd.KeyTickets)
+	if panel == nil {
+		go statsd.Client.IncrementKey(statsd.KeyOpenCommand)
+	}
 
 	if ctx.PremiumTier() > premium.None {
 		go createWebhook(ctx.Worker(), id, ctx.GuildId(), ch.Id)

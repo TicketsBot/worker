@@ -16,6 +16,7 @@ const (
 	AutoClose        Key = "autoclose"
 	KeyUnavailable   Key = "unavailable_guilds"
 	KeyDirectMessage Key = "direct_message"
+	KeyOpenCommand   Key = "open_command"
 )
 
 func (k Key) String() string {
