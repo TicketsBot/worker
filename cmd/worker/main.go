@@ -5,7 +5,6 @@ import (
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
-	"github.com/TicketsBot/worker/bot"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
@@ -14,13 +13,10 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/event"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/rest"
-	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -60,6 +56,7 @@ func main() {
 
 	cache.Client = &pgCache
 
+	/*
 	fmt.Println("Connected to cache, retrieving command list...")
 	{
 		token := os.Getenv("WORKER_PUBLIC_TOKEN")
@@ -74,7 +71,7 @@ func main() {
 			panic(err)
 		}
 	}
-
+*/
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if os.Getenv("DISCORD_PROXY_URL") != "" {
@@ -88,6 +85,8 @@ func main() {
 	} else {
 		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
 		utils.PremiumClient = &c
+
+		request.Client.Timeout = time.Second * 30
 	}
 
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))

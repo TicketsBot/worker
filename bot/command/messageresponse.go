@@ -112,6 +112,7 @@ func MessageIntoMessageResponse(msg message.Message) MessageResponse {
 	// TODO: Fix types
 	embeds := make([]*embed.Embed, len(msg.Embeds))
 	for i, embed := range msg.Embeds {
+		embed := embed // Loop values are pointers in Go and so change with each iteration
 		embeds[i] = &embed
 	}
 
