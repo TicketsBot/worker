@@ -32,7 +32,6 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 }
 
 func (UnclaimCommand) Execute(ctx registry.CommandContext) {
-
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
 		ctx.HandleError(err)
@@ -109,6 +108,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	ctx.Reply(customisation.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
+	ctx.ReplyPermanent(customisation.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
 	ctx.Accept()
 }
