@@ -44,7 +44,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 		return
 	}
 
-	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.U64Ptr(channelId)); err == nil {
+	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.Ptr(channelId)); err == nil {
 		ctx.Accept()
 		ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupTranscriptsComplete, channelId)
 	} else {
