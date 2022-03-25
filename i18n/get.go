@@ -139,10 +139,18 @@ func parseCrowdInData(path string, data map[string]interface{}) map[MessageId]st
 
 		s, ok := value.(string)
 		if ok {
+			if s == "" {
+				continue
+			}
+
 			parsed[MessageId(newPath)] = s
 		} else if m, ok := value.(map[string]interface{}); ok {
 			// TODO: Pass the map down directly
 			for k, v := range parseCrowdInData(newPath, m) {
+				if v == "" {
+					continue
+				}
+
 				parsed[k] = v
 			}
 		} else {
