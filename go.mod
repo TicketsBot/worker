@@ -3,7 +3,7 @@ module github.com/TicketsBot/worker
 go 1.18
 
 require (
-	github.com/TicketsBot/archiverclient v0.0.0-20211126155247-fb9aac46bd0c
+	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20220311020409-8068ba1c2ea3
 	github.com/TicketsBot/database v0.0.0-20220217133004-d190910ad66f
 	github.com/elliotchance/orderedmap v1.2.1
@@ -21,7 +21,7 @@ require (
 )
 
 require (
-	github.com/TicketsBot/logarchiver v0.0.0-20211126155104-4d78c720975c // indirect
+	github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c // indirect
 	github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 // indirect
