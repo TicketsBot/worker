@@ -97,13 +97,14 @@ func BuildOption(cmd registry.Command) interaction.ApplicationCommandOption {
 		}
 
 		option := interaction.ApplicationCommandOption{
-			Type:        argument.Type,
-			Name:        argument.Name,
-			Description: argument.Description,
-			Default:     false,
-			Required:    argument.Required,
-			Choices:     nil,
-			Options:     nil,
+			Type:         argument.Type,
+			Name:         argument.Name,
+			Description:  argument.Description,
+			Default:      false,
+			Required:     argument.Required,
+			Autocomplete: argument.AutoCompleteHandler != nil,
+			Choices:      nil,
+			Options:      nil,
 		}
 
 		if option.Required {
