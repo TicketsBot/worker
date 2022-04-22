@@ -94,7 +94,6 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
-	fmt.Println("reply with: " + strconv.FormatBool(hasReplied))
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseMessage{
