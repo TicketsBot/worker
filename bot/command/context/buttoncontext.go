@@ -18,6 +18,7 @@ import (
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
 	"go.uber.org/atomic"
+	"strconv"
 )
 
 type ButtonContext struct {
@@ -93,6 +94,7 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
+	fmt.Println("reply with: " + strconv.FormatBool(hasReplied))
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseMessage{
@@ -110,6 +112,7 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 
 func (ctx *ButtonContext) Edit(data command.MessageResponse) {
 	hasReplied := ctx.hasReplied.Swap(true)
+	fmt.Println("edit: " + strconv.FormatBool(hasReplied))
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseEdit{

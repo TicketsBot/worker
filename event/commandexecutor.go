@@ -1,12 +1,13 @@
 package event
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
-	"github.com/TicketsBot/worker/bot/command/context"
+	commandContext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -14,9 +15,11 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"golang.org/x/sync/errgroup"
 	"reflect"
 	"runtime/debug"
 	"strconv"
+	"sync"
 )
 
 // TODO: Command not found messages
@@ -28,7 +31,7 @@ func executeCommand(
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) (bool, error) {
 	if data.GuildId.Value == 0 {
-		responseCh <- interaction.ApplicationCommandCallbackData {
+		responseCh <- interaction.ApplicationCommandCallbackData{
 			Content: "Commands in DMs are not currently supported. Please run this command in a server.",
 		}
 		return false, nil
@@ -145,7 +148,7 @@ func executeCommand(
 			return
 		}
 
-		interactionContext := context.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
+		interactionContext := commandContext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
 		permLevel, err := interactionContext.UserPermissionLevel()
 		if err != nil {
@@ -187,8 +190,42 @@ func executeCommand(
 			return
 		}
 
-		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, userId)
-		if err != nil {
+		// Determine whether the user is blacklisted, at either global or servlev
+		blacklisted := false
+		blacklistedMu := sync.Mutex{}
+
+		group, _ := errgroup.WithContext(context.Background())
+		group.Go(func() error {
+			tmp, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, userId)
+			if err != nil {
+				return err
+			}
+
+			if tmp {
+				blacklistedMu.Lock()
+				blacklisted = true
+				blacklistedMu.Unlock()
+			}
+
+			return nil
+		})
+
+		group.Go(func() error {
+			tmp, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(userId)
+			if err != nil {
+				return err
+			}
+
+			if tmp {
+				blacklistedMu.Lock()
+				blacklisted = true
+				blacklistedMu.Unlock()
+			}
+
+			return nil
+		})
+
+		if err := group.Wait(); err != nil {
 			interactionContext.HandleError(err)
 			return
 		}
@@ -200,7 +237,7 @@ func executeCommand(
 		}
 
 		fn := reflect.TypeOf(cmd.GetExecutor())
-		if len(args) != fn.NumIn() - 1 { // - 1 since command context is provided
+		if len(args) != fn.NumIn()-1 { // - 1 since command context is provided
 			interactionContext.ReplyRaw(customisation.Red, "Error", "Argument count mismatch: Try creating slash commands again")
 			interactionContext.Reject()
 			return
