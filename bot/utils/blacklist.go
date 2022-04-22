@@ -8,7 +8,7 @@ import (
 )
 
 // Get whether the user is blacklisted at either global or server level
-func IsBlacklisted(userId, guildId uint64) (bool, error) {
+func IsBlacklisted(guildId, userId uint64) (bool, error) {
 	// Optimise as much as possible, skip errgroup if we can
 	if guildId == 0 {
 		blacklisted, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(userId)
