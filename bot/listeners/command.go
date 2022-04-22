@@ -146,7 +146,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		// get blacklisted
 		group.Go(func() (err error) {
-			blacklisted, err = dbclient.Client.Blacklist.IsBlacklisted(e.GuildId, e.Author.Id)
+			blacklisted, err = utils.IsBlacklisted(e.GuildId, e.Author.Id)
 			return
 		})
 

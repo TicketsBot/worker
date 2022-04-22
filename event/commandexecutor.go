@@ -1,7 +1,6 @@
 package event
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
@@ -10,16 +9,13 @@ import (
 	commandContext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
-	"golang.org/x/sync/errgroup"
 	"reflect"
 	"runtime/debug"
 	"strconv"
-	"sync"
 )
 
 // TODO: Command not found messages
@@ -190,42 +186,9 @@ func executeCommand(
 			return
 		}
 
-		// Determine whether the user is blacklisted, at either global or servlev
-		blacklisted := false
-		blacklistedMu := sync.Mutex{}
-
-		group, _ := errgroup.WithContext(context.Background())
-		group.Go(func() error {
-			tmp, err := dbclient.Client.Blacklist.IsBlacklisted(data.GuildId.Value, userId)
-			if err != nil {
-				return err
-			}
-
-			if tmp {
-				blacklistedMu.Lock()
-				blacklisted = true
-				blacklistedMu.Unlock()
-			}
-
-			return nil
-		})
-
-		group.Go(func() error {
-			tmp, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(userId)
-			if err != nil {
-				return err
-			}
-
-			if tmp {
-				blacklistedMu.Lock()
-				blacklisted = true
-				blacklistedMu.Unlock()
-			}
-
-			return nil
-		})
-
-		if err := group.Wait(); err != nil {
+		// Check for blacklist
+		blacklisted, err := utils.IsBlacklisted(data.GuildId.Value, userId)
+		if err != nil {
 			interactionContext.HandleError(err)
 			return
 		}

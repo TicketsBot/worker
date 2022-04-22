@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"strings"
 )
@@ -45,7 +46,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(panel.GuildId, ctx.InteractionUser().Id)
+		blacklisted, err := utils.IsBlacklisted(panel.GuildId, ctx.InteractionUser().Id)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -58,9 +59,9 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 
 		inputs, err := dbclient.Client.FormInput.GetAllInputsByCustomId(ctx.GuildId())
 		if err != nil {
-            ctx.HandleError(err)
-            return
-        }
+			ctx.HandleError(err)
+			return
+		}
 
 		formAnswers := make(map[database.FormInput]string)
 		for _, actionRow := range data.Components {

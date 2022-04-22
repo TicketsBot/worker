@@ -63,7 +63,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		// load isBlacklisted
 		group.Go(func() (err error) {
-			isBlacklisted, err = dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), userId)
+			isBlacklisted, err = utils.IsBlacklisted(ctx.GuildId(), userId)
 			return
 		})
 
@@ -95,11 +95,9 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(ctx.GetColour(customisation.Green)).
-
 			AddField("Is Admin", "false", true).
 			AddField("Is Support", "false", true).
 			AddField("Is Blacklisted", strconv.FormatBool(isBlacklisted), true).
-
 			AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 			AddField("Open Tickets", fmt.Sprintf("%d / %d", openTickets, ticketLimit), true)
 
@@ -122,9 +120,8 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		var weeklyAR, monthlyAR, totalAR *time.Duration
 		var weeklyAnsweredTickets, monthlyAnsweredTickets, totalAnsweredTickets,
-		weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets,
-		weeklyClaimedTickets, monthlyClaimedTickets, totalClaimedTickets int
-
+			weeklyTotalTickets, monthlyTotalTickets, totalTotalTickets,
+			weeklyClaimedTickets, monthlyClaimedTickets, totalClaimedTickets int
 
 		// totalAR
 		group.Go(func() (err error) {
@@ -226,23 +223,18 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(ctx.GetColour(customisation.Green)).
-
 			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
 			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
 			AddBlankField(true).
-
 			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
 			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 			AddBlankField(true).
-
 			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
 			AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
 			AddField("Average First Response Time (Total)", totalFormatted, true).
-
 			AddField("Tickets Answered (Weekly)", fmt.Sprintf("%d / %d", weeklyAnsweredTickets, weeklyTotalTickets), true).
 			AddField("Tickets Answered (Monthly)", fmt.Sprintf("%d / %d", monthlyAnsweredTickets, monthlyTotalTickets), true).
 			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true).
-
 			AddField("Claimed Tickets (Weekly)", strconv.Itoa(weeklyClaimedTickets), true).
 			AddField("Claimed Tickets (Monthly)", strconv.Itoa(monthlyClaimedTickets), true).
 			AddField("Claimed Tickets (Total)", strconv.Itoa(totalClaimedTickets), true)

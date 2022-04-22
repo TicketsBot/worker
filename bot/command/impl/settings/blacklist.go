@@ -65,7 +65,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), member.User.Id)
+	isBlacklisted, err := utils.IsBlacklisted(ctx.GuildId(), member.User.Id)
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		ctx.Reject()
