@@ -190,22 +190,23 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
+	// TODO: Translate titles
 	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(ctx.GetColour(customisation.Green)).
 		SetTimestamp(time.Now()).
-		AddField("Ticket ID", strconv.Itoa(ticket.Id), true).
-		AddField("Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
-		AddField("Closed By", member.User.Mention(), true).
-		AddField("Reason", formattedReason, false)
+		AddField("<:id:974006684643127296> Ticket ID", strconv.Itoa(ticket.Id), true).
+		AddField("<:open:974006684584378389> Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
+		AddField("<:close:974006684576002109> Closed By", member.User.Mention(), true).
+		AddField("<:reason:974006684567629845> Reason", formattedReason, false)
 
 	if settings.StoreTranscripts {
-		closeEmbed.AddField("Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true)
+		closeEmbed.AddField("<:transcript:974006684236267521> Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true)
 	}
 
 	closeEmbed.
-		AddField("Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField("Claimed By", claimedBy, true)
+		AddField("<:time:974006684622159952> Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField("<:claim:974006684483715072> Claimed By", claimedBy, true)
 
 	if archiveChannelExists && archiveChannelId != nil {
 		if _, err := ctx.Worker().CreateMessageEmbed(*archiveChannelId, closeEmbed); err != nil {
