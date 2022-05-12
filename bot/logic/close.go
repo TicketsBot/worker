@@ -166,47 +166,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
-	var formattedReason string
-	if reason == nil {
-		formattedReason = "No reason specified"
-	} else {
-		formattedReason = *reason
-		if len(formattedReason) > 1024 {
-			formattedReason = formattedReason[:1024]
-		}
-	}
-
-	var claimedBy string
-	{
-		claimUserId, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
-		if err != nil {
-			sentry.Error(err)
-		}
-
-		if claimUserId == 0 {
-			claimedBy = "Not claimed"
-		} else {
-			claimedBy = fmt.Sprintf("<@%d>", claimUserId)
-		}
-	}
-
-	// TODO: Translate titles
-	closeEmbed := embed.NewEmbed().
-		SetTitle("Ticket Closed").
-		SetColor(ctx.GetColour(customisation.Green)).
-		SetTimestamp(time.Now()).
-		AddField("<:id:974006684643127296> Ticket ID", strconv.Itoa(ticket.Id), true).
-		AddField("<:open:974006684584378389> Opened By", fmt.Sprintf("<@%d>", ticket.UserId), true).
-		AddField("<:close:974006684576002109> Closed By", member.User.Mention(), true).
-		AddField("<:reason:974006684567629845> Reason", formattedReason, false)
-
-	if settings.StoreTranscripts {
-		closeEmbed.AddField("<:transcript:974006684236267521> Archive", fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/logs/view/%d)", ticket.GuildId, ticket.Id), true)
-	}
-
-	closeEmbed.
-		AddField("<:time:974006684622159952> Open Time", message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField("<:claim:974006684483715072> Claimed By", claimedBy, true)
+	closeEmbed := buildCloseEmbed(ctx, ticket, settings, member, reason)
 
 	if archiveChannelExists && archiveChannelId != nil {
 		if _, err := ctx.Worker().CreateMessageEmbed(*archiveChannelId, closeEmbed); err != nil {
@@ -250,6 +210,60 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 				sentry.ErrorWithContext(err, errorContext)
 			}
 		}
+	}
+}
+
+func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settings database.Settings, member member.Member, reason *string) *embed.Embed {
+	var formattedReason string
+	if reason == nil {
+		formattedReason = "No reason specified"
+	} else {
+		formattedReason = *reason
+		if len(formattedReason) > 1024 {
+			formattedReason = formattedReason[:1024]
+		}
+	}
+
+	var claimedBy string
+	{
+		claimUserId, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
+		if err != nil {
+			sentry.Error(err)
+		}
+
+		if claimUserId == 0 {
+			claimedBy = "Not claimed"
+		} else {
+			claimedBy = fmt.Sprintf("<@%d>", claimUserId)
+		}
+	}
+
+	// TODO: Translate titles
+	closeEmbed := embed.NewEmbed().
+		SetTitle("Ticket Closed").
+		SetColor(ctx.GetColour(customisation.Green)).
+		SetTimestamp(time.Now()).
+		AddField(formatTitle("Ticket ID", utils.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
+		AddField(formatTitle("Opened By", utils.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
+		AddField(formatTitle("Closed By", utils.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
+		AddField(formatTitle("Reason", utils.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
+
+	if settings.StoreTranscripts {
+		closeEmbed.AddField(formatTitle("Transcript", utils.EmojiTranscript, ctx.Worker().IsWhitelabel), fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/transcripts/view/%d)", ticket.GuildId, ticket.Id), true)
+	}
+
+	closeEmbed.
+		AddField(formatTitle("Open Time", utils.EmojiTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true)
+
+	return closeEmbed
+}
+
+func formatTitle(s string, emoji utils.CustomEmoji, isWhitelabel bool) string {
+	if isWhitelabel {
+		return fmt.Sprintf("%s %s", emoji, s)
+	} else {
+		return s
 	}
 }
 
