@@ -260,7 +260,7 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 }
 
 func formatTitle(s string, emoji utils.CustomEmoji, isWhitelabel bool) string {
-	if isWhitelabel {
+	if !isWhitelabel {
 		return fmt.Sprintf("%s %s", emoji, s)
 	} else {
 		return s
