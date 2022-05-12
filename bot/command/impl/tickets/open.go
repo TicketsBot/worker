@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -39,6 +40,7 @@ func (OpenCommand) Execute(ctx registry.CommandContext, providedSubject *string)
 	}
 
 	if settings.DisableOpenCommand {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenCommandDisabled)
 		return
 	}
 

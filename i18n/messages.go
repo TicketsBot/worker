@@ -137,6 +137,7 @@ var (
 	MessageTicketStartedFrom        MessageId = "commands.open.from"
 	MessageMovedToTicket            MessageId = "commands.open.from.moved"
 	MessageFormMissingInput         MessageId = "commands.open.missing_form_answer"
+	MessageOpenCommandDisabled      MessageId = "commands.open.disabled"
 
 	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"

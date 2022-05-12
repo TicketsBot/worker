@@ -56,7 +56,8 @@ func ListenTicketClose() {
 				}
 
 				if isWhitelabel {
-					bot, err := dbclient.Client.Whitelabel.GetByBotId(whiteLabelBotId); if err != nil {
+					bot, err := dbclient.Client.Whitelabel.GetByBotId(whiteLabelBotId)
+					if err != nil {
 						sentry.ErrorWithContext(err, errorContext)
 						return
 					}
@@ -86,7 +87,8 @@ func ListenTicketClose() {
 			// Get whether the guild is premium for log archiver
 			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
 			if err != nil {
-
+				sentry.ErrorWithContext(err, errorContext)
+				return
 			}
 
 			// Create worker context
