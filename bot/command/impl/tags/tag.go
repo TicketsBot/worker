@@ -61,11 +61,13 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	}
 
 	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
-	go func() {
-		if err := dbclient.Client.Participants.Set(ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		}
-	}()
+	if ticket.GuildId != 0 {
+		go func() {
+			if err := dbclient.Client.Participants.Set(ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
+				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			}
+		}()
+	}
 
 	content = utils.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket)
 	ctx.ReplyPlainPermanent(content)
