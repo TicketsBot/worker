@@ -54,10 +54,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	if !ok {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenRatelimited)
-
-		err := fmt.Errorf("guild ratelimited")
-		sentry.LogWithContext(err, ctx.ToErrorContext())
-		return database.Ticket{}, err
+		return database.Ticket{}, nil
 	}
 
 	// If we're using a panel, then we need to create the ticket in the specified category
