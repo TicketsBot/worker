@@ -20,6 +20,7 @@ func (VoteCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Everyone,
 		Category:         command.General,
 		DefaultEphemeral: true,
+		MainBotOnly:      true,
 	}
 }
 
