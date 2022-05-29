@@ -5,8 +5,6 @@ github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h
 github.com/TicketsBot/common v0.0.0-20220311020409-8068ba1c2ea3 h1:wcmBzDWg68gumBKDdMPr+CFiFM03YKB2pBNy6Vcq+To=
 github.com/TicketsBot/common v0.0.0-20220311020409-8068ba1c2ea3/go.mod h1:SVwX6gKkxRCMbp+qwJIgvQiy/Ut0fUddexEqRB/NTzc=
 github.com/TicketsBot/database v0.0.0-20210902172951-4e1f8ced84b7/go.mod h1:A4T2uQFIWC/ttCYpfgv7AkPjR09mMRgzG13lgoV/+aI=
-github.com/TicketsBot/database v0.0.0-20220422212557-239d49f9211b h1:EgVKh4G8rlGwR0RB+aGS2r+oTrA52/ETHE65tJF23YU=
-github.com/TicketsBot/database v0.0.0-20220422212557-239d49f9211b/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
 github.com/TicketsBot/database v0.0.0-20220529133909-cccd997cce26 h1:Yit6HfxVmGVZWRBcJjYPVilqzap+VbjtPJI3dESMVng=
 github.com/TicketsBot/database v0.0.0-20220529133909-cccd997cce26/go.mod h1:72oWvH/Gq1iKeXCZhVRZn1JFbNVC5iAgERZWTrEarEo=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=

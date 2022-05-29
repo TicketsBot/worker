@@ -12,6 +12,7 @@ const (
 	Czech         Language = "cz"
 	Danish        Language = "dk"
 	German        Language = "de"
+	Greek         Language = "el"
 	English       Language = "en"
 	Spanish       Language = "es"
 	Finnish       Language = "fi"
@@ -44,6 +45,7 @@ var Flags = map[Language]string{
 	Czech:         "🇨🇿",
 	Danish:        "🇩🇰",
 	German:        "🇩🇪",
+	Greek:         "🇬🇷",
 	English:       "🇬🇧",
 	Spanish:       "🇪🇸",
 	Finnish:       "🇫🇮",
@@ -81,6 +83,7 @@ var DiscordLocales = map[string]Language{
 	"cs":    Czech,
 	"da":    Danish,
 	"nl":    Dutch,
+	"el":    Greek,
 	"fi":    Finnish,
 	"fr":    French,
 	"de":    German,
@@ -108,6 +111,7 @@ var FullLocales = map[string]Language{
 	"cs-CZ": Czech,
 	"da-DK": Danish,
 	"de-DE": German,
+	"el-GR": Greek,
 	"en-GB": English,
 	"es-ES": Spanish,
 	"fi-FI": Finnish,
@@ -140,6 +144,7 @@ var LanguagesAlphabetical = []Language{
 	Czech,
 	Danish,
 	German,
+	Greek,
 	English,
 	Spanish,
 	Finnish,
@@ -172,6 +177,7 @@ var FullNames = map[Language]string{
 	Czech:         "Czech",
 	Danish:        "Danish",
 	German:        "German",
+	Greek:         "Greek",
 	English:       "English",
 	Spanish:       "Spanish",
 	Finnish:       "Finnish",
