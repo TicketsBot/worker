@@ -16,3 +16,11 @@ func FormatDateTime(time time.Time) string {
 	zone, _ := time.Zone()
 	return fmt.Sprintf("%d/%d/%d %d:%d (%s)", time.Day(), time.Month(), time.Year(), time.Hour(), time.Minute(), zone)
 }
+
+func FormatNullableTime(duration *time.Duration) string {
+	if duration == nil {
+		return "No data"
+	} else {
+		return FormatTime(*duration)
+	}
+}

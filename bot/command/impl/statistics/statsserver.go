@@ -107,9 +107,5 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 }
 
 func formatNullableTime(duration *time.Duration) string {
-	if duration == nil {
-		return "No data"
-	} else {
-		return utils.FormatTime(*duration)
-	}
+	return utils.FormatNullableTime(duration)
 }

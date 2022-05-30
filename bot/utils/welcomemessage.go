@@ -204,6 +204,18 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
 	},
+	"first_response_time_weekly": func(ctx *worker.Context, ticket database.Ticket) string {
+		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		return FormatNullableTime(data.Weekly)
+	},
+	"first_response_time_monthly": func(ctx *worker.Context, ticket database.Ticket) string {
+		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		return FormatNullableTime(data.Monthly)
+	},
+	"first_response_time_all_time": func(ctx *worker.Context, ticket database.Ticket) string {
+		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		return FormatNullableTime(data.AllTime)
+	},
 }
 
 func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedField {
@@ -224,8 +236,8 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 		answer, ok := formData[input]
 		if ok {
 			fields = append(fields, embed.EmbedField{
-				Name:  input.Label,
-				Value: answer,
+				Name:   input.Label,
+				Value:  answer,
 				Inline: false,
 			})
 		}
