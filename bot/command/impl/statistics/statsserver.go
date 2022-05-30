@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -67,23 +68,16 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	})
 
 	// first response times
-	var weekly, monthly, total *time.Duration
-
-	// total
+	var firstResponseTime database.FirstResponseTimeData
 	group.Go(func() (err error) {
-		total, err = dbclient.Client.FirstResponseTime.GetAverageAllTime(ctx.GuildId())
+		firstResponseTime, err = dbclient.Client.FirstResponseTimeGuildView.Get(ctx.GuildId())
 		return
 	})
 
-	// monthly
+	// ticket duration
+	var ticketDuration database.TicketDurationData
 	group.Go(func() (err error) {
-		monthly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId(), time.Hour * 24 * 28)
-		return
-	})
-
-	// weekly
-	group.Go(func() (err error) {
-		weekly, err = dbclient.Client.FirstResponseTime.GetAverage(ctx.GuildId(), time.Hour * 24 * 7)
+		ticketDuration, err = dbclient.Client.TicketDurationView.Get(ctx.GuildId())
 		return
 	})
 
@@ -92,42 +86,30 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	var totalFormatted, monthlyFormatted, weeklyFormatted string
-
-	if total == nil {
-		totalFormatted = "No data"
-	} else {
-		totalFormatted = utils.FormatTime(*total)
-	}
-
-	if monthly == nil {
-		monthlyFormatted = "No data"
-	} else {
-		monthlyFormatted = utils.FormatTime(*monthly)
-	}
-
-	if weekly == nil {
-		weeklyFormatted = "No data"
-	} else {
-		weeklyFormatted = utils.FormatTime(*weekly)
-	}
-
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
 		SetColor(ctx.GetColour(customisation.Green)).
-
 		AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 		AddField("Open Tickets", strconv.Itoa(openTickets), true).
 		AddBlankField(true).
-
 		AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
 		AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 		AddBlankField(true).
-
-		AddField("Average First Response Time (Total)", totalFormatted, true).
-		AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
-		AddField("Average First Response Time (Weekly)", weeklyFormatted, true)
+		AddField("Average First Response Time (Total)", formatNullableTime(firstResponseTime.AllTime), true).
+		AddField("Average First Response Time (Monthly)", formatNullableTime(firstResponseTime.Monthly), true).
+		AddField("Average First Response Time (Weekly)", formatNullableTime(firstResponseTime.Weekly), true).
+		AddField("Average Ticket Duration (Total)", formatNullableTime(ticketDuration.AllTime), true).
+		AddField("Average Ticket Duration (Monthly)", formatNullableTime(ticketDuration.Monthly), true).
+		AddField("Average Ticket Duration (Weekly)", formatNullableTime(ticketDuration.Weekly), true)
 
 	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	ctx.Accept()
+}
+
+func formatNullableTime(duration *time.Duration) string {
+	if duration == nil {
+		return "No data"
+	} else {
+		return utils.FormatTime(*duration)
+	}
 }

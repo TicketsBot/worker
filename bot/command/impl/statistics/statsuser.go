@@ -23,7 +23,7 @@ type StatsUserCommand struct {
 func (StatsUserCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "user",
-		Description:     i18n.HelpStats, // TODO: Proper translations
+		Description:     i18n.HelpStats,
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"statistics"},
 		PermissionLevel: permission.Support,
@@ -200,26 +200,6 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		}
 
-		var totalFormatted, monthlyFormatted, weeklyFormatted string
-
-		if totalAR == nil {
-			totalFormatted = "No data"
-		} else {
-			totalFormatted = utils.FormatTime(*totalAR)
-		}
-
-		if monthlyAR == nil {
-			monthlyFormatted = "No data"
-		} else {
-			monthlyFormatted = utils.FormatTime(*monthlyAR)
-		}
-
-		if weeklyAR == nil {
-			weeklyFormatted = "No data"
-		} else {
-			weeklyFormatted = utils.FormatTime(*weeklyAR)
-		}
-
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(ctx.GetColour(customisation.Green)).
@@ -229,9 +209,9 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
 			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 			AddBlankField(true).
-			AddField("Average First Response Time (Weekly)", weeklyFormatted, true).
-			AddField("Average First Response Time (Monthly)", monthlyFormatted, true).
-			AddField("Average First Response Time (Total)", totalFormatted, true).
+			AddField("Average First Response Time (Weekly)", formatNullableTime(weeklyAR), true).
+			AddField("Average First Response Time (Monthly)", formatNullableTime(monthlyAR), true).
+			AddField("Average First Response Time (Total)", formatNullableTime(totalAR), true).
 			AddField("Tickets Answered (Weekly)", fmt.Sprintf("%d / %d", weeklyAnsweredTickets, weeklyTotalTickets), true).
 			AddField("Tickets Answered (Monthly)", fmt.Sprintf("%d / %d", monthlyAnsweredTickets, monthlyTotalTickets), true).
 			AddField("Tickets Answered (Total)", fmt.Sprintf("%d / %d", totalAnsweredTickets, totalTotalTickets), true).
