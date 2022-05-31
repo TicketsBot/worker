@@ -234,6 +234,10 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 	var fields []embed.EmbedField // Can't use len(formData), as form may have changed since modal was opened
 	for _, input := range inputs {
 		answer, ok := formData[input]
+		if answer == "" {
+			answer = "N/A" // TODO: What should we use here?
+		}
+
 		if ok {
 			fields = append(fields, embed.EmbedField{
 				Name:   input.Label,

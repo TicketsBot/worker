@@ -95,6 +95,7 @@ func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
 						Placeholder: input.Placeholder,
 						MinLength:   nil,
 						MaxLength:   &maxLength,
+						Required:    utils.Ptr(input.Required),
 					}))
 				}
 

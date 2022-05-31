@@ -112,7 +112,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
-
+		
 		var keyPrefix string
 
 		if payload.IsWhitelabel {

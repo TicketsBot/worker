@@ -75,6 +75,11 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 
 		// Validate user input
 		for question, answer := range formAnswers {
+			if !question.Required {
+				continue
+			}
+
+			// Check that users have not just pressed newline or space
 			isValid := false
 			for _, c := range answer {
 				if c != rune(' ') && c != rune('\n') {
