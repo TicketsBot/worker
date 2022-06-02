@@ -3,7 +3,6 @@ package tickets
 import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -119,18 +118,7 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 	}
 }
 
-// ReasonAutoCompleteHandler TODO: Per panel
+// ReasonAutoCompleteHandler TODO: Make a utility function rather than call the Close handler directly
 func (CloseRequestCommand) ReasonAutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
-	reasons, err := dbclient.Client.CloseReason.GetCommon(data.GuildId.Value, value, 10)
-	if err != nil {
-		sentry.Error(err) // TODO: Context
-		return nil
-	}
-
-	choices := make([]interaction.ApplicationCommandOptionChoice, len(reasons))
-	for i, reason := range reasons {
-		choices[i] = utils.StringChoice(reason)
-	}
-
-	return choices
+	return CloseCommand{}.AutoCompleteHandler(data, value)
 }
