@@ -25,7 +25,7 @@ func (BlacklistCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Support,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user", "User to blacklist or unblacklsit", interaction.OptionTypeUser, i18n.MessageBlacklistNoMembers),
+			command.NewRequiredArgument("user", "User to blacklist or unblacklist", interaction.OptionTypeUser, i18n.MessageBlacklistNoMembers),
 		),
 	}
 }

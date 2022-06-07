@@ -172,7 +172,7 @@ func executeCommand(
 
 		if properties.PremiumOnly && premiumLevel == premium.None {
 			interactionContext.Reject()
-			interactionContext.Reply(customisation.Red, "Premium Only Command", i18n.MessagePremium)
+			interactionContext.Reply(customisation.Red, i18n.TitlePremiumOnly, i18n.MessagePremium)
 			return
 		}
 

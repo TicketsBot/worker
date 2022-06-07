@@ -94,7 +94,7 @@ var (
 	MessageBlacklisted        MessageId = "generic.error.blacklisted"
 	MessageBlacklistNoMembers MessageId = "commands.blacklist.no_members"
 	MessageBlacklistSelf      MessageId = "commands.blacklist.self"
-	MessageBlacklistStaff     MessageId = "command.blacklist.staff"
+	MessageBlacklistStaff     MessageId = "commands.blacklist.staff"
 	MessageBlacklistAdd       MessageId = "commands.blacklist.add.success"
 	MessageBlacklistRemove    MessageId = "commands.blacklist.remove.success"
 
