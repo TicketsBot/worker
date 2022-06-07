@@ -24,42 +24,14 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, premiumTier premium.PremiumTier, subject string, panel *database.Panel, formData map[database.FormInput]string) (uint64, error) {
+func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel, formData map[database.FormInput]string) (uint64, error) {
 	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
 	if err != nil {
 		return 0, err
 	}
 
-	// Send welcome message
-	var welcomeMessage string
-	if panel == nil || panel.WelcomeMessage == nil {
-		var err error
-		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
-		if err != nil {
-			sentry.Error(err)
-			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
-		}
-	} else {
-		welcomeMessage = *panel.WelcomeMessage
-	}
-
-	// %average_response%
-	if premiumTier > premium.None && strings.Contains(welcomeMessage, "%average_response%") {
-		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(ticket.GuildId, time.Hour*24*7)
-		if err != nil {
-			sentry.Error(err)
-		} else {
-			strings.Replace(welcomeMessage, "%average_response%", FormatTime(*weeklyResponseTime), -1)
-		}
-	}
-
-	// variables
-	welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
-
 	// Build embeds
-	embeds := []*embed.Embed{
-		BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, premiumTier),
-	}
+	embeds := Slice(BuildWelcomeMessageEmbed(ctx, ticket, subject, panel))
 
 	// Put form fields in a separate embed
 	fields := getFormDataFields(formData)
@@ -71,7 +43,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 			formAnswersEmbed.AddField(field.Name, field.Value, field.Inline)
 		}
 
-		if premiumTier == premium.None {
+		if ctx.PremiumTier() == premium.None {
 			formAnswersEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 		}
 
@@ -120,6 +92,36 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, pre
 	}
 
 	return msg.Id, nil
+}
+
+func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel) *embed.Embed {
+	// Send welcome message
+	var welcomeMessage string
+	if panel == nil || panel.WelcomeMessage == nil {
+		var err error
+		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
+		}
+	} else {
+		welcomeMessage = *panel.WelcomeMessage
+	}
+
+	// %average_response%
+	if ctx.PremiumTier() > premium.None && strings.Contains(welcomeMessage, "%average_response%") {
+		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(ticket.GuildId, time.Hour*24*7)
+		if err != nil {
+			sentry.Error(err)
+		} else {
+			strings.Replace(welcomeMessage, "%average_response%", FormatTime(*weeklyResponseTime), -1)
+		}
+	}
+
+	// variables
+	welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
+
+	return BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier())
 }
 
 func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket) string {

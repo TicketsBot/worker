@@ -48,6 +48,7 @@ var (
 	TitleCloseConfirmation MessageId = "generic.title.close_confirmation"
 	TitleHelp              MessageId = "generic.title.help"
 	TitleCloseRequest      MessageId = "generic.title.close_request"
+	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
 
 	MessageAbout   MessageId = "commands.about"
 	MessagePremium MessageId = "commands.premium"
@@ -146,6 +147,9 @@ var (
 	MessageCloseRequestAccept       MessageId = "commands.close_request.accept"
 	MessageCloseRequestDeny         MessageId = "commands.close_request.deny"
 
+	MessageSwitchPanelInvalidPanel MessageId = "commands.switch_panel.invalid_panel"
+	MessageSwitchPanelSuccess      MessageId = "commands.switch_panel.success"
+
 	MessageAutoCloseConfigure MessageId = "commands.autoclose.configure"
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
 
@@ -243,4 +247,5 @@ var (
 	HelpHelp               MessageId = "help.help"
 	HelpRemoveAdmin        MessageId = "help.removeadmin"
 	HelpLanguage           MessageId = "help.language"
+	HelpSwitchPanel        MessageId = "help.switch_panel"
 )

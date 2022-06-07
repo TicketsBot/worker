@@ -48,7 +48,7 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 	}
 
 	tier := premium.Premium
-	if whitelabel != nil && *whitelabel  {
+	if whitelabel != nil && *whitelabel {
 		tier = premium.Whitelabel
 	}
 
@@ -75,7 +75,7 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 		return
 	}
 
-	content := "```"
+	content := "```\n"
 	for _, key := range keys {
 		content += fmt.Sprintf("%s\n", key)
 	}

@@ -95,7 +95,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		embed.SetDescription(messageContent)
 
 		data := rest.EditMessageData{
-			Embed: embed,
+			Embeds: utils.Slice(embed),
 		}
 
 		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
@@ -127,7 +127,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		embed.SetDescription(messageContent)
 
 		data := rest.EditMessageData{
-			Embed: embed,
+			Embeds: utils.Slice(embed),
 		}
 
 		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
@@ -167,8 +167,7 @@ func getTranscriptChannelData(guildId, supportRoleId, adminRoleId uint64) rest.C
 
 	overwrites := []channel.PermissionOverwrite{
 		{ // deny everyone else access to channel
-			Id:
-			guildId,
+			Id:    guildId,
 			Type:  channel.PermissionTypeRole,
 			Allow: 0,
 			Deny:  allow,

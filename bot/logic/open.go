@@ -26,7 +26,6 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -199,7 +198,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, err
 		}
 
-		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel, nil)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
@@ -286,7 +285,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, ctx.PremiumTier(), subject, panel, formData)
+	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
 	}
@@ -453,7 +452,7 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 
 var AllowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks, permission.UseSlashCommands}
 
-func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel) (overwrites []channel.PermissionOverwrite) {
+func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel, otherUsers ...uint64) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
 		User:  userId,
@@ -468,7 +467,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	})
 
 	// Create list of members & roles who should be added to the ticket
-	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, userId, selfId, panel)
+	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, userId, selfId, panel, otherUsers)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 		return nil
@@ -504,7 +503,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	return overwrites
 }
 
-func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel) ([]uint64, []uint64, error) {
+func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel, otherUsers []uint64) ([]uint64, []uint64, error) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
 		User:  userId,
@@ -514,6 +513,8 @@ func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel)
 	// Add the sender & self
 	allowedUsers := []uint64{userId, selfId}
 	allowedRoles := make([]uint64, 0)
+
+	allowedUsers = append(allowedUsers, otherUsers...)
 
 	// Should we add the default team
 	if panel == nil || panel.WithDefaultTeam {
@@ -536,40 +537,32 @@ func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel)
 
 	// Add other support teams
 	if panel != nil {
-		teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
-		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
-		} else {
-			group, _ := errgroup.WithContext(context.Background())
-			mu := sync.Mutex{}
+		group, _ := errgroup.WithContext(context.Background())
 
-			for _, team := range teams {
-				team := team
-
-				// TODO: Joins
-				group.Go(func() error {
-					members, err := dbclient.Client.SupportTeamMembers.Get(team.Id)
-					if err != nil {
-						return err
-					}
-
-					roles, err := dbclient.Client.SupportTeamRoles.Get(team.Id)
-					if err != nil {
-						return err
-					}
-
-					mu.Lock()
-					defer mu.Unlock()
-					allowedUsers = append(allowedUsers, members...)
-					allowedRoles = append(allowedRoles, roles...)
-
-					return nil
-				})
+		// Get users for support teams of panel
+		group.Go(func() error {
+			userIds, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(panel.PanelId)
+			if err != nil {
+				return err
 			}
 
-			if err := group.Wait(); err != nil {
-				return nil, nil, err
+			allowedUsers = append(allowedUsers, userIds...) // No mutex needed
+			return nil
+		})
+
+		// Get roles for support teams of panel
+		group.Go(func() error {
+			roleIds, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(panel.PanelId)
+			if err != nil {
+				return err
 			}
+
+			allowedRoles = append(allowedRoles, roleIds...) // No mutex needed
+			return nil
+		})
+
+		if err := group.Wait(); err != nil {
+			return nil, nil, err
 		}
 	}
 

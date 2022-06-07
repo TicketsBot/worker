@@ -3,24 +3,17 @@ package logic
 import (
 	"context"
 	"errors"
-	"github.com/TicketsBot/common/sentry"
+	"fmt"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"golang.org/x/sync/errgroup"
-	"sync"
 )
 
 func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) error {
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild:   ticket.GuildId,
-		User:    userId,
-	}
-
 	if ticket.ChannelId == nil {
 		return errors.New("channel ID is nil")
 	}
@@ -30,87 +23,99 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 		return err
 	}
 
+	newOverwrites, err := GenerateClaimedOverwrites(worker, ticket, userId)
+	if err != nil {
+		return err
+	}
+
+	// If newOverwrites = nil, no changes to permissions should be made
+	if newOverwrites != nil {
+		// Update channel
+		data := rest.ModifyChannelData{
+			PermissionOverwrites: newOverwrites,
+		}
+		if _, err = worker.ModifyChannel(*ticket.ChannelId, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GenerateClaimedOverwrites If support reps can still view and type, returns (nil, nil)
+func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, claimer uint64, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
 	// Get claim settings for guild
 	claimSettings, err := dbclient.Client.ClaimSettings.Get(ticket.GuildId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if claimSettings.SupportCanView && claimSettings.SupportCanType {
+		return nil, nil
 	}
 
 	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ticket.GuildId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ticket.GuildId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	var newOverwrites []channel.PermissionOverwrite
+	// Support can't view the ticket, and therefore can't type either
 	if !claimSettings.SupportCanView {
-		newOverwrites = overwritesCantView(userId, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles)
-	} else if !claimSettings.SupportCanType {
-		// TODO: Teams
+		return overwritesCantView(claimer, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles), nil
+	}
+
+	// Support can view the ticket, but can't type
+	if !claimSettings.SupportCanType {
 		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ticket.GuildId)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ticket.GuildId)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if ticket.PanelId != nil {
-			teams, err := dbclient.Client.PanelTeams.GetTeams(*ticket.PanelId)
-			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-			} else {
-				group, _ := errgroup.WithContext(context.Background())
-				mu := sync.Mutex{}
+			group, _ := errgroup.WithContext(context.Background())
 
-				for _, team := range teams {
-					team := team
-
-					// TODO: Joins
-					group.Go(func() error {
-						members, err := dbclient.Client.SupportTeamMembers.Get(team.Id)
-						if err != nil {
-							return err
-						}
-
-						roles, err := dbclient.Client.SupportTeamRoles.Get(team.Id)
-						if err != nil {
-							return err
-						}
-
-						mu.Lock()
-						defer mu.Unlock()
-						supportUsers = append(supportUsers, members...)
-						supportRoles = append(supportRoles, roles...)
-
-						return nil
-					})
+			// Get users for support teams of panel
+			group.Go(func() error {
+				userIds, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(*ticket.PanelId)
+				if err != nil {
+					return err
 				}
 
-				if err := group.Wait(); err != nil {
-					sentry.ErrorWithContext(err, errorContext)
+				supportUsers = append(supportUsers, userIds...) // No mutex needed
+				return nil
+			})
+
+			// Get roles for support teams of panel
+			group.Go(func() error {
+				roleIds, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(*ticket.PanelId)
+				if err != nil {
+					return err
 				}
+
+				supportRoles = append(supportRoles, roleIds...) // No mutex needed
+				return nil
+			})
+
+			if err := group.Wait(); err != nil {
+				return nil, err
 			}
 		}
 
-		newOverwrites = overwritesCantType(userId, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles)
+		return overwritesCantType(claimer, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles), nil
 	}
 
-	// Update channel
-	data := rest.ModifyChannelData{
-		PermissionOverwrites: newOverwrites,
-	}
-	if _, err = worker.ModifyChannel(*ticket.ChannelId, data); err != nil {
-		return err
-	}
-
-	return nil
+	// Unreachable
+	return nil, fmt.Errorf("unreachable code reached")
 }
 
 // We should build new overwrites from scratch
