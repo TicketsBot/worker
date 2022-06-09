@@ -100,14 +100,14 @@ func (r *Replyable) ReplyPlainPermanent(content string) {
 
 func (r *Replyable) HandleError(err error) {
 	eventId := sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
-	res := r.buildErrorResponse(err, eventId)
+	res := r.buildErrorResponse(err, eventId, !r.ctx.Worker().IsWhitelabel)
 
 	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) HandleWarning(err error) {
 	eventId := sentry.LogWithContext(err, r.ctx.ToErrorContext())
-	res := r.buildErrorResponse(err, eventId)
+	res := r.buildErrorResponse(err, eventId, !r.ctx.Worker().IsWhitelabel)
 
 	_, _ = r.ctx.ReplyWith(res)
 }
@@ -116,7 +116,7 @@ func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) 
 	return i18n.GetMessageFromGuild(r.ctx.GuildId(), messageId, format...)
 }
 
-func (r *Replyable) buildErrorResponse(err error, eventId string) command.MessageResponse {
+func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteLink bool) command.MessageResponse {
 	var message string
 	if restError, ok := err.(request.RestError); ok {
 		message = fmt.Sprintf("An error occurred while performing this action:\n"+
@@ -131,15 +131,18 @@ func (r *Replyable) buildErrorResponse(err error, eventId string) command.Messag
 
 	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), message)
 	res := command.NewEphemeralEmbedMessageResponse(embed)
-	res.Components = []component.Component{
-		component.BuildActionRow(
-			component.BuildButton(component.Button{
-				Label: r.GetMessage(i18n.MessageJoinSupportServer),
-				Style: component.ButtonStyleLink,
-				Emoji: utils.BuildEmoji("❓"),
-				Url:   utils.Ptr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
-			}),
-		),
+
+	if includeInviteLink {
+		res.Components = []component.Component{
+			component.BuildActionRow(
+				component.BuildButton(component.Button{
+					Label: r.GetMessage(i18n.MessageJoinSupportServer),
+					Style: component.ButtonStyleLink,
+					Emoji: utils.BuildEmoji("❓"),
+					Url:   utils.Ptr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
+				}),
+			),
+		}
 	}
 
 	return res
