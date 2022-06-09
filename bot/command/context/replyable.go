@@ -10,10 +10,14 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction/component"
+	"github.com/rxdn/gdl/rest/request"
+	"os"
+	"strings"
 )
 
 type Replyable struct {
-	ctx registry.CommandContext
+	ctx         registry.CommandContext
 	colourCodes map[customisation.Colour]int
 }
 
@@ -31,7 +35,7 @@ func NewReplyable(ctx registry.CommandContext) *Replyable {
 	}
 
 	return &Replyable{
-		ctx: ctx,
+		ctx:         ctx,
 		colourCodes: colourCodes,
 	}
 }
@@ -95,33 +99,48 @@ func (r *Replyable) ReplyPlainPermanent(content string) {
 }
 
 func (r *Replyable) HandleError(err error) {
-	sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
-
-	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	res := command.NewEphemeralEmbedMessageResponse(embed)
-	/*res.Components = []component.Component{
-		component.BuildActionRow(
-			component.BuildButton(component.Button{
-				Label: r.GetMessage(i18n.MessageJoinSupportServer),
-				Style: component.ButtonStyleLink,
-				Emoji: &emoji.Emoji{
-					Name: "❓",
-				},
-				Url: gdlutils.StrPtr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
-			}),
-		),
-	}*/
+	eventId := sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
+	res := r.buildErrorResponse(err, eventId)
 
 	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) HandleWarning(err error) {
-	sentry.LogWithContext(err, r.ctx.ToErrorContext())
+	eventId := sentry.LogWithContext(err, r.ctx.ToErrorContext())
+	res := r.buildErrorResponse(err, eventId)
 
-	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), fmt.Sprintf("An error occurred: `%s`", err.Error()))
-	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) string {
 	return i18n.GetMessageFromGuild(r.ctx.GuildId(), messageId, format...)
+}
+
+func (r *Replyable) buildErrorResponse(err error, eventId string) command.MessageResponse {
+	var message string
+	if restError, ok := err.(request.RestError); ok {
+		message = fmt.Sprintf("An error occurred while performing this action:\n"+
+			"```\n"+
+			"%s\n"+
+			"```\n"+
+			"Error ID: `%s`",
+			restError.Error(), eventId)
+	} else {
+		message = fmt.Sprintf("An error occurred while performing this action.\nError ID: `%s`", eventId)
+	}
+
+	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), message)
+	res := command.NewEphemeralEmbedMessageResponse(embed)
+	res.Components = []component.Component{
+		component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label: r.GetMessage(i18n.MessageJoinSupportServer),
+				Style: component.ButtonStyleLink,
+				Emoji: utils.BuildEmoji("❓"),
+				Url:   utils.Ptr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
+			}),
+		),
+	}
+
+	return res
 }
