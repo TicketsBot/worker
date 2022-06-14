@@ -1,8 +1,10 @@
 package settings
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -10,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"strings"
 )
 
 type RemoveSupportCommand struct {
@@ -25,9 +26,7 @@ func (RemoveSupportCommand) Properties() registry.Properties {
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("user", "User to remove the support representative permission from", interaction.OptionTypeUser, i18n.MessageAddAdminNoMembers),
-			command.NewOptionalArgument("role", "Role to remove the support representative permission from", interaction.OptionTypeRole, i18n.MessageAddAdminNoMembers),
-			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to remove the support representative permission from", interaction.OptionTypeString, i18n.MessageAddAdminNoMembers),
+			command.NewRequiredArgument("user_or_role", "User or role to remove the support representative permission from", interaction.OptionTypeMentionable, i18n.MessageRemoveSupportNoMembers),
 		),
 	}
 }
@@ -37,96 +36,64 @@ func (c RemoveSupportCommand) GetExecutor() interface{} {
 }
 
 // TODO: Remove from existing tickets
-func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`/removesupport @User`\n`/removesupport @Role`\n`/removesupport role name`",
+		Value:  "`/removesupport @User`\n`/removesupport @Role`",
 		Inline: false,
 	}
 
-	if userId == nil && roleId == nil && roleName == nil {
+	mentionableType, valid := context.DetermineMentionableType(ctx, id)
+	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
 
-	// get guild object
-	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	if userId != nil {
-		if guild.OwnerId == *userId {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
-			ctx.Reject()
-			return
-		}
-
-		if ctx.UserId() == *userId {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
-			ctx.Reject()
-			return
-		}
-
-		if err := dbclient.Client.Permissions.RemoveSupport(ctx.GuildId(), *userId); err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), *userId, permcache.Everyone); err != nil {
-			ctx.HandleError(err)
-			return
-		}
-	}
-
-	ctx.Reply(customisation.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
-
-	var roles []uint64
-	if roleId != nil {
-		roles = []uint64{*roleId}
-	}
-
-	if roleName != nil {
-		guildRoles, err := ctx.Worker().GetGuildRoles(ctx.GuildId())
+	if mentionableType == context.MentionableTypeUser {
+		// get guild object
+		guild, err := ctx.Worker().GetGuild(ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		// Get role ID from name
-		valid := false
-		for _, role := range guildRoles {
-			if strings.ToLower(role.Name) == strings.ToLower(*roleName) {
-				valid = true
-				roles = append(roles, role.Id)
-				break
-			}
-		}
-
-		// Verify a valid role was mentioned
-		if !valid {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.FieldsToSlice(usageEmbed))
+		if guild.OwnerId == id {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
-	}
 
-	// Add roles to DB
-	for _, role := range roles {
-		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx.GuildId(), role); err != nil {
+		if ctx.UserId() == id {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
+			ctx.Reject()
+			return
+		}
+
+		if err := dbclient.Client.Permissions.RemoveSupport(ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), role, permcache.Everyone); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Everyone); err != nil {
 			ctx.HandleError(err)
 			return
 		}
+	} else if mentionableType == context.MentionableTypeRole {
+		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx.GuildId(), id); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Everyone); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+	} else {
+		ctx.HandleError(fmt.Errorf("infallible"))
+		return
 	}
 
-	//logic.UpdateCommandPermissions(ctx, c.Registry)
-
+	ctx.Reply(customisation.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
 	ctx.Accept()
 }

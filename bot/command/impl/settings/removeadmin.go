@@ -1,9 +1,10 @@
 package settings
 
 import (
-	"context"
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -11,8 +12,6 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"golang.org/x/sync/errgroup"
-	"strings"
 )
 
 type RemoveAdminCommand struct {
@@ -27,9 +26,7 @@ func (RemoveAdminCommand) Properties() registry.Properties {
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
 		Arguments: command.Arguments(
-			command.NewOptionalArgument("user", "User to remove the administrator permission from", interaction.OptionTypeUser, i18n.MessageAddAdminNoMembers),
-			command.NewOptionalArgument("role", "Role to remove the administrator permission from", interaction.OptionTypeRole, i18n.MessageAddAdminNoMembers),
-			command.NewOptionalArgumentMessageOnly("role_name", "Name of the role to remove the administrator permission from", interaction.OptionTypeString, i18n.MessageAddAdminNoMembers),
+			command.NewRequiredArgument("user_or_role", "User or role to remove the administrator permission from", interaction.OptionTypeMentionable, i18n.MessageRemoveAdminNoMembers),
 		),
 	}
 }
@@ -39,100 +36,64 @@ func (c RemoveAdminCommand) GetExecutor() interface{} {
 }
 
 // TODO: Remove from existing tickets
-func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, userId *uint64, roleId *uint64, roleName *string) {
+func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`/removeadmin @User`\n`/removeadmin @Role`\n`/removeadmin role name`",
+		Value:  "`/removeadmin @User`\n`/removeadmin @Role`",
 		Inline: false,
 	}
 
-	if userId == nil && roleId == nil && roleName == nil {
+	mentionableType, valid := context.DetermineMentionableType(ctx, id)
+	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
 
-	// get guild object
-	guild, err := ctx.Worker().GetGuild(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
+	if mentionableType == context.MentionableTypeUser {
+		// get guild object
+		guild, err := ctx.Worker().GetGuild(ctx.GuildId())
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
 
-	if userId != nil {
-		if guild.OwnerId == *userId {
+		if guild.OwnerId == id {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
 			ctx.Reject()
 			return
 		}
 
-		if ctx.UserId() == *userId {
+		if ctx.UserId() == id {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
 			ctx.Reject()
 			return
 		}
 
-		if err := dbclient.Client.Permissions.RemoveAdmin(ctx.GuildId(), *userId); err != nil {
+		if err := dbclient.Client.Permissions.RemoveAdmin(ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), *userId, permcache.Support); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}
+	} else if mentionableType == context.MentionableTypeRole {
+		if err := dbclient.Client.RolePermissions.RemoveAdmin(ctx.GuildId(), id); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Support); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+	} else {
+		ctx.HandleError(fmt.Errorf("infallible"))
+		return
 	}
 
+	ctx.Accept()
 	ctx.Reply(customisation.Green, i18n.TitleRemoveAdmin, i18n.MessageRemoveAdminSuccess)
-
-	var roles []uint64
-	if roleId != nil {
-		roles = []uint64{*roleId}
-	}
-
-	if roleName != nil {
-		// Get role ID from name
-		valid := false
-		for _, role := range guild.Roles {
-			if strings.ToLower(role.Name) == strings.ToLower(*roleName) {
-				roles = append(roles, role.Id)
-				valid = true
-				break
-			}
-		}
-
-		// Verify a valid role was mentioned
-		if !valid {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveAdminNoMembers, utils.FieldsToSlice(usageEmbed))
-			ctx.Reject()
-			return
-		}
-	}
-
-	// Remove roles from DB
-	group, _ := errgroup.WithContext(context.Background())
-	for _, role := range roles {
-		role := role
-
-		group.Go(func() error {
-			if err := dbclient.Client.RolePermissions.RemoveAdmin(ctx.GuildId(), role); err != nil {
-				return err
-			}
-
-			if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), role, permcache.Support); err != nil {
-				return err
-			}
-
-			return nil
-		})
-	}
-
-	//logic.UpdateCommandPermissions(ctx, c.Registry)
-
-	switch group.Wait() {
-	case nil:
-		ctx.Accept()
-	case err:
-		ctx.HandleError(err)
-	}
 }

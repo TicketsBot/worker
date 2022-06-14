@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
@@ -97,7 +98,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		Id:    userId,
 		Type:  channel.PermissionTypeMember,
 		Allow: 0,
-		Deny:  permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+		Deny:  permission.BuildPermissions(logic.StandardPermissions[:]...),
 	}); err != nil {
 		ctx.HandleError(err)
 		return

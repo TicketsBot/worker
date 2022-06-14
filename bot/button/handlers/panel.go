@@ -43,7 +43,7 @@ func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := utils.IsBlacklisted(panel.GuildId, ctx.InteractionUser().Id)
+		blacklisted, err := ctx.IsBlacklisted()
 		if err != nil {
 			ctx.HandleError(err)
 			return

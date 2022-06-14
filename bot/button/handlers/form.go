@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"strings"
 )
@@ -46,7 +45,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := utils.IsBlacklisted(panel.GuildId, ctx.InteractionUser().Id)
+		blacklisted, err := ctx.IsBlacklisted()
 		if err != nil {
 			ctx.HandleError(err)
 			return

@@ -5,14 +5,14 @@ go 1.18
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20220609182514-8d43f86e8253
-	github.com/TicketsBot/database v0.0.0-20220609180637-329cb746b187
+	github.com/TicketsBot/database v0.0.0-20220613223914-5229a34649cd
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
-	github.com/rxdn/gdl v0.0.0-20220606005624-88c41fdba66a
+	github.com/rxdn/gdl v0.0.0-20220614155333-7e6d7486acdd
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0

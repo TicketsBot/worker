@@ -7,10 +7,13 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest/request"
 	"os"
 	"strings"
@@ -119,12 +122,27 @@ func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) 
 func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteLink bool) command.MessageResponse {
 	var message string
 	if restError, ok := err.(request.RestError); ok {
-		message = fmt.Sprintf("An error occurred while performing this action:\n"+
-			"```\n"+
-			"%s\n"+
-			"```\n"+
-			"Error ID: `%s`",
-			restError.Error(), eventId)
+		if restError.ApiError.Message == "Missing Permissions" { // Override for missing permissions
+			missingPermissions, err := r.findMissingPermissions()
+			if err == nil {
+				if len(missingPermissions) > 0 {
+					message = "I am missing the following permissions required to perform this action:\n"
+					for _, perm := range missingPermissions {
+						message += fmt.Sprintf("• `%s`\n", perm.String())
+					}
+
+					message += "\nPlease assign these permissions to the bot, or alternatively, the `Administrator` permission and try again.\n\n"
+					message += fmt.Sprintf("Error ID: `%s`", eventId)
+				} else {
+					message = formatDiscordError(restError, eventId)
+				}
+			} else {
+				sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
+				message = formatDiscordError(restError, eventId)
+			}
+		} else {
+			message = formatDiscordError(restError, eventId)
+		}
 	} else {
 		message = fmt.Sprintf("An error occurred while performing this action.\nError ID: `%s`", eventId)
 	}
@@ -146,4 +164,38 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 	}
 
 	return res
+}
+
+func formatDiscordError(restError request.RestError, eventId string) string {
+	return fmt.Sprintf("An error occurred while performing this action:\n"+
+		"```\n"+
+		"%s\n"+
+		"```\n"+
+		"Error ID: `%s`",
+		restError.Error(), eventId)
+}
+
+func (r *Replyable) findMissingPermissions() ([]permission.Permission, error) {
+	permissions, err := permissionwrapper.GetEffectivePermissions(r.ctx.Worker(), r.ctx.GuildId(), r.ctx.Worker().BotId)
+	if err != nil {
+		return nil, err
+	}
+
+	if permission.HasPermissionRaw(permissions, permission.Administrator) {
+		return nil, nil
+	}
+
+	requiredPermissions := append(
+		[]permission.Permission{permission.ManageChannels, permission.ManageRoles},
+		logic.StandardPermissions[:]...,
+	)
+
+	var missingPermissions []permission.Permission
+	for _, requiredPermission := range requiredPermissions {
+		if !permission.HasPermissionRaw(permissions, requiredPermission) {
+			missingPermissions = append(missingPermissions, requiredPermission)
+		}
+	}
+
+	return missingPermissions, nil
 }

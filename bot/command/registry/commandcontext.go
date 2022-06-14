@@ -55,4 +55,6 @@ type CommandContext interface {
 	Guild() (guild.Guild, error)
 	Member() (member.Member, error)
 	User() (user.User, error)
+
+	IsBlacklisted() (bool, error)
 }

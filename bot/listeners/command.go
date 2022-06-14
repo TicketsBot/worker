@@ -138,15 +138,21 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			return
 		}
 
+		userPermissionLevel, err := permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return
+		}
+
 		var blacklisted bool
 		var premiumTier premium.PremiumTier
-		var userPermissionLevel permcache.PermissionLevel
 
 		group, _ := errgroup.WithContext(context.Background())
 
 		// get blacklisted
 		group.Go(func() (err error) {
-			blacklisted, err = utils.IsBlacklisted(e.GuildId, e.Author.Id)
+			// If e.Member is zero, it does not matter, as it is not checked if the command is not executed in a guild
+			blacklisted, err = utils.IsBlacklisted(e.GuildId, e.Author.Id, e.Member, userPermissionLevel)
 			return
 		})
 
@@ -154,12 +160,6 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		group.Go(func() (err error) {
 			premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
 			return
-		})
-
-		// get permission level
-		group.Go(func() (err error) {
-			userPermissionLevel, err = permcache.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
-			return err
 		})
 
 		if err := group.Wait(); err != nil {
@@ -329,6 +329,60 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 						continue
 					}
 				}
+			case interaction.OptionTypeMentionable:
+				var snowflake string
+
+				// First, check for role
+				//goland:noinspection GoNilness
+				roleMatch := rolePattern.FindStringSubmatch(args[argsIndex])
+				if len(roleMatch) < 2 {
+					// Then, check for user
+					userMatch := userPattern.FindStringSubmatch(args[argsIndex])
+					if len(userMatch) < 2 {
+						if argument.Required {
+							ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
+							return
+						} else {
+							parsedArguments[i] = nil
+							continue
+						}
+					} else {
+						snowflake = userMatch[1]
+					}
+				} else {
+					snowflake = roleMatch[1]
+				}
+
+				if id, err := strconv.ParseUint(snowflake, 10, 64); err == nil {
+					parsedArguments[i] = id
+					argsIndex++
+				} else {
+					if argument.Required {
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
+						return
+					} else {
+						parsedArguments[i] = nil
+						continue
+					}
+				}
+			case interaction.OptionTypeNumber:
+				//goland:noinspection GoNilness
+				raw := args[argsIndex]
+				value, err := strconv.ParseFloat(raw, 64)
+				if err != nil {
+					if argument.Required {
+						ctx.Reply(customisation.Red, i18n.Error, argument.InvalidMessage)
+						return
+					} else {
+						parsedArguments[i] = (*float64)(nil)
+						continue
+					}
+				}
+
+				parsedArguments[i] = value
+				argsIndex++
+			default:
+				ctx.HandleError(fmt.Errorf("unknown argument type: %d", argument.Type))
 			}
 		}
 

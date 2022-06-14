@@ -33,10 +33,10 @@ func NewMessageContext(
 	permissionLevel permcache.PermissionLevel,
 ) MessageContext {
 	ctx := MessageContext{
-		worker: worker,
-		Message: message,
-		Args: args,
-		premium: premium,
+		worker:          worker,
+		Message:         message,
+		Args:            args,
+		premium:         premium,
 		permissionLevel: permissionLevel,
 	}
 
@@ -134,4 +134,20 @@ func (ctx *MessageContext) avatarUrl() string {
 	} else {
 		return "https://ticketsbot.net/assets/img/logo.png"
 	}
+}
+
+func (ctx *MessageContext) IsBlacklisted() (bool, error) {
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		return false, err
+	}
+
+	member, err := ctx.Member()
+	if err != nil {
+		return false, err
+	}
+
+	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
+	// if the command is not executed in a guild
+	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), member, permLevel)
 }

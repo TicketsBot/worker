@@ -450,8 +450,6 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
-var AllowedPermissions = []permission.Permission{permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks, permission.UseSlashCommands}
-
 func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel, otherUsers ...uint64) (overwrites []channel.PermissionOverwrite) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
@@ -474,12 +472,13 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	}
 
 	for _, member := range allowedUsers {
-		allow := AllowedPermissions
+		allow := make([]permission.Permission, len(StandardPermissions))
+		copy(allow, StandardPermissions[:]) // Do not append to StandardPermissions
 
 		// Give ourselves permissions to create webhooks
 		if member == selfId {
 			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
-				allow = append(AllowedPermissions, permission.ManageWebhooks)
+				allow = append(allow, permission.ManageWebhooks)
 			}
 		}
 
@@ -495,7 +494,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    role,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Allow: permission.BuildPermissions(StandardPermissions[:]...),
 			Deny:  0,
 		})
 	}

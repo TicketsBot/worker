@@ -170,3 +170,14 @@ func (ctx *ModalContext) InteractionUser() user.User {
 func (ctx *ModalContext) IntoPanelContext() PanelContext {
 	return NewPanelContext(ctx.worker, ctx.GuildId(), ctx.ChannelId(), ctx.InteractionUser().Id, ctx.PremiumTier())
 }
+
+func (ctx *ModalContext) IsBlacklisted() (bool, error) {
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		return false, err
+	}
+
+	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
+	// if the command is not executed in a guild
+	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), utils.ValueOrZero(ctx.Interaction.Member), permLevel)
+}

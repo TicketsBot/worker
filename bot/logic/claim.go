@@ -132,7 +132,7 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Allow: permission.BuildPermissions(StandardPermissions[:]...),
 			Deny:  0,
 		})
 	}
@@ -141,7 +141,7 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Allow: permission.BuildPermissions(StandardPermissions[:]...),
 			Deny:  0,
 		})
 	}
@@ -165,7 +165,7 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Allow: permission.BuildPermissions(StandardPermissions[:]...),
 			Deny:  0,
 		})
 	}
@@ -174,7 +174,7 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
-			Allow: permission.BuildPermissions(AllowedPermissions...),
+			Allow: permission.BuildPermissions(StandardPermissions[:]...),
 			Deny:  0,
 		})
 	}

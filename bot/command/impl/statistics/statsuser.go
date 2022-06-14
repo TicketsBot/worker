@@ -63,7 +63,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 		// load isBlacklisted
 		group.Go(func() (err error) {
-			isBlacklisted, err = utils.IsBlacklisted(ctx.GuildId(), userId)
+			isBlacklisted, err = utils.IsBlacklisted(ctx.GuildId(), userId, member, permLevel)
 			return
 		})
 

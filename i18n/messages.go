@@ -50,6 +50,8 @@ var (
 	TitleCloseRequest      MessageId = "generic.title.close_request"
 	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
 
+	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
+
 	MessageAbout   MessageId = "commands.about"
 	MessagePremium MessageId = "commands.premium"
 
@@ -91,12 +93,14 @@ var (
 	MessageAddNoPermission     MessageId = "commands.add.no_permission"
 	MessageAddSuccess          MessageId = "commands.add.success"
 
-	MessageBlacklisted        MessageId = "generic.error.blacklisted"
-	MessageBlacklistNoMembers MessageId = "commands.blacklist.no_members"
-	MessageBlacklistSelf      MessageId = "commands.blacklist.self"
-	MessageBlacklistStaff     MessageId = "commands.blacklist.staff"
-	MessageBlacklistAdd       MessageId = "commands.blacklist.add.success"
-	MessageBlacklistRemove    MessageId = "commands.blacklist.remove.success"
+	MessageBlacklisted         MessageId = "generic.error.blacklisted"
+	MessageBlacklistNoMembers  MessageId = "commands.blacklist.no_members"
+	MessageBlacklistSelf       MessageId = "commands.blacklist.self"
+	MessageBlacklistStaff      MessageId = "commands.blacklist.staff"
+	MessageBlacklistAdd        MessageId = "commands.blacklist.add.success"
+	MessageBlacklistAddRole    MessageId = "commands.blacklist.add_role.success"
+	MessageBlacklistRemove     MessageId = "commands.blacklist.remove.success"
+	MessageBlacklistRemoveRole MessageId = "commands.blacklist.remove_role.success"
 
 	MessageClaimed           MessageId = "commands.claim.success"
 	MessageClaimNoPermission MessageId = "commands.claim.no_permission"

@@ -11,7 +11,6 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
@@ -51,7 +50,7 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := utils.IsBlacklisted(panel.GuildId, ctx.InteractionUser().Id)
+		blacklisted, err := ctx.IsBlacklisted()
 		if err != nil {
 			ctx.HandleError(err)
 			return

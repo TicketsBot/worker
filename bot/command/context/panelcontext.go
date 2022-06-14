@@ -31,11 +31,11 @@ func NewPanelContext(
 	premium premium.PremiumTier,
 ) PanelContext {
 	ctx := PanelContext{
-		worker: worker,
-		guildId: guildId,
-		channelId: channelId,
-		userId: userId,
-		premium: premium,
+		worker:      worker,
+		guildId:     guildId,
+		channelId:   channelId,
+		userId:      userId,
+		premium:     premium,
 		dmChannelId: 0,
 	}
 
@@ -151,4 +151,20 @@ func (ctx *PanelContext) Member() (member.Member, error) {
 
 func (ctx *PanelContext) User() (user.User, error) {
 	return ctx.Worker().GetUser(ctx.UserId())
+}
+
+func (ctx *PanelContext) IsBlacklisted() (bool, error) {
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		return false, err
+	}
+
+	member, err := ctx.Member()
+	if err != nil {
+		return false, err
+	}
+
+	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
+	// if the command is not executed in a guild
+	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), member, permLevel)
 }

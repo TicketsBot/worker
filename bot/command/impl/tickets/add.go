@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -70,7 +71,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, channel.PermissionOverwrite{
 		Id:    userId,
 		Type:  channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(permission.ViewChannel, permission.SendMessages, permission.AddReactions, permission.AttachFiles, permission.ReadMessageHistory, permission.EmbedLinks),
+		Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
 	}); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}

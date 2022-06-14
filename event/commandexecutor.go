@@ -1,11 +1,11 @@
 package event
 
 import (
-	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command"
 	commandContext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -100,6 +100,8 @@ func executeCommand(
 				case interaction.OptionTypeChannel:
 					fallthrough
 				case interaction.OptionTypeRole:
+					fallthrough
+				case interaction.OptionTypeMentionable:
 					raw, ok := option.Value.(string)
 					if !ok {
 						return false, fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
@@ -111,6 +113,15 @@ func executeCommand(
 					}
 
 					args = append(args, id)
+				case interaction.OptionTypeNumber:
+					raw, ok := option.Value.(float64)
+					if !ok {
+						return false, fmt.Errorf("option %s of type %d was not an number", option.Name, argument.Type)
+					}
+
+					args = append(args, raw)
+				default:
+					return false, fmt.Errorf("unknown argument type: %d", argument.Type)
 				}
 			}
 		}
@@ -120,7 +131,18 @@ func executeCommand(
 		}
 
 		if !found && argument.Required {
-			return false, fmt.Errorf("argument %s was missing for command %s", argument.Name, cmd.Properties().Name)
+			if ctx.IsWhitelabel {
+				content := `This command registration is outdated. Please ask the server administrators to visit the whitelabel dashboard and press "Create Slash Commands" again.`
+				embed := utils.BuildEmbedRaw(customisation.GetDefaultColour(customisation.Red), "Outdated Command", content, nil, premium.Whitelabel)
+				res := command.NewEphemeralEmbedMessageResponse(embed)
+				go func() { // Must be in a goroutine
+					responseCh <- res.IntoApplicationCommandData()
+				}()
+
+				return false, nil
+			} else {
+				return false, fmt.Errorf("argument %s was missing for command %s", argument.Name, cmd.Properties().Name)
+			}
 		}
 	}
 
@@ -176,26 +198,16 @@ func executeCommand(
 			return
 		}
 
-		var userId uint64
-		if data.Member != nil {
-			userId = data.Member.User.Id
-		} else if data.User != nil {
-			userId = data.User.Id
-		} else { // ??????????????????????????????????
-			interactionContext.HandleError(errors.New("userId was nil"))
-			return
-		}
-
 		// Check for blacklist
-		blacklisted, err := utils.IsBlacklisted(data.GuildId.Value, userId)
+		// If data.Member is nil, it does not matter, as it is not checked if the command is not executed in a guild
+		blacklisted, err := interactionContext.IsBlacklisted()
 		if err != nil {
 			interactionContext.HandleError(err)
 			return
 		}
 
 		if blacklisted {
-			interactionContext.Reject()
-			interactionContext.Reply(customisation.Red, "Blacklisted", i18n.MessageBlacklisted)
+			interactionContext.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 			return
 		}
 
@@ -231,8 +243,10 @@ func executeCommand(
 		}
 
 		// Goroutine because recording metrics is blocking
-		go statsd.Client.IncrementKey(statsd.KeySlashCommands)
-		go statsd.Client.IncrementKey(statsd.KeyCommands)
+		go func() {
+			statsd.Client.IncrementKey(statsd.KeySlashCommands)
+			statsd.Client.IncrementKey(statsd.KeyCommands)
+		}()
 
 		reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
 	}()

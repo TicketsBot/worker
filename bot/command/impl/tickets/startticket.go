@@ -141,7 +141,7 @@ func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg m
 	overwrite := channel.PermissionOverwrite{
 		Id:    msg.Author.Id,
 		Type:  channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(logic.AllowedPermissions...),
+		Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
 		Deny:  0,
 	}
 

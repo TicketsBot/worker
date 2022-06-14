@@ -146,3 +146,20 @@ func (ctx *DashboardContext) Member() (member.Member, error) {
 func (ctx *DashboardContext) User() (user.User, error) {
 	return ctx.Worker().GetUser(ctx.UserId())
 }
+
+func (ctx *DashboardContext) IsBlacklisted() (bool, error) {
+	permLevel, err := ctx.UserPermissionLevel()
+	if err != nil {
+		return false, err
+	}
+
+	member, err := ctx.Member()
+	if err != nil {
+		return false, err
+	}
+
+	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
+	// if the command is not executed in a guild
+	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), member, permLevel)
+}
+
