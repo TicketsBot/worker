@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -166,10 +167,15 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
-	closeEmbed := buildCloseEmbed(ctx, ticket, settings, member, reason)
+	closeEmbed, closeComponents := buildCloseEmbed(ctx, ticket, settings, member, reason)
 
 	if archiveChannelExists && archiveChannelId != nil {
-		if _, err := ctx.Worker().CreateMessageEmbed(*archiveChannelId, closeEmbed); err != nil {
+		data := rest.CreateMessageData{
+			Embeds:     utils.Slice(closeEmbed),
+			Components: closeComponents,
+		}
+
+		if _, err := ctx.Worker().CreateMessageComplex(*archiveChannelId, data); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
@@ -193,17 +199,20 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		go statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
 		if !feedbackEnabled || !hasSentMessage {
-			if _, err := ctx.Worker().CreateMessageEmbed(dmChannel, closeEmbed); err != nil {
+			data := rest.CreateMessageData{
+				Embeds:     []*embed.Embed{closeEmbed},
+				Components: append(closeComponents),
+			}
+
+			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}
 		} else {
 			closeEmbed.SetDescription("Please rate the quality of service received with the buttons below")
 
 			data := rest.CreateMessageData{
-				Embeds: []*embed.Embed{closeEmbed},
-				Components: []component.Component{
-					buildRatingActionRow(ticket),
-				},
+				Embeds:     []*embed.Embed{closeEmbed},
+				Components: append(closeComponents, buildRatingActionRow(ticket)),
 			}
 
 			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
@@ -213,7 +222,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	}
 }
 
-func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settings database.Settings, member member.Member, reason *string) *embed.Embed {
+func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settings database.Settings, member member.Member, reason *string) (*embed.Embed, []component.Component) {
 	var formattedReason string
 	if reason == nil {
 		formattedReason = "No reason specified"
@@ -248,15 +257,37 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 		AddField(formatTitle("Closed By", utils.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
 		AddField(formatTitle("Reason", utils.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
 
+	var components []component.Component
 	if settings.StoreTranscripts {
-		closeEmbed.AddField(formatTitle("Transcript", utils.EmojiTranscript, ctx.Worker().IsWhitelabel), fmt.Sprintf("[Click here](https://panel.ticketsbot.net/manage/%d/transcripts/view/%d)", ticket.GuildId, ticket.Id), true)
+		title := formatTitle("Transcript", utils.EmojiTranscript, ctx.Worker().IsWhitelabel)
+		transcriptLink := fmt.Sprintf("https://panel.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
+		closeEmbed.AddField(title, fmt.Sprintf("[Click here](%s)", transcriptLink), true)
+
+		var transcriptEmoji *emoji.Emoji
+		if !ctx.Worker().IsWhitelabel {
+			transcriptEmoji = &emoji.Emoji{
+				Id:   objects.NewNullableSnowflake(utils.EmojiTranscript.Id),
+				Name: utils.EmojiTranscript.Name,
+			}
+		}
+
+		components = []component.Component{
+			component.BuildActionRow(
+				component.BuildButton(component.Button{
+					Label: "View Transcript",
+					Style: component.ButtonStyleLink,
+					Emoji: transcriptEmoji,
+					Url:   utils.Ptr(transcriptLink),
+				}),
+			),
+		}
 	}
 
 	closeEmbed.
 		AddField(formatTitle("Open Time", utils.EmojiTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
 		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true)
 
-	return closeEmbed
+	return closeEmbed, components
 }
 
 func formatTitle(s string, emoji utils.CustomEmoji, isWhitelabel bool) string {
