@@ -76,6 +76,11 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 			ctx.HandleError(err)
 			return
 		}
+
+		if err := utils.PremiumClient.DeleteCachedTier(ctx.GuildId()); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	} else if mentionableType == context.MentionableTypeRole {
 		if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
