@@ -21,6 +21,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	model "github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
@@ -605,6 +606,27 @@ func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, tic
 			}
 
 			name = strings.ReplaceAll(name, "%username%", user.Username)
+		}
+
+		if strings.Contains(name, "%nickname%") {
+			var member member.Member
+			var err error
+			if ctx.UserId() == openerId {
+				member, err = ctx.Member()
+			} else {
+				member, err = ctx.Worker().GetGuildMember(ctx.GuildId(), openerId)
+			}
+
+			if err != nil {
+				return "", err
+			}
+
+			nickname := member.Nick
+			if len(nickname) == 0 {
+				nickname = member.User.Username
+			}
+
+			name = strings.ReplaceAll(name, "%nickname%", member.Nick)
 		}
 	}
 
