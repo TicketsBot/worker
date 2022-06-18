@@ -25,6 +25,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
 	"golang.org/x/sync/errgroup"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -162,26 +163,10 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
-	// Create ticket name
-	var name string
-
-	namingScheme, err := dbclient.Client.NamingScheme.Get(ctx.GuildId())
+	name, err := generateChannelName(ctx, panel, id)
 	if err != nil {
-		namingScheme = database.Id
 		ctx.HandleError(err)
-	}
-
-	strTicket := strings.ToLower(ctx.GetMessage(i18n.Ticket))
-	if namingScheme == database.Username {
-		user, err := ctx.User()
-		if err != nil {
-			ctx.HandleError(err)
-			return database.Ticket{}, err
-		}
-
-		name = fmt.Sprintf("%s-%s", strTicket, user.Username)
-	} else {
-		name = fmt.Sprintf("%s-%d", strTicket, id)
+		return database.Ticket{}, err
 	}
 
 	guild, err := ctx.Guild()
@@ -566,6 +551,55 @@ func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel,
 	}
 
 	return allowedUsers, allowedRoles, nil
+}
+
+func generateChannelName(ctx registry.CommandContext, panel *database.Panel, id int) (string, error) {
+	// Create ticket name
+	var name string
+
+	// Use server default naming scheme
+	if panel == nil || panel.NamingScheme == nil {
+		namingScheme, err := dbclient.Client.NamingScheme.Get(ctx.GuildId())
+		if err != nil {
+			namingScheme = database.Id
+			ctx.HandleError(err)
+		}
+
+		strTicket := strings.ToLower(ctx.GetMessage(i18n.Ticket))
+		if namingScheme == database.Username {
+			user, err := ctx.User()
+			if err != nil {
+				return "", err
+			}
+
+			name = fmt.Sprintf("%s-%s", strTicket, user.Username)
+		} else {
+			name = fmt.Sprintf("%s-%d", strTicket, id)
+		}
+	} else {
+		name = *panel.NamingScheme
+
+		// TODO: Improve substitution code
+		if strings.Contains(name, "%id%") {
+			name = strings.ReplaceAll(name, "%id%", strconv.Itoa(id))
+		}
+
+		if strings.Contains(name, "%username%") {
+			user, err := ctx.User()
+			if err != nil {
+				return "", err
+			}
+
+			name = strings.ReplaceAll(name, "%username%", user.Username)
+		}
+	}
+
+	// Cap length after substitutions
+	if len(name) > 100 {
+		name = name[:100]
+	}
+
+	return name, nil
 }
 
 // target channel for messaging the user
