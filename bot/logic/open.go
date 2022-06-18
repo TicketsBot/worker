@@ -21,6 +21,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	model "github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
@@ -157,13 +158,13 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// Create channel
-	id, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
+	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
 
-	name, err := generateChannelName(ctx, panel, id)
+	name, err := GenerateChannelName(ctx, panel, ticketId, ctx.UserId())
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
@@ -245,7 +246,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ctx.HandleError(err)
 
 		// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
-		if err := dbclient.Client.Tickets.Close(id, ctx.GuildId()); err != nil {
+		if err := dbclient.Client.Tickets.Close(ticketId, ctx.GuildId()); err != nil {
 			ctx.HandleError(err)
 		}
 
@@ -260,7 +261,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	ticket := database.Ticket{
-		Id:               id,
+		Id:               ticketId,
 		GuildId:          ctx.GuildId(),
 		ChannelId:        &ch.Id,
 		UserId:           ctx.UserId(),
@@ -276,7 +277,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// UpdateUser channel in DB
-	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), id, ch.Id, welcomeMessageId, panelId); err != nil {
+	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, panelId); err != nil {
 		ctx.HandleError(err)
 	}
 
@@ -345,7 +346,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	if ctx.PremiumTier() > premium.None {
-		go createWebhook(ctx.Worker(), id, ctx.GuildId(), ch.Id)
+		go createWebhook(ctx.Worker(), ticketId, ctx.GuildId(), ch.Id)
 	}
 
 	// update cache
@@ -553,7 +554,7 @@ func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel,
 	return allowedUsers, allowedRoles, nil
 }
 
-func generateChannelName(ctx registry.CommandContext, panel *database.Panel, id int) (string, error) {
+func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, ticketId int, openerId uint64) (string, error) {
 	// Create ticket name
 	var name string
 
@@ -567,25 +568,38 @@ func generateChannelName(ctx registry.CommandContext, panel *database.Panel, id 
 
 		strTicket := strings.ToLower(ctx.GetMessage(i18n.Ticket))
 		if namingScheme == database.Username {
-			user, err := ctx.User()
+			var user user.User
+			if ctx.UserId() == openerId {
+				user, err = ctx.User()
+			} else {
+				user, err = ctx.Worker().GetUser(openerId)
+			}
+
 			if err != nil {
 				return "", err
 			}
 
 			name = fmt.Sprintf("%s-%s", strTicket, user.Username)
 		} else {
-			name = fmt.Sprintf("%s-%d", strTicket, id)
+			name = fmt.Sprintf("%s-%d", strTicket, ticketId)
 		}
 	} else {
 		name = *panel.NamingScheme
 
 		// TODO: Improve substitution code
 		if strings.Contains(name, "%id%") {
-			name = strings.ReplaceAll(name, "%id%", strconv.Itoa(id))
+			name = strings.ReplaceAll(name, "%id%", strconv.Itoa(ticketId))
 		}
 
 		if strings.Contains(name, "%username%") {
-			user, err := ctx.User()
+			var user user.User
+			var err error
+			if ctx.UserId() == openerId {
+				user, err = ctx.User()
+			} else {
+				user, err = ctx.Worker().GetUser(openerId)
+			}
+
 			if err != nil {
 				return "", err
 			}

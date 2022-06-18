@@ -78,12 +78,6 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 		return
 	}
 
-	// Move category
-	updateData := rest.ModifyChannelData{ParentId: panel.TargetCategory}
-	if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), updateData); err != nil {
-		ctx.HandleWarning(err)
-	}
-
 	// Update welcome message
 	if ticket.WelcomeMessageId != nil {
 		msg, err := ctx.Worker().GetChannelMessage(ctx.ChannelId(), *ticket.WelcomeMessageId)
@@ -140,10 +134,19 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 		}
 	}
 
+	channelName, err := logic.GenerateChannelName(ctx, &panel, ticket.Id, ticket.UserId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	// Update channel permissions
 	data := rest.ModifyChannelData{
+		Name:                 channelName,
 		PermissionOverwrites: overwrites,
+		ParentId:             panel.TargetCategory,
 	}
+
 	if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
 		ctx.HandleError(err)
 		return
