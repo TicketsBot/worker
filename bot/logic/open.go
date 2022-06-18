@@ -585,48 +585,29 @@ func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, tic
 			name = fmt.Sprintf("%s-%d", strTicket, ticketId)
 		}
 	} else {
-		name = *panel.NamingScheme
+		var err error
+		name, err = doSubstitutions(ctx, *panel.NamingScheme, openerId, []Substitutor{
+			// %id%
+			NewSubstitutor("id", false, false, func(user user.User, member member.Member) string {
+				return strconv.Itoa(ticketId)
+			}),
+			// %username%
+			NewSubstitutor("username", true, false, func(user user.User, member member.Member) string {
+				return user.Username
+			}),
+			// %nickname%
+			NewSubstitutor("nickname", false, true, func(user user.User, member member.Member) string {
+				nickname := member.Nick
+				if len(nickname) == 0 {
+					nickname = member.User.Username
+				}
 
-		// TODO: Improve substitution code
-		if strings.Contains(name, "%id%") {
-			name = strings.ReplaceAll(name, "%id%", strconv.Itoa(ticketId))
-		}
+				return nickname
+			}),
+		})
 
-		if strings.Contains(name, "%username%") {
-			var user user.User
-			var err error
-			if ctx.UserId() == openerId {
-				user, err = ctx.User()
-			} else {
-				user, err = ctx.Worker().GetUser(openerId)
-			}
-
-			if err != nil {
-				return "", err
-			}
-
-			name = strings.ReplaceAll(name, "%username%", user.Username)
-		}
-
-		if strings.Contains(name, "%nickname%") {
-			var member member.Member
-			var err error
-			if ctx.UserId() == openerId {
-				member, err = ctx.Member()
-			} else {
-				member, err = ctx.Worker().GetGuildMember(ctx.GuildId(), openerId)
-			}
-
-			if err != nil {
-				return "", err
-			}
-
-			nickname := member.Nick
-			if len(nickname) == 0 {
-				nickname = member.User.Username
-			}
-
-			name = strings.ReplaceAll(name, "%nickname%", member.Nick)
+		if err != nil {
+			return "", err
 		}
 	}
 
