@@ -47,10 +47,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		e.Member.User = e.Author
 
 		var usedPrefix string
-
-		if strings.HasPrefix(strings.ToLower(e.Content), utils.DefaultPrefix) {
-			usedPrefix = utils.DefaultPrefix
-		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
+		if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
 			usedPrefix = fmt.Sprintf("<@%d>", worker.BotId)
 		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@!%d>", worker.BotId)) {
 			usedPrefix = fmt.Sprintf("<@!%d>", worker.BotId)
@@ -62,9 +59,12 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 				return
 			}
 
-			if customPrefix != "" && strings.HasPrefix(e.Content, customPrefix) {
+			// If the server has a custom prefix set, completely ignore `t!` prefix, but check if custom prefix is not set
+			if customPrefix == "" && strings.HasPrefix(strings.ToLower(e.Content), utils.DefaultPrefix) {
+				usedPrefix = utils.DefaultPrefix
+			} else if customPrefix != "" && strings.HasPrefix(e.Content, customPrefix) {
 				usedPrefix = customPrefix
-			} else { // Not a command
+			} else {
 				return
 			}
 		}
