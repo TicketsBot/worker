@@ -68,13 +68,16 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// ticket.ChannelId cannot be nil, as we get by channel id
-	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, channel.PermissionOverwrite{
+	data := channel.PermissionOverwrite{
 		Id:    userId,
 		Type:  channel.PermissionTypeMember,
 		Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
-	}); err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 	}
 
-	ctx.Reply(customisation.Green, i18n.TitleAdd, i18n.MessageAddSuccess, userId, *ticket.ChannelId)
+	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, data); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	ctx.ReplyPermanent(customisation.Green, i18n.TitleAdd, i18n.MessageAddSuccess, userId, *ticket.ChannelId)
 }
