@@ -12,7 +12,7 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.10
-	github.com/rxdn/gdl v0.0.0-20220614155333-7e6d7486acdd
+	github.com/rxdn/gdl v0.0.0-20220621165443-28e214d254c1
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.5.0
 	go.uber.org/atomic v1.6.0

@@ -201,7 +201,6 @@ func (ctx *Context) CreatePrivateThread(channelId uint64, name string, autoArchi
 	return rest.StartThreadWithoutMessage(ctx.Token, ctx.RateLimiter, channelId, data)
 }
 
-
 func (ctx *Context) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	shouldCacheEmoji := ctx.Cache.GetOptions().Emojis
 	shouldCacheGuild := ctx.Cache.GetOptions().Guilds
@@ -366,8 +365,8 @@ func (ctx *Context) RemoveGuildMember(guildId, userId uint64) error {
 	return rest.RemoveGuildMember(ctx.Token, ctx.RateLimiter, guildId, userId)
 }
 
-func (ctx *Context) GetGuildBans(guildId uint64) ([]guild.Ban, error) {
-	return rest.GetGuildBans(ctx.Token, ctx.RateLimiter, guildId)
+func (ctx *Context) GetGuildBans(guildId uint64, data rest.GetGuildBansData) ([]guild.Ban, error) {
+	return rest.GetGuildBans(ctx.Token, ctx.RateLimiter, guildId, data)
 }
 
 func (ctx *Context) GetGuildBan(guildId, userId uint64) (guild.Ban, error) {
