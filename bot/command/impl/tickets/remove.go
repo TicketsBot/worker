@@ -35,12 +35,6 @@ func (c RemoveCommand) GetExecutor() interface{} {
 }
 
 func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
-	/*usageEmbed := embed.EmbedField{
-		Name:   "Usage",
-		Value:  "`t!remove @User`",
-		Inline: false,
-	}*/
-
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {

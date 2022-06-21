@@ -37,7 +37,7 @@ func (c StatsCommand) GetExecutor() interface{} {
 func (StatsCommand) Execute(ctx registry.CommandContext) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!stats server`\n`t!stats @User`",
+		Value:  "`/stats server`\n`/stats user @User`",
 		Inline: false,
 	}
 

@@ -33,12 +33,6 @@ func (c ManageTagsDeleteCommand) GetExecutor() interface{} {
 }
 
 func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string) {
-	/*usageEmbed := embed.EmbedField{
-		Name:   "Usage",
-		Value:  "`t!managetags delete [TagID]`",
-		Inline: false,
-	}*/
-
 	// TODO: Causes a race condition, just try to delete
 	var found bool
 	{

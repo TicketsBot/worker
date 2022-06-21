@@ -2,7 +2,6 @@ package tickets
 
 import (
 	permcache "github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -37,7 +36,7 @@ func (c AddCommand) GetExecutor() interface{} {
 func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
 	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 		return
 	}
 
@@ -63,7 +62,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	// Add user to ticket in DB
 	if err := dbclient.Client.TicketMembers.Add(ctx.GuildId(), ticket.Id, userId); err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		ctx.HandleError(err)
 		return
 	}
 

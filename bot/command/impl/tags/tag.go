@@ -37,7 +37,7 @@ func (c TagCommand) GetExecutor() interface{} {
 func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!tag [TagID]`",
+		Value:  "`/tag [TagID]`",
 		Inline: false,
 	}
 

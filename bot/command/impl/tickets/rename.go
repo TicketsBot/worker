@@ -36,7 +36,7 @@ func (c RenameCommand) GetExecutor() interface{} {
 func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`t!rename [ticket-name]`",
+		Value:  "`/rename [ticket-name]`",
 		Inline: false,
 	}
 
