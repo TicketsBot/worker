@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
@@ -62,10 +63,9 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 
 	messageId := interaction.Interaction.Data.TargetId
 
-	// TODO: Use resolved
-	msg, err := ctx.Worker().GetChannelMessage(ctx.ChannelId(), messageId)
+	msg, ok := interaction.ResolvedMessage(messageId)
 	if err != nil {
-		ctx.HandleError(err)
+		ctx.HandleError(errors.New("Message missing from resolved data"))
 		return
 	}
 

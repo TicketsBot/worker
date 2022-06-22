@@ -21,6 +21,7 @@ import (
 
 type SlashCommandContext struct {
 	*Replyable
+	InteractionExtension
 	worker      *worker.Context
 	Interaction interaction.ApplicationCommandInteraction
 	premium     premium.PremiumTier
@@ -36,6 +37,8 @@ func NewSlashCommandContext(
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) SlashCommandContext {
 	ctx := SlashCommandContext{
+		InteractionExtension: NewInteractionExtension(interaction),
+
 		worker:      worker,
 		Interaction: interaction,
 		premium:     premium,
