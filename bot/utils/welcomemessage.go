@@ -230,7 +230,7 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 	}
 
 	sort.Slice(inputs, func(i, j int) bool {
-		return inputs[i].Id < inputs[j].Id
+		return inputs[i].Position < inputs[j].Position
 	})
 
 	var fields []embed.EmbedField // Can't use len(formData), as form may have changed since modal was opened
