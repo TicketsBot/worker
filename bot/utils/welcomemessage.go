@@ -42,7 +42,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	fields := getFormDataFields(formData)
 	if len(fields) > 0 {
 		formAnswersEmbed := embed.NewEmbed().
-			SetColor(ctx.GetColour(customisation.Green))
+			SetColor(welcomeMessageEmbed.Color)
 
 		for _, field := range fields {
 			formAnswersEmbed.AddField(field.Name, field.Value, field.Inline)
@@ -120,9 +120,6 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println(*panel.WelcomeMessageEmbed)
-		fmt.Println(data.Url)
 
 		fields, err := dbclient.Client.EmbedFields.GetFieldsForEmbed(*panel.WelcomeMessageEmbed)
 		if err != nil {

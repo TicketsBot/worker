@@ -100,6 +100,10 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 				return
 			}
 
+			for i := 1; i < len(embeds); i++ {
+				embeds[i].Color = embeds[0].Color
+			}
+
 			editData := rest.EditMessageData{
 				Content:    msg.Content,
 				Embeds:     embeds,
