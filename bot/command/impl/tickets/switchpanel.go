@@ -94,7 +94,11 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 				subject = embeds[0].Title // TODO: Store subjects in database
 			}
 
-			embeds[0] = utils.BuildWelcomeMessageEmbed(ctx, ticket, subject, &panel)
+			embeds[0], err = utils.BuildWelcomeMessageEmbed(ctx, ticket, subject, &panel)
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
 
 			editData := rest.EditMessageData{
 				Content:    msg.Content,

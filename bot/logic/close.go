@@ -78,7 +78,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 				Before: lastId,
 				Limit:  100,
 			})
-
+			
 			count = len(array)
 			if err != nil {
 				count = 0

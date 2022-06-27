@@ -31,7 +31,12 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	}
 
 	// Build embeds
-	embeds := Slice(BuildWelcomeMessageEmbed(ctx, ticket, subject, panel))
+	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel)
+	if err != nil {
+		return 0, err
+	}
+
+	embeds := Slice(welcomeMessageEmbed)
 
 	// Put form fields in a separate embed
 	fields := getFormDataFields(formData)
@@ -94,34 +99,68 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	return msg.Id, nil
 }
 
-func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel) *embed.Embed {
+func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel) (*embed.Embed, error) {
 	// Send welcome message
-	var welcomeMessage string
-	if panel == nil || panel.WelcomeMessage == nil {
-		var err error
-		welcomeMessage, err = dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
+	if panel == nil || panel.WelcomeMessageEmbed == nil {
+		welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
 		if err != nil {
-			sentry.Error(err)
+			return nil, err
+		}
+
+		if len(welcomeMessage) == 0 {
 			welcomeMessage = "Thank you for contacting support.\nPlease describe your issue (and provide an invite to your server if applicable) and wait for a response."
 		}
+
+		// Replace variables
+		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
+
+		return BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier()), nil
 	} else {
-		welcomeMessage = *panel.WelcomeMessage
-	}
-
-	// %average_response%
-	if ctx.PremiumTier() > premium.None && strings.Contains(welcomeMessage, "%average_response%") {
-		weeklyResponseTime, err := dbclient.Client.FirstResponseTime.GetAverage(ticket.GuildId, time.Hour*24*7)
+		data, err := dbclient.Client.Embeds.GetEmbed(*panel.WelcomeMessageEmbed)
 		if err != nil {
-			sentry.Error(err)
-		} else {
-			strings.Replace(welcomeMessage, "%average_response%", FormatTime(*weeklyResponseTime), -1)
+			return nil, err
 		}
+
+		fmt.Println(*panel.WelcomeMessageEmbed)
+		fmt.Println(data.Url)
+
+		fields, err := dbclient.Client.EmbedFields.GetFieldsForEmbed(*panel.WelcomeMessageEmbed)
+		if err != nil {
+			return nil, err
+		}
+
+		e := &embed.Embed{
+			Title:       ValueOrZero(data.Title),
+			Description: DoPlaceholderSubstitutions(ValueOrZero(data.Description), ctx.Worker(), ticket),
+			Url:         ValueOrZero(data.Url),
+			Timestamp:   data.Timestamp,
+			Color:       int(data.Colour),
+		}
+
+		if ctx.PremiumTier() == premium.None {
+			e.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
+		} else if data.FooterText != nil {
+			e.SetFooter(*data.FooterText, ValueOrZero(data.FooterIconUrl))
+		}
+
+		if data.ImageUrl != nil {
+			e.SetImage(*data.ImageUrl)
+		}
+
+		if data.ThumbnailUrl != nil {
+			e.SetThumbnail(*data.ThumbnailUrl)
+		}
+
+		if data.AuthorName != nil {
+			e.SetAuthor(*data.AuthorName, ValueOrZero(data.AuthorUrl), ValueOrZero(data.AuthorIconUrl))
+		}
+
+		for _, field := range fields {
+			e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx.Worker(), ticket), field.Inline)
+		}
+
+		return e, nil
 	}
-
-	// variables
-	welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
-
-	return BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier())
 }
 
 func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket) string {
@@ -206,6 +245,7 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
 	},
+	// TODO: Decide whether to restrict to premium users
 	"first_response_time_weekly": func(ctx *worker.Context, ticket database.Ticket) string {
 		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
 		return FormatNullableTime(data.Weekly)
