@@ -36,7 +36,7 @@ func (c TransferCommand) GetExecutor() interface{} {
 
 func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

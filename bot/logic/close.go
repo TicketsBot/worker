@@ -29,7 +29,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -78,7 +78,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 				Before: lastId,
 				Limit:  100,
 			})
-			
+
 			count = len(array)
 			if err != nil {
 				count = 0

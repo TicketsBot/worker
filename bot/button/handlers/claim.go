@@ -42,7 +42,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -67,7 +67,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		res.Components[0] = component.Component{
-			Type: component.ComponentActionRow,
+			Type:          component.ComponentActionRow,
 			ComponentData: row,
 		}
 	}

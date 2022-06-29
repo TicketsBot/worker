@@ -54,7 +54,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return

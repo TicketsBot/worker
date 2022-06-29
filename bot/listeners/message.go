@@ -16,7 +16,7 @@ import (
 
 // proxy messages to web UI + set last message id
 func OnMessage(worker *worker.Context, e *events.MessageCreate) {
-	go statsd.Client.IncrementKey(statsd.KeyMessages)
+	statsd.Client.IncrementKey(statsd.KeyMessages)
 
 	// ignore DMs
 	if e.GuildId == 0 {
@@ -24,7 +24,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 	}
 
 	// Verify that this is a ticket
-	ticket, err := dbclient.Client.Tickets.GetByChannel(e.ChannelId)
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(e.ChannelId, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return

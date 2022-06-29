@@ -29,7 +29,7 @@ func (c AutoCloseExcludeCommand) GetExecutor() interface{} {
 }
 
 func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

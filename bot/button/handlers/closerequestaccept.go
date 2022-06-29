@@ -25,7 +25,7 @@ func (h *CloseRequestAcceptHandler) Properties() registry.Properties {
 }
 
 func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

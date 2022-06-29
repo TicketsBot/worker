@@ -28,7 +28,7 @@ func (h *CloseWithReasonModalHandler) Properties() registry.Properties {
 }
 
 func (h *CloseWithReasonModalHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -41,13 +41,13 @@ func (h *CloseWithReasonModalHandler) Execute(ctx *context.ButtonContext) {
 
 	if !utils.CanClose(ctx, ticket) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
-        return
-    }
+		return
+	}
 
 	ctx.Modal(button.ResponseModal{
 		Data: interaction.ModalResponseData{
-			CustomId:   "close_with_reason_submit",
-			Title:      i18n.TitleClose.GetFromGuild(ctx.GuildId()),
+			CustomId: "close_with_reason_submit",
+			Title:    i18n.TitleClose.GetFromGuild(ctx.GuildId()),
 			Components: []component.Component{
 				component.BuildActionRow(component.BuildInputText(component.InputText{
 					Style:       component.TextStyleParagraph,

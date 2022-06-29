@@ -40,7 +40,7 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 		Inline: false,
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

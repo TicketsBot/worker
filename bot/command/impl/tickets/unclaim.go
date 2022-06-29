@@ -33,7 +33,8 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 
 func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannel(ctx.ChannelId()); if err != nil {
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -58,7 +59,8 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	// Get who claimed
-	whoClaimed, err := dbclient.Client.TicketClaims.Get(ctx.GuildId(), ticket.Id); if err != nil {
+	whoClaimed, err := dbclient.Client.TicketClaims.Get(ctx.GuildId(), ticket.Id)
+	if err != nil {
 		ctx.HandleError(err)
 		return
 	}

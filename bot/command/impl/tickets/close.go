@@ -47,7 +47,7 @@ func (CloseCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoC
 		reasons, err = dbclient.Client.CloseReason.GetCommon(data.GuildId.Value, value, 10)
 	} else {
 		// Get ticket
-		ticket, e := dbclient.Client.Tickets.GetByChannel(data.ChannelId)
+		ticket, e := dbclient.Client.Tickets.GetByChannelAndGuild(data.ChannelId, data.GuildId.Value)
 		if e != nil {
 			sentry.Error(e) // TODO: Context
 			return nil
