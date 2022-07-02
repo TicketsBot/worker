@@ -15,14 +15,6 @@ var Client *database.Database
 var Pool *pgxpool.Pool
 
 func Connect() {
-	fmt.Println(fmt.Sprintf(
-		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
-		config.Conf.Database.Username,
-		config.Conf.Database.Password,
-		config.Conf.Database.Host,
-		config.Conf.Database.Database,
-		config.Conf.Database.Threads,
-	))
 	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		config.Conf.Database.Username,
