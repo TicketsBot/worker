@@ -46,11 +46,12 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		e.Member.User = e.Author
 
+		// fmt.Sprintf is twice as slow!
+		mentionPrefix := "<@" + strconv.FormatUint(worker.BotId, 10) + ">"
+
 		var usedPrefix string
-		if strings.HasPrefix(e.Content, fmt.Sprintf("<@%d>", worker.BotId)) {
-			usedPrefix = fmt.Sprintf("<@%d>", worker.BotId)
-		} else if strings.HasPrefix(e.Content, fmt.Sprintf("<@!%d>", worker.BotId)) {
-			usedPrefix = fmt.Sprintf("<@!%d>", worker.BotId)
+		if strings.HasPrefix(e.Content, mentionPrefix) {
+			usedPrefix = mentionPrefix
 		} else {
 			// No need to query the custom prefix if we just the default prefix
 			customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
