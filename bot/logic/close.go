@@ -196,7 +196,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			return
 		}
 
-		go statsd.Client.IncrementKey(statsd.KeyDirectMessage)
+		statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
 		if !feedbackEnabled || !hasSentMessage {
 			data := rest.CreateMessageData{

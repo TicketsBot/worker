@@ -1,29 +1,35 @@
 package statsd
 
 import (
+	"go.uber.org/atomic"
 	stats "gopkg.in/alexcesaro/statsd.v2"
-	"os"
+	"sync"
 	"time"
 )
 
 type StatsdClient struct {
-	client           *stats.Client
-	buffer           map[Key]int
-	incrementChannel chan Key
+	client *stats.Client
+	buffer map[Key]*atomic.Int32
+	mu     *sync.Mutex
 }
 
 var Client StatsdClient
 
-func NewClient() (StatsdClient, error) {
-	client, err := stats.New(stats.Address(os.Getenv("WORKER_STATSD_ADDR")), stats.Prefix(os.Getenv("WORKER_STATSD_PREFIX")))
+func NewClient(statsdAddress, statsdPrefix string) (StatsdClient, error) {
+	client, err := stats.New(stats.Address(statsdAddress), stats.Prefix(statsdPrefix))
 	if err != nil {
 		return StatsdClient{}, err
 	}
 
+	buffer := make(map[Key]*atomic.Int32)
+	for _, key := range AllKeys() {
+		buffer[key] = atomic.NewInt32(0)
+	}
+
 	return StatsdClient{
-		client:           client,
-		buffer:           make(map[Key]int),
-		incrementChannel: make(chan Key),
+		client: client,
+		buffer: buffer,
+		mu:     &sync.Mutex{},
 	}, nil
 }
 
@@ -35,24 +41,16 @@ func (c *StatsdClient) StartDaemon() {
 		select {
 		case _ = <-ticker.C:
 			for key, count := range c.buffer {
-				c.client.Count(key.String(), count)
+				c.client.Count(key.String(), count.Swap(0))
 			}
-
-			c.buffer = make(map[Key]int)
-		case key := <-c.incrementChannel:
-			c.buffer[key]++
 		}
 	}
 }
 
-func IsClientNull() bool {
-	return Client.client == nil
-}
-
 func (c *StatsdClient) IncrementKey(key Key) {
-	if IsClientNull() {
+	if c.buffer[key] == nil {
 		return
 	}
 
-	c.incrementChannel <- key
+	c.buffer[key].Inc()
 }

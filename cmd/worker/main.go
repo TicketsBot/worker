@@ -57,21 +57,21 @@ func main() {
 	cache.Client = &pgCache
 
 	/*
-	fmt.Println("Connected to cache, retrieving command list...")
-	{
-		token := os.Getenv("WORKER_PUBLIC_TOKEN")
-		ratelimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, "ratelimiter:public"), 1)
-		botId, err := strconv.ParseUint(os.Getenv("WORKER_PUBLIC_ID"), 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		fmt.Println("Connected to cache, retrieving command list...")
+		{
+			token := os.Getenv("WORKER_PUBLIC_TOKEN")
+			ratelimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, "ratelimiter:public"), 1)
+			botId, err := strconv.ParseUint(os.Getenv("WORKER_PUBLIC_ID"), 10, 64)
+			if err != nil {
+				panic(err)
+			}
 
-		bot.GlobalCommands, err = rest.GetGlobalCommands(token, ratelimiter, botId)
-		if err != nil {
-			panic(err)
+			bot.GlobalCommands, err = rest.GetGlobalCommands(token, ratelimiter, botId)
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
-*/
+	*/
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if os.Getenv("DISCORD_PROXY_URL") != "" {
@@ -91,7 +91,7 @@ func main() {
 
 	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
 
-	statsd.Client, err = statsd.NewClient()
+	statsd.Client, err = statsd.NewClient(os.Getenv("WORKER_STATSD_ADDR"), os.Getenv("WORKER_STATSD_PREFIX"))
 	if err != nil {
 		sentry.Error(err)
 	} else {

@@ -9,16 +9,29 @@ const (
 	KeyJoins         Key = "joins"
 	KeyLeaves        Key = "leaves"
 	KeyRest          Key = "rest"
-	KeyReconnect     Key = "reconnect"
-	KeyIdentify      Key = "identify"
 	KeySlashCommands Key = "slash_commands"
 	KeyEvents        Key = "events"
 	AutoClose        Key = "autoclose"
-	KeyUnavailable   Key = "unavailable_guilds"
 	KeyDirectMessage Key = "direct_message"
 	KeyOpenCommand   Key = "open_command"
 )
 
 func (k Key) String() string {
 	return string(k)
+}
+
+func AllKeys() []Key {
+	return []Key{
+		KeyMessages,
+		KeyTickets,
+		KeyCommands,
+		KeyJoins,
+		KeyLeaves,
+		KeyRest,
+		KeySlashCommands,
+		KeyEvents,
+		AutoClose,
+		KeyDirectMessage,
+		KeyOpenCommand,
+	}
 }

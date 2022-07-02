@@ -341,9 +341,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	// Ephemeral reply is ok
 	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
-	go statsd.Client.IncrementKey(statsd.KeyTickets)
+	statsd.Client.IncrementKey(statsd.KeyTickets)
 	if panel == nil {
-		go statsd.Client.IncrementKey(statsd.KeyOpenCommand)
+		statsd.Client.IncrementKey(statsd.KeyOpenCommand)
 	}
 
 	if ctx.PremiumTier() > premium.None {

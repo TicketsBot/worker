@@ -414,7 +414,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		}
 
 		go reflect.ValueOf(c.GetExecutor()).Call(valueArgs)
-		go statsd.Client.IncrementKey(statsd.KeyCommands)
+		statsd.Client.IncrementKey(statsd.KeyCommands)
 
 		utils.DeleteAfter(worker, e.ChannelId, e.Id, utils.DeleteAfterSeconds)
 	}

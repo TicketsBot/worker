@@ -38,7 +38,7 @@ func execute(ctx *worker.Context, event []byte) error {
 	}
 
 	// Goroutine because recording metrics is blocking
-	go statsd.Client.IncrementKey(statsd.KeyEvents)
+	statsd.Client.IncrementKey(statsd.KeyEvents)
 
 	return nil
 }
