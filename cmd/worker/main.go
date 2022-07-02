@@ -7,16 +7,17 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/integrations"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/event"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/rest/request"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"time"
 )
 
@@ -25,14 +26,13 @@ func main() {
 		fmt.Println(http.ListenAndServe(":6060", nil))
 	}()
 
-	utils.ParseBotAdmins()
-	utils.ParseBotHelpers()
+	config.Parse()
 
 	fmt.Println("Connecting to Sentry...")
 	if err := sentry.Initialise(sentry.Options{
-		Dsn:     os.Getenv("WORKER_SENTRY_DSN"),
+		Dsn:     config.Conf.SentryDsn,
 		Project: "tickets-bot",
-		Debug:   os.Getenv("WORKER_DEBUG") != "",
+		Debug:   config.Conf.DebugMode != "",
 	}); err != nil {
 		fmt.Println(err.Error())
 	}
@@ -56,32 +56,16 @@ func main() {
 
 	cache.Client = &pgCache
 
-	/*
-		fmt.Println("Connected to cache, retrieving command list...")
-		{
-			token := os.Getenv("WORKER_PUBLIC_TOKEN")
-			ratelimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, "ratelimiter:public"), 1)
-			botId, err := strconv.ParseUint(os.Getenv("WORKER_PUBLIC_ID"), 10, 64)
-			if err != nil {
-				panic(err)
-			}
-
-			bot.GlobalCommands, err = rest.GetGlobalCommands(token, ratelimiter, botId)
-			if err != nil {
-				panic(err)
-			}
-		}
-	*/
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
-	if os.Getenv("DISCORD_PROXY_URL") != "" {
+	if config.Conf.Discord.ProxyUrl != "" {
 		request.Client.Timeout = time.Second * 30
 		request.RegisterHook(utils.ProxyHook)
 	}
 
 	fmt.Println("Retrieved command list, initialising microservice clients...")
-	if os.Getenv("WORKER_DEBUG") == "" {
-		utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(os.Getenv("WORKER_PROXY_URL"), os.Getenv("WORKER_PROXY_KEY")), redis.Client, &pgCache, dbclient.Client)
+	if config.Conf.DebugMode == "" {
+		utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(config.Conf.PremiumProxy.Url, config.Conf.PremiumProxy.Key), redis.Client, &pgCache, dbclient.Client)
 	} else {
 		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
 		utils.PremiumClient = &c
@@ -89,15 +73,17 @@ func main() {
 		request.Client.Timeout = time.Second * 30
 	}
 
-	utils.ArchiverClient = archiverclient.NewArchiverClient(os.Getenv("WORKER_ARCHIVER_URL"), []byte(os.Getenv("WORKER_ARCHIVER_AES_KEY")))
+	utils.ArchiverClient = archiverclient.NewArchiverClient(config.Conf.Archiver.Url, []byte(config.Conf.Archiver.AesKey))
 
-	statsd.Client, err = statsd.NewClient(os.Getenv("WORKER_STATSD_ADDR"), os.Getenv("WORKER_STATSD_PREFIX"))
+	statsd.Client, err = statsd.NewClient(config.Conf.Statsd.Address, config.Conf.Statsd.Prefix)
 	if err != nil {
 		sentry.Error(err)
 	} else {
 		request.RegisterHook(statsd.RestHook)
 		go statsd.Client.StartDaemon()
 	}
+
+	integrations.InitIntegrations()
 
 	go messagequeue.ListenTicketClose()
 	go messagequeue.ListenAutoClose()

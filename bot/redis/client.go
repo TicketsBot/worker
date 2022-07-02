@@ -1,25 +1,19 @@
 package redis
 
 import (
+	"github.com/TicketsBot/worker/config"
 	"github.com/go-redis/redis/v8"
-	"os"
-	"strconv"
 )
 
 var Client *redis.Client
 
 func Connect() error {
-	threads, err := strconv.Atoi(os.Getenv("WORKER_REDIS_THREADS"))
-	if err != nil {
-		return err
-	}
-
 	Client = redis.NewClient(&redis.Options{
-		Network:            "tcp",
-		Addr:               os.Getenv("WORKER_REDIS_ADDR"),
-		Password:           os.Getenv("WORKER_REDIS_PASSWD"),
-		PoolSize:           threads,
-		MinIdleConns:       threads,
+		Network:      "tcp",
+		Addr:         config.Conf.Redis.Address,
+		Password:     config.Conf.Redis.Password,
+		PoolSize:     config.Conf.Redis.Threads,
+		MinIdleConns: config.Conf.Redis.Threads,
 	})
 
 	return nil

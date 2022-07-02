@@ -12,8 +12,8 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/config"
 	"github.com/rxdn/gdl/rest/ratelimit"
-	"os"
 )
 
 // TODO: Make this good
@@ -63,13 +63,13 @@ func ListenTicketClose() {
 					}
 
 					if bot.Token == "" {
-						token = os.Getenv("WORKER_PUBLIC_TOKEN")
+						token = config.Conf.Discord.Token
 					} else {
 						token = bot.Token
 						botId = whiteLabelBotId
 					}
 				} else {
-					token = os.Getenv("WORKER_PUBLIC_TOKEN")
+					token = config.Conf.Discord.Token
 				}
 			}
 

@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
-github.com/TicketsBot/common v0.0.0-20220702190221-5d614f71fe12 h1:/cfSVHn+Utt2bj19ZBvw25IieC3celGqitLusfdx8+c=
-github.com/TicketsBot/common v0.0.0-20220702190221-5d614f71fe12/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
+github.com/TicketsBot/common v0.0.0-20220702223413-28890c9942dd h1:Pz3TYi849zSxoWHpfP3OiFfkCwz4DTGpj41jSpFQQlk=
+github.com/TicketsBot/common v0.0.0-20220702223413-28890c9942dd/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
 github.com/TicketsBot/database v0.0.0-20220629215232-c3d8fb0facb7 h1:+x+ptlG4aqrG9maEcke8BnWDvgznKkCSJ1gJMoq/SjI=
 github.com/TicketsBot/database v0.0.0-20220629215232-c3d8fb0facb7/go.mod h1:F57cywrZsnper1cy56Bx0c/HEsxQBLHz3Pl98WXblWw=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
@@ -12,6 +12,8 @@ github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cj
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261/go.mod h1:2zPxDAN2TAPpxUPjxszjs3QFKreKrQh5al/R3cMXmYk=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
+github.com/caarlos0/env/v6 v6.9.3 h1:Tyg69hoVXDnpO5Qvpsu8EoquarbPyQb+YwExWHP8wWU=
+github.com/caarlos0/env/v6 v6.9.3/go.mod h1:hvp/ryKXKipEkcuYjs9mI4bBCg+UI0Yhgm5Zu0ddvwc=
 github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 h1:JLaf/iINcLyjwbtTsCJjc6rtlASgHeIJPrB6QmwURnA=
 github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894/go.mod h1:sGbDF6GwGcLpkNXPUTkMRoywsNa/ol15pxFe6ERfguA=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=

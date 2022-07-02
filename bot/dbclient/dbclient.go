@@ -4,30 +4,32 @@ import (
 	"context"
 	"fmt"
 	"github.com/TicketsBot/database"
+	"github.com/TicketsBot/worker/config"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
-	"os"
-	"strconv"
 )
 
 var Client *database.Database
 var Pool *pgxpool.Pool
 
 func Connect() {
-	threads, err := strconv.Atoi(os.Getenv("DATABASE_THREADS"))
-	if err != nil {
-		panic(err)
-	}
-
-	config, err := pgxpool.ParseConfig(fmt.Sprintf(
+	fmt.Println(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_NAME"),
-		threads,
+		config.Conf.Database.Username,
+		config.Conf.Database.Password,
+		config.Conf.Database.Host,
+		config.Conf.Database.Database,
+		config.Conf.Database.Threads,
+	))
+	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
+		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
+		config.Conf.Database.Username,
+		config.Conf.Database.Password,
+		config.Conf.Database.Host,
+		config.Conf.Database.Database,
+		config.Conf.Database.Threads,
 	))
 
 	if err != nil {
@@ -35,14 +37,13 @@ func Connect() {
 	}
 
 	// TODO: Sentry
-	config.ConnConfig.LogLevel = pgx.LogLevelWarn
-	config.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
+	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
+	cfg.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
 
-	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
+	Pool, err = pgxpool.ConnectConfig(context.Background(), cfg)
 	if err != nil {
 		panic(err)
 	}
 
 	Client = database.NewDatabase(Pool)
-	//Client.CreateTables(pool)
 }

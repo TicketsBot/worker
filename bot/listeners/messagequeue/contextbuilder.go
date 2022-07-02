@@ -6,10 +6,9 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/config"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/rest/ratelimit"
-	"os"
-	"strconv"
 )
 
 func buildContext(ticket database.Ticket, cache *cache.PgCache) (ctx *worker.Context, err error) {
@@ -36,13 +35,10 @@ func buildContext(ticket database.Ticket, cache *cache.PgCache) (ctx *worker.Con
 		ctx.BotId = whitelabelBotId
 		keyPrefix = fmt.Sprintf("ratelimiter:%d", whitelabelBotId)
 	} else {
-		ctx.Token = os.Getenv("WORKER_PUBLIC_TOKEN")
+		ctx.Token = config.Conf.Discord.Token
 		keyPrefix = "ratelimiter:public"
 
-		ctx.BotId, err = strconv.ParseUint(os.Getenv("WORKER_PUBLIC_ID"), 10, 64)
-		if err != nil {
-			return
-		}
+		ctx.BotId = config.Conf.Discord.PublicBotId
 	}
 
 	// TODO: Large sharding buckets

@@ -10,12 +10,12 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest/request"
-	"os"
 	"strings"
 )
 
@@ -157,7 +157,7 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 					Label: r.GetMessage(i18n.MessageJoinSupportServer),
 					Style: component.ButtonStyleLink,
 					Emoji: utils.BuildEmoji("❓"),
-					Url:   utils.Ptr(strings.ReplaceAll(os.Getenv("SUPPORT_SERVER_INVITE"), "\n", "")),
+					Url:   utils.Ptr(strings.ReplaceAll(config.Conf.Bot.SupportServerInvite, "\n", "")),
 				}),
 			),
 		}

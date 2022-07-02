@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/common/integrations/bloxlink"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -10,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/integrations"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -254,6 +256,19 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 	"first_response_time_all_time": func(ctx *worker.Context, ticket database.Ticket) string {
 		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
 		return FormatNullableTime(data.AllTime)
+	},
+	"roblox_username": func(ctx *worker.Context, ticket database.Ticket) string {
+		user, err := integrations.Bloxlink.GetRobloxUser(ticket.UserId)
+		if err != nil {
+			if err == bloxlink.ErrUserNotFound {
+				return "N/A"
+			} else {
+				sentry.Error(err)
+				return "Error fetching username"
+			}
+		}
+
+		return user.Name
 	},
 }
 

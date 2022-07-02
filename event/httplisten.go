@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/config"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/rxdn/gdl/cache"
@@ -18,7 +19,6 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
-	"os"
 	"strings"
 	"time"
 )
@@ -59,7 +59,7 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 	router.POST("/event", eventHandler(redis, cache))
 	router.POST("/interaction", interactionHandler(redis, cache))
 
-	if err := router.Run(os.Getenv("HTTP_ADDR")); err != nil {
+	if err := router.Run(config.Conf.Bot.HttpAddress); err != nil {
 		panic(err)
 	}
 }
@@ -112,7 +112,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			ctx.JSON(400, newErrorResponse(err))
 			return
 		}
-		
+
 		var keyPrefix string
 
 		if payload.IsWhitelabel {

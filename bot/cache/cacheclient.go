@@ -3,30 +3,24 @@ package cache
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/worker/config"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/cache"
 	"github.com/sirupsen/logrus"
-	"os"
-	"strconv"
 )
 
 var Client *cache.PgCache
 
 func Connect() (client cache.PgCache, err error) {
-	threads, err := strconv.Atoi(os.Getenv("CACHE_THREADS"))
-	if err != nil {
-		panic(err)
-	}
-
-	config, err := pgxpool.ParseConfig(fmt.Sprintf(
+	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
-		os.Getenv("CACHE_USER"),
-		os.Getenv("CACHE_PASSWORD"),
-		os.Getenv("CACHE_HOST"),
-		os.Getenv("CACHE_NAME"),
-		threads,
+		config.Conf.Cache.Username,
+		config.Conf.Cache.Password,
+		config.Conf.Cache.Host,
+		config.Conf.Cache.Database,
+		config.Conf.Cache.Threads,
 	))
 
 	if err != nil {
@@ -34,10 +28,10 @@ func Connect() (client cache.PgCache, err error) {
 	}
 
 	// TODO: Sentry
-	config.ConnConfig.LogLevel = pgx.LogLevelWarn
-	config.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
+	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
+	cfg.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
 
-	pool, err := pgxpool.ConnectConfig(context.Background(), config)
+	pool, err := pgxpool.ConnectConfig(context.Background(), cfg)
 	if err != nil {
 		return
 	}

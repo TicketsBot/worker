@@ -1,31 +1,11 @@
 package utils
 
 import (
-	"os"
-	"strconv"
-	"strings"
+	"github.com/TicketsBot/worker/config"
 )
 
-var admins, helpers []uint64
-
-func ParseBotAdmins() {
-	for _, id := range strings.Split(os.Getenv("WORKER_BOT_ADMINS"), ",") {
-		if parsed, err := strconv.ParseUint(id, 10, 64); err == nil {
-			admins = append(admins, parsed)
-		}
-	}
-}
-
-func ParseBotHelpers() {
-	for _, id := range strings.Split(os.Getenv("WORKER_BOT_HELPERS"), ",") {
-		if parsed, err := strconv.ParseUint(id, 10, 64); err == nil {
-			helpers = append(helpers, parsed)
-		}
-	}
-}
-
 func IsBotAdmin(id uint64) bool {
-	for _, admin := range admins {
+	for _, admin := range config.Conf.Bot.Admins {
 		if admin == id {
 			return true
 		}
@@ -39,7 +19,7 @@ func IsBotHelper(id uint64) bool {
 		return true
 	}
 
-	for _, helper := range helpers {
+	for _, helper := range config.Conf.Bot.Helpers {
 		if helper == id {
 			return true
 		}

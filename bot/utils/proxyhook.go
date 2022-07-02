@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"github.com/TicketsBot/worker/config"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -11,6 +11,6 @@ import (
 func ProxyHook(token string, req *http.Request) {
 	if !strings.HasPrefix(req.URL.Path, "/api/v9/applications/") {
 		req.URL.Scheme = "http"
-		req.URL.Host = os.Getenv("DISCORD_PROXY_URL")
+		req.URL.Host = config.Conf.Discord.ProxyUrl
 	}
 }
