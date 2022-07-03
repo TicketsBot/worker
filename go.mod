@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
-	github.com/TicketsBot/common v0.0.0-20220703003136-9f599ff6ae87
+	github.com/TicketsBot/common v0.0.0-20220703211704-f792aa9f0c42
 	github.com/TicketsBot/database v0.0.0-20220629215232-c3d8fb0facb7
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
