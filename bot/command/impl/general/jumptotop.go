@@ -32,8 +32,6 @@ func (c JumpToTopCommand) GetExecutor() interface{} {
 }
 
 func (JumpToTopCommand) Execute(ctx registry.CommandContext) {
-	ctx.Reply(customisation.Green, i18n.TitleAbout, i18n.MessageAbout)
-
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
@@ -63,5 +61,8 @@ func (JumpToTopCommand) Execute(ctx registry.CommandContext) {
 		})),
 	}
 
-	ctx.ReplyWith(res)
+	if _, err := ctx.ReplyWith(res); err != nil {
+		ctx.HandleError(err)
+		return
+	}
 }
