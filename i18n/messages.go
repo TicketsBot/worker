@@ -50,6 +50,7 @@ var (
 	TitleHelp              MessageId = "generic.title.help"
 	TitleCloseRequest      MessageId = "generic.title.close_request"
 	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
+	TitleJumpToTop         MessageId = "generic.title.jump_to_top"
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
@@ -159,6 +160,7 @@ var (
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
 
 	MessageJumpToTopNoWelcomeMessage MessageId = "commands.jump_to_top.no_welcome_message"
+	MessageJumpToTopContent          MessageId = "commands.jump_to_top.content"
 
 	SetupArchiveChannel  MessageId = "setup.info.archive_channel"
 	SetupChannelCategory MessageId = "setup.info.category"

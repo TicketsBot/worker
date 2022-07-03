@@ -50,7 +50,8 @@ func (JumpToTopCommand) Execute(ctx registry.CommandContext) {
 
 	messageLink := fmt.Sprintf("https://discord.com/channels/%d/%d/%d", ctx.GuildId(), ctx.ChannelId(), *ticket.WelcomeMessageId)
 
-	res := command.NewEphemeralEmbedMessageResponse(utils.BuildEmbed(ctx, customisation.Green, i18n.TitleAbout, i18n.MessageAbout, nil))
+	embed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleJumpToTop, i18n.MessageJumpToTopContent, nil)
+	res := command.NewEphemeralEmbedMessageResponse(embed)
 	res.Components = []component.Component{
 		component.BuildActionRow(component.BuildButton(component.Button{
 			Label:    ctx.GetMessage(i18n.ClickHere),
