@@ -15,11 +15,12 @@ var (
 	MessageNoPermission MessageId = "generic.no_permission"
 	MessageOwnerOnly    MessageId = "generic.owner_only"
 
-	Error   MessageId = "generic.error"
-	Success MessageId = "generic.success"
-	Admin   MessageId = "generic.admin"
-	Ticket  MessageId = "generic.ticket"
-	Reason  MessageId = "generic.reason"
+	Error     MessageId = "generic.error"
+	Success   MessageId = "generic.success"
+	Admin     MessageId = "generic.admin"
+	Ticket    MessageId = "generic.ticket"
+	Reason    MessageId = "generic.reason"
+	ClickHere MessageId = "generic.click_here"
 
 	TitlePremiumOnly       MessageId = "generic.title.premium_only"
 	TitleAbout             MessageId = "generic.title.about"
@@ -157,6 +158,8 @@ var (
 	MessageAutoCloseConfigure MessageId = "commands.autoclose.configure"
 	MessageAutoCloseExclude   MessageId = "commands.autoclose.exclude.success"
 
+	MessageJumpToTopNoWelcomeMessage MessageId = "commands.jump_to_top.no_welcome_message"
+
 	SetupArchiveChannel  MessageId = "setup.info.archive_channel"
 	SetupChannelCategory MessageId = "setup.info.category"
 	SetupPrefix          MessageId = "setup.info.prefix"
@@ -252,4 +255,5 @@ var (
 	HelpRemoveAdmin        MessageId = "help.removeadmin"
 	HelpLanguage           MessageId = "help.language"
 	HelpSwitchPanel        MessageId = "help.switch_panel"
+	HelpJumpToTop          MessageId = "help.jump_to_top"
 )
