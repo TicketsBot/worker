@@ -45,7 +45,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistNoMembers, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistNoMembers, utils.ToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
@@ -58,7 +58,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 
 		if ctx.UserId() == id {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistSelf, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistSelf, utils.ToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -70,7 +70,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 
 		if permLevel > permission.Everyone {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed))
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.ToSlice(usageEmbed))
 			ctx.Reject()
 			return
 		}
@@ -106,7 +106,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 
 		if isSupport {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed)) // TODO: Does this need a new message?
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.ToSlice(usageEmbed)) // TODO: Does this need a new message?
 			return
 		}
 
@@ -118,7 +118,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 
 		if isSupport {
-			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.FieldsToSlice(usageEmbed)) // TODO: Does this need a new message?
+			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.ToSlice(usageEmbed)) // TODO: Does this need a new message?
 			return
 		}
 

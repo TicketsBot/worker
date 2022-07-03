@@ -48,7 +48,7 @@ func (RenameCommand) Execute(ctx registry.CommandContext, name string) {
 
 	// Check this is a ticket channel
 	if ticket.UserId == 0 {
-		ctx.ReplyWithFields(customisation.Red, i18n.TitleRename, i18n.MessageNotATicketChannel, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.TitleRename, i18n.MessageNotATicketChannel, utils.ToSlice(usageEmbed))
 		return
 	}
 

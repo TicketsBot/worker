@@ -49,7 +49,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	}
 
 	if content == "" {
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagInvalidTag, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagInvalidTag, utils.ToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}

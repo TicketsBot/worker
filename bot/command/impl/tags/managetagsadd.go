@@ -46,7 +46,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	// Length check
 	if len(tagId) > 16 {
 		ctx.Reject()
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateTooLong, utils.FieldsToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateTooLong, utils.ToSlice(usageEmbed))
 		return
 	}
 
@@ -65,7 +65,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	if tagExists {
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.FieldsToSlice(usageEmbed), tagId, tagId)
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.ToSlice(usageEmbed), tagId, tagId)
 		ctx.Reject()
 		return
 	}

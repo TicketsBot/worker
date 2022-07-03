@@ -186,6 +186,44 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 		}
 	}
 
+	for _, substitutor := range groupSubstitutions {
+		substitutor := substitutor
+
+		contains := false
+		for _, placeholder := range substitutor.Placeholders {
+			formatted := fmt.Sprintf("%%%s%%", placeholder)
+			if strings.Contains(message, formatted) {
+				contains = true
+				break
+			}
+		}
+
+		if contains {
+			group.Go(func() error {
+				replacements := substitutor.F(ctx, ticket)
+				if replacements == nil {
+					replacements = make(map[string]string)
+				}
+
+				// Fill any placeholder with N/A that do not have values
+				for _, placeholder := range substitutor.Placeholders {
+					if _, ok := replacements[placeholder]; !ok {
+						replacements[placeholder] = "N/A"
+					}
+				}
+
+				lock.Lock()
+				for placeholder, replacement := range replacements {
+					formatted := fmt.Sprintf("%%%s%%", placeholder)
+					message = strings.Replace(message, formatted, replacement, -1)
+				}
+				lock.Unlock()
+
+				return nil
+			})
+		}
+	}
+
 	if err := group.Wait(); err != nil {
 		sentry.Error(err)
 	}
@@ -193,7 +231,9 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 	return message
 }
 
-var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket) string{
+type SubstitutionFunc func(*worker.Context, database.Ticket) string
+
+var substitutions = map[string]SubstitutionFunc{
 	"user": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<@%d>", ticket.UserId)
 	},
@@ -257,19 +297,45 @@ var substitutions = map[string]func(ctx *worker.Context, ticket database.Ticket)
 		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
 		return FormatNullableTime(data.AllTime)
 	},
-	"roblox_username": func(ctx *worker.Context, ticket database.Ticket) string {
-		user, err := integrations.Bloxlink.GetRobloxUser(ticket.UserId)
-		if err != nil {
-			if err == bloxlink.ErrUserNotFound {
-				return "N/A"
-			} else {
-				sentry.Error(err)
-				return "Error fetching username"
-			}
-		}
+}
 
-		return user.Name
-	},
+type GroupSubstitutionFunc func(*worker.Context, database.Ticket) map[string]string
+
+type GroupSubstitutor struct {
+	Placeholders []string
+	F            GroupSubstitutionFunc
+}
+
+func NewGroupSubstitutor(placeholders []string, f GroupSubstitutionFunc) GroupSubstitutor {
+	return GroupSubstitutor{
+		Placeholders: placeholders,
+		F:            f,
+	}
+}
+
+var groupSubstitutions = []GroupSubstitutor{
+	NewGroupSubstitutor([]string{"roblox_username", "roblox_id", "roblox_display_name", "roblox_profile_url", "roblox_account_age", "roblox_account_created"},
+		func(ctx *worker.Context, ticket database.Ticket) map[string]string {
+			user, err := integrations.Bloxlink.GetRobloxUser(ticket.UserId)
+			if err != nil {
+				if err == bloxlink.ErrUserNotFound {
+					return nil
+				} else {
+					sentry.Error(err)
+					return nil
+				}
+			}
+
+			return map[string]string{
+				"roblox_username":        user.Name,
+				"roblox_id":              strconv.Itoa(user.Id),
+				"roblox_display_name":    user.DisplayName,
+				"roblox_profile_url":     fmt.Sprintf("https://www.roblox.com/users/%d/profile", user.Id),
+				"roblox_account_age":     fmt.Sprintf("<t:%d:D>", user.Created.Unix()),
+				"roblox_account_created": fmt.Sprintf("<t:%d:R>", user.Created.Unix()),
+			}
+		},
+	),
 }
 
 func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedField {

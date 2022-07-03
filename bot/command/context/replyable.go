@@ -121,6 +121,8 @@ func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) 
 
 func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteLink bool) command.MessageResponse {
 	var message string
+	var imageUrl *string
+
 	if restError, ok := err.(request.RestError); ok {
 		if restError.ApiError.Message == "Missing Permissions" { // Override for missing permissions
 			missingPermissions, err := r.findMissingPermissions()
@@ -140,6 +142,9 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 				sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 				message = formatDiscordError(restError, eventId)
 			}
+		} else if restError.ApiError.Message == "CHANNEL_PARENT_INVALID" {
+			message = fmt.Sprintf("Invalid channel category. Tell an administrator to visit the [dashboard](https://panel.ticketsbot.net/manage/%d/panels) and assign a valid channel category to this ticket panel.\nError ID: `%s`", r.ctx.GuildId(), eventId)
+			imageUrl = utils.Ptr("https://docs.ticketsbot.net/img/multi_panel_category.png")
 		} else {
 			message = formatDiscordError(restError, eventId)
 		}
@@ -148,6 +153,10 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 	}
 
 	embed := r.buildEmbedRaw(customisation.Red, r.GetMessage(i18n.Error), message)
+	if imageUrl != nil {
+		embed.SetImage(*imageUrl)
+	}
+
 	res := command.NewEphemeralEmbedMessageResponse(embed)
 
 	if includeInviteLink {

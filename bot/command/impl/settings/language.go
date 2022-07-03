@@ -93,7 +93,7 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 	example := utils.EmbedFieldRaw("Example", fmt.Sprintf("`/language en`\n`/language fr`\n`/language de`"), true)
 	helpWanted := utils.EmbedField(ctx.GuildId(), "ℹ️ Help Wanted", i18n.MessageLanguageHelpWanted, true)
 
-	ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageLanguageInvalidLanguage, utils.FieldsToSlice(example, utils.BlankField(true), helpWanted), list)
+	ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageLanguageInvalidLanguage, utils.ToSlice(example, utils.BlankField(true), helpWanted), list)
 	ctx.Accept()
 }
 

@@ -2,10 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
-github.com/TicketsBot/common v0.0.0-20220702223413-28890c9942dd h1:Pz3TYi849zSxoWHpfP3OiFfkCwz4DTGpj41jSpFQQlk=
-github.com/TicketsBot/common v0.0.0-20220702223413-28890c9942dd/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
-github.com/TicketsBot/common v0.0.0-20220702235417-86b34af63aff h1:ZkPgk1Xu1nziuV3rDJEbaFYlGCCEDkVNxJWLjN/ZpLE=
-github.com/TicketsBot/common v0.0.0-20220702235417-86b34af63aff/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
+github.com/TicketsBot/common v0.0.0-20220703003136-9f599ff6ae87 h1:jELWa3aOpVvFg7rmpo4K2FPta+kL36DjYkkl2N5wDWw=
+github.com/TicketsBot/common v0.0.0-20220703003136-9f599ff6ae87/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
 github.com/TicketsBot/database v0.0.0-20220629215232-c3d8fb0facb7 h1:+x+ptlG4aqrG9maEcke8BnWDvgznKkCSJ1gJMoq/SjI=
 github.com/TicketsBot/database v0.0.0-20220629215232-c3d8fb0facb7/go.mod h1:F57cywrZsnper1cy56Bx0c/HEsxQBLHz3Pl98WXblWw=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
