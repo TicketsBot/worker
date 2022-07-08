@@ -15,7 +15,7 @@ var Client *cache.PgCache
 
 func Connect() (client cache.PgCache, err error) {
 	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
-		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
+		"postgres://%s:%s@%s/%s?pool_max_conns=%d&prefer_simple_protocol=true",
 		config.Conf.Cache.Username,
 		config.Conf.Cache.Password,
 		config.Conf.Cache.Host,
