@@ -67,3 +67,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	nhooyr.io/websocket v1.8.4 // indirect
 )
+
+replace github.com/TicketsBot/database => ../database

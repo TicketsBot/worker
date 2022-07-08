@@ -8,11 +8,13 @@ import (
 )
 
 var (
-	WebProxy *webproxy.WebProxy
-	Bloxlink *bloxlink.BloxlinkIntegration
+	WebProxy    *webproxy.WebProxy
+	SecureProxy *SecureProxyClient
+	Bloxlink    *bloxlink.BloxlinkIntegration
 )
 
 func InitIntegrations() {
 	WebProxy = webproxy.NewWebProxy(config.Conf.WebProxy.Url, config.Conf.WebProxy.AuthHeaderName, config.Conf.WebProxy.AuthHeaderValue)
 	Bloxlink = bloxlink.NewBloxlinkIntegration(redis.Client, WebProxy, config.Conf.Integrations.BloxlinkApiKey)
+	SecureProxy = NewSecureProxy("http://localhost:8081")
 }
