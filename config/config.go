@@ -39,6 +39,7 @@ type Config struct {
 
 	Integrations struct {
 		BloxlinkApiKey string `env:"BLOXLINK_API_KEY"`
+		SecureProxyUrl string `env:"SECURE_PROXY_URL"`
 	}
 
 	Database struct {
