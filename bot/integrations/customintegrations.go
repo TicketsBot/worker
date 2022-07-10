@@ -69,6 +69,8 @@ func parseBody(body map[string]any, placeholders []database.CustomIntegrationPla
 
 outer:
 	for _, placeholder := range placeholders {
+		parsed[placeholder.Name] = "N/A"
+
 		current := body
 		split := strings.Split(placeholder.JsonPath, ".")
 		for i, key := range split {

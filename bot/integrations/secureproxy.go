@@ -43,7 +43,7 @@ func (p *SecureProxyClient) DoRequest(method, url string, headers map[string]str
 	res, err := p.client.Post(p.Url+"/proxy", "application/json", bytes.NewBuffer(encoded))
 	if err != nil {
 		sentry.Error(err)
-		return nil, errors.New("error encoding request")
+		return nil, errors.New("error proxying request")
 	}
 
 	defer res.Body.Close()
