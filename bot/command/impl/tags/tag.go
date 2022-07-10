@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -69,7 +70,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		}()
 	}
 
-	content = utils.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket)
+	content = logic.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket)
 	ctx.ReplyPlainPermanent(content)
 }
 

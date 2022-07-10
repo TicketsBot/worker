@@ -16,7 +16,6 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -272,7 +271,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		PanelId:          panelId,
 	}
 
-	welcomeMessageId, err := utils.SendWelcomeMessage(ctx, ticket, subject, panel, formData)
+	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
 	}

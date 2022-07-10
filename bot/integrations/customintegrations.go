@@ -1,0 +1,120 @@
+package integrations
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/TicketsBot/database"
+	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/config"
+	"strconv"
+	"strings"
+)
+
+var (
+	blacklistedHeaders        = []string{"user-agent", "x-real-ip", "cache-control", "content-type", "content-length", "expect", "max-forwards", "pragma", "range", "te", "if-match", "if-none-match", "if-modified-since", "if-unmodified-since", "if-range", "accept", "from", "referer"}
+	blacklistedHeaderPrefixes = []string{
+		"x-forwarded-",
+		"x-proxy-",
+		"cf-",
+	}
+
+	ErrIntegrationReturnedErrorStatus = errors.New("Integration returned an error status")
+)
+
+func Fetch(
+	integration database.CustomIntegration,
+	ticket database.Ticket,
+	secrets []database.SecretWithValue,
+	headers []database.CustomIntegrationHeader,
+	placeholders []database.CustomIntegrationPlaceholder, // Only include placeholders that are actually used
+) (map[string]string, error) {
+	userIdStr := strconv.FormatUint(ticket.UserId, 10)
+	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", userIdStr)
+	for _, secret := range secrets {
+		url = strings.ReplaceAll(url, "%"+secret.Name+"%", secret.Value)
+	}
+
+	// Apply headers
+	headerMap := make(map[string]string)
+	for _, header := range headers {
+		if isHeaderBlacklisted(header.Name) {
+			continue
+		}
+
+		value := header.Value
+		value = strings.ReplaceAll(value, "%user_id%", userIdStr)
+		for _, secret := range secrets {
+			value = strings.ReplaceAll(value, "%"+secret.Name+"%", secret.Value)
+		}
+
+		headerMap[header.Name] = value
+	}
+
+	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap)
+	if err != nil {
+		return nil, err
+	}
+
+	var jsonBody map[string]any
+	if err := json.Unmarshal(res, &jsonBody); err != nil {
+		return nil, err
+	}
+
+	return parseBody(jsonBody, placeholders), nil
+}
+
+func parseBody(body map[string]any, placeholders []database.CustomIntegrationPlaceholder) map[string]string {
+	parsed := make(map[string]string)
+
+outer:
+	for _, placeholder := range placeholders {
+		parsed[placeholder.Name] = "N/A"
+
+		current := body
+		split := strings.Split(placeholder.JsonPath, ".")
+		for i, key := range split {
+			if i == len(split)-1 {
+				value, ok := current[key]
+				if ok {
+					parsed[placeholder.Name] = fmt.Sprintf("%v", value)
+				}
+			} else {
+				nested, ok := current[key]
+				if !ok {
+					continue outer
+				}
+
+				nestedMap, ok := nested.(map[string]any)
+				if current == nil {
+					continue outer
+				}
+
+				current = nestedMap
+			}
+		}
+	}
+
+	return parsed
+}
+
+func isHeaderBlacklisted(name string) bool {
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, " ", "")
+
+	if utils.Contains(blacklistedHeaders, name) {
+		return true
+	}
+
+	for _, blacklistedPrefix := range blacklistedHeaderPrefixes {
+		if strings.HasPrefix(name, blacklistedPrefix) {
+			return true
+		}
+	}
+
+	if name == config.Conf.WebProxy.AuthHeaderName {
+		return true
+	}
+
+	return false
+}

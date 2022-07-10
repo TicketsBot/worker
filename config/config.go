@@ -18,7 +18,7 @@ type Config struct {
 		HttpAddress         string   `env:"HTTP_ADDR"`
 		SupportServerInvite string   `env:"SUPPORT_SERVER_INVITE"`
 		Admins              []uint64 `env:"WORKER_BOT_ADMINS"`
-		Helpers             []uint64 `env:"WORKER_BOT_ADMINS"`
+		Helpers             []uint64 `env:"WORKER_BOT_HELPERS"`
 	}
 
 	PremiumProxy struct {
