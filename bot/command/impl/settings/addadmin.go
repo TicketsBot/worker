@@ -23,9 +23,11 @@ func (AddAdminCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permcache.Admin,
 		Category:        command.Settings,
+		InteractionOnly: true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user_or_role", "User or role to apply the administrator permission to", interaction.OptionTypeMentionable, i18n.MessageAddAdminNoMembers),
 		),
+		DefaultEphemeral: true,
 	}
 }
 
