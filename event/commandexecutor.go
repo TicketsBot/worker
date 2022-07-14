@@ -9,6 +9,7 @@ import (
 	commandContext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -246,6 +247,7 @@ func executeCommand(
 		go func() {
 			statsd.Client.IncrementKey(statsd.KeySlashCommands)
 			statsd.Client.IncrementKey(statsd.KeyCommands)
+			prometheus.LogCommand(data.GuildId.Value, data.Data.Name)
 		}()
 
 		reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)

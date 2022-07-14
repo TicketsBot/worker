@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -85,14 +86,11 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 			}
 		}
 
-		var c registry.Command
+		var c, rootCmd registry.Command
 		for _, cmd := range commandManager.GetCommands() {
-			if cmd.Properties().InteractionOnly {
-				continue
-			}
-
 			if strings.ToLower(cmd.Properties().Name) == strings.ToLower(root) || contains(cmd.Properties().Aliases, strings.ToLower(root)) {
 				parent := cmd
+				rootCmd = cmd
 				index := 0
 
 				for {
@@ -101,10 +99,6 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 						found := false
 
 						for _, child := range parent.Properties().Children {
-							if child.Properties().InteractionOnly {
-								continue
-							}
-
 							if strings.ToLower(child.Properties().Name) == strings.ToLower(childName) || contains(child.Properties().Aliases, strings.ToLower(childName)) {
 								parent = child
 								found = true
@@ -175,6 +169,12 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		}
 
 		ctx := context2.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
+
+		if properties.InteractionOnly || rootCmd.Properties().InteractionOnly {
+			ctx.Reject()
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInteractionOnly, rootCmd.Properties().Name)
+			return
+		}
 
 		if properties.PermissionLevel > userPermissionLevel {
 			ctx.Reject()
@@ -416,6 +416,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 
 		go reflect.ValueOf(c.GetExecutor()).Call(valueArgs)
 		statsd.Client.IncrementKey(statsd.KeyCommands)
+		prometheus.LogCommand(e.GuildId, rootCmd.Properties().Name)
 
 		utils.DeleteAfter(worker, e.ChannelId, e.Id, utils.DeleteAfterSeconds)
 	}

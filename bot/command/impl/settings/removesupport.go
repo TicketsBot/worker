@@ -14,9 +14,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
-type RemoveSupportCommand struct {
-	Registry registry.Registry
-}
+type RemoveSupportCommand struct{}
 
 func (RemoveSupportCommand) Properties() registry.Properties {
 	return registry.Properties{

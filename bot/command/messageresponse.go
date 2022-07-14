@@ -36,10 +36,25 @@ func NewEmbedMessageResponse(embeds ...*embed.Embed) MessageResponse {
 	}
 }
 
+func NewEmbedMessageResponseWithComponents(e *embed.Embed, components []component.Component) MessageResponse {
+	return MessageResponse{
+		Embeds:     []*embed.Embed{e},
+		Components: components,
+	}
+}
+
 func NewEphemeralEmbedMessageResponse(embeds ...*embed.Embed) MessageResponse {
 	return MessageResponse{
 		Embeds: embeds,
 		Flags:  message.SumFlags(message.FlagEphemeral),
+	}
+}
+
+func NewEphemeralEmbedMessageResponseWithComponents(e *embed.Embed, components []component.Component) MessageResponse {
+	return MessageResponse{
+		Embeds:     []*embed.Embed{e},
+		Flags:      message.SumFlags(message.FlagEphemeral),
+		Components: components,
 	}
 }
 

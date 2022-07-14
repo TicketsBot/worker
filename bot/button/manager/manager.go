@@ -49,6 +49,8 @@ func (m *ComponentInteractionManager) GetCommands() []registry.ButtonHandler {
 
 func (m *ComponentInteractionManager) RegisterCommands() {
 	m.buttonRegistry = append(m.buttonRegistry,
+		new(handlers.AddAdminHandler),
+		new(handlers.AddSupportHandler),
 		new(handlers.CloseHandler),
 		new(handlers.CloseWithReasonModalHandler),
 		new(handlers.ClaimHandler),

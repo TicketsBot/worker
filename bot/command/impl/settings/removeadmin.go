@@ -14,9 +14,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
-type RemoveAdminCommand struct {
-	Registry registry.Registry
-}
+type RemoveAdminCommand struct{}
 
 func (RemoveAdminCommand) Properties() registry.Properties {
 	return registry.Properties{

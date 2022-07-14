@@ -7,21 +7,14 @@ import (
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/permission"
-	"github.com/rxdn/gdl/rest"
-	"github.com/rxdn/gdl/rest/request"
+	"github.com/rxdn/gdl/objects/interaction/component"
 )
 
-type AddAdminCommand struct {
-	Registry registry.Registry
-}
+type AddAdminCommand struct{}
 
 func (AddAdminCommand) Properties() registry.Properties {
 	return registry.Properties{
@@ -49,103 +42,33 @@ func (c AddAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
-		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddAdminNoMembers, utils.ToSlice(usageEmbed))
+		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.ToSlice(usageEmbed))
 		ctx.Reject()
 		return
 	}
 
+	var mention string
 	if mentionableType == context.MentionableTypeUser {
-		// Guild owner doesn't need to be added
-		guild, err := ctx.Guild()
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if guild.OwnerId == id {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerIsAlreadyAdmin)
-			return
-		}
-
-		if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId(), id); err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Admin); err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if err := utils.PremiumClient.DeleteCachedTier(ctx.GuildId()); err != nil {
-			ctx.HandleError(err)
-			return
-		}
+		mention = fmt.Sprintf("<@%d>", id)
 	} else if mentionableType == context.MentionableTypeRole {
-		if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), id); err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Admin); err != nil {
-			ctx.HandleError(err)
-			return
-		}
+		mention = fmt.Sprintf("<@&%d>", id)
 	} else {
-		ctx.HandleError(fmt.Errorf("infallible"))
+		ctx.HandleError(fmt.Errorf("unknown mentionable type: %d", mentionableType))
 		return
 	}
 
-	ctx.Reply(customisation.Green, i18n.TitleAddAdmin, i18n.MessageAddAdminSuccess)
+	// Send confirmation message
+	e := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleAddAdmin, i18n.MessageAddAdminConfirm, nil, mention)
+	res := command.NewEphemeralEmbedMessageResponseWithComponents(e, utils.Slice(component.BuildActionRow(
+		component.BuildButton(component.Button{
+			Label:    ctx.GetMessage(i18n.Confirm),
+			CustomId: fmt.Sprintf("addadmin-%d-%d", mentionableType, id),
+			Style:    component.ButtonStylePrimary,
+			Emoji:    nil,
+		}),
+	)))
 
-	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
-	if err != nil {
+	if _, err := ctx.ReplyWith(res); err != nil {
 		ctx.HandleError(err)
-		return
-	}
-
-	// Update permissions for existing tickets
-	for _, ticket := range openTickets {
-		if ticket.ChannelId == nil {
-			continue
-		}
-
-		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
-		if err != nil {
-			// Check if the channel has been deleted
-			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
-				if restError.StatusCode == 404 {
-					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
-						ctx.HandleError(err)
-						return
-					}
-
-					continue
-				} else if restError.StatusCode == 403 {
-					break
-				}
-			} else {
-				ctx.HandleError(err)
-				return
-			}
-		}
-
-		// Apply overwrites to existing channels
-		overwrites := append(ch.PermissionOverwrites, channel.PermissionOverwrite{
-			Id:    id,
-			Type:  mentionableType.OverwriteType(),
-			Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
-			Deny:  0,
-		})
-
-		data := rest.ModifyChannelData{
-			PermissionOverwrites: overwrites,
-			Position:             ch.Position,
-		}
-
-		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
-			ctx.HandleError(err)
-			return
-		}
 	}
 }

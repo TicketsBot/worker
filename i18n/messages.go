@@ -21,6 +21,7 @@ var (
 	Ticket    MessageId = "generic.ticket"
 	Reason    MessageId = "generic.reason"
 	ClickHere MessageId = "generic.click_here"
+	Confirm   MessageId = "generic.confirm"
 
 	TitlePremiumOnly       MessageId = "generic.title.premium_only"
 	TitleAbout             MessageId = "generic.title.about"
@@ -54,8 +55,9 @@ var (
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
-	MessageAbout   MessageId = "commands.about"
-	MessagePremium MessageId = "commands.premium"
+	MessageAbout           MessageId = "commands.about"
+	MessagePremium         MessageId = "commands.premium"
+	MessageInteractionOnly MessageId = "commands.interaction_only"
 
 	MessageVote                   MessageId = "commands.vote"
 	MessageInvalidArgument        MessageId = "generic.invalid_argument"
@@ -85,8 +87,10 @@ var (
 	MessageTicketOpened    MessageId = "open.success"
 
 	MessageAddAdminNoMembers   MessageId = "commands.addadmin.no_members"
+	MessageAddAdminConfirm     MessageId = "commands.addadmin.confirm"
 	MessageAddAdminSuccess     MessageId = "commands.addadmin.success"
 	MessageAddSupportNoMembers MessageId = "commands.addsupport.no_members"
+	MessageAddSupportConfirm   MessageId = "commands.addsupport.confirm"
 	MessageAddSupportSuccess   MessageId = "commands.addsupport.success"
 
 	MessageAddNoMembers        MessageId = "commands.add.no_members"

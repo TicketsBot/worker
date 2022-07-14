@@ -32,15 +32,15 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["jumptotop"] = general.JumpToTopCommand{}
 	cm.registry["vote"] = general.VoteCommand{}
 
-	cm.registry["addadmin"] = settings.AddAdminCommand{Registry: cm.registry}
-	cm.registry["addsupport"] = settings.AddSupportCommand{Registry: cm.registry}
+	cm.registry["addadmin"] = settings.AddAdminCommand{}
+	cm.registry["addsupport"] = settings.AddSupportCommand{}
 	cm.registry["autoclose"] = settings.AutoCloseCommand{}
 	cm.registry["blacklist"] = settings.BlacklistCommand{}
 	cm.registry["language"] = settings.LanguageCommand{}
 	cm.registry["panel"] = settings.PanelCommand{}
 	cm.registry["premium"] = settings.PremiumCommand{}
-	cm.registry["removeadmin"] = settings.RemoveAdminCommand{Registry: cm.registry}
-	cm.registry["removesupport"] = settings.RemoveSupportCommand{Registry: cm.registry}
+	cm.registry["removeadmin"] = settings.RemoveAdminCommand{}
+	cm.registry["removesupport"] = settings.RemoveSupportCommand{}
 	cm.registry["premium"] = settings.PremiumCommand{}
 	cm.registry["setup"] = setup.SetupCommand{}
 	cm.registry["viewstaff"] = settings.ViewStaffCommand{}
