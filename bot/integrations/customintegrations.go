@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/database"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"strconv"
@@ -29,6 +30,8 @@ func Fetch(
 	headers []database.CustomIntegrationHeader,
 	placeholders []database.CustomIntegrationPlaceholder, // Only include placeholders that are actually used
 ) (map[string]string, error) {
+	prometheus.LogIntegrationRequest(integration.Id, ticket.GuildId)
+
 	userIdStr := strconv.FormatUint(ticket.UserId, 10)
 	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", userIdStr)
 	for _, secret := range secrets {

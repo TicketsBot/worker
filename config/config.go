@@ -64,6 +64,10 @@ type Config struct {
 		Threads  int    `env:"WORKER_REDIS_THREADS"`
 	}
 
+	Prometheus struct {
+		Address string `env:"PROMETHEUS_SERVER_ADDR"`
+	}
+
 	Statsd struct {
 		Address string `env:"WORKER_STATSD_ADDR"`
 		Prefix  string `env:"WORKER_STATSD_PREFIX"`

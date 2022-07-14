@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/integrations"
 	"github.com/TicketsBot/worker/bot/listeners/messagequeue"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -74,6 +75,8 @@ func main() {
 	}
 
 	utils.ArchiverClient = archiverclient.NewArchiverClient(config.Conf.Archiver.Url, []byte(config.Conf.Archiver.AesKey))
+
+	prometheus.StartServer(config.Conf.Prometheus.Address)
 
 	statsd.Client, err = statsd.NewClient(config.Conf.Statsd.Address, config.Conf.Statsd.Prefix)
 	if err != nil {

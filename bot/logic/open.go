@@ -13,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -340,6 +341,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	// Ephemeral reply is ok
 	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
+	prometheus.LogTicketCreated(ctx.GuildId())
 	statsd.Client.IncrementKey(statsd.KeyTickets)
 	if panel == nil {
 		statsd.Client.IncrementKey(statsd.KeyOpenCommand)
