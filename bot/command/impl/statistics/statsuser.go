@@ -32,6 +32,7 @@ func (StatsUserCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user", "User whose statistics to retrieve", interaction.OptionTypeUser, i18n.MessageInvalidUser),
 		),
+		DefaultEphemeral: true,
 	}
 }
 
@@ -95,9 +96,10 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(ctx.GetColour(customisation.Green)).
-			AddField("Is Admin", "false", true).
-			AddField("Is Support", "false", true).
+			SetAuthor(member.User.Username, "", member.User.AvatarUrl(256)).
+			AddField("Permission Level", "Regular", true).
 			AddField("Is Blacklisted", strconv.FormatBool(isBlacklisted), true).
+			AddBlankField(true).
 			AddField("Total Tickets", strconv.Itoa(totalTickets), true).
 			AddField("Open Tickets", fmt.Sprintf("%d / %d", openTickets, ticketLimit), true)
 
@@ -200,12 +202,18 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			return
 		}
 
+		var permissionLevel string
+		if permLevel == permission.Admin {
+			permissionLevel = "Admin"
+		} else {
+			permissionLevel = "Support"
+		}
+
 		msgEmbed := embed.NewEmbed().
 			SetTitle("Statistics").
 			SetColor(ctx.GetColour(customisation.Green)).
-			AddField("Is Admin", strconv.FormatBool(permLevel == permission.Admin), true).
-			AddField("Is Support", strconv.FormatBool(permLevel >= permission.Support), true).
-			AddBlankField(true).
+			SetAuthor(member.User.Username, "", member.User.AvatarUrl(256)).
+			AddField("Permission Level", permissionLevel, true).
 			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
 			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
 			AddBlankField(true).

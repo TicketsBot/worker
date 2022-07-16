@@ -23,12 +23,13 @@ type StatsServerCommand struct {
 
 func (StatsServerCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "server",
-		Description:     i18n.HelpStatsServer,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Support,
-		Category:        command.Statistics,
-		PremiumOnly:     true,
+		Name:             "server",
+		Description:      i18n.HelpStatsServer,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Support,
+		Category:         command.Statistics,
+		PremiumOnly:      true,
+		DefaultEphemeral: true,
 	}
 }
 
