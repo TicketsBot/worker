@@ -1,6 +1,7 @@
 package integrations
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,8 +60,11 @@ func Fetch(
 		return nil, err
 	}
 
+	decoder := json.NewDecoder(bytes.NewBuffer(res))
+	decoder.UseNumber()
+
 	var jsonBody map[string]any
-	if err := json.Unmarshal(res, &jsonBody); err != nil {
+	if err := decoder.Decode(&jsonBody); err != nil {
 		return nil, err
 	}
 
