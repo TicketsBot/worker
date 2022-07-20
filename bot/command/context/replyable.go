@@ -106,8 +106,8 @@ func (r *Replyable) HandleError(err error) {
 	eventId := sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 
 	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
-	permLevel, err := r.ctx.UserPermissionLevel()
-	showInviteLink := !r.ctx.Worker().IsWhitelabel && (err != nil || permLevel > permcache.Everyone)
+	permLevel, resolveError := r.ctx.UserPermissionLevel()
+	showInviteLink := !r.ctx.Worker().IsWhitelabel && (resolveError != nil || permLevel > permcache.Everyone)
 
 	res := r.buildErrorResponse(err, eventId, showInviteLink)
 	_, _ = r.ctx.ReplyWith(res)
@@ -117,8 +117,8 @@ func (r *Replyable) HandleWarning(err error) {
 	eventId := sentry.LogWithContext(err, r.ctx.ToErrorContext())
 
 	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
-	permLevel, err := r.ctx.UserPermissionLevel()
-	showInviteLink := !r.ctx.Worker().IsWhitelabel && (err != nil || permLevel > permcache.Everyone)
+	permLevel, resolveError := r.ctx.UserPermissionLevel()
+	showInviteLink := !r.ctx.Worker().IsWhitelabel && (resolveError != nil || permLevel > permcache.Everyone)
 
 	res := r.buildErrorResponse(err, eventId, showInviteLink)
 	_, _ = r.ctx.ReplyWith(res)
