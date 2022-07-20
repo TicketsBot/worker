@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -103,15 +104,23 @@ func (r *Replyable) ReplyPlainPermanent(content string) {
 
 func (r *Replyable) HandleError(err error) {
 	eventId := sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
-	res := r.buildErrorResponse(err, eventId, !r.ctx.Worker().IsWhitelabel)
 
+	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
+	permLevel, err := r.ctx.UserPermissionLevel()
+	showInviteLink := !r.ctx.Worker().IsWhitelabel && (err != nil || permLevel > permcache.Everyone)
+
+	res := r.buildErrorResponse(err, eventId, showInviteLink)
 	_, _ = r.ctx.ReplyWith(res)
 }
 
 func (r *Replyable) HandleWarning(err error) {
 	eventId := sentry.LogWithContext(err, r.ctx.ToErrorContext())
-	res := r.buildErrorResponse(err, eventId, !r.ctx.Worker().IsWhitelabel)
 
+	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
+	permLevel, err := r.ctx.UserPermissionLevel()
+	showInviteLink := !r.ctx.Worker().IsWhitelabel && (err != nil || permLevel > permcache.Everyone)
+
+	res := r.buildErrorResponse(err, eventId, showInviteLink)
 	_, _ = r.ctx.ReplyWith(res)
 }
 
