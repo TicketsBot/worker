@@ -275,6 +275,7 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 
 		// Replace placeholders
 		for _, integration := range usedIntegrations {
+			integration := integration
 			integrationSecrets := secrets[integration.Id]
 
 			group.Go(func() error {
