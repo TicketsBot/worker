@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -16,6 +17,8 @@ import (
 	"github.com/rxdn/gdl/rest"
 )
 
+const freePanelLimit = 3
+
 type AutoSetupCommand struct {
 }
 
@@ -27,6 +30,7 @@ func (AutoSetupCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
 		Children:        nil,
+		InteractionOnly: true,
 	}
 }
 
@@ -36,13 +40,17 @@ func (c AutoSetupCommand) GetExecutor() interface{} {
 
 // TODO: Separate into diff functions
 func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
+	interaction, ok := ctx.(*context.SlashCommandContext)
+	if !ok {
+		return
+	}
+
 	var supportRoleId, adminRoleId uint64
-	var messageId uint64
 	var failed bool
 	var messageContent string
 
 	// create roles
-	switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), supportRoleData); err {
+	switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), rest.GuildRoleData{Name: "Tickets Support"}); err {
 	case nil: // an error occurred creating admin role
 		supportRoleId = role.Id
 
@@ -51,7 +59,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 			ctx.HandleError(err)
 		}
 
-		switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), adminRoleData); err {
+		switch role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), rest.GuildRoleData{Name: "Tickets Admin"}); err {
 		case nil:
 			adminRoleId = role.Id
 
@@ -74,8 +82,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		SetColor(getColour(ctx.GuildId(), failed)).
 		SetDescription(messageContent)
 
-	msg, _ := ctx.Worker().CreateMessageEmbed(ctx.ChannelId(), embed)
-	messageId = msg.Id
+	ctx.ReplyWithEmbed(embed)
 
 	// create transcripts channel
 	switch transcriptChannel, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), getTranscriptChannelData(ctx.GuildId(), supportRoleId, adminRoleId)); err {
@@ -90,15 +97,11 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoTranscriptChannelFailure))
 	}
 
-	// update status
-	if messageId != 0 {
-		embed.SetDescription(messageContent)
+	embed.SetDescription(messageContent)
 
-		data := rest.EditMessageData{
-			Embeds: utils.Slice(embed),
-		}
-
-		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
+	shouldEdit := true
+	if err := edit(interaction, embed); err != nil {
+		shouldEdit = false
 	}
 
 	// create category
@@ -118,30 +121,27 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		messageContent += fmt.Sprintf("\n❌ %s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoCategoryFailure))
 	}
 
-	{
-		messageContent += fmt.Sprintf("\n%s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoCompleted, ctx.GuildId(), adminRoleId, supportRoleId))
-	}
+	messageContent += fmt.Sprintf("\n\n%s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoCompleted, ctx.GuildId(), adminRoleId, supportRoleId))
+	messageContent += fmt.Sprintf("\n\n%s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoDocs))
 
 	// update status
-	if messageId != 0 {
+	if shouldEdit {
 		embed.SetDescription(messageContent)
 
-		data := rest.EditMessageData{
-			Embeds: utils.Slice(embed),
+		if err := edit(interaction, embed); err != nil {
+			shouldEdit = false
 		}
-
-		_, _ = ctx.Worker().EditMessage(ctx.ChannelId(), messageId, data)
 	}
 }
 
-var (
-	adminRoleData = rest.GuildRoleData{
-		Name: "Tickets Admin",
+func edit(ctx *context.SlashCommandContext, e *embed.Embed) error {
+	data := rest.WebhookEditBody{
+		Embeds: utils.Slice(e),
 	}
-	supportRoleData = rest.GuildRoleData{
-		Name: "Tickets Support",
-	}
-)
+
+	_, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.Worker().RateLimiter, ctx.Worker().BotId, data)
+	return err
+}
 
 func getColour(guildId uint64, failed bool) int {
 	var colour customisation.Colour

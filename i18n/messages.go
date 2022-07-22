@@ -197,6 +197,7 @@ var (
 	SetupAutoCategorySuccess          MessageId = "setup.auto.category.success"
 	SetupAutoCategoryFailure          MessageId = "setup.auto.category.failure"
 	SetupAutoCompleted                MessageId = "setup.auto.completed"
+	SetupAutoDocs                     MessageId = "setup.auto.docs"
 
 	SetupPrefixInvalid  MessageId = "setup.prefix.invalid"
 	SetupPrefixComplete MessageId = "setup.prefix.success"
