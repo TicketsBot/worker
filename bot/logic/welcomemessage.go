@@ -403,8 +403,8 @@ var groupSubstitutions = []GroupSubstitutor{
 				"roblox_id":              strconv.Itoa(user.Id),
 				"roblox_display_name":    user.DisplayName,
 				"roblox_profile_url":     fmt.Sprintf("https://www.roblox.com/users/%d/profile", user.Id),
-				"roblox_account_age":     fmt.Sprintf("<t:%d:D>", user.Created.Unix()),
-				"roblox_account_created": fmt.Sprintf("<t:%d:R>", user.Created.Unix()),
+				"roblox_account_age":     fmt.Sprintf("<t:%d:R>", user.Created.Unix()),
+				"roblox_account_created": fmt.Sprintf("<t:%d:D>", user.Created.Unix()),
 			}
 		},
 	),
