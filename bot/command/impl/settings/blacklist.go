@@ -90,6 +90,18 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 			ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemove, id)
 		} else {
+			// Limit of 250 *users*
+			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx.GuildId())
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
+
+			if count >= 250 {
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageBlacklistLimit, 250)
+				return
+			}
+
 			if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
 				ctx.HandleError(err)
 				return
@@ -136,6 +148,18 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 			ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemoveRole, id)
 		} else {
+			// Limit of 50 *roles*
+			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx.GuildId())
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
+
+			if count >= 250 {
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageBlacklistRoleLimit, 50)
+				return
+			}
+
 			if err := dbclient.Client.RoleBlacklist.Add(ctx.GuildId(), id); err != nil {
 				ctx.HandleError(err)
 				return

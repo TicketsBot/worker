@@ -43,6 +43,18 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 		Inline: false,
 	}
 
+	// Limit of 200 tags
+	count, err := dbclient.Client.Tag.GetTagCount(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if count >= 200 {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTagCreateLimit, 200)
+		return
+	}
+
 	// Length check
 	if len(tagId) > 16 {
 		ctx.Reject()

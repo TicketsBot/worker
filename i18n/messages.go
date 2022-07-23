@@ -72,6 +72,7 @@ var (
 	MessageTagCreateInvalidArguments MessageId = "commands.tags.create.invalid_arguments"
 	MessageTagCreateTooLong          MessageId = "commands.tags.create.too_long"
 	MessageTagCreateAlreadyExists    MessageId = "commands.tags.create.already_exists"
+	MessageTagCreateLimit            MessageId = "commands.tags.create.limit"
 	MessageTagCreateSuccess          MessageId = "commands.tags.create.success"
 
 	MessageTagDeleteInvalidArguments MessageId = "commands.tags.delete.invalid_arguments"
@@ -103,7 +104,9 @@ var (
 	MessageBlacklistNoMembers  MessageId = "commands.blacklist.no_members"
 	MessageBlacklistSelf       MessageId = "commands.blacklist.self"
 	MessageBlacklistStaff      MessageId = "commands.blacklist.staff"
+	MessageBlacklistLimit      MessageId = "commands.blacklist.add.limit"
 	MessageBlacklistAdd        MessageId = "commands.blacklist.add.success"
+	MessageBlacklistRoleLimit  MessageId = "commands.blacklist.add_role.limit"
 	MessageBlacklistAddRole    MessageId = "commands.blacklist.add_role.success"
 	MessageBlacklistRemove     MessageId = "commands.blacklist.remove.success"
 	MessageBlacklistRemoveRole MessageId = "commands.blacklist.remove_role.success"
