@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
@@ -77,40 +78,43 @@ func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
 			if len(inputs) == 0 { // Don't open a blank form
 				_, _ = logic.OpenTicket(ctx, &panel, panel.Title, nil)
 			} else {
-				components := make([]component.Component, len(inputs))
-				for i, input := range inputs {
-					style := component.TextStyleTypes(input.Style) // wrap
-
-					var maxLength uint32
-					if style == component.TextStyleShort {
-						maxLength = 255
-					} else if style == component.TextStyleParagraph {
-						maxLength = 1024 // Max embed field value
-					}
-
-					components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
-						Style:       component.TextStyleTypes(input.Style),
-						CustomId:    input.CustomId,
-						Label:       input.Label,
-						Placeholder: input.Placeholder,
-						MinLength:   nil,
-						MaxLength:   &maxLength,
-						Required:    utils.Ptr(input.Required),
-					}))
-				}
-
-				modal := button.ResponseModal{
-					Data: interaction.ModalResponseData{
-						CustomId:   fmt.Sprintf("form_%s", panel.CustomId),
-						Title:      form.Title,
-						Components: components,
-					},
-				}
-
+				modal := buildForm(panel, form, inputs)
 				ctx.Modal(modal)
 			}
 		}
 
 		return
+	}
+}
+
+func buildForm(panel database.Panel, form database.Form, inputs []database.FormInput) button.ResponseModal {
+	components := make([]component.Component, len(inputs))
+	for i, input := range inputs {
+		style := component.TextStyleTypes(input.Style) // wrap
+
+		var maxLength uint32
+		if style == component.TextStyleShort {
+			maxLength = 255
+		} else if style == component.TextStyleParagraph {
+			maxLength = 1024 // Max embed field value
+		}
+
+		components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
+			Style:       component.TextStyleTypes(input.Style),
+			CustomId:    input.CustomId,
+			Label:       input.Label,
+			Placeholder: input.Placeholder,
+			MinLength:   nil,
+			MaxLength:   &maxLength,
+			Required:    utils.Ptr(input.Required),
+		}))
+	}
+
+	return button.ResponseModal{
+		Data: interaction.ModalResponseData{
+			CustomId:   fmt.Sprintf("form_%s", panel.CustomId),
+			Title:      form.Title,
+			Components: components,
+		},
 	}
 }
