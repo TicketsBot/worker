@@ -11,6 +11,7 @@ import (
 	"github.com/elliotchance/orderedmap"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"sort"
 	"strings"
 )
 
@@ -94,6 +95,10 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 				commands = retrieved.([]registry.Command)
 			}
 		}
+
+		sort.Slice(commands, func(i, j int) bool {
+			return commands[i].Properties().Name < commands[j].Properties().Name
+		})
 
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
