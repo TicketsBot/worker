@@ -199,7 +199,7 @@ var FullNames = map[Language]string{
 	Portuguese:    "Português",
 	Romanian:      "Română",
 	Russian:       "Pусский",
-	Slovak:        "Slovak",
+	Slovak:        "Slovenský",
 	Swedish:       "Svenska",
 	Thai:          "ไทย",
 	Turkish:       "Türkçe",
