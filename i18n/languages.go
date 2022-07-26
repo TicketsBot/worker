@@ -30,6 +30,7 @@ const (
 	Portuguese    Language = "pt"
 	Romanian      Language = "ro"
 	Russian       Language = "ru"
+	Slovak        Language = "sk"
 	Swedish       Language = "sv"
 	Thai          Language = "th"
 	Turkish       Language = "tr"
@@ -63,6 +64,7 @@ var Flags = map[Language]string{
 	Portuguese:    "🇵🇹",
 	Romanian:      "🇷🇴",
 	Russian:       "🇷🇺",
+	Slovak:        "🇸🇰",
 	Swedish:       "🇸🇪",
 	Thai:          "🇹🇭",
 	Turkish:       "🇹🇷",
@@ -129,6 +131,7 @@ var FullLocales = map[string]Language{
 	"pt-PT": Portuguese,
 	"ro-RO": Romanian,
 	"ru-RU": Russian,
+	"sk-SK": Slovak,
 	"sv-SE": Swedish,
 	"th-TH": Thai,
 	"tr-TR": Turkish,
@@ -162,6 +165,7 @@ var LanguagesAlphabetical = []Language{
 	Portuguese,
 	Romanian,
 	Russian,
+	Slovak,
 	Swedish,
 	Thai,
 	Turkish,
@@ -195,6 +199,7 @@ var FullNames = map[Language]string{
 	Portuguese:    "Portuguese",
 	Romanian:      "Romanian",
 	Russian:       "Russian",
+	Slovak:        "Slovak",
 	Swedish:       "Swedish",
 	Thai:          "Thai",
 	Turkish:       "Turkish",

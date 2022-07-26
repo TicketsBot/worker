@@ -155,7 +155,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 				return
 			}
 
-			if count >= 250 {
+			if count >= 50 {
 				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageBlacklistRoleLimit, 50)
 				return
 			}
