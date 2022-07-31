@@ -33,8 +33,8 @@ func Fetch(
 ) (map[string]string, error) {
 	prometheus.LogIntegrationRequest(integration.Id, ticket.GuildId)
 
-	userIdStr := strconv.FormatUint(ticket.UserId, 10)
-	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", userIdStr)
+	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", strconv.FormatUint(ticket.UserId, 10))
+	url = strings.ReplaceAll(integration.WebhookUrl, "%guild_id%", strconv.FormatUint(ticket.GuildId, 10))
 	for _, secret := range secrets {
 		url = strings.ReplaceAll(url, "%"+secret.Name+"%", secret.Value)
 	}
@@ -47,7 +47,8 @@ func Fetch(
 		}
 
 		value := header.Value
-		value = strings.ReplaceAll(value, "%user_id%", userIdStr)
+		value = strings.ReplaceAll(value, "%user_id%", strconv.FormatUint(ticket.UserId, 10))
+		value = strings.ReplaceAll(value, "%guild_id%", strconv.FormatUint(ticket.GuildId, 10))
 		for _, secret := range secrets {
 			value = strings.ReplaceAll(value, "%"+secret.Name+"%", secret.Value)
 		}
