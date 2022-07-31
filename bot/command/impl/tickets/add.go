@@ -8,9 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/permission"
 )
 
 type AddCommand struct {
@@ -66,13 +64,15 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	// ticket.ChannelId cannot be nil, as we get by channel id
-	data := channel.PermissionOverwrite{
-		Id:    userId,
-		Type:  channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
+	// Build permissions
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
+	// ticket.ChannelId cannot be nil, as we get by channel id
+	data := logic.BuildUserOverwrite(userId, additionalPermissions)
 	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, data); err != nil {
 		ctx.HandleError(err)
 		return

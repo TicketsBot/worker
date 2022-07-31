@@ -185,7 +185,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, err
 		}
 
-		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel, nil)
+		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.Worker().BotId, panel)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
@@ -227,7 +227,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 		}*/
 	} else {
-		overwrites := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
 
 		data := rest.CreateChannelData{
 			Name:                 name,
@@ -438,25 +442,31 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
-func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel, otherUsers ...uint64) (overwrites []channel.PermissionOverwrite) {
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild: guildId,
-		User:  userId,
+func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
+	overwrites := []channel.PermissionOverwrite{ // @everyone
+		{
+			Id:    guildId,
+			Type:  channel.PermissionTypeRole,
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		},
 	}
 
-	// Apply permission overwrites
-	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
-		Id:    guildId,
-		Type:  channel.PermissionTypeRole,
-		Allow: 0,
-		Deny:  permission.BuildPermissions(permission.ViewChannel),
-	})
+	// Build permissions
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(guildId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Separate permissions apply
+	for _, snowflake := range append(otherUsers, userId) {
+		overwrites = append(overwrites, BuildUserOverwrite(snowflake, additionalPermissions))
+	}
 
 	// Create list of members & roles who should be added to the ticket
-	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, userId, selfId, panel, otherUsers)
+	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, selfId, panel)
 	if err != nil {
-		sentry.ErrorWithContext(err, errorContext)
-		return nil
+		return nil, err
 	}
 
 	for _, member := range allowedUsers {
@@ -487,21 +497,18 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		})
 	}
 
-	return overwrites
+	return overwrites, nil
 }
 
-func getAllowedUsersRoles(guildId, userId, selfId uint64, panel *database.Panel, otherUsers []uint64) ([]uint64, []uint64, error) {
+func getAllowedUsersRoles(guildId, selfId uint64, panel *database.Panel) ([]uint64, []uint64, error) {
 	errorContext := errorcontext.WorkerErrorContext{
 		Guild: guildId,
-		User:  userId,
 	}
 
 	// Create list of members & roles who should be added to the ticket
 	// Add the sender & self
-	allowedUsers := []uint64{userId, selfId}
+	allowedUsers := []uint64{selfId}
 	allowedRoles := make([]uint64, 0)
-
-	allowedUsers = append(allowedUsers, otherUsers...)
 
 	// Should we add the default team
 	if panel == nil || panel.WithDefaultTeam {

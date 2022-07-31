@@ -100,9 +100,15 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		}
 	}
 
+	overwrites, err := logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, panel)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+	
 	// Update channel
 	data := rest.ModifyChannelData{
-		PermissionOverwrites: logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, panel),
+		PermissionOverwrites: overwrites,
 	}
 
 	if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), data); err != nil {

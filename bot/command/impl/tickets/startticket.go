@@ -13,10 +13,8 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/permission"
 	"strings"
 )
 
@@ -138,13 +136,14 @@ func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg m
 		}
 	}
 
-	overwrite := channel.PermissionOverwrite{
-		Id:    msg.Author.Id,
-		Type:  channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(logic.StandardPermissions[:]...),
-		Deny:  0,
+	// Build permissions
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
+	overwrite := logic.BuildUserOverwrite(msg.Author.Id, additionalPermissions)
 	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, overwrite); err != nil {
 		ctx.HandleError(err)
 		return

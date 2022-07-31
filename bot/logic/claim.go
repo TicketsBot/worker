@@ -13,6 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// ClaimTicket TODO: Keep /add members
 func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) error {
 	if ticket.ChannelId == nil {
 		return errors.New("channel ID is nil")
@@ -64,9 +65,14 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 		return nil, err
 	}
 
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ticket.GuildId)
+	if err != nil {
+		return nil, err
+	}
+
 	// Support can't view the ticket, and therefore can't type either
 	if !claimSettings.SupportCanView {
-		return overwritesCantView(claimer, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles), nil
+		return overwritesCantView(claimer, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles, additionalPermissions), nil
 	}
 
 	// Support can view the ticket, but can't type
@@ -111,7 +117,7 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 			}
 		}
 
-		return overwritesCantType(claimer, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles), nil
+		return overwritesCantType(claimer, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles, additionalPermissions), nil
 	}
 
 	// Unreachable
@@ -120,15 +126,17 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 
 // We should build new overwrites from scratch
 // TODO: Instead of append(), set indices
-func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
-	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
-		Id:    guildId,
-		Type:  channel.PermissionTypeRole,
-		Allow: 0,
-		Deny:  permission.BuildPermissions(permission.ViewChannel),
-	})
+func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, adminRoles []uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
+	overwrites = append(overwrites, BuildUserOverwrite(openerId, additionalPermissions),
+		channel.PermissionOverwrite{ // @everyone
+			Id:    guildId,
+			Type:  channel.PermissionTypeRole,
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		},
+	)
 
-	for _, userId := range append(adminUsers, claimer, openerId, selfId) {
+	for _, userId := range append(adminUsers, claimer, selfId) {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
@@ -153,15 +161,17 @@ var readOnlyAllowed = []permission.Permission{permission.ViewChannel, permission
 var readOnlyDenied = []permission.Permission{permission.SendMessages, permission.AddReactions}
 
 // support & admins are not mutually exclusive due to support teams
-func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64) (overwrites []channel.PermissionOverwrite) {
-	overwrites = append(overwrites, channel.PermissionOverwrite{ // @everyone
-		Id:    guildId,
-		Type:  channel.PermissionTypeRole,
-		Allow: 0,
-		Deny:  permission.BuildPermissions(permission.ViewChannel),
-	})
+func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
+	overwrites = append(overwrites, BuildUserOverwrite(openerId, additionalPermissions),
+		channel.PermissionOverwrite{ // @everyone
+			Id:    guildId,
+			Type:  channel.PermissionTypeRole,
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		},
+	)
 
-	for _, userId := range append(adminUsers, claimerId, selfId, openerId) {
+	for _, userId := range append(adminUsers, claimerId, selfId) {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
