@@ -146,7 +146,7 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 		}
 	}
 
-	channelName, err := logic.GenerateChannelName(ctx, &panel, ticket.Id, ticket.UserId)
+	channelName, err := logic.GenerateChannelName(ctx, &panel, ticket.Id, ticket.UserId, utils.NilIfZero(claimer))
 	if err != nil {
 		ctx.HandleError(err)
 		return

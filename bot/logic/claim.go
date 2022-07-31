@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/permission"
@@ -14,9 +15,22 @@ import (
 )
 
 // ClaimTicket TODO: Keep /add members
-func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) error {
+func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uint64) error {
 	if ticket.ChannelId == nil {
 		return errors.New("channel ID is nil")
+	}
+
+	// Get panel
+	var panel *database.Panel
+	if ticket.PanelId != nil {
+		tmp, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		if err != nil {
+			return err
+		}
+
+		if tmp.GuildId != 0 {
+			panel = &tmp
+		}
 	}
 
 	// Set to claimed in DB
@@ -24,18 +38,25 @@ func ClaimTicket(worker *worker.Context, ticket database.Ticket, userId uint64) 
 		return err
 	}
 
-	newOverwrites, err := GenerateClaimedOverwrites(worker, ticket, userId)
+	newOverwrites, err := GenerateClaimedOverwrites(ctx.Worker(), ticket, userId)
 	if err != nil {
 		return err
 	}
 
 	// If newOverwrites = nil, no changes to permissions should be made
 	if newOverwrites != nil {
+		channelName, err := GenerateChannelName(ctx, panel, ticket.Id, ticket.UserId, &userId)
+		if err != nil {
+			return err
+		}
+
 		// Update channel
 		data := rest.ModifyChannelData{
+			Name:                 channelName,
 			PermissionOverwrites: newOverwrites,
 		}
-		if _, err = worker.ModifyChannel(*ticket.ChannelId, data); err != nil {
+
+		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
 			return err
 		}
 	}

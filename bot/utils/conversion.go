@@ -24,3 +24,11 @@ func ValueOrZero[T any](v *T) T {
 		return *v
 	}
 }
+
+func NilIfZero[T comparable](v T) *T {
+	if v == *new(T) {
+		return nil
+	} else {
+		return &v
+	}
+}

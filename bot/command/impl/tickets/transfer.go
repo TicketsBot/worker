@@ -79,7 +79,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx.Worker(), ticket, userId); err != nil {
+	if err := logic.ClaimTicket(ctx, ticket, userId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

@@ -54,7 +54,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx.Worker(), ticket, ctx.UserId()); err != nil {
+	if err := logic.ClaimTicket(ctx, ticket, ctx.UserId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}

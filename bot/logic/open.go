@@ -165,7 +165,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
-	name, err := GenerateChannelName(ctx, panel, ticketId, ctx.UserId())
+	name, err := GenerateChannelName(ctx, panel, ticketId, ctx.UserId(), nil)
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
@@ -563,7 +563,7 @@ func getAllowedUsersRoles(guildId, selfId uint64, panel *database.Panel) ([]uint
 	return allowedUsers, allowedRoles, nil
 }
 
-func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, ticketId int, openerId uint64) (string, error) {
+func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, ticketId int, openerId uint64, claimer *uint64) (string, error) {
 	// Create ticket name
 	var name string
 
@@ -571,8 +571,7 @@ func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, tic
 	if panel == nil || panel.NamingScheme == nil {
 		namingScheme, err := dbclient.Client.NamingScheme.Get(ctx.GuildId())
 		if err != nil {
-			namingScheme = database.Id
-			ctx.HandleError(err)
+			return "", err
 		}
 
 		strTicket := strings.ToLower(ctx.GetMessage(i18n.Ticket))
@@ -598,6 +597,18 @@ func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, tic
 			// %id%
 			NewSubstitutor("id", false, false, func(user user.User, member member.Member) string {
 				return strconv.Itoa(ticketId)
+			}),
+			// %id_padded%
+			NewSubstitutor("id_padded", false, false, func(user user.User, member member.Member) string {
+				return fmt.Sprintf("%04d", ticketId)
+			}),
+			// %claimed%
+			NewSubstitutor("claimed", false, false, func(user user.User, member member.Member) string {
+				if claimer == nil {
+					return "unclaimed"
+				} else {
+					return "claimed"
+				}
 			}),
 			// %username%
 			NewSubstitutor("username", true, false, func(user user.User, member member.Member) string {
