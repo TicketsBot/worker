@@ -34,7 +34,7 @@ func Fetch(
 	prometheus.LogIntegrationRequest(integration.Id, ticket.GuildId)
 
 	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", strconv.FormatUint(ticket.UserId, 10))
-	url = strings.ReplaceAll(integration.WebhookUrl, "%guild_id%", strconv.FormatUint(ticket.GuildId, 10))
+	url = strings.ReplaceAll(url, "%guild_id%", strconv.FormatUint(ticket.GuildId, 10))
 	for _, secret := range secrets {
 		url = strings.ReplaceAll(url, "%"+secret.Name+"%", secret.Value)
 	}
