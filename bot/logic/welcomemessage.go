@@ -130,36 +130,7 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 			return nil, err
 		}
 
-		e := &embed.Embed{
-			Title:       utils.ValueOrZero(data.Title),
-			Description: DoPlaceholderSubstitutions(utils.ValueOrZero(data.Description), ctx.Worker(), ticket),
-			Url:         utils.ValueOrZero(data.Url),
-			Timestamp:   data.Timestamp,
-			Color:       int(data.Colour),
-		}
-
-		if ctx.PremiumTier() == premium.None {
-			e.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
-		} else if data.FooterText != nil {
-			e.SetFooter(*data.FooterText, utils.ValueOrZero(data.FooterIconUrl))
-		}
-
-		if data.ImageUrl != nil {
-			e.SetImage(*data.ImageUrl)
-		}
-
-		if data.ThumbnailUrl != nil {
-			e.SetThumbnail(*data.ThumbnailUrl)
-		}
-
-		if data.AuthorName != nil {
-			e.SetAuthor(*data.AuthorName, utils.ValueOrZero(data.AuthorUrl), utils.ValueOrZero(data.AuthorIconUrl))
-		}
-
-		for _, field := range fields {
-			e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx.Worker(), ticket), field.Inline)
-		}
-
+		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None)
 		return e, nil
 	}
 }
@@ -440,4 +411,44 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 	}
 
 	return fields
+}
+
+func BuildCustomEmbed(
+	ctx *worker.Context,
+	ticket database.Ticket,
+	customEmbed database.CustomEmbed,
+	fields []database.EmbedField,
+	branding bool,
+) *embed.Embed {
+	e := &embed.Embed{
+		Title:       utils.ValueOrZero(customEmbed.Title),
+		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket),
+		Url:         utils.ValueOrZero(customEmbed.Url),
+		Timestamp:   customEmbed.Timestamp,
+		Color:       int(customEmbed.Colour),
+	}
+
+	if branding {
+		e.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
+	} else if customEmbed.FooterText != nil {
+		e.SetFooter(*customEmbed.FooterText, utils.ValueOrZero(customEmbed.FooterIconUrl))
+	}
+
+	if customEmbed.ImageUrl != nil {
+		e.SetImage(*customEmbed.ImageUrl)
+	}
+
+	if customEmbed.ThumbnailUrl != nil {
+		e.SetThumbnail(*customEmbed.ThumbnailUrl)
+	}
+
+	if customEmbed.AuthorName != nil {
+		e.SetAuthor(*customEmbed.AuthorName, utils.ValueOrZero(customEmbed.AuthorUrl), utils.ValueOrZero(customEmbed.AuthorIconUrl))
+	}
+
+	for _, field := range fields {
+		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket), field.Inline)
+	}
+
+	return e
 }

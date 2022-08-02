@@ -2,7 +2,6 @@ package tags
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -33,28 +32,21 @@ func (c ManageTagsDeleteCommand) GetExecutor() interface{} {
 }
 
 func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string) {
-	// TODO: Causes a race condition, just try to delete
-	var found bool
-	{
-		tag, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
-		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.Reject()
-			return
-		}
-
-		found = tag != ""
+	exists, err := dbclient.Client.Tag.Exists(ctx.GuildId(), tagId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
-	if !found {
-		ctx.Reject()
+	if !exists {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTagDeleteDoesNotExist, tagId)
 		return
 	}
 
-	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err == nil {
-		ctx.Reply(customisation.Green, i18n.MessageTag, i18n.MessageTagDeleteSuccess, tagId)
-	} else {
+	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err != nil {
 		ctx.HandleError(err)
+		return
 	}
+
+	ctx.Reply(customisation.Green, i18n.MessageTag, i18n.MessageTagDeleteSuccess, tagId)
 }

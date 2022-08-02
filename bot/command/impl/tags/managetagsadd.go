@@ -2,7 +2,7 @@ package tags
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -63,28 +63,30 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	// Verify a tag with the ID doesn't already exist
-	// TODO: This causes a race condition, just try to insert and handle error
-	var tagExists bool
-	{
-		tag, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
-		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.Reject()
-			return
-		}
-
-		tagExists = tag != ""
+	exists, err := dbclient.Client.Tag.Exists(ctx.GuildId(), tagId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
-	if tagExists {
+	if exists {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagCreateAlreadyExists, utils.ToSlice(usageEmbed), tagId, tagId)
 		ctx.Reject()
 		return
 	}
 
-	if err := dbclient.Client.Tag.Set(ctx.GuildId(), tagId, content); err == nil {
-		ctx.Reply(customisation.Green, i18n.MessageTag, i18n.MessageTagCreateSuccess, tagId)
-	} else {
-		ctx.HandleError(err)
+	tag := database.Tag{
+		Id:              tagId,
+		GuildId:         ctx.GuildId(),
+		UseGuildCommand: false,
+		Content:         &content,
+		Embed:           nil,
 	}
+
+	if err := dbclient.Client.Tag.Set(tag); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	ctx.Reply(customisation.Green, i18n.MessageTag, i18n.MessageTagCreateSuccess, tagId)
 }

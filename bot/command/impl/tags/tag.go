@@ -2,6 +2,7 @@ package tags
 
 import (
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -42,16 +43,14 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		Inline: false,
 	}
 
-	content, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
+	tag, ok, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
 	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
-		ctx.Reject()
+		ctx.HandleError(err)
 		return
 	}
 
-	if content == "" {
+	if !ok {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageTagInvalidTag, utils.ToSlice(usageEmbed))
-		ctx.Reject()
 		return
 	}
 
@@ -70,8 +69,27 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		}()
 	}
 
-	content = logic.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket)
-	ctx.ReplyPlainPermanent(content)
+	var content string
+	if tag.Content != nil {
+		content = logic.DoPlaceholderSubstitutions(*tag.Content, ctx.Worker(), ticket)
+	}
+
+	var embeds []*embed.Embed
+	if tag.Embed != nil {
+		embeds = []*embed.Embed{
+			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, ctx.PremiumTier() == premium.None),
+		}
+	}
+
+	data := command.MessageResponse{
+		Content: content,
+		Embeds:  embeds,
+	}
+
+	if _, err := ctx.ReplyWith(data); err != nil {
+		ctx.HandleError(err)
+		return
+	}
 }
 
 func (TagCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
