@@ -181,8 +181,17 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 	}
 
 	// Notify user and send logs in DMs
+	// This mutates state!
 	dmChannel, ok := getDmChannel(ctx, ticket.UserId)
 	if ok {
+		guild, err := ctx.Guild()
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
+		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
+
 		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx.GuildId())
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
@@ -198,26 +207,18 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 
 		statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
-		if !feedbackEnabled || !hasSentMessage {
-			data := rest.CreateMessageData{
-				Embeds:     []*embed.Embed{closeEmbed},
-				Components: append(closeComponents),
-			}
-
-			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-			}
-		} else {
+		if feedbackEnabled && hasSentMessage {
 			closeEmbed.SetDescription("Please rate the quality of service received with the buttons below")
+			closeComponents = append(closeComponents, buildRatingActionRow(ticket))
+		}
 
-			data := rest.CreateMessageData{
-				Embeds:     []*embed.Embed{closeEmbed},
-				Components: append(closeComponents, buildRatingActionRow(ticket)),
-			}
+		data := rest.CreateMessageData{
+			Embeds:     utils.Slice(closeEmbed),
+			Components: closeComponents,
+		}
 
-			if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-			}
+		if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
+			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 }
