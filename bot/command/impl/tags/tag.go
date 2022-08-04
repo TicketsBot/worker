@@ -2,7 +2,6 @@ package tags
 
 import (
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -77,7 +76,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	var embeds []*embed.Embed
 	if tag.Embed != nil {
 		embeds = []*embed.Embed{
-			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, ctx.PremiumTier() == premium.None),
+			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, false),
 		}
 	}
 
