@@ -18,6 +18,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.6.0
 	go.uber.org/atomic v1.6.0
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )

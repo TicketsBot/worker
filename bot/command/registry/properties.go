@@ -8,19 +8,21 @@ import (
 )
 
 type Properties struct {
-	Name                string
-	Description         i18n.MessageId
-	Type                interaction.ApplicationCommandType
-	Aliases             []string
-	PermissionLevel     permission.PermissionLevel
-	Children            []Command // TODO: Map
-	PremiumOnly         bool
-	Category            command.Category
-	AdminOnly           bool
-	HelperOnly          bool
-	InteractionOnly     bool
-	MessageOnly         bool
-	MainBotOnly         bool
-	Arguments           []command.Argument
-	DefaultEphemeral    bool
+	Name             string
+	Description      i18n.MessageId
+	Type             interaction.ApplicationCommandType
+	Aliases          []string
+	PermissionLevel  permission.PermissionLevel
+	Children         []Command // TODO: Map
+	PremiumOnly      bool
+	Category         command.Category
+	AdminOnly        bool
+	HelperOnly       bool
+	InteractionOnly  bool
+	MessageOnly      bool
+	MainBotOnly      bool
+	Arguments        []command.Argument
+	DefaultEphemeral bool
+
+	SetupFunc func()
 }

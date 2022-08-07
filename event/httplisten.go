@@ -102,6 +102,7 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
 	commandManager := new(cmd_manager.CommandManager)
 	commandManager.RegisterCommands()
+	commandManager.RunSetupFuncs()
 
 	buttonManager := btn_manager.NewButtonManager()
 	buttonManager.RegisterCommands()

@@ -6,12 +6,13 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/schollz/progressbar/v3"
 	"io/ioutil"
+	"math"
 	"strings"
 )
 
@@ -25,9 +26,6 @@ func (c LanguageCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
-		Arguments: command.Arguments(
-			command.NewRequiredAutocompleteableArgument("language", "The country-code of the language to switch to", interaction.OptionTypeString, i18n.MessageLanguageInvalidLanguage, c.AutoCompleteHandler),
-		),
 	}
 }
 
@@ -35,33 +33,8 @@ func (c LanguageCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (c LanguageCommand) Execute(ctx registry.CommandContext, newLanguage string) {
-	var valid bool
-	var newFlag string
-
-	for language, flag := range i18n.Flags {
-		if newLanguage == string(language) || newLanguage == flag {
-			if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), language.String()); err != nil { // TODO: Don't wrap
-				ctx.HandleError(err)
-				return
-			}
-
-			newFlag = flag
-			valid = true
-			break
-		}
-	}
-
-	if !valid {
-		c.sendInvalidMessage(ctx)
-		return
-	}
-
-	ctx.Reply(customisation.Green, i18n.TitleLanguage, i18n.MessageLanguageSuccess, newFlag)
-}
-
-func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
-	var list string
+func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
+	var languageList string
 	for _, language := range i18n.LanguagesAlphabetical {
 		coverage := i18n.GetCoverage(language)
 		if coverage == 0 {
@@ -85,35 +58,50 @@ func (LanguageCommand) sendInvalidMessage(ctx registry.CommandContext) {
 		)
 		_ = bar.Set(coverage)
 
-		list += fmt.Sprintf("%s **%s** `%s`\n", flag, language, strings.TrimSpace(bar.String()))
+		languageList += fmt.Sprintf("%s **%s** `%s`\n", flag, i18n.FullNamesEnglish[language], strings.TrimSpace(bar.String()))
 	}
 
-	list = strings.TrimSuffix(list, "\n")
+	languageList = strings.TrimSuffix(languageList, "\n")
 
-	example := utils.EmbedFieldRaw("Example", fmt.Sprintf("`/language en`\n`/language fr`\n`/language de`"), true)
 	helpWanted := utils.EmbedField(ctx.GuildId(), "ℹ️ Help Wanted", i18n.MessageLanguageHelpWanted, true)
+	e := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleLanguage, i18n.MessageLanguageCommand, utils.ToSlice(helpWanted), languageList)
+	res := command.NewEphemeralEmbedMessageResponseWithComponents(e, buildComponents(ctx))
 
-	ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageLanguageInvalidLanguage, utils.ToSlice(example, utils.BlankField(true), helpWanted), list)
-	ctx.Accept()
+	_, _ = ctx.ReplyWith(res)
 }
 
-func (c LanguageCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) (choices []interaction.ApplicationCommandOptionChoice) {
-	valLower := strings.ToLower(value)
+func buildComponents(ctx registry.CommandContext) []component.Component {
+	components := make([]component.Component, int(math.Ceil(float64(len(i18n.LanguagesAlphabetical))/25.0)))
 
-	// Don't iter map in order to keep alphabetical
-	for _, code := range i18n.LanguagesAlphabetical {
-		fullName := i18n.FullNames[code]
-		if strings.HasPrefix(strings.ToLower(fullName), valLower) || strings.HasPrefix(strings.ToLower(code.String()), valLower) {
-			choices = append(choices, interaction.ApplicationCommandOptionChoice{
-				Name:  fullName,
-				Value: code.String(),
-			})
+	var menu component.SelectMenu
+	var i int
+	for j, language := range i18n.LanguagesAlphabetical {
+		if j%25 == 0 {
+			if j != 0 {
+				components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
+				i++
+			}
+
+			remainingLanguages := len(i18n.LanguagesAlphabetical) - (i * 25)
+			menu = component.SelectMenu{
+				CustomId:    fmt.Sprintf("language-selector-%d", i),
+				Options:     make([]component.SelectOption, utils.Min(remainingLanguages, 25)),
+				Placeholder: ctx.GetMessage(i18n.MessageLanguageSelect, i*25+1, i*25+utils.Min(remainingLanguages, 25)),
+			}
+		}
+
+		menu.Options[j%25] = component.SelectOption{
+			Label:       i18n.FullNamesEnglish[language],
+			Description: i18n.FullNames[language],
+			Value:       string(language),
+			Emoji:       utils.BuildEmoji(i18n.Flags[language]),
+			Default:     false,
 		}
 	}
 
-	if len(choices) > 25 {
-		return choices[:25]
-	} else {
-		return choices
+	if len(menu.Options) > 0 {
+		components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
 	}
+
+	return components
 }

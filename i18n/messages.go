@@ -175,9 +175,10 @@ var (
 	SetupTicketLimit     MessageId = "setup.info.ticket_limit"
 	SetupWelcomeMessage  MessageId = "setup.info.welcome_message"
 
-	MessageLanguageInvalidLanguage MessageId = "commands.language.invalid"
-	MessageLanguageHelpWanted      MessageId = "commands.language.help_wanted"
-	MessageLanguageSuccess         MessageId = "commands.language.success"
+	MessageLanguageCommand    MessageId = "commands.language.content"
+	MessageLanguageSelect     MessageId = "commands.language.select"
+	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
+	MessageLanguageSuccess    MessageId = "commands.language.success"
 
 	HelpAdminCheckPremium MessageId = "help.admin.check_premium"
 	HelpAdminBlacklist    MessageId = "help.admin.blacklist"

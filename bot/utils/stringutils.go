@@ -1,9 +1,14 @@
 package utils
 
 import (
+	"golang.org/x/exp/constraints"
 	"math/rand"
 	"strings"
 )
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
 
 func StringMax(str string, max int, suffix ...string) string {
 	if len(str) > max {
@@ -11,6 +16,22 @@ func StringMax(str string, max int, suffix ...string) string {
 	}
 
 	return str
+}
+
+func Max[T Number](a, b T) T {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Min[T Number](a, b T) T {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

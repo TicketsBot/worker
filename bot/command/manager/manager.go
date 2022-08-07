@@ -63,3 +63,11 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["transfer"] = tickets.TransferCommand{}
 	cm.registry["unclaim"] = tickets.UnclaimCommand{}
 }
+
+func (cm *CommandManager) RunSetupFuncs() {
+	for _, command := range cm.registry {
+		if command.Properties().SetupFunc != nil {
+			command.Properties().SetupFunc()
+		}
+	}
+}

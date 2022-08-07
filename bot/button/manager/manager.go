@@ -63,6 +63,7 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 	)
 
 	m.selectRegistry = append(m.selectRegistry,
+		new(handlers.LanguageSelectorHandler),
 		new(handlers.MultiPanelHandler),
 	)
 

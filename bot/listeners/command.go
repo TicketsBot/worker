@@ -34,6 +34,7 @@ var (
 func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 	commandManager := new(manager.CommandManager)
 	commandManager.RegisterCommands()
+	commandManager.RunSetupFuncs()
 
 	return func(worker *worker.Context, e *events.MessageCreate) {
 		if e.Author.Bot {
