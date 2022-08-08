@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"math"
 	"strings"
+	"unicode"
 )
 
 type LanguageCommand struct {
@@ -74,20 +75,26 @@ func buildComponents(ctx registry.CommandContext) []component.Component {
 	components := make([]component.Component, int(math.Ceil(float64(len(i18n.LanguagesAlphabetical))/25.0)))
 
 	var menu component.SelectMenu
+	var firstLanguage, lastLanguage i18n.Language
 	var i int
 	for j, language := range i18n.LanguagesAlphabetical {
 		if j%25 == 0 {
 			if j != 0 {
+				startLetter := unicode.ToUpper(rune(i18n.LocalesInverse[firstLanguage][0]))
+				endLetter := unicode.ToUpper(rune(i18n.LocalesInverse[lastLanguage][0]))
+
+				menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
 				components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
 				i++
 			}
 
 			remainingLanguages := len(i18n.LanguagesAlphabetical) - (i * 25)
 			menu = component.SelectMenu{
-				CustomId:    fmt.Sprintf("language-selector-%d", i),
-				Options:     make([]component.SelectOption, utils.Min(remainingLanguages, 25)),
-				Placeholder: ctx.GetMessage(i18n.MessageLanguageSelect, i*25+1, i*25+utils.Min(remainingLanguages, 25)),
+				CustomId: fmt.Sprintf("language-selector-%d", i),
+				Options:  make([]component.SelectOption, utils.Min(remainingLanguages, 25)),
 			}
+
+			firstLanguage = language
 		}
 
 		menu.Options[j%25] = component.SelectOption{
@@ -97,9 +104,15 @@ func buildComponents(ctx registry.CommandContext) []component.Component {
 			Emoji:       utils.BuildEmoji(i18n.Flags[language]),
 			Default:     false,
 		}
+
+		lastLanguage = language
 	}
 
 	if len(menu.Options) > 0 {
+		startLetter := unicode.ToUpper(rune(i18n.LocalesInverse[firstLanguage][0]))
+		endLetter := unicode.ToUpper(rune(i18n.LocalesInverse[lastLanguage][0]))
+
+		menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
 		components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
 	}
 

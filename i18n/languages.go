@@ -141,7 +141,41 @@ var FullLocales = map[string]Language{
 	"zh-TW": ChineseTaiwan,
 }
 
-var LanguagesAlphabetical = []Language{
+var LocalesInverse = map[Language]string{
+	Arabic:        "ar-SA",
+	Bulgarian:     "bg-BG",
+	Czech:         "cs-CZ",
+	Danish:        "da-DK",
+	German:        "de-DE",
+	Greek:         "el-GR",
+	English:       "en-GB",
+	Spanish:       "es-ES",
+	Finnish:       "fi-FI",
+	French:        "fr-FR",
+	Croatian:      "hr-HR",
+	Hungarian:     "hu-HU",
+	Italian:       "it-IT",
+	Japanese:      "ja-JP",
+	Korean:        "ko-KR",
+	Lithuanian:    "lt-LT",
+	Dutch:         "nl-NL",
+	Norwegian:     "no-NO",
+	Polish:        "pl-PL",
+	PortugueseBR:  "pt-BR",
+	Portuguese:    "pt-PT",
+	Romanian:      "ro-RO",
+	Russian:       "ru-RU",
+	Slovak:        "sk-SK",
+	Swedish:       "sv-SE",
+	Thai:          "th-TH",
+	Turkish:       "tr-TR",
+	Ukrainian:     "uk-UA",
+	Vietnamese:    "vi-VN",
+	Chinese:       "zh-CN",
+	ChineseTaiwan: "zh-TW",
+}
+
+var LanguagesAlphabetical = [...]Language{
 	Arabic,
 	Bulgarian,
 	Czech,
