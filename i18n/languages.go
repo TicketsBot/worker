@@ -47,7 +47,7 @@ var Flags = map[Language]string{
 	Danish:        "🇩🇰",
 	German:        "🇩🇪",
 	Greek:         "🇬🇷",
-	English:       "🇬🇧",
+	English:       "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
 	Spanish:       "🇪🇸",
 	Finnish:       "🇫🇮",
 	French:        "🇫🇷",
