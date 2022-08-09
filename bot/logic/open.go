@@ -182,6 +182,12 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), true)
 		if err != nil {
 			ctx.HandleError(err)
+
+			// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
+			if err := dbclient.Client.Tickets.Close(ticketId, ctx.GuildId()); err != nil {
+				ctx.HandleError(err)
+			}
+
 			return database.Ticket{}, err
 		}
 
@@ -221,11 +227,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 			return database.Ticket{}, err
 		}
-
-		// Delete the message
-		/*if err := ctx.Worker().DeleteMessage(msg.ChannelId, msg.Id); err != nil {
-			ctx.HandleError(err)
-		}*/
 	} else {
 		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 		if err != nil {
@@ -245,17 +246,16 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		ch, err = ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
-	}
-
-	if err != nil { // Bot likely doesn't have permission
-		ctx.HandleError(err)
-
-		// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
-		if err := dbclient.Client.Tickets.Close(ticketId, ctx.GuildId()); err != nil {
+		if err != nil { // Bot likely doesn't have permission
 			ctx.HandleError(err)
-		}
 
-		return database.Ticket{}, err
+			// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
+			if err := dbclient.Client.Tickets.Close(ticketId, ctx.GuildId()); err != nil {
+				ctx.HandleError(err)
+			}
+
+			return database.Ticket{}, err
+		}
 	}
 
 	ctx.Accept()
