@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
@@ -636,21 +635,6 @@ func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, tic
 	}
 
 	return name, nil
-}
-
-// target channel for messaging the user
-// either DMs or the channel where the command was run
-func getErrorTargetChannel(ctx registry.CommandContext, panel *database.Panel) (uint64, error) {
-	if panel == nil {
-		return ctx.ChannelId(), nil
-	} else {
-		dmChannel, ok := getDmChannel(ctx, ctx.UserId())
-		if !ok {
-			return 0, errors.New("failed to create dm channel")
-		}
-
-		return dmChannel, nil
-	}
 }
 
 func countRealChannels(channels []channel.Channel, parentId uint64) int {

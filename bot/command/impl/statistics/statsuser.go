@@ -214,8 +214,7 @@ func (StatsUserCommand) Execute(ctx registry.CommandContext, userId uint64) {
 			SetColor(ctx.GetColour(customisation.Green)).
 			SetAuthor(member.User.Username, "", member.User.AvatarUrl(256)).
 			AddField("Permission Level", permissionLevel, true).
-			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
-			AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
+			AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐ (%d ratings)", feedbackRating, feedbackCount), true).
 			AddBlankField(true).
 			AddField("Average First Response Time (Weekly)", formatNullableTime(weeklyAR), true).
 			AddField("Average First Response Time (Monthly)", formatNullableTime(monthlyAR), true).
