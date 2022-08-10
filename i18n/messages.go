@@ -93,6 +93,7 @@ var (
 	MessageAddSupportNoMembers MessageId = "commands.addsupport.no_members"
 	MessageAddSupportConfirm   MessageId = "commands.addsupport.confirm"
 	MessageAddSupportSuccess   MessageId = "commands.addsupport.success"
+	MessageAddSupportEveryone  MessageId = "commands.addsupport.everyone"
 
 	MessageAddNoMembers        MessageId = "commands.add.no_members"
 	MessageAddNoChannel        MessageId = "commands.add.no_channel"

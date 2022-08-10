@@ -92,6 +92,11 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 			return
 		}
 	} else if mentionableType == context.MentionableTypeRole {
+		if id == ctx.GuildId() {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageAddSupportEveryone)
+			return
+		}
+
 		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
