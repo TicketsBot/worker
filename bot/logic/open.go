@@ -244,7 +244,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			data.ParentId = category
 		}
 
-		ch, err = ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
+		tmp, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
 		if err != nil { // Bot likely doesn't have permission
 			ctx.HandleError(err)
 
@@ -255,6 +255,14 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 			return database.Ticket{}, err
 		}
+
+		// TODO: Remove
+		if tmp.Id == 0 {
+			ctx.HandleError(fmt.Errorf("channel id is 0"))
+			return database.Ticket{}, fmt.Errorf("channel id is 0")
+		}
+
+		ch = tmp
 	}
 
 	ctx.Accept()
