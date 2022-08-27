@@ -51,7 +51,7 @@ func ListenAutoClose() {
 			}
 
 			ctx := context.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
-			logic.CloseTicket(&ctx, gdlUtils.StrPtr(AutoCloseReason))
+			logic.CloseTicket(ctx, gdlUtils.StrPtr(AutoCloseReason))
 		}()
 	}
 }

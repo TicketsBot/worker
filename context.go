@@ -15,6 +15,6 @@ type Context struct {
 	RateLimiter  *ratelimit.Ratelimiter
 }
 
-func (c *Context) Self() (user.User, error) {
-	return c.GetUser(c.BotId)
+func (ctx *Context) Self() (user.User, error) {
+	return ctx.GetUser(ctx.BotId)
 }

@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -9,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest/request"
 )
 
 type AddCommand struct {
@@ -39,7 +41,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// Test valid ticket channel
-	if ticket.Id == 0 {
+	if ticket.Id == 0 || ticket.ChannelId == nil {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		ctx.Reject()
 		return
@@ -64,18 +66,36 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	// Build permissions
-	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
+	if ticket.IsThread {
+		if err := ctx.Worker().AddThreadMember(*ticket.ChannelId, userId); err != nil {
+			if err, ok := err.(request.RestError); ok && err.ApiError.Message == "Missing Access" {
+				ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+				if err != nil {
+					ctx.HandleError(err)
+					return
+				}
 
-	// ticket.ChannelId cannot be nil, as we get by channel id
-	data := logic.BuildUserOverwrite(userId, additionalPermissions)
-	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, data); err != nil {
-		ctx.HandleError(err)
-		return
+				ctx.ReplyPlain(fmt.Sprintf("Couldn't add <@%d> to the ticket: Ensure that they have permission to view the parent channel (<#%d>)", userId, ch.ParentId.Value)) // TODO: Embed + Translate
+			} else {
+				ctx.HandleError(err)
+			}
+
+			return
+		}
+	} else {
+		// Build permissions
+		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		// ticket.ChannelId cannot be nil, as we get by channel id
+		data := logic.BuildUserOverwrite(userId, additionalPermissions)
+		if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, data); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	}
 
 	ctx.ReplyPermanent(customisation.Green, i18n.TitleAdd, i18n.MessageAddSuccess, userId, *ticket.ChannelId)

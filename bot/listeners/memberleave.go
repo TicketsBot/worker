@@ -58,7 +58,7 @@ func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
 					}
 
 					ctx := context.NewAutoCloseContext(worker, e.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
-					logic.CloseTicket(&ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason))
+					logic.CloseTicket(ctx, gdlUtils.StrPtr(messagequeue.AutoCloseReason))
 				}
 			}
 		}

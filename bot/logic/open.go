@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -16,10 +17,12 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	model "github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/permission"
@@ -30,6 +33,9 @@ import (
 	"strings"
 	"time"
 )
+
+// Todo: add settings
+const ThreadChannel uint64 = 1009101009433395210
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	// Make sure ticket count is within ticket limit
@@ -58,6 +64,12 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, nil
 	}
 
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -71,7 +83,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	useCategory := category != 0
+	useCategory := category != 0 && !settings.UseThreads
 	if useCategory {
 		// Check if the category still exists
 		_, err := ctx.Worker().GetChannel(category)
@@ -101,17 +113,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
-	}
-
 	// Channel count checks
 	channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
 	// 500 guild limit check
-	if countRealChannels(channels, 0) >= 500 {
+	if !settings.UseThreads && countRealChannels(channels, 0) >= 500 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
 		return database.Ticket{}, fmt.Errorf("channel limit reached")
 	}
@@ -157,8 +163,15 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
+	guild, err := ctx.Guild()
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
 	// Create channel
-	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId())
+	isThread := settings.UseThreads && guild.PremiumTier >= model.PremiumTier2
+	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId(), isThread)
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
@@ -170,14 +183,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
-	guild, err := ctx.Guild()
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
-	}
-
 	var ch channel.Channel
-	if settings.UseThreads && guild.PremiumTier >= model.PremiumTier2 {
+	var joinMessageId *uint64
+	if isThread {
 		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), true)
 		if err != nil {
 			ctx.HandleError(err)
@@ -190,41 +198,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, err
 		}
 
-		allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.Worker().BotId, panel)
-		if err != nil {
+		// Join ticket
+		if err := ctx.Worker().AddThreadMember(ch.Id, ctx.UserId()); err != nil {
 			ctx.HandleError(err)
-			return database.Ticket{}, err
 		}
 
-		var content string
-		for _, roleId := range allowedRoles {
-			content += fmt.Sprintf(" <@&%d>", roleId)
-		}
+		data := BuildJoinThreadMessage(ctx.GuildId(), ctx.UserId(), ticketId, panel, 0, ctx.PremiumTier())
 
-		for _, userId := range allowedUsers {
-			content += fmt.Sprintf(" <@%d>", userId)
-		}
-
-		// TODO: Split into multiple messages
-		if len(content) > 2000 {
-			content = content[:2000]
-		}
-
-		// Add all roles
-		data := rest.CreateMessageData{
-			Content: content,
-			// Must mention all, or it won't add the members
-			AllowedMentions: message.AllowedMention{
-				Parse: []message.AllowedMentionType{
-					message.EVERYONE,
-				},
-			},
-		}
-
-		_, err = ctx.Worker().CreateMessageComplex(ch.Id, data)
-		if err != nil {
+		if msg, err := ctx.Worker().CreateMessageComplex(ThreadChannel, data.IntoCreateMessageData()); err == nil {
+			joinMessageId = &msg.Id
+		} else {
 			ctx.HandleError(err)
-			return database.Ticket{}, err
 		}
 	} else {
 		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
@@ -289,13 +273,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// UpdateUser channel in DB
-	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, panelId); err != nil {
+	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, joinMessageId, panelId); err != nil {
 		ctx.HandleError(err)
 	}
 
 	// mentions
 	{
 		var content string
+
+		if isThread && settings.OnCallRole != nil {
+			content += fmt.Sprintf("<@&%d>", *settings.OnCallRole)
+		}
 
 		if panel != nil {
 			// roles
@@ -660,4 +648,66 @@ func countRealChannels(channels []channel.Channel, parentId uint64) int {
 	}
 
 	return count
+}
+
+func BuildJoinThreadMessage(guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
+	var colour customisation.Colour
+	if staffCount > 0 {
+		colour = customisation.Green
+	} else {
+		colour = customisation.Red
+	}
+
+	panelName := "None"
+	if panel != nil {
+		panelName = panel.ButtonLabel
+	}
+
+	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Join Ticket", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
+	e.AddField("Opened By", fmt.Sprintf("<@%d>", openerId), true)
+	e.AddField("Panel", panelName, true)
+	e.AddField("Staff In Ticket", strconv.Itoa(staffCount), true)
+
+	return command.MessageResponse{
+		Embeds: utils.Slice(e),
+		Components: utils.Slice(component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label:    "Join Ticket",
+				CustomId: fmt.Sprintf("join_thread_%d", ticketId),
+				Style:    component.ButtonStylePrimary,
+				Emoji:    utils.BuildEmoji("➕"),
+			}),
+		)),
+	}
+}
+
+func BuildThreadReopenMessage(guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
+	var colour customisation.Colour
+	if staffCount > 0 {
+		colour = customisation.Green
+	} else {
+		colour = customisation.Red
+	}
+
+	panelName := "None"
+	if panel != nil {
+		panelName = panel.ButtonLabel
+	}
+
+	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Ticket Reopened", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
+	e.AddField("Opened By", fmt.Sprintf("<@%d>", openerId), true)
+	e.AddField("Panel", panelName, true)
+	e.AddField("Staff In Ticket", strconv.Itoa(staffCount), true)
+
+	return command.MessageResponse{
+		Embeds: utils.Slice(e),
+		Components: utils.Slice(component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label:    "Join Ticket",
+				CustomId: fmt.Sprintf("join_thread_%d", ticketId),
+				Style:    component.ButtonStylePrimary,
+				Emoji:    utils.BuildEmoji("➕"),
+			}),
+		)),
+	}
 }

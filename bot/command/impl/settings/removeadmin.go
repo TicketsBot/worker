@@ -8,10 +8,13 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/permission"
 )
 
 type RemoveAdminCommand struct{}
@@ -92,6 +95,13 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 		return
 	}
 
-	ctx.Accept()
 	ctx.Reply(customisation.Green, i18n.TitleRemoveAdmin, i18n.MessageRemoveAdminSuccess)
+
+	// Remove user / role from thread notification channel
+	_ = ctx.Worker().EditChannelPermissions(logic.ThreadChannel, channel.PermissionOverwrite{
+		Id:    id,
+		Type:  mentionableType.OverwriteType(),
+		Allow: 0,
+		Deny:  permission.BuildPermissions(permission.ViewChannel),
+	})
 }

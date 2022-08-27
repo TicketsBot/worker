@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
 )
@@ -47,13 +46,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	// Check if thread
-	ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	if ch.Type == channel.ChannelTypeGuildPrivateThread {
+	if ticket.IsThread {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
 		return
 	}
@@ -105,7 +98,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		ctx.HandleError(err)
 		return
 	}
-	
+
 	// Update channel
 	data := rest.ModifyChannelData{
 		PermissionOverwrites: overwrites,

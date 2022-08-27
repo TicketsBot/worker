@@ -49,7 +49,7 @@ func ListenCloseRequestTimer() {
 			}
 
 			ctx := context.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, request.UserId, premiumTier)
-			logic.CloseTicket(&ctx, request.Reason)
+			logic.CloseTicket(ctx, request.Reason)
 		}()
 	}
 }

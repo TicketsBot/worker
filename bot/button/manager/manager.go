@@ -57,6 +57,7 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 		new(handlers.CloseConfirmHandler),
 		new(handlers.CloseRequestAcceptHandler),
 		new(handlers.CloseRequestDenyHandler),
+		new(handlers.JoinThreadHandler),
 		new(handlers.PanelHandler),
 		new(handlers.RateHandler),
 		new(handlers.ViewStaffHandler),

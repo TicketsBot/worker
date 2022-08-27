@@ -55,9 +55,10 @@ var (
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
-	MessageAbout           MessageId = "commands.about"
-	MessagePremium         MessageId = "commands.premium"
-	MessageInteractionOnly MessageId = "commands.interaction_only"
+	MessageAbout             MessageId = "commands.about"
+	MessagePremium           MessageId = "commands.premium"
+	MessageInteractionOnly   MessageId = "commands.interaction_only"
+	MessageInteractionSwitch MessageId = "commands.interaction_switch"
 
 	MessageVote                   MessageId = "commands.vote"
 	MessageInvalidArgument        MessageId = "generic.invalid_argument"

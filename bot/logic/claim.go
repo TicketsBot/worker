@@ -7,7 +7,9 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
@@ -18,6 +20,12 @@ import (
 func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uint64) error {
 	if ticket.ChannelId == nil {
 		return errors.New("channel ID is nil")
+	}
+
+	// Check if thread
+	if ticket.IsThread {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
+		return nil
 	}
 
 	// Get panel

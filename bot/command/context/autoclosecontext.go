@@ -24,7 +24,7 @@ func NewAutoCloseContext(
 	worker *worker.Context,
 	guildId, channelId, userId uint64,
 	premium premium.PremiumTier,
-) AutoCloseContext {
+) *AutoCloseContext {
 	ctx := AutoCloseContext{
 		worker:    worker,
 		guildId:   guildId,
@@ -34,7 +34,7 @@ func NewAutoCloseContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
-	return ctx
+	return &ctx
 }
 
 func (ctx *AutoCloseContext) Worker() *worker.Context {
