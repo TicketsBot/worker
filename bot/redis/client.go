@@ -6,6 +6,7 @@ import (
 )
 
 var Client *redis.Client
+var ErrNil = redis.Nil
 
 func Connect() error {
 	Client = redis.NewClient(&redis.Options{

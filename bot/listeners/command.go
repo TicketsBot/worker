@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/command"
 	context2 "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -23,6 +24,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -170,6 +172,26 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		}
 
 		ctx := context2.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
+
+		// Redirect user to slash commands
+		if time.Now().Unix() > 1661986800 && !properties.AdminOnly && !properties.HelperOnly {
+			commands, err := command.LoadCommandIds(worker, worker.BotId)
+			if err != nil {
+				sentry.Error(err)
+				return
+			}
+
+			commandName := strings.ToLower(rootCmd.Properties().Name)
+
+			commandMention := "`COMMAND NOT FOUND`"
+			if id, ok := commands[commandName]; ok {
+				commandMention = fmt.Sprintf(`</%s:%d>`, commandName, id)
+			}
+
+			ctx.Reject()
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInteractionSwitch, commandMention)
+			return
+		}
 
 		if properties.InteractionOnly || rootCmd.Properties().InteractionOnly {
 			ctx.Reject()

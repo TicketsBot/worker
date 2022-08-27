@@ -49,6 +49,12 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
+	commandIds, err := command.LoadCommandIds(ctx.Worker(), ctx.Worker().BotId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	for _, cmd := range c.Registry {
 		properties := cmd.Properties()
 
@@ -103,7 +109,12 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 		if len(commands) > 0 {
 			formatted := make([]string, 0)
 			for _, cmd := range commands {
-				formatted = append(formatted, registry.FormatHelp(cmd, ctx.GuildId()))
+				var commandId *uint64
+				if tmp, ok := commandIds[cmd.Properties().Name]; ok {
+					commandId = &tmp
+				}
+
+				formatted = append(formatted, registry.FormatHelp(cmd, ctx.GuildId(), commandId))
 			}
 
 			embed.AddField(string(category.(command.Category)), strings.Join(formatted, "\n"), false)
