@@ -307,12 +307,14 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 	}
 
 	if ticket.IsThread && ticket.ChannelId != nil {
-		transcriptButtons = append(transcriptButtons, component.BuildButton(component.Button{
-			Label: "View Thread",
-			Style: component.ButtonStyleLink,
-			Emoji: threadEmoji,
-			Url:   utils.Ptr(fmt.Sprintf("https://discord.com/channels/%d/%d", ticket.GuildId, *ticket.ChannelId)),
-		}))
+		transcriptButtons = append(transcriptButtons,
+			component.BuildButton(component.Button{
+				Label: "View Thread",
+				Style: component.ButtonStyleLink,
+				Emoji: threadEmoji,
+				Url:   utils.Ptr(fmt.Sprintf("https://discord.com/channels/%d/%d", ticket.GuildId, *ticket.ChannelId)),
+			}),
+		)
 	}
 
 	return closeEmbed, []component.Component{

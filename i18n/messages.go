@@ -52,6 +52,7 @@ var (
 	TitleCloseRequest      MessageId = "generic.title.close_request"
 	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
 	TitleJumpToTop         MessageId = "generic.title.jump_to_top"
+	TitleeReopened         MessageId = "generic.title.reopened"
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
@@ -186,6 +187,14 @@ var (
 	MessageOnCallChannelMode   MessageId = "commands.on_call.channel_mode"
 	MessageOnCallSuccess       MessageId = "commands.on_call.success"
 	MessageOnCallRemoveSuccess MessageId = "commands.on_call.remove_success"
+
+	MessageReopenTicketNotFound MessageId = "commands.reopen.not_found"
+	MessageReopenNoPermission   MessageId = "commands.reopen.no_permission"
+	MessageReopenAlreadyOpen    MessageId = "commands.reopen.already_open"
+	MessageReopenNotThread      MessageId = "commands.reopen.not_thread"
+	MessageReopenThreadDeleted  MessageId = "commands.reopen.thread_deleted"
+	MessageReopenSuccess        MessageId = "commands.reopen.success"
+	MessageReopenedTicket       MessageId = "commands.reopen.in_ticket"
 
 	MessageJoinClosedTicket       MessageId = "button.join_thread.closed_ticket"
 	MessageJoinThreadNoPermission MessageId = "button.join_thread.no_permission"

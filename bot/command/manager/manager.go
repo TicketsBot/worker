@@ -60,6 +60,7 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["Start Ticket"] = tickets.StartTicketCommand{}
 	cm.registry["remove"] = tickets.RemoveCommand{}
 	cm.registry["rename"] = tickets.RenameCommand{}
+	cm.registry["reopen"] = tickets.ReopenCommand{}
 	cm.registry["switchpanel"] = tickets.SwitchPanelCommand{}
 	cm.registry["transfer"] = tickets.TransferCommand{}
 	cm.registry["unclaim"] = tickets.UnclaimCommand{}
