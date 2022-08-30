@@ -122,7 +122,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
 	// 500 guild limit check
-	if !settings.UseThreads && countRealChannels(channels, 0) >= 500 {
+	if !isThread && countRealChannels(channels, 0) >= 500 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
 		return database.Ticket{}, fmt.Errorf("channel limit reached")
 	}
