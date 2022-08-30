@@ -1,7 +1,6 @@
 package tickets
 
 import (
-	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -75,7 +74,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 					return
 				}
 
-				ctx.ReplyPlain(fmt.Sprintf("Couldn't add <@%d> to the ticket: Ensure that they have permission to view the parent channel (<#%d>)", userId, ch.ParentId.Value)) // TODO: Embed + Translate
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenCantSeeParentChannel, userId, ch.ParentId.Value)
 			} else {
 				ctx.HandleError(err)
 			}
