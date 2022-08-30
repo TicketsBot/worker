@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20220703211704-f792aa9f0c42
-	github.com/TicketsBot/database v0.0.0-20220830131231-b5540b57f6cb
+	github.com/TicketsBot/database v0.0.0-20220830210421-0463b1ba94d9
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
@@ -73,8 +73,4 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	nhooyr.io/websocket v1.8.4 // indirect
-)
-
-replace (
-	github.com/TicketsBot/database => "../database"
 )

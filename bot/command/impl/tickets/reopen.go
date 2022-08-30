@@ -18,7 +18,7 @@ type ReopenCommand struct {
 func (c ReopenCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "reopen",
-		Description:     i18n.HelpRename, // TODO: Change
+		Description:     i18n.HelpReopen,
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Tickets,

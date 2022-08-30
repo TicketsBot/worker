@@ -287,6 +287,7 @@ var (
 	HelpOpen               MessageId = "help.open"
 	HelpRemove             MessageId = "help.remove"
 	HelpRename             MessageId = "help.rename"
+	HelpReopen             MessageId = "help.reopen"
 	HelpTransfer           MessageId = "help.transfer"
 	HelpUnclaim            MessageId = "help.unclaim"
 	HelpHelp               MessageId = "help.help"
