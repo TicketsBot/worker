@@ -12,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -287,10 +286,12 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 	// Build action row
 	var transcriptEmoji *emoji.Emoji
 	if !ctx.Worker().IsWhitelabel {
-		transcriptEmoji = &emoji.Emoji{
-			Id:   objects.NewNullableSnowflake(utils.EmojiTranscript.Id),
-			Name: utils.EmojiTranscript.Name,
-		}
+		transcriptEmoji = utils.EmojiTranscript.BuildEmoji()
+	}
+
+	var threadEmoji *emoji.Emoji
+	if !ctx.Worker().IsWhitelabel {
+		threadEmoji = utils.EmojiThread.BuildEmoji()
 	}
 
 	var transcriptButtons []component.Component
@@ -309,7 +310,7 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 		transcriptButtons = append(transcriptButtons, component.BuildButton(component.Button{
 			Label: "View Thread",
 			Style: component.ButtonStyleLink,
-			Emoji: transcriptEmoji,
+			Emoji: threadEmoji,
 			Url:   utils.Ptr(fmt.Sprintf("https://discord.com/channels/%d/%d", ticket.GuildId, *ticket.ChannelId)),
 		}))
 	}
