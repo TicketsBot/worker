@@ -285,4 +285,5 @@ var (
 	HelpLanguage           MessageId = "help.language"
 	HelpSwitchPanel        MessageId = "help.switch_panel"
 	HelpJumpToTop          MessageId = "help.jump_to_top"
+	HelpOnCall             MessageId = "help.on_call"
 )

@@ -67,6 +67,14 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
+	guild, err := ctx.Guild()
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
+	isThread := settings.UseThreads && guild.PremiumTier >= model.PremiumTier2
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
@@ -80,7 +88,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	useCategory := category != 0 && !settings.UseThreads
+	useCategory := category != 0 && !isThread
 	if useCategory {
 		// Check if the category still exists
 		_, err := ctx.Worker().GetChannel(category)
@@ -160,14 +168,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	}
 
-	guild, err := ctx.Guild()
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
-	}
-
 	// Create channel
-	isThread := settings.UseThreads && guild.PremiumTier >= model.PremiumTier2
 	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId(), isThread)
 	if err != nil {
 		ctx.HandleError(err)

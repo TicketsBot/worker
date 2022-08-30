@@ -21,7 +21,7 @@ type OnCallCommand struct {
 func (OnCallCommand) Properties() registry.Properties {
 	return registry.Properties{
 		Name:            "on-call",
-		Description:     i18n.HelpAdd,
+		Description:     i18n.HelpOnCall,
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permcache.Support,
 		Category:        command.Tickets,
