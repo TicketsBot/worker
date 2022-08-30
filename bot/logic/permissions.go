@@ -272,11 +272,11 @@ func FilterStaffMembers(
 	return staffIds, nil
 }
 
-func CountStaffInThread(worker *worker.Context, ticket database.Ticket, threadId uint64) (int, error) {
+func GetStaffInThread(worker *worker.Context, ticket database.Ticket, threadId uint64) ([]uint64, error) {
 	// Calculate how many staff members there are
 	members, err := worker.ListThreadMembers(threadId) // TODO: Should we try and maintain a cache
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	memberIds := make([]uint64, len(members))
@@ -286,10 +286,10 @@ func CountStaffInThread(worker *worker.Context, ticket database.Ticket, threadId
 
 	staffIds, err := FilterStaffMembers(worker, ticket.GuildId, ticket, memberIds, true, true)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return len(staffIds), nil
+	return staffIds, nil
 }
 
 // GetMemberTeams Returns (default_team, team_ids, error)

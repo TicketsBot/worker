@@ -202,7 +202,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 
 		if settings.TicketNotificationChannel != nil {
-			data := BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ticketId, panel, 0, ctx.PremiumTier())
+			data := BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ticketId, panel, nil, ctx.PremiumTier())
 
 			if msg, err := ctx.Worker().CreateMessageComplex(*settings.TicketNotificationChannel, data.IntoCreateMessageData()); err == nil {
 				joinMessageId = &msg.Id
@@ -676,40 +676,40 @@ func countRealChannels(channels []channel.Channel, parentId uint64) int {
 	return count
 }
 
-func BuildJoinThreadMessage(worker *worker.Context, guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
-	var colour customisation.Colour
-	if staffCount > 0 {
-		colour = customisation.Green
-	} else {
-		colour = customisation.Red
-	}
-
-	panelName := "None"
-	if panel != nil {
-		panelName = panel.ButtonLabel
-	}
-
-	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Join Ticket", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
-	e.AddField(utils.PrefixWithEmoji("Opened By", utils.EmojiOpen, !worker.IsWhitelabel), utils.PrefixWithEmoji(fmt.Sprintf("<@%d>", openerId), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
-	e.AddField(utils.PrefixWithEmoji("Panel", utils.EmojiPanel, !worker.IsWhitelabel), utils.PrefixWithEmoji(panelName, utils.EmojiBulletLine, !worker.IsWhitelabel), true)
-	e.AddField(utils.PrefixWithEmoji("Staff In Ticket", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strconv.Itoa(staffCount), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
-
-	return command.MessageResponse{
-		Embeds: utils.Slice(e),
-		Components: utils.Slice(component.BuildActionRow(
-			component.BuildButton(component.Button{
-				Label:    "Join Ticket",
-				CustomId: fmt.Sprintf("join_thread_%d", ticketId),
-				Style:    component.ButtonStylePrimary,
-				Emoji:    utils.BuildEmoji("➕"),
-			}),
-		)),
-	}
+func BuildJoinThreadMessage(
+	worker *worker.Context,
+	guildId, openerId uint64,
+	ticketId int,
+	panel *database.Panel,
+	staffMembers []uint64,
+	premiumTier premium.PremiumTier,
+) command.MessageResponse {
+	return buildJoinThreadMessage(worker, guildId, openerId, ticketId, panel, staffMembers, premiumTier, false)
 }
 
-func BuildThreadReopenMessage(worker *worker.Context, guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
+func BuildThreadReopenMessage(
+	worker *worker.Context,
+	guildId, openerId uint64,
+	ticketId int,
+	panel *database.Panel,
+	staffMembers []uint64,
+	premiumTier premium.PremiumTier,
+) command.MessageResponse {
+	return buildJoinThreadMessage(worker, guildId, openerId, ticketId, panel, staffMembers, premiumTier, true)
+}
+
+// TODO: Translations
+func buildJoinThreadMessage(
+	worker *worker.Context,
+	guildId, openerId uint64,
+	ticketId int,
+	panel *database.Panel,
+	staffMembers []uint64,
+	premiumTier premium.PremiumTier,
+	fromReopen bool,
+) command.MessageResponse {
 	var colour customisation.Colour
-	if staffCount > 0 {
+	if len(staffMembers) > 0 {
 		colour = customisation.Green
 	} else {
 		colour = customisation.Red
@@ -720,10 +720,32 @@ func BuildThreadReopenMessage(worker *worker.Context, guildId, openerId uint64, 
 		panelName = panel.ButtonLabel
 	}
 
-	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Ticket Reopened", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
+	title := "Join Ticket"
+	if fromReopen {
+		title = "Ticket Reopened"
+	}
+
+	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), title, "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
 	e.AddField(utils.PrefixWithEmoji("Opened By", utils.EmojiOpen, !worker.IsWhitelabel), utils.PrefixWithEmoji(fmt.Sprintf("<@%d>", openerId), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
 	e.AddField(utils.PrefixWithEmoji("Panel", utils.EmojiPanel, !worker.IsWhitelabel), utils.PrefixWithEmoji(panelName, utils.EmojiBulletLine, !worker.IsWhitelabel), true)
-	e.AddField(utils.PrefixWithEmoji("Staff In Ticket", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strconv.Itoa(staffCount), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+	e.AddField(utils.PrefixWithEmoji("Staff In Ticket", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strconv.Itoa(len(staffMembers)), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+
+	if len(staffMembers) > 0 {
+		var mentions []string // dynamic length
+		charCount := len(utils.EmojiBulletLine.String()) + 1
+		for _, staffMember := range staffMembers {
+			mention := fmt.Sprintf("<@%d>", staffMember)
+
+			if charCount+len(mention)+1 > 1024 {
+				break
+			}
+
+			mentions = append(mentions, mention)
+			charCount += len(mention) + 1 // +1 for space
+		}
+
+		e.AddField(utils.PrefixWithEmoji("Staff Members", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strings.Join(mentions, " "), utils.EmojiBulletLine, !worker.IsWhitelabel), false)
+	}
 
 	return command.MessageResponse{
 		Embeds: utils.Slice(e),

@@ -146,13 +146,13 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 
 		// Modify join message
 		if ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
-			staffCount, err := logic.CountStaffInThread(ctx.Worker(), ticket, *ticket.ChannelId)
+			threadStaff, err := logic.GetStaffInThread(ctx.Worker(), ticket, *ticket.ChannelId)
 			if err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return
 			}
 
-			msg := logic.BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ticket.UserId, ticket.Id, &panel, staffCount, ctx.PremiumTier())
+			msg := logic.BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ticket.UserId, ticket.Id, &panel, threadStaff, ctx.PremiumTier())
 			if _, err := ctx.Worker().EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, msg.IntoEditMessageData()); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return

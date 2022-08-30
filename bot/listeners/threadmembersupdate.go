@@ -48,14 +48,14 @@ func OnThreadMembersUpdate(worker *worker.Context, e *events.ThreadMembersUpdate
 			return
 		}
 
-		staffCount, err := logic.CountStaffInThread(worker, ticket, e.ThreadId)
+		threadStaff, err := logic.GetStaffInThread(worker, ticket, e.ThreadId)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 			return
 		}
 
 		if settings.TicketNotificationChannel != nil {
-			data := logic.BuildJoinThreadMessage(worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, staffCount, premiumTier)
+			data := logic.BuildJoinThreadMessage(worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, threadStaff, premiumTier)
 			if _, err := worker.EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, data.IntoEditMessageData()); err != nil {
 				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 			}

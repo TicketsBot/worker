@@ -60,7 +60,7 @@ func OnThreadUpdate(worker *worker.Context, e *events.ThreadUpdate) {
 		}
 
 		if settings.TicketNotificationChannel != nil {
-			staffCount, err := logic.CountStaffInThread(worker, ticket, e.Id)
+			staffCount, err := logic.GetStaffInThread(worker, ticket, e.Id)
 			if err != nil {
 				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 				return
