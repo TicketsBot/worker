@@ -60,20 +60,19 @@ func BuildUserOverwrite(userId uint64, additionalPermissions database.TicketPerm
 	}
 }
 
-// TODO: Add this to dashboard teams manager
 func RemoveOnCallRoles(ctx registry.CommandContext, userId uint64) error {
 	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
 	if err != nil {
 		return err
 	}
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
 	if err != nil {
 		return err
 	}
 
-	if settings.OnCallRole != nil && member.HasRole(*settings.OnCallRole) {
-		if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), userId, *settings.OnCallRole); err != nil && !isUnknownRoleError(err) {
+	if metadata.OnCallRole != nil && member.HasRole(*metadata.OnCallRole) {
+		if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), userId, *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
 			return err
 		}
 	}
@@ -96,20 +95,20 @@ func RemoveOnCallRoles(ctx registry.CommandContext, userId uint64) error {
 
 func RecreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam) error {
 	if team == nil {
-		settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+		metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
 		if err != nil {
 			return err
 		}
 
-		if settings.OnCallRole == nil {
+		if metadata.OnCallRole == nil {
 			return nil
 		}
 
-		if err := dbclient.Client.Settings.SetOnCallRole(ctx.GuildId(), nil); err != nil {
+		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), nil); err != nil {
 			return nil
 		}
 
-		if err := ctx.Worker().DeleteGuildRole(ctx.GuildId(), *settings.OnCallRole); err != nil && !isUnknownRoleError(err) {
+		if err := ctx.Worker().DeleteGuildRole(ctx.GuildId(), *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
 			return err
 		}
 
@@ -163,7 +162,7 @@ func CreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam) (
 	}
 
 	if team == nil {
-		if err := dbclient.Client.Settings.SetOnCallRole(ctx.GuildId(), &role.Id); err != nil {
+		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), &role.Id); err != nil {
 			return 0, err
 		}
 	} else {

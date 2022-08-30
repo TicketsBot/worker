@@ -12,6 +12,12 @@ import (
 )
 
 func OnThreadMembersUpdate(worker *worker.Context, e *events.ThreadMembersUpdate) {
+	settings, err := dbclient.Client.Settings.Get(e.GuildId)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+		return
+	}
+
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(e.ThreadId, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
@@ -48,9 +54,11 @@ func OnThreadMembersUpdate(worker *worker.Context, e *events.ThreadMembersUpdate
 			return
 		}
 
-		data := logic.BuildJoinThreadMessage(ticket.GuildId, ticket.UserId, ticket.Id, panel, staffCount, premiumTier)
-		if _, err := worker.EditMessage(logic.ThreadChannel, *ticket.JoinMessageId, data.IntoEditMessageData()); err != nil {
-			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+		if settings.TicketNotificationChannel != nil {
+			data := logic.BuildJoinThreadMessage(worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, staffCount, premiumTier)
+			if _, err := worker.EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, data.IntoEditMessageData()); err != nil {
+				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+			}
 		}
 	}
 }

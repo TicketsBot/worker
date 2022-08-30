@@ -17,6 +17,12 @@ func OnThreadUpdate(worker *worker.Context, e *events.ThreadUpdate) {
 		return
 	}
 
+	settings, err := dbclient.Client.Settings.Get(e.GuildId)
+	if err != nil {
+		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+		return
+	}
+
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(e.Id, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
@@ -53,22 +59,24 @@ func OnThreadUpdate(worker *worker.Context, e *events.ThreadUpdate) {
 			return
 		}
 
-		staffCount, err := logic.CountStaffInThread(worker, ticket, e.Id)
-		if err != nil {
-			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
-			return
-		}
+		if settings.TicketNotificationChannel != nil {
+			staffCount, err := logic.CountStaffInThread(worker, ticket, e.Id)
+			if err != nil {
+				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+				return
+			}
 
-		data := logic.BuildThreadReopenMessage(ticket.GuildId, ticket.UserId, ticket.Id, panel, staffCount, premiumTier)
-		msg, err := worker.CreateMessageComplex(logic.ThreadChannel, data.IntoCreateMessageData())
-		if err != nil {
-			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
-			return
-		}
+			data := logic.BuildThreadReopenMessage(worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, staffCount, premiumTier)
+			msg, err := worker.CreateMessageComplex(*settings.TicketNotificationChannel, data.IntoCreateMessageData())
+			if err != nil {
+				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+				return
+			}
 
-		if err := dbclient.Client.Tickets.SetJoinMessageId(ticket.GuildId, ticket.Id, &msg.Id); err != nil {
-			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
-			return
+			if err := dbclient.Client.Tickets.SetJoinMessageId(ticket.GuildId, ticket.Id, &msg.Id); err != nil {
+				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
+				return
+			}
 		}
 	} else if ticket.Open && e.ThreadMetadata.Archived { // Handle ticket being archived on its own
 		ctx := context.NewAutoCloseContext(worker, ticket.GuildId, e.Id, worker.BotId, premiumTier)

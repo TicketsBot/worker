@@ -182,6 +182,15 @@ var (
 	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
 	MessageLanguageSuccess    MessageId = "commands.language.success"
 
+	MessageOnCallChannelMode   MessageId = "commands.on_call.channel_mode"
+	MessageOnCallSuccess       MessageId = "commands.on_call.success"
+	MessageOnCallRemoveSuccess MessageId = "commands.on_call.remove_success"
+
+	MessageJoinClosedTicket       MessageId = "button.join_thread.closed_ticket"
+	MessageJoinThreadNoPermission MessageId = "button.join_thread.no_permission"
+	MessageAlreadyJoinedThread    MessageId = "button.join_thread.already_joined"
+	MessageJoinThreadSuccess      MessageId = "button.join_thread.success"
+
 	HelpAdminCheckPremium MessageId = "help.admin.check_premium"
 	HelpAdminBlacklist    MessageId = "help.admin.blacklist"
 	HelpAdminUnblacklist  MessageId = "help.admin.unblacklist"
@@ -219,6 +228,12 @@ var (
 
 	SetupCategoryInvalid  MessageId = "setup.category.invalid"
 	SetupCategoryComplete MessageId = "setup.category.success"
+
+	SetupThreadsMissingBoosts           MessageId = "setup.threads.missing_boosts"
+	SetupThreadsNoNotificationChannel   MessageId = "setup.threads.no_notification_channel"
+	SetupThreadsNotificationChannelType MessageId = "setup.threads.notification_channel_type"
+	SetupThreadsSuccess                 MessageId = "setup.threads.success"
+	SetupThreadsDisabled                MessageId = "setup.threads.disabled"
 
 	MessageOwnerIsAlreadyAdmin MessageId = "commands.addadmin.owner"
 	MessageHelpInvite          MessageId = "help.invite"

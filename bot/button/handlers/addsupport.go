@@ -118,13 +118,21 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 }
 
 func updateChannelPermissions(ctx cmdregistry.CommandContext, id uint64, mentionableType context.MentionableType) {
-	// Add user / role to thread notification channel
-	_ = ctx.Worker().EditChannelPermissions(logic.ThreadChannel, channel.PermissionOverwrite{
-		Id:    id,
-		Type:  mentionableType.OverwriteType(),
-		Allow: permission.BuildPermissions(permission.ViewChannel, permission.UseApplicationCommands, permission.ReadMessageHistory),
-		Deny:  0,
-	})
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if settings.TicketNotificationChannel != nil {
+		// Add user / role to thread notification channel
+		_ = ctx.Worker().EditChannelPermissions(*settings.TicketNotificationChannel, channel.PermissionOverwrite{
+			Id:    id,
+			Type:  mentionableType.OverwriteType(),
+			Allow: permission.BuildPermissions(permission.ViewChannel, permission.UseApplicationCommands, permission.ReadMessageHistory),
+			Deny:  0,
+		})
+	}
 
 	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx.GuildId())
 	if err != nil {

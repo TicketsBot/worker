@@ -166,8 +166,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	}
 
 	// Delete join thread button
-	if ticket.IsThread && ticket.JoinMessageId != nil {
-		_ = ctx.Worker().DeleteMessage(ThreadChannel, *ticket.JoinMessageId)
+	if ticket.IsThread && ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
+		_ = ctx.Worker().DeleteMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId)
 		if err := dbclient.Client.Tickets.SetJoinMessageId(ticket.GuildId, ticket.Id, nil); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
@@ -279,7 +279,7 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 		AddField(formatTitle("Ticket ID", utils.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
 		AddField(formatTitle("Opened By", utils.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField(formatTitle("Closed By", utils.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
-		AddField(formatTitle("Open Time", utils.EmojiTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField(formatTitle("Open Time", utils.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
 		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true).
 		AddBlankField(true).
 		AddField(formatTitle("Reason", utils.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)

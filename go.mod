@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20220703211704-f792aa9f0c42
-	github.com/TicketsBot/database v0.0.0-20220802140804-643695cd8347
+	github.com/TicketsBot/database v0.0.0-20220830131231-b5540b57f6cb
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.7.1
@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rxdn/gdl v0.0.0-20220816151714-b119c7b939a9
+	github.com/rxdn/gdl v0.0.0-20220830131333-09a2e5819976
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.6.0
 	go.uber.org/atomic v1.6.0
@@ -73,9 +73,4 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	nhooyr.io/websocket v1.8.4 // indirect
-)
-
-replace github.com/TicketsBot/database => ../database
-replace (
-	github.com/rxdn/gdl => "../../rxdn/gdl"
 )

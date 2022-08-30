@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -31,7 +32,6 @@ func (c OnCallCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-// TODO: Remove on call role from user when removed from team, or they will keep being added to tickets
 func (OnCallCommand) Execute(ctx registry.CommandContext) {
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
@@ -40,7 +40,7 @@ func (OnCallCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	if !settings.UseThreads {
-		ctx.ReplyPlain("`/on-call` can only be used in thread mode. Visit our docs to find out more") // TODO: Translate
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOnCallChannelMode)
 		return
 	}
 
@@ -69,9 +69,15 @@ func (OnCallCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
+	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	if onCall { // *new* value
 		if defaultTeam {
-			if err := assignOnCallRole(ctx, member, settings.OnCallRole, nil, 0); err != nil {
+			if err := assignOnCallRole(ctx, member, metadata.OnCallRole, nil, 0); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -93,11 +99,11 @@ func (OnCallCommand) Execute(ctx registry.CommandContext) {
 			}
 		}
 
-		// TODO: Add assigning roles message
-		ctx.ReplyPlain("You are now on call")
+		// TODO: Add assigning roles progress message
+		ctx.Reply(customisation.Green, i18n.Success, i18n.MessageOnCallSuccess)
 	} else {
-		if defaultTeam && settings.OnCallRole != nil {
-			if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), ctx.UserId(), *settings.OnCallRole); err != nil {
+		if defaultTeam && metadata.OnCallRole != nil {
+			if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), ctx.UserId(), *metadata.OnCallRole); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -123,7 +129,7 @@ func (OnCallCommand) Execute(ctx registry.CommandContext) {
 			}
 		}
 
-		ctx.ReplyPlain("You are no longer on call")
+		ctx.Reply(customisation.Green, i18n.Success, i18n.MessageOnCallRemoveSuccess)
 	}
 }
 
@@ -147,7 +153,7 @@ func assignOnCallRole(ctx registry.CommandContext, member member.Member, roleId 
 		// If role was deleted, recreate it
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 404 && err.ApiError.Message == "Unknown Role" {
 			if team == nil {
-				if err := dbclient.Client.Settings.SetOnCallRole(ctx.GuildId(), nil); err != nil {
+				if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), nil); err != nil {
 					return err
 				}
 			} else {

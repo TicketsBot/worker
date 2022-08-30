@@ -127,6 +127,12 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 	// If the ticket is a thread, we cannot update the permissions (possibly remove a small amount of  members in the
 	// future), or the parent channel (user may not have access to it. can you even move threads anyway?)
 	if ticket.IsThread {
+		settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
 		data := rest.ModifyChannelData{
 			Name: channelName,
 		}
@@ -139,15 +145,15 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 		ctx.ReplyRaw(customisation.Green, "Success", "This ticket has been switched to the panel <value here>.\n\nNote: As this is a thread, the permissions could not be bulk updated.")
 
 		// Modify join message
-		if ticket.JoinMessageId != nil {
+		if ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
 			staffCount, err := logic.CountStaffInThread(ctx.Worker(), ticket, *ticket.ChannelId)
 			if err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return
 			}
 
-			msg := logic.BuildJoinThreadMessage(ctx.GuildId(), ticket.UserId, ticket.Id, &panel, staffCount, ctx.PremiumTier())
-			if _, err := ctx.Worker().EditMessage(logic.ThreadChannel, *ticket.JoinMessageId, msg.IntoEditMessageData()); err != nil {
+			msg := logic.BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ticket.UserId, ticket.Id, &panel, staffCount, ctx.PremiumTier())
+			if _, err := ctx.Worker().EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, msg.IntoEditMessageData()); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return
 			}

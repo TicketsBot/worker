@@ -44,6 +44,12 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 		Inline: false,
 	}
 
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveSupportNoMembers, utils.ToSlice(usageEmbed))
@@ -107,11 +113,13 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 	ctx.Reply(customisation.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
 
-	// Remove user / role from thread notification channel
-	_ = ctx.Worker().EditChannelPermissions(logic.ThreadChannel, channel.PermissionOverwrite{
-		Id:    id,
-		Type:  mentionableType.OverwriteType(),
-		Allow: 0,
-		Deny:  permission.BuildPermissions(permission.ViewChannel),
-	})
+	if settings.TicketNotificationChannel != nil {
+		// Remove user / role from thread notification channel
+		_ = ctx.Worker().EditChannelPermissions(*settings.TicketNotificationChannel, channel.PermissionOverwrite{
+			Id:    id,
+			Type:  mentionableType.OverwriteType(),
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		})
+	}
 }

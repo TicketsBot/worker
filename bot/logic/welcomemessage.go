@@ -74,7 +74,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 		}),
 	}
 
-	if !settings.HideClaimButton {
+	if !settings.HideClaimButton && !ticket.IsThread {
 		buttons = append(buttons, component.BuildButton(component.Button{
 			Label:    ctx.GetMessage(i18n.TitleClaim),
 			CustomId: "claim",

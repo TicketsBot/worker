@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/i18n"
 	"regexp"
 	"strconv"
 	"strings"
@@ -53,7 +54,7 @@ func (h *JoinThreadHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if !ticket.Open {
-		ctx.ReplyPlain("Ticket is closed")
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageJoinClosedTicket)
 
 		// Try to delete message
 		_ = ctx.Worker().DeleteMessage(ctx.ChannelId(), ctx.Interaction.Message.Id)
@@ -74,11 +75,14 @@ func (h *JoinThreadHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if !hasPermission {
-		ctx.ReplyPlain("You do not have permission to join this ticket")
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageJoinThreadNoPermission)
 		return
 	}
 
-	// TODO: Check if already joined
+	if _, err := ctx.Worker().GetThreadMember(*ticket.ChannelId, ctx.UserId()); err == nil {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageAlreadyJoinedThread, *ticket.ChannelId)
+		return
+	}
 
 	// Join ticket
 	if err := ctx.Worker().AddThreadMember(*ticket.ChannelId, ctx.UserId()); err != nil {
@@ -86,5 +90,5 @@ func (h *JoinThreadHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	ctx.ReplyPlain(fmt.Sprintf("<#%d>", *ticket.ChannelId))
+	ctx.Reply(customisation.Green, i18n.Success, i18n.MessageJoinThreadSuccess, *ticket.ChannelId)
 }

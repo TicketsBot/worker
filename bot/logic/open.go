@@ -34,9 +34,6 @@ import (
 	"time"
 )
 
-// Todo: add settings
-const ThreadChannel uint64 = 1009101009433395210
-
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	// Make sure ticket count is within ticket limit
 	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
@@ -203,12 +200,14 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			ctx.HandleError(err)
 		}
 
-		data := BuildJoinThreadMessage(ctx.GuildId(), ctx.UserId(), ticketId, panel, 0, ctx.PremiumTier())
+		if settings.TicketNotificationChannel != nil {
+			data := BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ticketId, panel, 0, ctx.PremiumTier())
 
-		if msg, err := ctx.Worker().CreateMessageComplex(ThreadChannel, data.IntoCreateMessageData()); err == nil {
-			joinMessageId = &msg.Id
-		} else {
-			ctx.HandleError(err)
+			if msg, err := ctx.Worker().CreateMessageComplex(*settings.TicketNotificationChannel, data.IntoCreateMessageData()); err == nil {
+				joinMessageId = &msg.Id
+			} else {
+				ctx.HandleError(err)
+			}
 		}
 	} else {
 		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
@@ -277,12 +276,38 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ctx.HandleError(err)
 	}
 
+	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
 	// mentions
 	{
 		var content string
 
-		if isThread && settings.OnCallRole != nil {
-			content += fmt.Sprintf("<@&%d>", *settings.OnCallRole)
+		// Append on-call role pings
+		if isThread {
+			if panel == nil {
+				if metadata.OnCallRole != nil {
+					content += fmt.Sprintf("<@&%d>", *metadata.OnCallRole)
+				}
+			} else {
+				if panel.WithDefaultTeam && metadata.OnCallRole != nil {
+					content += fmt.Sprintf("<@&%d>", *metadata.OnCallRole)
+				}
+
+				teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
+				if err != nil {
+					ctx.HandleError(err)
+				} else {
+					for _, team := range teams {
+						if team.OnCallRole != nil {
+							content += fmt.Sprintf("<@&%d>", *team.OnCallRole)
+						}
+					}
+				}
+			}
 		}
 
 		if panel != nil {
@@ -650,7 +675,7 @@ func countRealChannels(channels []channel.Channel, parentId uint64) int {
 	return count
 }
 
-func BuildJoinThreadMessage(guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
+func BuildJoinThreadMessage(worker *worker.Context, guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
 	var colour customisation.Colour
 	if staffCount > 0 {
 		colour = customisation.Green
@@ -664,9 +689,9 @@ func BuildJoinThreadMessage(guildId, openerId uint64, ticketId int, panel *datab
 	}
 
 	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Join Ticket", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
-	e.AddField("Opened By", fmt.Sprintf("<@%d>", openerId), true)
-	e.AddField("Panel", panelName, true)
-	e.AddField("Staff In Ticket", strconv.Itoa(staffCount), true)
+	e.AddField(utils.PrefixWithEmoji("Opened By", utils.EmojiOpen, !worker.IsWhitelabel), utils.PrefixWithEmoji(fmt.Sprintf("<@%d>", openerId), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+	e.AddField(utils.PrefixWithEmoji("Panel", utils.EmojiPanel, !worker.IsWhitelabel), utils.PrefixWithEmoji(panelName, utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+	e.AddField(utils.PrefixWithEmoji("Staff In Ticket", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strconv.Itoa(staffCount), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
 
 	return command.MessageResponse{
 		Embeds: utils.Slice(e),
@@ -681,7 +706,7 @@ func BuildJoinThreadMessage(guildId, openerId uint64, ticketId int, panel *datab
 	}
 }
 
-func BuildThreadReopenMessage(guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
+func BuildThreadReopenMessage(worker *worker.Context, guildId, openerId uint64, ticketId int, panel *database.Panel, staffCount int, premiumTier premium.PremiumTier) command.MessageResponse {
 	var colour customisation.Colour
 	if staffCount > 0 {
 		colour = customisation.Green
@@ -695,9 +720,9 @@ func BuildThreadReopenMessage(guildId, openerId uint64, ticketId int, panel *dat
 	}
 
 	e := utils.BuildEmbedRaw(customisation.GetColourOrDefault(guildId, colour), "Ticket Reopened", "A ticket has been opened. Press the button below to join it.", nil, premiumTier)
-	e.AddField("Opened By", fmt.Sprintf("<@%d>", openerId), true)
-	e.AddField("Panel", panelName, true)
-	e.AddField("Staff In Ticket", strconv.Itoa(staffCount), true)
+	e.AddField(utils.PrefixWithEmoji("Opened By", utils.EmojiOpen, !worker.IsWhitelabel), utils.PrefixWithEmoji(fmt.Sprintf("<@%d>", openerId), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+	e.AddField(utils.PrefixWithEmoji("Panel", utils.EmojiPanel, !worker.IsWhitelabel), utils.PrefixWithEmoji(panelName, utils.EmojiBulletLine, !worker.IsWhitelabel), true)
+	e.AddField(utils.PrefixWithEmoji("Staff In Ticket", utils.EmojiStaff, !worker.IsWhitelabel), utils.PrefixWithEmoji(strconv.Itoa(staffCount), utils.EmojiBulletLine, !worker.IsWhitelabel), true)
 
 	return command.MessageResponse{
 		Embeds: utils.Slice(e),
