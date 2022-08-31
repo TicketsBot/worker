@@ -8,10 +8,13 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/permission"
 )
 
 type RemoveSupportCommand struct{}
@@ -39,6 +42,12 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 		Name:   "Usage",
 		Value:  "`/removesupport @User`\n`/removesupport @Role`",
 		Inline: false,
+	}
+
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
@@ -77,6 +86,11 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 			ctx.HandleError(err)
 			return
 		}
+
+		if err := logic.RemoveOnCallRoles(ctx, id); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	} else if mentionableType == context.MentionableTypeRole {
 		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
@@ -87,11 +101,25 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 			ctx.HandleError(err)
 			return
 		}
+
+		if err := logic.RecreateOnCallRole(ctx, nil); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	} else {
 		ctx.HandleError(fmt.Errorf("infallible"))
 		return
 	}
 
 	ctx.Reply(customisation.Green, i18n.TitleRemoveSupport, i18n.MessageRemoveSupportSuccess)
-	ctx.Accept()
+
+	if settings.TicketNotificationChannel != nil {
+		// Remove user / role from thread notification channel
+		_ = ctx.Worker().EditChannelPermissions(*settings.TicketNotificationChannel, channel.PermissionOverwrite{
+			Id:    id,
+			Type:  mentionableType.OverwriteType(),
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		})
+	}
 }

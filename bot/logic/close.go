@@ -12,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -35,9 +34,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		return
 	}
 
-	isTicket := ticket.GuildId != 0
-
-	if !isTicket {
+	if ticket.Id == 0 || ticket.GuildId != ctx.GuildId() {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
@@ -131,23 +128,48 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		}
 	}
 
-	if _, err := ctx.Worker().DeleteChannel(ctx.ChannelId()); err != nil {
-		// Check if we should exclude this from autoclose
-		if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
-			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-			}
+	if ticket.IsThread {
+		// TODO: Autoclose should lock the ticket
+		data := rest.ModifyChannelData{
+			ThreadMetadataModifyData: &rest.ThreadMetadataModifyData{
+				Archived: utils.Ptr(true),
+				Locked:   utils.Ptr(true),
+			},
 		}
 
-		ctx.HandleError(err)
-		return
+		if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), data); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+	} else {
+		if _, err := ctx.Worker().DeleteChannel(ctx.ChannelId()); err != nil {
+			// Check if we should exclude this from autoclose
+			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
+				if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+					sentry.ErrorWithContext(err, errorContext)
+				}
+			}
+
+			ctx.HandleError(err)
+			return
+		}
 	}
 
 	// Save space - delete the webhook
-	go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
+	if !ticket.IsThread {
+		go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
+	}
 
 	if err := dbclient.Client.CloseRequest.Delete(ticket.GuildId, ticket.Id); err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	}
+
+	// Delete join thread button
+	if ticket.IsThread && ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
+		_ = ctx.Worker().DeleteMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId)
+		if err := dbclient.Client.Tickets.SetJoinMessageId(ticket.GuildId, ticket.Id, nil); err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+		}
 	}
 
 	sendCloseEmbed(ctx, errorContext, member, settings, ticket, reason)
@@ -256,39 +278,48 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 		AddField(formatTitle("Ticket ID", utils.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
 		AddField(formatTitle("Opened By", utils.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField(formatTitle("Closed By", utils.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
+		AddField(formatTitle("Open Time", utils.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true).
+		AddBlankField(true).
 		AddField(formatTitle("Reason", utils.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
 
-	var components []component.Component
-	if settings.StoreTranscripts {
-		title := formatTitle("Transcript", utils.EmojiTranscript, ctx.Worker().IsWhitelabel)
-		transcriptLink := fmt.Sprintf("https://panel.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
-		closeEmbed.AddField(title, fmt.Sprintf("[Click here](%s)", transcriptLink), true)
-
-		var transcriptEmoji *emoji.Emoji
-		if !ctx.Worker().IsWhitelabel {
-			transcriptEmoji = &emoji.Emoji{
-				Id:   objects.NewNullableSnowflake(utils.EmojiTranscript.Id),
-				Name: utils.EmojiTranscript.Name,
-			}
-		}
-
-		components = []component.Component{
-			component.BuildActionRow(
-				component.BuildButton(component.Button{
-					Label: "View Transcript",
-					Style: component.ButtonStyleLink,
-					Emoji: transcriptEmoji,
-					Url:   utils.Ptr(transcriptLink),
-				}),
-			),
-		}
+	// Build action row
+	var transcriptEmoji *emoji.Emoji
+	if !ctx.Worker().IsWhitelabel {
+		transcriptEmoji = utils.EmojiTranscript.BuildEmoji()
 	}
 
-	closeEmbed.
-		AddField(formatTitle("Open Time", utils.EmojiTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true)
+	var threadEmoji *emoji.Emoji
+	if !ctx.Worker().IsWhitelabel {
+		threadEmoji = utils.EmojiThread.BuildEmoji()
+	}
 
-	return closeEmbed, components
+	var transcriptButtons []component.Component
+	if settings.StoreTranscripts {
+		transcriptLink := fmt.Sprintf("https://panel.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
+
+		transcriptButtons = append(transcriptButtons, component.BuildButton(component.Button{
+			Label: "View Online Transcript",
+			Style: component.ButtonStyleLink,
+			Emoji: transcriptEmoji,
+			Url:   utils.Ptr(transcriptLink),
+		}))
+	}
+
+	if ticket.IsThread && ticket.ChannelId != nil {
+		transcriptButtons = append(transcriptButtons,
+			component.BuildButton(component.Button{
+				Label: "View Thread",
+				Style: component.ButtonStyleLink,
+				Emoji: threadEmoji,
+				Url:   utils.Ptr(fmt.Sprintf("https://discord.com/channels/%d/%d", ticket.GuildId, *ticket.ChannelId)),
+			}),
+		)
+	}
+
+	return closeEmbed, []component.Component{
+		component.BuildActionRow(transcriptButtons...),
+	}
 }
 
 func formatTitle(s string, emoji utils.CustomEmoji, isWhitelabel bool) string {

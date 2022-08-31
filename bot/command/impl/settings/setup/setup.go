@@ -30,6 +30,7 @@ func (SetupCommand) Properties() registry.Properties {
 			LimitSetupCommand{},
 			TranscriptsSetupCommand{},
 			CategorySetupCommand{},
+			ThreadsSetupCommand{},
 		},
 	}
 }
@@ -47,18 +48,18 @@ func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField 
 
 	group, _ := errgroup.WithContext(context.Background())
 
-	group.Go(getFieldFunc(ctx, fields, 0, "t!setup auto", i18n.SetupAutoDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 0, "/setup auto", i18n.SetupAutoDescription, true))
 	group.Go(getFieldFunc(ctx, fields, 1, "Dashboard", i18n.SetupDashboardDescription, true))
 	fields[2] = embed.EmbedField{
 		Name:   "\u200b",
 		Value:  "‎",
 		Inline: true,
 	}
-	group.Go(getFieldFunc(ctx, fields, 3, "t!setup prefix", i18n.SetupPrefixDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 4, "t!setup limit", i18n.SetupLimitDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 5, "t!setup welcomemessage", i18n.SetupWelcomeMessageDescription, false))
-	group.Go(getFieldFunc(ctx, fields, 6, "t!setup transcripts", i18n.SetupTranscriptsDescription, true))
-	group.Go(getFieldFunc(ctx, fields, 7, "t!setup category", i18n.SetupCategoryDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 3, "/setup prefix", i18n.SetupPrefixDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 4, "/setup limit", i18n.SetupLimitDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 5, "/setup welcomemessage", i18n.SetupWelcomeMessageDescription, false))
+	group.Go(getFieldFunc(ctx, fields, 6, "/setup transcripts", i18n.SetupTranscriptsDescription, true))
+	group.Go(getFieldFunc(ctx, fields, 7, "/setup category", i18n.SetupCategoryDescription, true))
 	group.Go(getFieldFunc(ctx, fields, 8, "Reaction Panels", i18n.SetupReactionPanelsDescription, false, ctx.GuildId))
 
 	// should never happen

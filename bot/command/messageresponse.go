@@ -80,6 +80,15 @@ func (r *MessageResponse) IntoCreateMessageData() rest.CreateMessageData {
 	}
 }
 
+func (r *MessageResponse) IntoEditMessageData() rest.EditMessageData {
+	return rest.EditMessageData{
+		Content:    r.Content,
+		Embeds:     r.Embeds,
+		Flags:      r.Flags,
+		Components: r.Components,
+	}
+}
+
 func (r *MessageResponse) IntoWebhookBody() rest.WebhookBody {
 	return rest.WebhookBody{
 		Tts:             r.Tts,

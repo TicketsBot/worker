@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
+	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 )
 
@@ -51,6 +54,10 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 	if !ok {
 		return
 	}
+
+	ctx.Edit(command.MessageResponse{
+		Embeds: utils.Slice(utils.BuildEmbedRaw(customisation.DefaultColours[customisation.Green], "Close Request", "Closing ticket...", nil, premium.Whitelabel)), // TODO: Translations, calculate premium level
+	})
 
 	// Create context for staff member - avoid users cant close issue
 	newCtx := context.NewPanelContext(ctx.Worker(), ctx.GuildId(), ctx.ChannelId(), closeRequest.UserId, ctx.PremiumTier())

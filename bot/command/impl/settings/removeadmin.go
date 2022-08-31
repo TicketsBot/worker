@@ -10,8 +10,10 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/permission"
 )
 
 type RemoveAdminCommand struct{}
@@ -39,6 +41,12 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 		Name:   "Usage",
 		Value:  "`/removeadmin @User`\n`/removeadmin @Role`",
 		Inline: false,
+	}
+
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
@@ -92,6 +100,15 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 		return
 	}
 
-	ctx.Accept()
 	ctx.Reply(customisation.Green, i18n.TitleRemoveAdmin, i18n.MessageRemoveAdminSuccess)
+
+	// Remove user / role from thread notification channel
+	if settings.TicketNotificationChannel != nil {
+		_ = ctx.Worker().EditChannelPermissions(*settings.TicketNotificationChannel, channel.PermissionOverwrite{
+			Id:    id,
+			Type:  mentionableType.OverwriteType(),
+			Allow: 0,
+			Deny:  permission.BuildPermissions(permission.ViewChannel),
+		})
+	}
 }

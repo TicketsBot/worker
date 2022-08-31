@@ -52,6 +52,7 @@ var (
 	TitleCloseRequest      MessageId = "generic.title.close_request"
 	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
 	TitleJumpToTop         MessageId = "generic.title.jump_to_top"
+	TitleeReopened         MessageId = "generic.title.reopened"
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
@@ -154,6 +155,7 @@ var (
 	MessageMovedToTicket            MessageId = "commands.open.from.moved"
 	MessageFormMissingInput         MessageId = "commands.open.missing_form_answer"
 	MessageOpenCommandDisabled      MessageId = "commands.open.disabled"
+	MessageOpenCantSeeParentChannel MessageId = "commands.open.threads.cant_see_parent_channel"
 
 	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"
@@ -181,6 +183,23 @@ var (
 	MessageLanguageSelect     MessageId = "commands.language.select"
 	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
 	MessageLanguageSuccess    MessageId = "commands.language.success"
+
+	MessageOnCallChannelMode   MessageId = "commands.on_call.channel_mode"
+	MessageOnCallSuccess       MessageId = "commands.on_call.success"
+	MessageOnCallRemoveSuccess MessageId = "commands.on_call.remove_success"
+
+	MessageReopenTicketNotFound MessageId = "commands.reopen.not_found"
+	MessageReopenNoPermission   MessageId = "commands.reopen.no_permission"
+	MessageReopenAlreadyOpen    MessageId = "commands.reopen.already_open"
+	MessageReopenNotThread      MessageId = "commands.reopen.not_thread"
+	MessageReopenThreadDeleted  MessageId = "commands.reopen.thread_deleted"
+	MessageReopenSuccess        MessageId = "commands.reopen.success"
+	MessageReopenedTicket       MessageId = "commands.reopen.in_ticket"
+
+	MessageJoinClosedTicket       MessageId = "button.join_thread.closed_ticket"
+	MessageJoinThreadNoPermission MessageId = "button.join_thread.no_permission"
+	MessageAlreadyJoinedThread    MessageId = "button.join_thread.already_joined"
+	MessageJoinThreadSuccess      MessageId = "button.join_thread.success"
 
 	HelpAdminCheckPremium MessageId = "help.admin.check_premium"
 	HelpAdminBlacklist    MessageId = "help.admin.blacklist"
@@ -219,6 +238,12 @@ var (
 
 	SetupCategoryInvalid  MessageId = "setup.category.invalid"
 	SetupCategoryComplete MessageId = "setup.category.success"
+
+	SetupThreadsMissingBoosts           MessageId = "setup.threads.missing_boosts"
+	SetupThreadsNoNotificationChannel   MessageId = "setup.threads.no_notification_channel"
+	SetupThreadsNotificationChannelType MessageId = "setup.threads.notification_channel_type"
+	SetupThreadsSuccess                 MessageId = "setup.threads.success"
+	SetupThreadsDisabled                MessageId = "setup.threads.disabled"
 
 	MessageOwnerIsAlreadyAdmin MessageId = "commands.addadmin.owner"
 	MessageHelpInvite          MessageId = "help.invite"
@@ -262,6 +287,7 @@ var (
 	HelpOpen               MessageId = "help.open"
 	HelpRemove             MessageId = "help.remove"
 	HelpRename             MessageId = "help.rename"
+	HelpReopen             MessageId = "help.reopen"
 	HelpTransfer           MessageId = "help.transfer"
 	HelpUnclaim            MessageId = "help.unclaim"
 	HelpHelp               MessageId = "help.help"
@@ -269,4 +295,5 @@ var (
 	HelpLanguage           MessageId = "help.language"
 	HelpSwitchPanel        MessageId = "help.switch_panel"
 	HelpJumpToTop          MessageId = "help.jump_to_top"
+	HelpOnCall             MessageId = "help.on_call"
 )

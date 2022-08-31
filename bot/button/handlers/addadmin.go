@@ -118,7 +118,23 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 	e := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleAddAdmin, i18n.MessageAddAdminSuccess, nil)
 	ctx.Edit(command.NewEphemeralEmbedMessageResponse(e))
 
-	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
+	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	// Add user / role to thread notification channel
+	if settings.TicketNotificationChannel != nil {
+		_ = ctx.Worker().EditChannelPermissions(*settings.TicketNotificationChannel, channel.PermissionOverwrite{
+			Id:    id,
+			Type:  mentionableType.OverwriteType(),
+			Allow: permission.BuildPermissions(permission.ViewChannel, permission.UseApplicationCommands, permission.ReadMessageHistory),
+			Deny:  0,
+		})
+	}
+
+	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -126,7 +142,7 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 
 	// Update permissions for existing tickets
 	for _, ticket := range openTickets {
-		if ticket.ChannelId == nil {
+		if ticket.ChannelId == nil || ticket.IsThread {
 			continue
 		}
 

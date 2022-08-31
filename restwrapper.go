@@ -152,6 +152,26 @@ func (ctx *Context) DeletePinnedChannelMessage(channelId, messageId uint64) erro
 	return rest.DeletePinnedChannelMessage(ctx.Token, ctx.RateLimiter, channelId, messageId)
 }
 
+func (ctx *Context) JoinThread(channelId uint64) error {
+	return rest.JoinThread(ctx.Token, ctx.RateLimiter, channelId)
+}
+
+func (ctx *Context) AddThreadMember(channelId, userId uint64) error {
+	return rest.AddThreadMember(ctx.Token, ctx.RateLimiter, channelId, userId)
+}
+
+func (ctx *Context) LeaveThread(channelId uint64) error {
+	return rest.LeaveThread(ctx.Token, ctx.RateLimiter, channelId)
+}
+
+func (ctx *Context) RemoveThreadMember(channelId, userId uint64) error {
+	return rest.RemoveThreadMember(ctx.Token, ctx.RateLimiter, channelId, userId)
+}
+
+func (ctx *Context) GetThreadMember(channelId, userId uint64) (channel.ThreadMember, error) {
+	return rest.GetThreadMember(ctx.Token, ctx.RateLimiter, channelId, userId)
+}
+
 func (ctx *Context) ListThreadMembers(channelId uint64) ([]channel.ThreadMember, error) {
 	return rest.ListThreadMembers(ctx.Token, ctx.RateLimiter, channelId)
 }

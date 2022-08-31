@@ -88,16 +88,23 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// Remove user from ticket
-	data := channel.PermissionOverwrite{
-		Id:    userId,
-		Type:  channel.PermissionTypeMember,
-		Allow: 0,
-		Deny:  permission.BuildPermissions(logic.StandardPermissions[:]...),
-	}
+	if ticket.IsThread {
+		if err := ctx.Worker().RemoveThreadMember(ctx.ChannelId(), userId); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+	} else {
+		data := channel.PermissionOverwrite{
+			Id:    userId,
+			Type:  channel.PermissionTypeMember,
+			Allow: 0,
+			Deny:  permission.BuildPermissions(logic.StandardPermissions[:]...),
+		}
 
-	if err := ctx.Worker().EditChannelPermissions(ctx.ChannelId(), data); err != nil {
-		ctx.HandleError(err)
-		return
+		if err := ctx.Worker().EditChannelPermissions(ctx.ChannelId(), data); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	}
 
 	ctx.ReplyPermanent(customisation.Green, i18n.TitleRemove, i18n.MessageRemoveSuccess, userId, ctx.ChannelId())
