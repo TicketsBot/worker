@@ -93,6 +93,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 			}
 		}
 
+		ctx.Defer()
 		_, _ = logic.OpenTicket(ctx, &panel, panel.Title, formAnswers)
 
 		return

@@ -49,6 +49,11 @@ func NewModalContext(
 	return &ctx
 }
 
+func (ctx *ModalContext) Defer() {
+	ctx.hasReplied.Store(true)
+	ctx.Ack()
+}
+
 func (ctx *ModalContext) Worker() *worker.Context {
 	return ctx.worker
 }
