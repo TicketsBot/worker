@@ -25,7 +25,6 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["help"] = general.HelpCommand{Registry: cm.registry}
 
 	cm.registry["admin"] = admin.AdminCommand{}
-	cm.registry["registercommands"] = admin.RegisterCommandsCommand{Registry: cm.registry}
 
 	cm.registry["about"] = general.AboutCommand{}
 	cm.registry["invite"] = general.InviteCommand{}

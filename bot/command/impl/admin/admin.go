@@ -25,16 +25,13 @@ func (AdminCommand) Properties() registry.Properties {
 		Children: []registry.Command{
 			AdminBlacklistCommand{},
 			AdminCheckPremiumCommand{},
-			AdminForceCloseCommand{},
 			AdminGenPremiumCommand{},
 			AdminGetOwnerCommand{},
 			AdminRecacheCommand{},
 			AdminUnblacklistCommand{},
-			AdminUpdateSchemaCommand{},
 		},
-		Category:    command.Settings,
-		HelperOnly:  true,
-		MessageOnly: true,
+		Category:   command.Settings,
+		HelperOnly: true,
 	}
 }
 

@@ -22,7 +22,6 @@ func (AdminGetOwnerCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
-		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to get the owner of", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),

@@ -24,11 +24,9 @@ func (AdminGenPremiumCommand) Properties() registry.Properties {
 		Name:            "genpremium",
 		Description:     i18n.HelpAdminGenPremium,
 		Type:            interaction.ApplicationCommandTypeChatInput,
-		Aliases:         []string{"gp", "gk", "generatepremium", "genkeys", "generatekeys"},
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("length", "Length in days of the key", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),
 			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),

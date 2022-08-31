@@ -26,7 +26,6 @@ func (AdminBlacklistCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		AdminOnly:       true,
-		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),

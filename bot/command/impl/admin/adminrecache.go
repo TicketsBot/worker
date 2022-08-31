@@ -20,7 +20,6 @@ func (AdminRecacheCommand) Properties() registry.Properties {
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
 		HelperOnly:      true,
-		MessageOnly:     true,
 		Arguments: command.Arguments(
 			command.NewOptionalArgument("guildid", "ID of the guild to recache", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
