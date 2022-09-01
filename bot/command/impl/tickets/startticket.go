@@ -15,6 +15,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest/request"
 	"strings"
 )
 
@@ -88,7 +89,10 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		sendTicketStartedFromMessage(ctx, ticket, msg)
 
 		if settings.ContextMenuAddSender {
-			addMessageSender(ctx, ticket, msg)
+			if err := addMessageSender(ctx, ticket, msg); err != nil {
+				ctx.HandleError(err)
+			}
+			
 			sendMovedMessage(ctx, ticket, msg)
 			if err := dbclient.Client.TicketMembers.Add(ticket.GuildId, ticket.Id, msg.Author.Id); err != nil {
 				ctx.HandleError(err)
@@ -115,39 +119,54 @@ func sendTicketStartedFromMessage(ctx registry.CommandContext, ticket database.T
 	}
 }
 
-func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
+func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) error {
 	// If the sender was the ticket opener, or staff, they already have access
 	// However, support teams makes this tricky
 	if msg.Author.Id == ticket.UserId {
-		return
+		return nil
 	}
 
-	// Get perms
-	ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
+	if ticket.IsThread {
+		if err := ctx.Worker().AddThreadMember(*ticket.ChannelId, msg.Author.Id); err != nil {
+			if err, ok := err.(request.RestError); ok && err.ApiError.Message == "Missing Access" {
+				ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+				if err != nil {
+					return err
+				}
 
-	for _, overwrite := range ch.PermissionOverwrites {
-		// Check if already present
-		if overwrite.Id == msg.Author.Id {
-			return
+				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenCantSeeParentChannel, msg.Author.Id, ch.ParentId.Value)
+				return nil
+			} else {
+				return err
+			}
+		}
+	} else {
+		// Get perms
+		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
+		if err != nil {
+			return err
+		}
+
+		for _, overwrite := range ch.PermissionOverwrites {
+			// Check if already present
+			if overwrite.Id == msg.Author.Id {
+				return nil
+			}
+		}
+
+		// Build permissions
+		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+		if err != nil {
+			return err
+		}
+
+		overwrite := logic.BuildUserOverwrite(msg.Author.Id, additionalPermissions)
+		if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, overwrite); err != nil {
+			return err
 		}
 	}
 
-	// Build permissions
-	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
-	overwrite := logic.BuildUserOverwrite(msg.Author.Id, additionalPermissions)
-	if err := ctx.Worker().EditChannelPermissions(*ticket.ChannelId, overwrite); err != nil {
-		ctx.HandleError(err)
-		return
-	}
+	return nil
 }
 
 func sendMovedMessage(ctx registry.CommandContext, ticket database.Ticket, msg message.Message) {
