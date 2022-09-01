@@ -265,11 +265,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		OpenTime:         time.Now(), // will be a bit off, but not used
 		WelcomeMessageId: nil,
 		PanelId:          panelId,
+		IsThread:         isThread,
+		JoinMessageId:    joinMessageId,
 	}
 
 	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
+	}
+
+	if welcomeMessageId != 0 {
+		ticket.WelcomeMessageId = &welcomeMessageId
 	}
 
 	// UpdateUser channel in DB
