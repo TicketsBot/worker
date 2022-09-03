@@ -36,8 +36,6 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
-github.com/TicketsBot/common v0.0.0-20220703211704-f792aa9f0c42 h1:3/qnbrEfL8gqSbjJ4o7WKkdoPngmhjAGEXFwteEjpqs=
-github.com/TicketsBot/common v0.0.0-20220703211704-f792aa9f0c42/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
 github.com/TicketsBot/common v0.0.0-20220902210819-74a2741d548b h1:yNRfFWu8x9gd7Mn7Tcgy4qPhpQg7Yb+6C7+z0+AI4Y4=
 github.com/TicketsBot/common v0.0.0-20220902210819-74a2741d548b/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
 github.com/TicketsBot/database v0.0.0-20220830210421-0463b1ba94d9 h1:czH0W9q1dNSXcULlfIJKeGCn2PWKcpqO+Nmd5bNbBds=
