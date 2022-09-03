@@ -184,7 +184,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	var ch channel.Channel
 	var joinMessageId *uint64
 	if isThread {
-		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), true)
+		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), false)
 		if err != nil {
 			ctx.HandleError(err)
 
