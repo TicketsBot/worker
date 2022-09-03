@@ -25,6 +25,7 @@ func (OpenCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, "infallible"),
 		),
+		DefaultEphemeral: true,
 	}
 }
 
