@@ -318,11 +318,11 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 	}
 
 	if len(transcriptButtons) == 0 {
+		return closeEmbed, nil
+	} else {
 		return closeEmbed, []component.Component{
 			component.BuildActionRow(transcriptButtons...),
 		}
-	} else {
-		return closeEmbed, nil
 	}
 }
 
