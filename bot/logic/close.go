@@ -131,7 +131,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	if ticket.IsThread {
 		// If it is a thread, we need to send a message
 		if reason == nil {
-			ctx.Reply(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, ctx.UserId())
+			ctx.ReplyPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, ctx.UserId())
 		} else {
 			fields := []embed.EmbedField{
 				{
@@ -141,7 +141,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 				},
 			}
 
-			ctx.ReplyWithFields(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, ctx.UserId())
+			ctx.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, ctx.UserId())
 		}
 
 		data := rest.ModifyChannelData{
