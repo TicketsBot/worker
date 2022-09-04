@@ -249,6 +249,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		ch = tmp
 	}
 
+	// Let the user know the ticket has been opened
+	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
+
 	ctx.Accept()
 
 	var panelId *int
@@ -367,10 +370,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			}
 		}
 	}
-
-	// Let the user know the ticket has been opened
-	// Ephemeral reply is ok
-	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
 
 	prometheus.LogTicketCreated(ctx.GuildId())
 	statsd.Client.IncrementKey(statsd.KeyTickets)

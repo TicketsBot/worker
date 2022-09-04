@@ -144,6 +144,9 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 			ctx.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, ctx.UserId())
 		}
 
+		// Discord has a race condition
+		time.Sleep(time.Millisecond * 500)
+
 		data := rest.ModifyChannelData{
 			ThreadMetadataModifyData: &rest.ThreadMetadataModifyData{
 				Archived: utils.Ptr(true),
