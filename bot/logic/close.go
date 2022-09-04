@@ -129,7 +129,21 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 	}
 
 	if ticket.IsThread {
-		// TODO: Autoclose should lock the ticket
+		// If it is a thread, we need to send a message
+		if reason == nil {
+			ctx.Reply(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, ctx.UserId())
+		} else {
+			fields := []embed.EmbedField{
+				{
+					Name:   ctx.GetMessage(i18n.Reason),
+					Value:  fmt.Sprintf("```%s```", *reason),
+					Inline: false,
+				},
+			}
+
+			ctx.ReplyWithFields(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, ctx.UserId())
+		}
+
 		data := rest.ModifyChannelData{
 			ThreadMetadataModifyData: &rest.ThreadMetadataModifyData{
 				Archived: utils.Ptr(true),

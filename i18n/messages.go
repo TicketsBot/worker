@@ -30,6 +30,7 @@ var (
 	TitleAutoclose         MessageId = "generic.title.autoclose"
 	TitleInvite            MessageId = "generic.title.invite"
 	TitleClose             MessageId = "generic.title.close"
+	TitleTicketClosed      MessageId = "generic.title.ticket_closed"
 	TitleCloseWithReason   MessageId = "generic.title.close_with_reason"
 	TitleClaim             MessageId = "generic.title.claim"
 	TitleBlacklist         MessageId = "generic.title.blacklist"
@@ -68,6 +69,7 @@ var (
 	MessageCloseReasonTooLong     MessageId = "close.reason_too_long"
 	MessageCloseReasonPlacehodler MessageId = "close.reason.placeholder"
 	MessageCloseConfirmation      MessageId = "close.confirmation"
+	MessageCloseSuccess           MessageId = "close.success"
 	MessageUseSlashCommands       MessageId = "generic.use_slash_commands"
 
 	MessageTag                       MessageId = "commands.tag.generic"
