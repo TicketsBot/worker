@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rxdn/gdl v0.0.0-20220830131333-09a2e5819976
+	github.com/rxdn/gdl v0.0.0-20220905221613-8799fa0b4922
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.6.0
 	go.uber.org/atomic v1.6.0
@@ -73,8 +73,4 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	nhooyr.io/websocket v1.8.4 // indirect
-)
-
-replace (
-	github.com/rxdn/gdl => "../../rxdn/gdl"
 )
