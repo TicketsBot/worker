@@ -74,6 +74,6 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 		}
 	} else {
 		// TODO: IntoPanelContext()?
-		logic.CloseTicket(ctx, nil)
+		logic.CloseTicket(ctx, nil, false)
 	}
 }

@@ -59,7 +59,6 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 		Embeds: utils.Slice(utils.BuildEmbedRaw(customisation.DefaultColours[customisation.Green], "Close Request", "Closing ticket...", nil, premium.Whitelabel)), // TODO: Translations, calculate premium level
 	})
 
-	// Create context for staff member - avoid users cant close issue
-	newCtx := context.NewPanelContext(ctx.Worker(), ctx.GuildId(), ctx.ChannelId(), closeRequest.UserId, ctx.PremiumTier())
-	logic.CloseTicket(&newCtx, closeRequest.Reason)
+	// Avoid users cant close issue
+	logic.CloseTicket(ctx, closeRequest.Reason, true)
 }

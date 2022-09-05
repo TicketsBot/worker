@@ -33,7 +33,7 @@ func (c CloseCommand) GetExecutor() interface{} {
 }
 
 func (CloseCommand) Execute(ctx registry.CommandContext, reason *string) {
-	logic.CloseTicket(ctx, reason)
+	logic.CloseTicket(ctx, reason, false)
 }
 
 func (CloseCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {

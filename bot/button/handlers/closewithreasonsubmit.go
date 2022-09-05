@@ -8,7 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 )
 
-type CloseWithReasonSubmitHandler struct {}
+type CloseWithReasonSubmitHandler struct{}
 
 func (h *CloseWithReasonSubmitHandler) Matcher() matcher.Matcher {
 	return matcher.NewSimpleMatcher("close_with_reason_submit")
@@ -47,8 +47,6 @@ func (h *CloseWithReasonSubmitHandler) Execute(ctx *context.ModalContext) {
 		return
 	}
 
-
 	ctx.Ack()
-	logic.CloseTicket(ctx, &textInput.Value)
+	logic.CloseTicket(ctx, &textInput.Value, false)
 }
-

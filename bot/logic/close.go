@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-func CloseTicket(ctx registry.CommandContext, reason *string) {
+func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCheck bool) {
 	var success bool
 	errorContext := ctx.ToErrorContext()
 
@@ -47,7 +47,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string) {
 		}
 	}()
 
-	if !utils.CanClose(ctx, ticket) {
+	if !bypassPermissionCheck && !utils.CanClose(ctx, ticket) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}

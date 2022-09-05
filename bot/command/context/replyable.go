@@ -14,6 +14,7 @@ import (
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest/request"
@@ -126,6 +127,14 @@ func (r *Replyable) HandleWarning(err error) {
 
 func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) string {
 	return i18n.GetMessageFromGuild(r.ctx.GuildId(), messageId, format...)
+}
+
+func (r *Replyable) SelectValidEmoji(customEmoji utils.CustomEmoji, fallback string) *emoji.Emoji {
+	if r.ctx.Worker().IsWhitelabel {
+		return utils.BuildEmoji(fallback) // TODO: Check whitelabel_guilds table for emojis server
+	} else {
+		return customEmoji.BuildEmoji()
+	}
 }
 
 func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteLink bool) command.MessageResponse {

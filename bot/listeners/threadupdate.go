@@ -80,6 +80,6 @@ func OnThreadUpdate(worker *worker.Context, e *events.ThreadUpdate) {
 		}
 	} else if ticket.Open && e.ThreadMetadata.Archived { // Handle ticket being archived on its own
 		ctx := context.NewAutoCloseContext(worker, ticket.GuildId, e.Id, worker.BotId, premiumTier)
-		logic.CloseTicket(ctx, utils.Ptr("Thread was archive"))
+		logic.CloseTicket(ctx, utils.Ptr("Thread was archived"), true) // TODO: Translate
 	}
 }

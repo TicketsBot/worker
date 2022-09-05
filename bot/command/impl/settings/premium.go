@@ -69,7 +69,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 			Inline: false,
 		})
 
-		ctx.ReplyWith(command.NewEmbedMessageResponseWithComponents(
+		ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(
 			utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, i18n.MessagePremiumAbout, fields),
 			utils.Slice(
 				component.BuildActionRow(

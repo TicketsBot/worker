@@ -23,5 +23,5 @@ func (h *CloseConfirmHandler) Properties() registry.Properties {
 
 func (h *CloseConfirmHandler) Execute(ctx *context.ButtonContext) {
 	// TODO: IntoPanelContext()?
-	logic.CloseTicket(ctx, nil)
+	logic.CloseTicket(ctx, nil, false)
 }

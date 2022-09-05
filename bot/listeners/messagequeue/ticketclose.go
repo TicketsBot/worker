@@ -111,7 +111,7 @@ func ListenTicketClose() {
 			// ticket.ChannelId cannot be nil
 			ctx := context.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
 
-			logic.CloseTicket(&ctx, &payload.Reason)
+			logic.CloseTicket(&ctx, &payload.Reason, false)
 		}()
 	}
 }
