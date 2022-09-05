@@ -56,5 +56,31 @@ func BuildSubscriptionFoundMessage(ctx registry.CommandContext) (command.Message
 	))
 
 	embed := utils.BuildEmbed(ctx, customisation.Red, i18n.MessagePremiumSubscriptionFound, i18n.MessagePremiumSubscriptionFoundContent, nil, guild.OwnerId, commands["addadmin"], commands["viewstaff"])
-	return command.NewEmbedMessageResponseWithComponents(embed, components), nil
+	return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components), nil
+}
+
+func BuildNotLinkedMessage(ctx registry.CommandContext) command.MessageResponse {
+	components := utils.Slice(component.BuildActionRow(
+		component.BuildButton(component.Button{
+			Label:    ctx.GetMessage(i18n.MessagePremiumCheckAgain),
+			CustomId: "premium_check_again",
+			Style:    component.ButtonStylePrimary,
+			Emoji:    utils.BuildEmoji("🔎"),
+		}),
+		component.BuildButton(component.Button{
+			Label: ctx.GetMessage(i18n.MessagePremiumLinkPatreonAccount),
+			Style: component.ButtonStyleLink,
+			Emoji: ctx.SelectValidEmoji(utils.EmojiPatreon, "🔗"),
+			Url:   utils.Ptr("https://support.patreon.com/hc/en-us/articles/212052266-Get-my-Discord-role"), // TODO: Localised link
+		}),
+		component.BuildButton(component.Button{
+			Label: ctx.GetMessage(i18n.MessageJoinSupportServer),
+			Style: component.ButtonStyleLink,
+			Emoji: utils.BuildEmoji("❓"),
+			Url:   utils.Ptr(strings.ReplaceAll(config.Conf.Bot.SupportServerInvite, "\n", "")),
+		}),
+	))
+
+	embed := utils.BuildEmbed(ctx, customisation.Red, i18n.TitlePremium, i18n.MessagePremiumNoSubscription, nil)
+	return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components)
 }

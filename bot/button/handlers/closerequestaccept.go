@@ -60,5 +60,6 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 	})
 
 	// Avoid users cant close issue
+	// Allow members to close too, for context menu tickets
 	logic.CloseTicket(ctx, closeRequest.Reason, true)
 }

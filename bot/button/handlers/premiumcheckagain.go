@@ -49,12 +49,22 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 	if ctx.PremiumTier() > premium.None {
 		ctx.EditWith(customisation.Green, i18n.Success, i18n.MessagePremiumSuccessAfterCheck)
 	} else {
-		res, err := prem.BuildSubscriptionFoundMessage(ctx)
+		tier, err := utils.PremiumClient.GetTierByUser(ctx.UserId(), false)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		ctx.Edit(res)
+		if tier == premium.None {
+			ctx.Edit(prem.BuildNotLinkedMessage(ctx))
+		} else {
+			res, err := prem.BuildSubscriptionFoundMessage(ctx)
+			if err != nil {
+				ctx.HandleError(err)
+				return
+			}
+
+			ctx.Edit(res)
+		}
 	}
 }

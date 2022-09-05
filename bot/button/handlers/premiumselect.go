@@ -11,11 +11,8 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	prem "github.com/TicketsBot/worker/bot/premium"
 	"github.com/TicketsBot/worker/bot/utils"
-	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction/component"
-	"strings"
 )
 
 type PremiumKeyOpenHandler struct{}
@@ -55,29 +52,7 @@ func (h *PremiumKeyOpenHandler) Execute(ctx *context.SelectMenuContext) {
 		}
 
 		if tier == premium.None {
-			var patreonEmoji *emoji.Emoji
-			if ctx.Worker().IsWhitelabel {
-				patreonEmoji = utils.BuildEmoji("🔗")
-			} else {
-				patreonEmoji = utils.EmojiPatreon.BuildEmoji()
-			}
-
-			components := utils.Slice(component.BuildActionRow(
-				component.BuildButton(component.Button{
-					Label: ctx.GetMessage(i18n.MessagePremiumLinkPatreonAccount),
-					Style: component.ButtonStyleLink,
-					Emoji: patreonEmoji,
-					Url:   utils.Ptr("https://support.patreon.com/hc/en-us/articles/212052266-Get-my-Discord-role"), // TODO: Localised link
-				}),
-				component.BuildButton(component.Button{
-					Label: ctx.GetMessage(i18n.MessageJoinSupportServer),
-					Style: component.ButtonStyleLink,
-					Emoji: utils.BuildEmoji("❓"),
-					Url:   utils.Ptr(strings.ReplaceAll(config.Conf.Bot.SupportServerInvite, "\n", "")),
-				}),
-			))
-
-			ctx.EditWithComponents(customisation.Red, i18n.TitlePremium, i18n.MessagePremiumNoSubscription, components)
+			ctx.Edit(prem.BuildNotLinkedMessage(ctx))
 		} else {
 			res, err := prem.BuildSubscriptionFoundMessage(ctx)
 			if err != nil {
