@@ -59,6 +59,8 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 		new(handlers.CloseRequestDenyHandler),
 		new(handlers.JoinThreadHandler),
 		new(handlers.PanelHandler),
+		new(handlers.PremiumCheckAgain),
+		new(handlers.PremiumKeyButtonHandler),
 		new(handlers.RateHandler),
 		new(handlers.ViewStaffHandler),
 	)
@@ -66,11 +68,13 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 	m.selectRegistry = append(m.selectRegistry,
 		new(handlers.LanguageSelectorHandler),
 		new(handlers.MultiPanelHandler),
+		new(handlers.PremiumKeyOpenHandler),
 	)
 
 	m.modalRegistry = append(m.modalRegistry,
 		new(handlers.FormHandler),
 		new(handlers.CloseWithReasonSubmitHandler),
+		new(handlers.PremiumKeySubmitHandler),
 	)
 
 	for _, handler := range m.buttonRegistry {

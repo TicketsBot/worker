@@ -50,6 +50,7 @@ var (
 	EmojiStaff      = NewCustomEmoji("staff", 1013527371216867370, false)
 	EmojiThread     = NewCustomEmoji("thread", 1013527373750214717, false)
 	EmojiBulletLine = NewCustomEmoji("bulletline", 1014161470491201596, false)
+	EmojiPatreon    = NewCustomEmoji("patreon", 1016062317210906704, false)
 	//EmojiTime       = NewCustomEmoji("time", 974006684622159952, false)
 )
 

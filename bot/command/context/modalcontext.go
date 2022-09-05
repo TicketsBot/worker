@@ -14,6 +14,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
@@ -45,13 +46,32 @@ func NewModalContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
-	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, responseChannel)
+	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
 	return &ctx
 }
 
 func (ctx *ModalContext) Defer() {
 	ctx.hasReplied.Store(true)
 	ctx.Ack()
+}
+
+func (ctx *ModalContext) GetInput(customId string) (string, bool) {
+	for _, c := range ctx.Interaction.Data.Components {
+		if c.Type != component.ComponentActionRow || len(c.Components) != 1 {
+			continue
+		}
+
+		input := c.Components[0]
+		if input.Type != component.ComponentInputText {
+			continue
+		}
+
+		if input.CustomId == customId {
+			return input.Value, true
+		}
+	}
+
+	return "", false
 }
 
 func (ctx *ModalContext) Worker() *worker.Context {
@@ -103,23 +123,6 @@ func (ctx *ModalContext) ReplyWith(response command.MessageResponse) (msg messag
 		}
 	} else {
 		msg, err = rest.CreateFollowupMessage(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
-		if err != nil {
-			sentry.LogWithContext(err, ctx.ToErrorContext())
-		}
-	}
-
-	return
-}
-
-func (ctx *ModalContext) Edit(data command.MessageResponse) {
-	hasReplied := ctx.hasReplied.Swap(true)
-
-	if !hasReplied {
-		ctx.responseChannel <- button.ResponseEdit{
-			Data: data,
-		}
-	} else {
-		_, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, data.IntoWebhookEditBody())
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
 		}

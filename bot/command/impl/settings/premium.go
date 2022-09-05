@@ -3,17 +3,15 @@ package settings
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/gofrs/uuid"
-	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction"
-	"time"
+	"github.com/rxdn/gdl/objects/interaction/component"
 )
 
 type PremiumCommand struct {
@@ -26,9 +24,6 @@ func (PremiumCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Admin,
 		Category:        command.Settings,
-		Arguments: command.Arguments(
-			command.NewOptionalArgument("key", "Premium key to activate", interaction.OptionTypeString, i18n.MessageInvalidPremiumKey),
-		),
 	}
 }
 
@@ -36,76 +31,81 @@ func (c PremiumCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (PremiumCommand) Execute(ctx registry.CommandContext, key *string) {
-	if key == nil {
-		if ctx.PremiumTier() > premium.None {
-			expiry, err := dbclient.Client.PremiumGuilds.GetExpiry(ctx.GuildId())
-			if err != nil {
-				ctx.Reject()
-				sentry.ErrorWithContext(err, ctx.ToErrorContext())
-				return
-			}
+func (PremiumCommand) Execute(ctx registry.CommandContext) {
+	premiumTier := ctx.PremiumTier()
 
-			if expiry.After(time.Now()) {
-				ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessageAlreadyPremium, message.BuildTimestamp(expiry, message.TimestampStyleLongDateTime))
-				return
-			}
-		}
-
-		ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessagePremium)
-	} else {
-		parsed, err := uuid.FromString(*key)
-
-		if err != nil {
-			ctx.Reply(customisation.Red, i18n.TitlePremium, i18n.MessageInvalidPremiumKey)
-			ctx.Reject()
-			return
-		}
-
-		length, premiumTypeRaw, err := dbclient.Client.PremiumKeys.Delete(parsed)
-		if err != nil {
-			ctx.Reject()
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			return
-		}
-
-		if length == 0 {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInvalidPremiumKey)
-			ctx.Reject()
-			return
-		}
-
-		premiumType := premium.PremiumTier(premiumTypeRaw)
-
-		if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId(), ctx.UserId()); err != nil {
-			ctx.Reject()
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			return
-		}
-
-		if premiumType == premium.Premium {
-			if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
-				ctx.HandleError(err)
-				ctx.Reject()
-				return
-			}
-		} else if premiumType == premium.Whitelabel {
-			if err := dbclient.Client.WhitelabelUsers.Add(ctx.UserId(), length); err != nil {
-				ctx.HandleError(err)
-				ctx.Reject()
-				return
-			}
-		}
-
-		data := premium.CachedTier{
-			Tier:   int8(premiumTypeRaw),
-			Source: premium.SourcePremiumKey,
-		}
-
-		if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
-			ctx.Reply(customisation.Green, i18n.TitlePremium, i18n.MessagePremiumSuccess, int(length.Hours()/24))
+	// Tell user if premium is already active
+	if premiumTier > premium.None {
+		var content i18n.MessageId
+		if premiumTier == premium.Whitelabel {
+			content = i18n.MessagePremiumLinkAlreadyActivatedWhitelabel
 		} else {
-			ctx.HandleError(err)
+			content = i18n.MessagePremiumLinkAlreadyActivated
 		}
+
+		ctx.ReplyWith(command.MessageResponse{
+			Embeds: utils.Slice(
+				utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, content, nil),
+			),
+			Components: utils.Slice(component.BuildActionRow(
+				component.BuildButton(component.Button{
+					Label:    ctx.GetMessage(i18n.MessagePremiumUseKeyAnyway),
+					CustomId: "open_premium_key_modal",
+					Style:    component.ButtonStyleSecondary,
+					Emoji:    utils.BuildEmoji("🔑"),
+				}),
+			)),
+		})
+
+	} else {
+		var patreonEmoji, keyEmoji *emoji.Emoji
+		if !ctx.Worker().IsWhitelabel {
+			patreonEmoji = utils.EmojiPatreon.BuildEmoji()
+			keyEmoji = utils.BuildEmoji("🔑")
+		}
+
+		// utils.EmbedField
+		fields := utils.Slice(embed.EmbedField{
+			Name:   ctx.GetMessage(i18n.MessagePremiumAlreadyPurchasedTitle),
+			Value:  ctx.GetMessage(i18n.MessagePremiumAlreadyPurchasedDescription),
+			Inline: false,
+		})
+
+		ctx.ReplyWith(command.MessageResponse{
+			Embeds: utils.Slice(
+				utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, i18n.MessagePremiumAbout, fields),
+			),
+			Components: utils.Slice(
+				component.BuildActionRow(
+					component.BuildSelectMenu(component.SelectMenu{
+						CustomId: "premium_purchase_method",
+						Options: utils.Slice(
+							component.SelectOption{
+								Label:       "Patreon", // Don't translate
+								Value:       "patreon",
+								Description: ctx.GetMessage(i18n.MessagePremiumMethodSelectorPatreon),
+								Emoji:       patreonEmoji,
+							},
+							component.SelectOption{
+								Label:       ctx.GetMessage(i18n.MessagePremiumGiveawayKey),
+								Value:       "key",
+								Description: ctx.GetMessage(i18n.MessagePremiumMethodSelectorKey),
+								Emoji:       keyEmoji,
+							},
+						),
+						Placeholder: ctx.GetMessage(i18n.MessagePremiumMethodSelector),
+						Disabled:    false,
+					}),
+				),
+				component.BuildActionRow(
+					component.BuildButton(component.Button{
+						Label: ctx.GetMessage(i18n.Website),
+						Style: component.ButtonStyleLink,
+						Emoji: utils.BuildEmoji("🔗"),
+						Url:   utils.Ptr("https://ticketsbot.net/premium"),
+					}),
+				),
+			),
+		})
 	}
 }

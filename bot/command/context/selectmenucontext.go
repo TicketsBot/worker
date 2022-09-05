@@ -47,7 +47,7 @@ func NewSelectMenuContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
-	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, responseChannel)
+	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
 	return &ctx
 }
 
@@ -100,23 +100,6 @@ func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg m
 		}
 	} else {
 		msg, err = rest.CreateFollowupMessage(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
-		if err != nil {
-			sentry.LogWithContext(err, ctx.ToErrorContext())
-		}
-	}
-
-	return
-}
-
-func (ctx *SelectMenuContext) Edit(data command.MessageResponse) {
-	hasReplied := ctx.hasReplied.Swap(true)
-
-	if !hasReplied {
-		ctx.responseChannel <- button.ResponseEdit{
-			Data: data,
-		}
-	} else {
-		_, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, data.IntoWebhookEditBody())
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
 		}

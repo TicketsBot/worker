@@ -11,6 +11,10 @@ func (c Colour) Int16() int16 {
 	return int16(c)
 }
 
+func (c Colour) Default() int {
+	return DefaultColours[c]
+}
+
 const (
 	Green Colour = iota
 	Red
@@ -44,14 +48,14 @@ func GetColours(guildId uint64) (map[Colour]int, error) {
 
 	colours := make(map[Colour]int)
 	for id, hex := range raw {
-        colours[Colour(id)] = hex
-    }
+		colours[Colour(id)] = hex
+	}
 
 	for id, hex := range DefaultColours {
-        if _, ok := colours[id]; !ok {
-            colours[id] = hex
-        }
-    }
+		if _, ok := colours[id]; !ok {
+			colours[id] = hex
+		}
+	}
 
 	return colours, nil
 }
@@ -60,8 +64,8 @@ func GetColours(guildId uint64) (map[Colour]int, error) {
 func GetColour(guildId uint64, colourCode Colour) (int, error) {
 	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
 	if err != nil {
-        return 0, err
-    }
+		return 0, err
+	}
 
 	if !ok {
 		return GetDefaultColour(colourCode), nil
@@ -75,8 +79,8 @@ func GetColourOrDefault(guildId uint64, colourCode Colour) int {
 	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
 	if err != nil {
 		sentry.Error(err)
-        return GetDefaultColour(colourCode)
-    }
+		return GetDefaultColour(colourCode)
+	}
 
 	if !ok {
 		return GetDefaultColour(colourCode)
