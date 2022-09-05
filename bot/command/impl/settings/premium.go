@@ -43,11 +43,9 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 			content = i18n.MessagePremiumLinkAlreadyActivated
 		}
 
-		ctx.ReplyWith(command.MessageResponse{
-			Embeds: utils.Slice(
-				utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, content, nil),
-			),
-			Components: utils.Slice(component.BuildActionRow(
+		ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(
+			utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, content, nil),
+			utils.Slice(component.BuildActionRow(
 				component.BuildButton(component.Button{
 					Label:    ctx.GetMessage(i18n.MessagePremiumUseKeyAnyway),
 					CustomId: "open_premium_key_modal",
@@ -55,7 +53,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 					Emoji:    utils.BuildEmoji("🔑"),
 				}),
 			)),
-		})
+		))
 
 	} else {
 		var patreonEmoji, keyEmoji *emoji.Emoji
@@ -71,11 +69,9 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 			Inline: false,
 		})
 
-		ctx.ReplyWith(command.MessageResponse{
-			Embeds: utils.Slice(
-				utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, i18n.MessagePremiumAbout, fields),
-			),
-			Components: utils.Slice(
+		ctx.ReplyWith(command.NewEmbedMessageResponseWithComponents(
+			utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, i18n.MessagePremiumAbout, fields),
+			utils.Slice(
 				component.BuildActionRow(
 					component.BuildSelectMenu(component.SelectMenu{
 						CustomId: "premium_purchase_method",
@@ -106,6 +102,6 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 					}),
 				),
 			),
-		})
+		))
 	}
 }
