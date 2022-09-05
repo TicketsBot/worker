@@ -70,7 +70,7 @@ func BuildNotLinkedMessage(ctx registry.CommandContext) command.MessageResponse 
 		component.BuildButton(component.Button{
 			Label: ctx.GetMessage(i18n.MessagePremiumLinkPatreonAccount),
 			Style: component.ButtonStyleLink,
-			Emoji: ctx.SelectValidEmoji(utils.EmojiPatreon, "🔗"),
+			Emoji: ctx.SelectValidEmoji(customisation.EmojiPatreon, "🔗"),
 			Url:   utils.Ptr("https://support.patreon.com/hc/en-us/articles/212052266-Get-my-Discord-role"), // TODO: Localised link
 		}),
 		component.BuildButton(component.Button{

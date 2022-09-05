@@ -7,7 +7,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -47,7 +46,7 @@ type CommandContext interface {
 	Accept()
 	Reject()
 
-	SelectValidEmoji(customEmoji utils.CustomEmoji, fallback string) *emoji.Emoji
+	SelectValidEmoji(customEmoji customisation.CustomEmoji, fallback string) *emoji.Emoji
 
 	HandleError(err error)
 	HandleWarning(err error)

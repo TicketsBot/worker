@@ -58,7 +58,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 	} else {
 		var patreonEmoji, keyEmoji *emoji.Emoji
 		if !ctx.Worker().IsWhitelabel {
-			patreonEmoji = utils.EmojiPatreon.BuildEmoji()
+			patreonEmoji = customisation.EmojiPatreon.BuildEmoji()
 			keyEmoji = utils.BuildEmoji("🔑")
 		}
 

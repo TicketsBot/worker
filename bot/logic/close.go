@@ -292,23 +292,23 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 		SetTitle("Ticket Closed").
 		SetColor(ctx.GetColour(customisation.Green)).
 		SetTimestamp(time.Now()).
-		AddField(formatTitle("Ticket ID", utils.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
-		AddField(formatTitle("Opened By", utils.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
-		AddField(formatTitle("Closed By", utils.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
-		AddField(formatTitle("Open Time", utils.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField(formatTitle("Claimed By", utils.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true).
+		AddField(formatTitle("Ticket ID", customisation.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
+		AddField(formatTitle("Opened By", customisation.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
+		AddField(formatTitle("Closed By", customisation.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
+		AddField(formatTitle("Open Time", customisation.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField(formatTitle("Claimed By", customisation.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true).
 		AddBlankField(true).
-		AddField(formatTitle("Reason", utils.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
+		AddField(formatTitle("Reason", customisation.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
 
 	// Build action row
 	var transcriptEmoji *emoji.Emoji
 	if !ctx.Worker().IsWhitelabel {
-		transcriptEmoji = utils.EmojiTranscript.BuildEmoji()
+		transcriptEmoji = customisation.EmojiTranscript.BuildEmoji()
 	}
 
 	var threadEmoji *emoji.Emoji
 	if !ctx.Worker().IsWhitelabel {
-		threadEmoji = utils.EmojiThread.BuildEmoji()
+		threadEmoji = customisation.EmojiThread.BuildEmoji()
 	}
 
 	var transcriptButtons []component.Component
@@ -343,7 +343,7 @@ func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settin
 	}
 }
 
-func formatTitle(s string, emoji utils.CustomEmoji, isWhitelabel bool) string {
+func formatTitle(s string, emoji customisation.CustomEmoji, isWhitelabel bool) string {
 	if !isWhitelabel {
 		return fmt.Sprintf("%s %s", emoji, s)
 	} else {

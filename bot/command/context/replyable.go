@@ -129,7 +129,7 @@ func (r *Replyable) GetMessage(messageId i18n.MessageId, format ...interface{}) 
 	return i18n.GetMessageFromGuild(r.ctx.GuildId(), messageId, format...)
 }
 
-func (r *Replyable) SelectValidEmoji(customEmoji utils.CustomEmoji, fallback string) *emoji.Emoji {
+func (r *Replyable) SelectValidEmoji(customEmoji customisation.CustomEmoji, fallback string) *emoji.Emoji {
 	if r.ctx.Worker().IsWhitelabel {
 		return utils.BuildEmoji(fallback) // TODO: Check whitelabel_guilds table for emojis server
 	} else {
