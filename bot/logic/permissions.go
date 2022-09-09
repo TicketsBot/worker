@@ -19,6 +19,16 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 		return true, nil
 	}
 
+	// Check if user is the guild owner
+	guild, err := ctx.GetGuild(ticket.GuildId)
+	if err != nil {
+		return false, err
+	}
+
+	if guild.OwnerId == userId {
+		return true, nil
+	}
+
 	// Get member object
 	member, err := ctx.GetGuildMember(ticket.GuildId, userId)
 	if err != nil {
