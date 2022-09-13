@@ -12,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -24,7 +23,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var (
@@ -56,22 +54,10 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		var usedPrefix string
 		if strings.HasPrefix(e.Content, mentionPrefix) {
 			usedPrefix = mentionPrefix
+		} else if strings.HasPrefix(strings.ToLower(e.Content), utils.DefaultPrefix) {
+			usedPrefix = utils.DefaultPrefix
 		} else {
-			// No need to query the custom prefix if we just the default prefix
-			customPrefix, err := dbclient.Client.Prefix.Get(e.GuildId)
-			if err != nil {
-				sentry.Error(err)
-				return
-			}
-
-			// If the server has a custom prefix set, completely ignore `t!` prefix, but check if custom prefix is not set
-			if customPrefix == "" && strings.HasPrefix(strings.ToLower(e.Content), utils.DefaultPrefix) {
-				usedPrefix = utils.DefaultPrefix
-			} else if customPrefix != "" && strings.HasPrefix(e.Content, customPrefix) {
-				usedPrefix = customPrefix
-			} else {
-				return
-			}
+			return
 		}
 
 		content := strings.TrimPrefix(e.Content, usedPrefix)
@@ -174,7 +160,7 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		ctx := context2.NewMessageContext(worker, e.Message, args, premiumTier, userPermissionLevel)
 
 		// Redirect user to slash commands
-		if time.Now().Unix() > 1661986800 && !properties.AdminOnly && !properties.HelperOnly {
+		if !properties.AdminOnly && !properties.HelperOnly {
 			commands, err := command.LoadCommandIds(worker, worker.BotId)
 			if err != nil {
 				sentry.Error(err)
