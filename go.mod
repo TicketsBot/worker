@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rxdn/gdl v0.0.0-20220905221613-8799fa0b4922
+	github.com/rxdn/gdl v0.0.0-20221019104728-7259dea7ce39
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.6.0
 	go.uber.org/atomic v1.6.0
