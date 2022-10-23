@@ -35,6 +35,8 @@ import (
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
+	return database.Ticket{}, fmt.Errorf("creating tickets has temporarily been disabled")
+
 	// Make sure ticket count is within ticket limit
 	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
 	violatesTicketLimit, limit := getTicketLimit(ctx)
