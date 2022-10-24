@@ -25,7 +25,7 @@ func (AdminWhitelabelDataCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Everyone,
 		Category:        command.Settings,
-		AdminOnly:       true,
+		HelperOnly:      true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user_id", "ID of the user who has the whitelabel subscription", interaction.OptionTypeUser, i18n.MessageInvalidArgument),
 		),
@@ -55,14 +55,18 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 	}
 
 	var botIdFormatted = "Bot not found"
-	var publicKey = "Not set"
+	var publicKeyFormatted = "Not set"
 	if data.BotId != 0 {
 		botIdFormatted = fmt.Sprintf("%d (<@%d>)", data.BotId, data.BotId)
 
-		publicKey, err = dbclient.Client.WhitelabelKeys.Get(data.BotId)
+		publicKey, err := dbclient.Client.WhitelabelKeys.Get(data.BotId)
 		if err != nil {
 			ctx.HandleError(err)
 			return
+		}
+
+		if publicKey != "" {
+			publicKeyFormatted = "Has public key"
 		}
 	}
 
@@ -87,7 +91,7 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 	fields := []embed.EmbedField{
 		utils.EmbedFieldRaw("Subscription Tier", tier.String(), true),
 		utils.EmbedFieldRaw("Bot ID", botIdFormatted, true),
-		utils.EmbedFieldRaw("Public Key", publicKey, false),
+		utils.EmbedFieldRaw("Public Key", publicKeyFormatted, true),
 		utils.EmbedFieldRaw("Last 3 Errors", errorsFormatted, false),
 	}
 
