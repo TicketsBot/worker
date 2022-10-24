@@ -29,6 +29,7 @@ func (AdminCommand) Properties() registry.Properties {
 			AdminGetOwnerCommand{},
 			AdminRecacheCommand{},
 			AdminUnblacklistCommand{},
+			AdminWhitelabelDataCommand{},
 		},
 		Category:   command.Settings,
 		HelperOnly: true,
