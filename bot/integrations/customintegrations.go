@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -63,11 +64,14 @@ func Fetch(
 		headerMap[header.Name] = value
 	}
 
-	body := integrationWebhookBody{
-		GuildId:         ticket.GuildId,
-		UserId:          ticket.UserId,
-		TicketId:        ticket.Id,
-		TicketChannelId: ticket.ChannelId,
+	var body requestBody = nil
+	if integration.HttpMethod == http.MethodPost {
+		body = integrationWebhookBody{
+			GuildId:         ticket.GuildId,
+			UserId:          ticket.UserId,
+			TicketId:        ticket.Id,
+			TicketChannelId: ticket.ChannelId,
+		}
 	}
 
 	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap, body)
