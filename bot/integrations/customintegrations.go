@@ -24,6 +24,13 @@ var (
 	ErrIntegrationReturnedErrorStatus = errors.New("Integration returned an error status")
 )
 
+type integrationWebhookBody struct {
+	GuildId         uint64  `json:"guild_id"`
+	UserId          uint64  `json:"user_id"`
+	TicketId        int     `json:"ticket_id"`
+	TicketChannelId *uint64 `json:"ticket_channel_id"`
+}
+
 func Fetch(
 	integration database.CustomIntegration,
 	ticket database.Ticket,
@@ -56,7 +63,14 @@ func Fetch(
 		headerMap[header.Name] = value
 	}
 
-	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap)
+	body := integrationWebhookBody{
+		GuildId:         ticket.GuildId,
+		UserId:          ticket.UserId,
+		TicketId:        ticket.Id,
+		TicketChannelId: ticket.ChannelId,
+	}
+
+	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap, body)
 	if err != nil {
 		return nil, err
 	}
