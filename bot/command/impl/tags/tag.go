@@ -23,7 +23,7 @@ func (c TagCommand) Properties() registry.Properties {
 		Description:     i18n.HelpTag,
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		Aliases:         []string{"canned", "cannedresponse", "cr", "tags", "tag", "snippet", "c"},
-		PermissionLevel: permission.Support,
+		PermissionLevel: permission.Everyone,
 		Category:        command.Tags,
 		Arguments: command.Arguments(
 			command.NewRequiredAutocompleteableArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, i18n.MessageTagInvalidArguments, c.AutoCompleteHandler),
