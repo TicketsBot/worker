@@ -340,6 +340,12 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
 		return utils.FormatNullableTime(data.AllTime)
 	},
+	"discord_account_creation_date": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<t:%d:d>", utils.SnowflakeToTime(ticket.UserId).Unix())
+	},
+	"discord_account_age": func(ctx *worker.Context, ticket database.Ticket) string {
+		return fmt.Sprintf("<t:%d:R>", utils.SnowflakeToTime(ticket.UserId).Unix())
+	},
 }
 
 type GroupSubstitutionFunc func(*worker.Context, database.Ticket) map[string]string
