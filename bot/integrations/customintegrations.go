@@ -26,10 +26,10 @@ var (
 )
 
 type integrationWebhookBody struct {
-	GuildId         uint64  `json:"guild_id"`
-	UserId          uint64  `json:"user_id"`
+	GuildId         uint64  `json:"guild_id,string"`
+	UserId          uint64  `json:"user_id,string"`
 	TicketId        int     `json:"ticket_id"`
-	TicketChannelId *uint64 `json:"ticket_channel_id"`
+	TicketChannelId *uint64 `json:"ticket_channel_id,string"`
 }
 
 func Fetch(
