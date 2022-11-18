@@ -8,7 +8,6 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -35,18 +34,6 @@ func (c ThreadsSetupCommand) GetExecutor() interface{} {
 
 func (ThreadsSetupCommand) Execute(ctx registry.CommandContext, useThreads bool, channelId *uint64) {
 	if useThreads {
-		// Assert guild has boost level 2, or users will be confused
-		g, err := ctx.Guild()
-		if err != nil {
-			ctx.HandleError(err)
-			return
-		}
-
-		if g.PremiumTier < guild.PremiumTier2 {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.SetupThreadsMissingBoosts)
-			return
-		}
-
 		if channelId == nil {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.SetupThreadsNoNotificationChannel)
 			return

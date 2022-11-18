@@ -21,7 +21,6 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
-	model "github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -67,13 +66,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, err
 	}
 
-	guild, err := ctx.Guild()
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
-	}
-
-	isThread := settings.UseThreads && guild.PremiumTier >= model.PremiumTier2
+	isThread := settings.UseThreads
 
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
