@@ -151,8 +151,7 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 						message += fmt.Sprintf("• `%s`\n", perm.String())
 					}
 
-					message += "\nPlease assign these permissions to the bot, or alternatively, the `Administrator` permission and try again.\n\n"
-					message += fmt.Sprintf("Error ID: `%s`", eventId)
+					message += "\nPlease assign these permissions to the bot, or alternatively, the `Administrator` permission and try again."
 				} else {
 					message = formatDiscordError(restError, eventId)
 				}
