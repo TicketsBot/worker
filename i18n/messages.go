@@ -89,8 +89,9 @@ var (
 	MessageTagInvalidArguments MessageId = "commands.tags.get.invalid_arguments"
 	MessageTagInvalidTag       MessageId = "commands.tags.get.invalid_tag"
 
-	MessageOpenRatelimited MessageId = "open.ratelimited"
-	MessageTicketOpened    MessageId = "open.success"
+	MessageOpenThreadAnnouncementChannel MessageId = "open.thread_in_announcement_channel"
+	MessageOpenRatelimited               MessageId = "open.ratelimited"
+	MessageTicketOpened                  MessageId = "open.success"
 
 	MessageAddAdminNoMembers   MessageId = "commands.addadmin.no_members"
 	MessageAddAdminConfirm     MessageId = "commands.addadmin.confirm"

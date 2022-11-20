@@ -68,6 +68,20 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	isThread := settings.UseThreads
 
+	// Check if the parent channel is an announcement channel
+	if isThread {
+		panelChannel, err := ctx.Worker().GetChannel(ctx.ChannelId())
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
+
+		if panelChannel.Type != channel.ChannelTypeGuildText {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenThreadAnnouncementChannel)
+			return database.Ticket{}, nil
+		}
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
