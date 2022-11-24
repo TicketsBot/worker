@@ -36,6 +36,7 @@ const (
 	Turkish       Language = "tr"
 	Ukrainian     Language = "ua"
 	Vietnamese    Language = "vn"
+	Welsh         Language = "cy"
 	Chinese       Language = "cn"
 	ChineseTaiwan Language = "tw"
 )
@@ -70,6 +71,7 @@ var Flags = map[Language]string{
 	Turkish:       "🇹🇷",
 	Ukrainian:     "🇺🇦",
 	Vietnamese:    "🇻🇳",
+	Welsh:         "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
 	Chinese:       "🇨🇳",
 	ChineseTaiwan: "🇹🇼",
 }
@@ -111,6 +113,7 @@ var FullLocales = map[string]Language{
 	"ar-SA": Arabic,
 	"bg-BG": Bulgarian,
 	"cs-CZ": Czech,
+	"cy-GB": Welsh,
 	"da-DK": Danish,
 	"de-DE": German,
 	"el-GR": Greek,
@@ -171,6 +174,7 @@ var LocalesInverse = map[Language]string{
 	Turkish:       "tr-TR",
 	Ukrainian:     "uk-UA",
 	Vietnamese:    "vi-VN",
+	Welsh:         "cy-GB",
 	Chinese:       "zh-CN",
 	ChineseTaiwan: "zh-TW",
 }
@@ -205,6 +209,7 @@ var LanguagesAlphabetical = [...]Language{
 	Turkish,
 	Ukrainian,
 	Vietnamese,
+	Welsh,
 	Chinese,
 	ChineseTaiwan,
 }
@@ -239,6 +244,7 @@ var FullNames = map[Language]string{
 	Turkish:       "Türkçe",
 	Ukrainian:     "Українська",
 	Vietnamese:    "Tiếng Việt",
+	Welsh:         "Cymraeg",
 	Chinese:       "中文",
 	ChineseTaiwan: "繁體中文",
 }
@@ -273,6 +279,7 @@ var FullNamesEnglish = map[Language]string{
 	Turkish:       "Turkish",
 	Ukrainian:     "Ukrainian",
 	Vietnamese:    "Vietnamese",
+	Welsh:         "Welsh",
 	Chinese:       "Chinese",
 	ChineseTaiwan: "Chinese (Taiwan)",
 }
