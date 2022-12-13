@@ -60,6 +60,26 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, nil
 	}
 
+	// Ensure that the panel isn't disabled
+	if panel != nil && panel.ForceDisabled {
+		// Build premium command mention
+		var premiumCommand string
+		commands, err := command.LoadCommandIds(ctx.Worker(), ctx.Worker().BotId)
+		if err != nil {
+			sentry.Error(err)
+			return database.Ticket{}, err
+		}
+
+		if id, ok := commands["premium"]; ok {
+			premiumCommand = fmt.Sprintf("</premium:%d>", id)
+		} else {
+			premiumCommand = "`/premium`"
+		}
+
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenPanelForceDisabled, premiumCommand)
+		return database.Ticket{}, nil
+	}
+
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)

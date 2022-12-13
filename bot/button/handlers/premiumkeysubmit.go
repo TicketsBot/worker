@@ -79,6 +79,11 @@ func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
 			return
 		}
 	}
+	// Re-enable panels
+	if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+		ctx.HandleError(err)
+		return
+	}
 
 	data := premium.CachedTier{
 		Tier:   int8(premiumTypeRaw),

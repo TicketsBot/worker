@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	prem "github.com/TicketsBot/worker/bot/premium"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -48,6 +49,12 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 
 	if ctx.PremiumTier() > premium.None {
 		ctx.EditWith(customisation.Green, i18n.Success, i18n.MessagePremiumSuccessAfterCheck)
+
+		// Re-enable panels
+		if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	} else {
 		tier, err := utils.PremiumClient.GetTierByUser(ctx.UserId(), false)
 		if err != nil {

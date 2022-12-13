@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -36,6 +37,12 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 
 	// Tell user if premium is already active
 	if premiumTier > premium.None {
+		// Re-enable panels
+		if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
 		var content i18n.MessageId
 		if premiumTier == premium.Whitelabel {
 			content = i18n.MessagePremiumLinkAlreadyActivatedWhitelabel
