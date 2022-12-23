@@ -92,6 +92,7 @@ var (
 	MessageOpenThreadAnnouncementChannel MessageId = "open.thread_in_announcement_channel"
 	MessageOpenRatelimited               MessageId = "open.ratelimited"
 	MessageOpenPanelForceDisabled        MessageId = "open.panel_force_disabled"
+	MessageOpenPanelDisabled             MessageId = "open.panel_disabled"
 	MessageTicketOpened                  MessageId = "open.success"
 
 	MessageAddAdminNoMembers   MessageId = "commands.addadmin.no_members"

@@ -80,6 +80,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, nil
 	}
 
+	if panel != nil && panel.Disabled {
+		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenPanelDisabled)
+		return database.Ticket{}, nil
+	}
+
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
