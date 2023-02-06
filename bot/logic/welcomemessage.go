@@ -274,6 +274,7 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 	return message
 }
 
+// TODO: Error handling
 type PlaceholderSubstitutionFunc func(*worker.Context, database.Ticket) string
 
 var substitutions = map[string]PlaceholderSubstitutionFunc{
@@ -299,12 +300,16 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 		return strconv.Itoa(len(open))
 	},
 	"total_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		total, _ := dbclient.Client.Tickets.GetTotalTicketCount(ticket.GuildId)
-		return strconv.Itoa(total)
+		count, _ := dbclient.Client.Tickets.GetTotalTicketCount(ticket.GuildId)
+		return strconv.Itoa(count)
 	},
 	"user_open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		tickets, _ := dbclient.Client.Tickets.GetOpenByUser(ticket.GuildId, ticket.UserId)
-		return strconv.Itoa(len(tickets))
+		count, _ := dbclient.Client.Tickets.GetOpenCountByUser(ticket.GuildId, ticket.UserId)
+		return strconv.Itoa(count)
+	},
+	"user_total_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
+		tickets, _ := dbclient.Client.Tickets.GetTotalCountByUser(ticket.GuildId, ticket.UserId)
+		return strconv.Itoa(tickets)
 	},
 	"ticket_limit": func(ctx *worker.Context, ticket database.Ticket) string {
 		limit, _ := dbclient.Client.TicketLimit.Get(ticket.GuildId)

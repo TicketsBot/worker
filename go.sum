@@ -38,8 +38,8 @@ github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
 github.com/TicketsBot/common v0.0.0-20220902210819-74a2741d548b h1:yNRfFWu8x9gd7Mn7Tcgy4qPhpQg7Yb+6C7+z0+AI4Y4=
 github.com/TicketsBot/common v0.0.0-20220902210819-74a2741d548b/go.mod h1:WxHh6bY7KhIqdayeOp5f0Zj2NNi/7QqCQfMEqHnpdAM=
-github.com/TicketsBot/database v0.0.0-20221223231047-b0d3d36c563b h1:ZlPTCuJVEjvt6Rdz1mUgkJUVMj8XrLOwrbh05vcl1KI=
-github.com/TicketsBot/database v0.0.0-20221223231047-b0d3d36c563b/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
+github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394 h1:tt6L1MuZNSrB41EHBR3HAug7PwHTy9TLoyArxtYtYqE=
+github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c/go.mod h1:jgi2OXQKsd5nUnTIRkwvPmeuD/i7OhN68LKMssuQY1c=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
