@@ -8,7 +8,7 @@ require (
 	github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/jackc/pgx/v4 v4.7.1
