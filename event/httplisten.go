@@ -290,6 +290,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 			Content:         data.Content,
 			Embeds:          data.Embeds,
 			AllowedMentions: data.AllowedMentions,
+			Components:      data.Components,
 		}
 
 		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
