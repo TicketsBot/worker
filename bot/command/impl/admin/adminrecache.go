@@ -67,5 +67,5 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 		return
 	}
 
-	ctx.Accept()
+	ctx.ReplyPlainPermanent("done")
 }
