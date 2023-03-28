@@ -141,9 +141,15 @@ func GetCommandListener() func(*worker.Context, *events.MessageCreate) {
 		})
 
 		// get premium tier
-		group.Go(func() (err error) {
+		group.Go(func() error {
+			var err error
 			premiumTier, err = utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
-			return
+			if err != nil {
+				sentry.Error(err)
+				premiumTier = premium.None
+			}
+
+			return nil
 		})
 
 		if err := group.Wait(); err != nil {

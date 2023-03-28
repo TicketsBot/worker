@@ -34,7 +34,8 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			Guild:   data.GuildId.Value,
 			Channel: data.ChannelId,
 		})
-		return false
+
+		premiumTier = premium.None
 	}
 
 	switch data.Data.Type() {

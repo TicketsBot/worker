@@ -164,7 +164,7 @@ func executeCommand(
 		premiumLevel, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
 		if err != nil {
 			sentry.Error(err)
-			return
+			premiumLevel = premium.None
 		}
 
 		interactionContext := commandContext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)

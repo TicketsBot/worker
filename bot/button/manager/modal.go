@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/button"
@@ -25,7 +26,8 @@ func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker
 			Guild:   data.GuildId.Value,
 			Channel: data.ChannelId,
 		})
-		return false
+
+		premiumTier = premium.None
 	}
 
 	handler := manager.MatchModal(data.Data.CustomId)
