@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"fmt"
-	"github.com/TicketsBot/common/collections"
 	"github.com/TicketsBot/common/integrations/bloxlink"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -199,37 +198,33 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 	}
 
 	// Custom integrations
-	placeholders, err := dbclient.Client.CustomIntegrationPlaceholders.GetAllActivatedInGuild(ticket.GuildId)
+	guildIntegrations, err := dbclient.Client.CustomIntegrationGuilds.GetGuildIntegrations(ticket.GuildId)
 	if err != nil {
 		sentry.Error(err)
 		return message
 	}
 
-	// Determine which integrations we need to fetch
-	set := collections.NewSet[int]()
-	placeholderMap := make(map[int][]database.CustomIntegrationPlaceholder) // integration_id -> []Placeholder
-	for _, placeholder := range placeholders {
-		formatted := fmt.Sprintf("%%%s%%", placeholder.Name)
+	// Fetch integrations
+	if len(guildIntegrations) > 0 {
+		integrationIds := make([]int, len(guildIntegrations))
+		for i, integration := range guildIntegrations {
+			integrationIds[i] = integration.Id
+		}
 
-		if strings.Contains(message, formatted) {
-			set.Add(placeholder.IntegrationId)
+		placeholders, err := dbclient.Client.CustomIntegrationPlaceholders.GetAllActivatedInGuild(ticket.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return message
+		}
 
+		// Determine which integrations we need to fetch
+		placeholderMap := make(map[int][]database.CustomIntegrationPlaceholder) // integration_id -> []Placeholder
+		for _, placeholder := range placeholders {
 			if _, ok := placeholderMap[placeholder.IntegrationId]; !ok {
 				placeholderMap[placeholder.IntegrationId] = []database.CustomIntegrationPlaceholder{}
 			}
 
 			placeholderMap[placeholder.IntegrationId] = append(placeholderMap[placeholder.IntegrationId], placeholder)
-		}
-	}
-
-	integrationIds := set.Collect()
-
-	// Fetch integrations
-	if set.Size() > 0 {
-		usedIntegrations, err := dbclient.Client.CustomIntegrations.GetAll(integrationIds)
-		if err != nil {
-			sentry.Error(err)
-			return message
 		}
 
 		secrets, err := dbclient.Client.CustomIntegrationSecretValues.GetAll(ticket.GuildId, integrationIds)
@@ -245,7 +240,7 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 		}
 
 		// Replace placeholders
-		for _, integration := range usedIntegrations {
+		for _, integration := range guildIntegrations {
 			integration := integration
 			integrationSecrets := secrets[integration.Id]
 
