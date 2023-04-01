@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/cache"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 var Client *cache.PgCache
@@ -31,6 +32,7 @@ func Connect() (client cache.PgCache, err error) {
 	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
 	cfg.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
 	cfg.ConnConfig.PreferSimpleProtocol = true
+	cfg.ConnConfig.ConnectTimeout = time.Second * 15
 
 	pool, err := pgxpool.ConnectConfig(context.Background(), cfg)
 	if err != nil {
