@@ -3,6 +3,7 @@ package tickets
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -14,6 +15,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
+	"strings"
 )
 
 type SwitchPanelCommand struct {
@@ -217,11 +219,29 @@ func (SwitchPanelCommand) AutoCompleteHandler(data interaction.ApplicationComman
 		return nil
 	}
 
-	// TODO: Text search
-	if len(panels) > 25 {
-		panels = panels[:25]
-	}
+	if value == "" {
+		if len(panels) > 25 {
+			return panelsToChoices(panels[:25])
+		} else {
+			return panelsToChoices(panels)
+		}
+	} else {
+		var filtered []database.Panel
+		for _, panel := range panels {
+			if strings.Contains(strings.ToLower(panel.Title), strings.ToLower(value)) {
+				filtered = append(filtered, panel)
+			}
 
+			if len(filtered) == 25 {
+				break
+			}
+		}
+
+		return panelsToChoices(filtered)
+	}
+}
+
+func panelsToChoices(panels []database.Panel) []interaction.ApplicationCommandOptionChoice {
 	choices := make([]interaction.ApplicationCommandOptionChoice, len(panels))
 	for i, panel := range panels {
 		choices[i] = interaction.ApplicationCommandOptionChoice{
