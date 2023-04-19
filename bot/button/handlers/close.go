@@ -56,6 +56,8 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 	if closeConfirmation {
 		// Send confirmation message
 		confirmEmbed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleCloseConfirmation, i18n.MessageCloseConfirmation, nil)
+		confirmEmbed.SetAuthor(ctx.InteractionUser().Username, "", utils.Ptr(ctx.InteractionUser()).AvatarUrl(256))
+
 		msgData := command.MessageResponse{
 			Embeds: []*embed.Embed{confirmEmbed},
 			Components: []component.Component{
