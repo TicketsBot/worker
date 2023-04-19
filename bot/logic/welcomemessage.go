@@ -34,7 +34,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	}
 
 	// Build embeds
-	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel)
+	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel, true, getFormAnswers(formData))
 	if err != nil {
 		return 0, err
 	}
@@ -102,7 +102,7 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	return msg.Id, nil
 }
 
-func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel) (*embed.Embed, error) {
+func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel, isNewTicket bool, formAnswers map[string]*string) (*embed.Embed, error) {
 	// Send welcome message
 	if panel == nil || panel.WelcomeMessageEmbed == nil {
 		welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
@@ -115,7 +115,7 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 		}
 
 		// Replace variables
-		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket)
+		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket, isNewTicket, formAnswers)
 
 		return utils.BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier()), nil
 	} else {
@@ -129,12 +129,12 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 			return nil, err
 		}
 
-		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None)
+		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, true)
 		return e, nil
 	}
 }
 
-func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket) string {
+func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket, isNewTicket bool, formAnswers map[string]*string) string {
 	var lock sync.Mutex
 
 	// do DB lookups in parallel
@@ -245,7 +245,7 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 			integrationSecrets := secrets[integration.Id]
 
 			group.Go(func() error {
-				response, err := integrations.Fetch(integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id])
+				response, err := integrations.Fetch(integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id], isNewTicket, formAnswers)
 				if err != nil {
 					return err
 				}
@@ -387,6 +387,32 @@ var groupSubstitutions = []GroupSubstitutor{
 	),
 }
 
+func getFormAnswers(formData map[database.FormInput]string) map[string]*string {
+	// Get form inputs in the same order they are presented on the dashboard
+	i := 0
+	inputs := make([]database.FormInput, len(formData))
+	for input := range formData {
+		inputs[i] = input
+		i++
+	}
+
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].Position < inputs[j].Position
+	})
+
+	answers := make(map[string]*string)
+	for _, input := range inputs {
+		answer, ok := formData[input]
+		if ok {
+			answers[input.Label] = &answer
+		} else {
+			answers[input.Label] = nil
+		}
+	}
+
+	return answers
+}
+
 func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedField {
 	// Get form inputs in the same order they are presented on the dashboard
 	i := 0
@@ -425,10 +451,11 @@ func BuildCustomEmbed(
 	customEmbed database.CustomEmbed,
 	fields []database.EmbedField,
 	branding bool,
+	isNewTicket bool,
 ) *embed.Embed {
 	e := &embed.Embed{
 		Title:       utils.ValueOrZero(customEmbed.Title),
-		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket),
+		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, isNewTicket, nil),
 		Url:         utils.ValueOrZero(customEmbed.Url),
 		Timestamp:   customEmbed.Timestamp,
 		Color:       int(customEmbed.Colour),
@@ -453,7 +480,7 @@ func BuildCustomEmbed(
 	}
 
 	for _, field := range fields {
-		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket), field.Inline)
+		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket, isNewTicket, nil), field.Inline)
 	}
 
 	return e

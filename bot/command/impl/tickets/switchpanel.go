@@ -96,7 +96,7 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 				subject = embeds[0].Title // TODO: Store subjects in database
 			}
 
-			embeds[0], err = logic.BuildWelcomeMessageEmbed(ctx, ticket, subject, &panel)
+			embeds[0], err = logic.BuildWelcomeMessageEmbed(ctx, ticket, subject, &panel, false, nil) // TODO: Store form answers in database
 			if err != nil {
 				ctx.HandleError(err)
 				return

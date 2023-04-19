@@ -25,11 +25,15 @@ var (
 	ErrIntegrationReturnedErrorStatus = errors.New("Integration returned an error status")
 )
 
+type formAnswers map[string]*string
+
 type integrationWebhookBody struct {
-	GuildId         uint64  `json:"guild_id,string"`
-	UserId          uint64  `json:"user_id,string"`
-	TicketId        int     `json:"ticket_id"`
-	TicketChannelId *uint64 `json:"ticket_channel_id,string"`
+	GuildId         uint64      `json:"guild_id,string"`
+	UserId          uint64      `json:"user_id,string"`
+	TicketId        int         `json:"ticket_id"`
+	TicketChannelId *uint64     `json:"ticket_channel_id,string"`
+	IsNewTicket     bool        `json:"is_new_ticket"`
+	FormData        formAnswers `json:"form_data,omitempty"`
 }
 
 func Fetch(
@@ -38,6 +42,8 @@ func Fetch(
 	secrets []database.SecretWithValue,
 	headers []database.CustomIntegrationHeader,
 	placeholders []database.CustomIntegrationPlaceholder, // Only include placeholders that are actually used
+	isNewTicket bool,
+	formAnswers formAnswers,
 ) (map[string]string, error) {
 	prometheus.LogIntegrationRequest(integration.Id, ticket.GuildId)
 
@@ -66,12 +72,19 @@ func Fetch(
 
 	var body requestBody = nil
 	if integration.HttpMethod == http.MethodPost {
-		body = integrationWebhookBody{
+		postBody := integrationWebhookBody{
 			GuildId:         ticket.GuildId,
 			UserId:          ticket.UserId,
 			TicketId:        ticket.Id,
 			TicketChannelId: ticket.ChannelId,
+			IsNewTicket:     isNewTicket,
 		}
+
+		if !integration.Public {
+			postBody.FormData = formAnswers
+		}
+
+		body = postBody
 	}
 
 	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap, body)
