@@ -1,11 +1,17 @@
 package admin
 
 import (
+	"errors"
+	"fmt"
 	"github.com/TicketsBot/common/permission"
+	w "github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"strconv"
 )
 
@@ -49,20 +55,48 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 	ctx.Worker().Cache.DeleteGuildRoles(guildId)
 
 	// re-cache
-	_, err := ctx.Worker().GetGuild(guildId)
+	botId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	_, err = ctx.Worker().GetGuildChannels(guildId)
-	if err != nil {
+	var worker *w.Context
+	if isWhitelabel {
+		bot, err := dbclient.Client.Whitelabel.GetByBotId(botId)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if bot.BotId == 0 {
+			ctx.HandleError(errors.New("bot not found"))
+			return
+		}
+
+		worker = &w.Context{
+			Token:        bot.Token,
+			BotId:        bot.BotId,
+			IsWhitelabel: true,
+			ShardId:      0,
+			Cache:        ctx.Worker().Cache,
+			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, fmt.Sprintf("ratelimiter:%d", bot.BotId)), 1),
+		}
+	} else {
+		worker = ctx.Worker()
+	}
+
+	if _, err := worker.GetGuild(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	_, err = ctx.Worker().GetGuildRoles(guildId)
-	if err != nil {
+	if _, err := worker.GetGuildChannels(guildId); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if _, err = worker.GetGuildRoles(guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
