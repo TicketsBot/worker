@@ -88,11 +88,29 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 		errorsFormatted = strings.Join(strs, "\n")
 	}
 
+	guilds, err := dbclient.Client.WhitelabelGuilds.GetGuilds(data.BotId)
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	var guildsFormatted string
+	if len(guilds) == 0 {
+		guildsFormatted = "No Guilds"
+	} else {
+		for _, guild := range guilds {
+			guildsFormatted += fmt.Sprintf("%d\n", guild)
+		}
+
+		guildsFormatted = strings.TrimSuffix(guildsFormatted, "\n")
+	}
+
 	fields := []embed.EmbedField{
 		utils.EmbedFieldRaw("Subscription Tier", tier.String(), true),
 		utils.EmbedFieldRaw("Bot ID", botIdFormatted, true),
 		utils.EmbedFieldRaw("Public Key", publicKeyFormatted, true),
-		utils.EmbedFieldRaw("Last 3 Errors", errorsFormatted, false),
+		utils.EmbedFieldRaw("Guilds", guildsFormatted, true),
+		utils.EmbedFieldRaw("Last 3 Errors", errorsFormatted, true),
 	}
 
 	ctx.ReplyWithEmbed(utils.BuildEmbedRaw(ctx.GetColour(customisation.Green), "Whitelabel", "", fields, ctx.PremiumTier()))
