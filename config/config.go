@@ -50,6 +50,14 @@ type Config struct {
 		Threads  int    `env:"THREADS"`
 	} `envPrefix:"DATABASE_"`
 
+	Clickhouse struct {
+		Address  string `env:"ADDR"`
+		Threads  int    `env:"THREADS"`
+		Database string `env:"DATABASE"`
+		Username string `env:"USERNAME"`
+		Password string `env:"PASSWORD"`
+	} `envPrefix:"CLICKHOUSE_"`
+
 	Cache struct {
 		Host     string `env:"HOST"`
 		Database string `env:"NAME"`

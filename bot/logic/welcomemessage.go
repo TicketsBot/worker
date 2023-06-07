@@ -327,17 +327,76 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
 	},
-	// TODO: Decide whether to restrict to premium users
 	"first_response_time_weekly": func(ctx *worker.Context, ticket database.Ticket) string {
-		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+			if err != nil {
+				sentry.Error(err)
+				return ""
+			}
+
+			if premiumTier == premium.None {
+				return ""
+			}
+		}
+
+		context, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
+		defer cancel()
+
+		data, err := dbclient.Analytics.GetFirstResponseTimeStats(context, ticket.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return ""
+		}
+
 		return utils.FormatNullableTime(data.Weekly)
 	},
 	"first_response_time_monthly": func(ctx *worker.Context, ticket database.Ticket) string {
-		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+			if err != nil {
+				sentry.Error(err)
+				return ""
+			}
+
+			if premiumTier == premium.None {
+				return ""
+			}
+		}
+
+		context, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
+		defer cancel()
+
+		data, err := dbclient.Analytics.GetFirstResponseTimeStats(context, ticket.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return ""
+		}
+
 		return utils.FormatNullableTime(data.Monthly)
 	},
 	"first_response_time_all_time": func(ctx *worker.Context, ticket database.Ticket) string {
-		data, _ := dbclient.Client.FirstResponseTimeGuildView.Get(ticket.GuildId)
+		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+			if err != nil {
+				sentry.Error(err)
+				return ""
+			}
+
+			if premiumTier == premium.None {
+				return ""
+			}
+		}
+
+		context, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
+		defer cancel()
+
+		data, err := dbclient.Analytics.GetFirstResponseTimeStats(context, ticket.GuildId)
+		if err != nil {
+			sentry.Error(err)
+			return ""
+		}
+
 		return utils.FormatNullableTime(data.AllTime)
 	},
 	"discord_account_creation_date": func(ctx *worker.Context, ticket database.Ticket) string {

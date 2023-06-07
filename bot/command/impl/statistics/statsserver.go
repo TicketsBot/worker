@@ -3,8 +3,8 @@ package statistics
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/analytics-client"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -69,16 +69,22 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	})
 
 	// first response times
-	var firstResponseTime database.FirstResponseTimeData
+	var firstResponseTime analytics.TripleWindow
 	group.Go(func() (err error) {
-		firstResponseTime, err = dbclient.Client.FirstResponseTimeGuildView.Get(ctx.GuildId())
+		context, cancel := utils.ContextTimeout(time.Second * 3)
+		defer cancel()
+
+		firstResponseTime, err = dbclient.Analytics.GetFirstResponseTimeStats(context, ctx.GuildId())
 		return
 	})
 
 	// ticket duration
-	var ticketDuration database.TicketDurationData
+	var ticketDuration analytics.TripleWindow
 	group.Go(func() (err error) {
-		ticketDuration, err = dbclient.Client.TicketDurationView.Get(ctx.GuildId())
+		context, cancel := utils.ContextTimeout(time.Second * 3)
+		defer cancel()
+
+		ticketDuration, err = dbclient.Analytics.GetTicketDurationStats(context, ctx.GuildId())
 		return
 	})
 

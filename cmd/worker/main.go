@@ -57,6 +57,9 @@ func main() {
 
 	cache.Client = &pgCache
 
+	fmt.Println("Connected to cache, connect to clickhouse...")
+	dbclient.ConnectAnalytics()
+
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if config.Conf.Discord.ProxyUrl != "" {

@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type CloseCommand struct {
@@ -40,24 +41,33 @@ func (CloseCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoC
 	var reasons []string
 	var err error
 
+	// Get ticket
+	ticket, e := dbclient.Client.Tickets.GetByChannelAndGuild(data.ChannelId, data.GuildId.Value)
+	if e != nil {
+		sentry.Error(e) // TODO: Context
+		return nil
+	}
+
+	ctx, cancel := utils.ContextTimeout(time.Millisecond * 1500)
+	defer cancel()
+
 	// If there is no text provided by the user yet, and this is a ticket channel, we can use our materialised view to
 	// get the most common close reasons for that panel. Otherwise, perform a dynamic query to get the most common
 	// reasons for that text for all panels.
-	if len(value) > 0 {
-		reasons, err = dbclient.Client.CloseReason.GetCommon(data.GuildId.Value, value, 10)
-	} else {
-		// Get ticket
-		ticket, e := dbclient.Client.Tickets.GetByChannelAndGuild(data.ChannelId, data.GuildId.Value)
-		if e != nil {
-			sentry.Error(e) // TODO: Context
-			return nil
+	if len(value) == 0 {
+		var panelId *int
+		if ticket.Id != 0 {
+			panelId = ticket.PanelId
 		}
 
-		if ticket.Id == 0 {
-			reasons, err = dbclient.Client.CloseReason.GetCommon(data.GuildId.Value, value, 10)
-		} else {
-			reasons, err = dbclient.Client.TopCloseReasonsView.Get(ticket.GuildId, ticket.PanelId)
+		reasons, err = dbclient.Analytics.GetTopCloseReasons(ctx, data.GuildId.Value, panelId)
+	} else {
+		var panelId *int
+		if ticket.Id != 0 {
+			panelId = ticket.PanelId
 		}
+
+		reasons, err = dbclient.Analytics.GetTopCloseReasonsWithPrefix(ctx, data.GuildId.Value, panelId, value)
 	}
 
 	if err != nil {
