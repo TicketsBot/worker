@@ -40,6 +40,8 @@ github.com/ClickHouse/clickhouse-go/v2 v2.10.0/go.mod h1:teXfZNM90iQ99Jnuht+dxQX
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
 github.com/TicketsBot/analytics-client v0.0.0-20230607194720-b5c7f67e79f0 h1:iFC2/d/4QJijsZcqTayoFMYyLICad2I9J2UJsraZcZ8=
 github.com/TicketsBot/analytics-client v0.0.0-20230607194720-b5c7f67e79f0/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
+github.com/TicketsBot/analytics-client v0.0.0-20230607205416-3e7eb62e79ef h1:skeTba+BzCNTxSuFr4EfdBFrdmxXLY158ENmB7u5IUU=
+github.com/TicketsBot/analytics-client v0.0.0-20230607205416-3e7eb62e79ef/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
 github.com/TicketsBot/common v0.0.0-20230529131115-93fca32c2439 h1:vCi3YcLGAYMHhgCnxzo3/XArXUuKc4WPMq0zOq6ksKQ=
