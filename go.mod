@@ -3,7 +3,7 @@ module github.com/TicketsBot/worker
 go 1.18
 
 require (
-	github.com/TicketsBot/analytics-client v0.0.0-20230607205416-3e7eb62e79ef
+	github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20230529131115-93fca32c2439
 	github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394
