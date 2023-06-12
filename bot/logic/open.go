@@ -34,6 +34,11 @@ import (
 )
 
 func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
+	rootSpan := sentry.StartSpan(context.Background(), "Ticket open")
+	defer rootSpan.Finish()
+
+	span := sentry.StartSpan(rootSpan.Context(), "Check ticket limit")
+
 	// Make sure ticket count is within ticket limit
 	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
 	violatesTicketLimit, limit := getTicketLimit(ctx)
@@ -49,11 +54,17 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, fmt.Errorf("ticket limit reached")
 	}
 
+	span.Finish()
+
+	span = sentry.StartSpan(rootSpan.Context(), "Ticket ratelimit")
+
 	ok, err := redis.TakeTicketRateLimitToken(redis.Client, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
+
+	span.Finish()
 
 	if !ok {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenRatelimited)
@@ -61,6 +72,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// Ensure that the panel isn't disabled
+	span = sentry.StartSpan(rootSpan.Context(), "Check if panel is disabled")
 	if panel != nil && panel.ForceDisabled {
 		// Build premium command mention
 		var premiumCommand string
@@ -80,20 +92,25 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		return database.Ticket{}, nil
 	}
 
+	span.Finish()
+
 	if panel != nil && panel.Disabled {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOpenPanelDisabled)
 		return database.Ticket{}, nil
 	}
 
+	span = sentry.StartSpan(rootSpan.Context(), "Load settings")
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
+	span.Finish()
 
 	isThread := settings.UseThreads
 
 	// Check if the parent channel is an announcement channel
+	span = sentry.StartSpan(rootSpan.Context(), "Check if parent channel is announcement channel")
 	if isThread {
 		panelChannel, err := ctx.Worker().GetChannel(ctx.ChannelId())
 		if err != nil {
@@ -106,8 +123,10 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, nil
 		}
 	}
+	span.Finish()
 
 	// If we're using a panel, then we need to create the ticket in the specified category
+	span = sentry.StartSpan(rootSpan.Context(), "Get category")
 	var category uint64
 	if panel != nil && panel.TargetCategory != 0 {
 		category = panel.TargetCategory
@@ -119,9 +138,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			return database.Ticket{}, err
 		}
 	}
+	span.Finish()
 
 	useCategory := category != 0 && !isThread
 	if useCategory {
+		span := sentry.StartSpan(rootSpan.Context(), "Check if category exists")
 		// Check if the category still exists
 		_, err := ctx.Worker().GetChannel(category)
 		if err != nil {
@@ -135,6 +156,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				} // TODO: Else, set panel category to 0
 			}
 		}
+		span.Finish()
 	}
 
 	// Generate subject
@@ -151,71 +173,87 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// Channel count checks
-	channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
+	if !isThread {
+		span := sentry.StartSpan(rootSpan.Context(), "Check < 500 channels")
+		channels, _ := ctx.Worker().GetGuildChannels(ctx.GuildId())
 
-	// 500 guild limit check
-	if !isThread && countRealChannels(channels, 0) >= 500 {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
-		return database.Ticket{}, fmt.Errorf("channel limit reached")
-	}
+		// 500 guild limit check
+		if !isThread && countRealChannels(channels, 0) >= 500 {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
+			return database.Ticket{}, fmt.Errorf("channel limit reached")
+		}
 
-	// Make sure there's not > 50 channels in a category
-	if useCategory {
-		categoryChildrenCount := countRealChannels(channels, category)
+		span.Finish()
 
-		if categoryChildrenCount >= 50 {
-			// Try to use the overflow category if there is one
-			if settings.OverflowEnabled {
-				// If overflow is enabled, and the category id is nil, then use the root of the server
-				if settings.OverflowCategoryId == nil {
-					useCategory = false
-				} else {
-					category = *settings.OverflowCategoryId
+		// Make sure there's not > 50 channels in a category
+		if useCategory {
+			span := sentry.StartSpan(rootSpan.Context(), "Check < 50 channels in category")
+			categoryChildrenCount := countRealChannels(channels, category)
 
-					// Verify that the overflow category still exists
-					if _, err := ctx.Worker().GetChannel(category); err != nil {
-						if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
-							if err := dbclient.Client.Settings.SetOverflow(ctx.GuildId(), false, nil); err != nil {
-								ctx.HandleError(err)
-								return database.Ticket{}, err
+			if categoryChildrenCount >= 50 {
+				// Try to use the overflow category if there is one
+				if settings.OverflowEnabled {
+					// If overflow is enabled, and the category id is nil, then use the root of the server
+					if settings.OverflowCategoryId == nil {
+						useCategory = false
+					} else {
+						category = *settings.OverflowCategoryId
+
+						// Verify that the overflow category still exists
+						span := sentry.StartSpan(span.Context(), "Check if overflow category exists")
+						if _, err := ctx.Worker().GetChannel(category); err != nil {
+							if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
+								if err := dbclient.Client.Settings.SetOverflow(ctx.GuildId(), false, nil); err != nil {
+									ctx.HandleError(err)
+									return database.Ticket{}, err
+								}
 							}
+
+							ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+							return database.Ticket{}, err
 						}
 
-						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-						return database.Ticket{}, err
-					}
+						// Check that the overflow category still has space
+						overflowCategoryChildrenCount := countRealChannels(channels, *settings.OverflowCategoryId)
 
-					// Check that the overflow category still has space
-					overflowCategoryChildrenCount := countRealChannels(channels, *settings.OverflowCategoryId)
+						if overflowCategoryChildrenCount >= 50 {
+							ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+							return database.Ticket{}, fmt.Errorf("overflow category full")
+						}
 
-					if overflowCategoryChildrenCount >= 50 {
-						ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-						return database.Ticket{}, fmt.Errorf("overflow category full")
+						span.Finish()
 					}
+				} else {
+					ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+					return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 				}
-			} else {
-				ctx.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-				return database.Ticket{}, fmt.Errorf("category ticket limit reached")
 			}
+
+			span.Finish()
 		}
 	}
 
 	// Create channel
+	span = sentry.StartSpan(rootSpan.Context(), "Create ticket in database")
 	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId(), isThread)
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
+	span.Finish()
 
+	span = sentry.StartSpan(rootSpan.Context(), "Generate channel name")
 	name, err := GenerateChannelName(ctx, panel, ticketId, ctx.UserId(), nil)
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
+	span.Finish()
 
 	var ch channel.Channel
 	var joinMessageId *uint64
 	if isThread {
+		span = sentry.StartSpan(rootSpan.Context(), "Create thread")
 		ch, err = ctx.Worker().CreatePrivateThread(ctx.ChannelId(), name, uint16(settings.ThreadArchiveDuration), false)
 		if err != nil {
 			ctx.HandleError(err)
@@ -227,27 +265,35 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 			return database.Ticket{}, err
 		}
+		span.Finish()
 
 		// Join ticket
+		span = sentry.StartSpan(rootSpan.Context(), "Add user to thread")
 		if err := ctx.Worker().AddThreadMember(ch.Id, ctx.UserId()); err != nil {
 			ctx.HandleError(err)
 		}
+		span.Finish()
 
 		if settings.TicketNotificationChannel != nil {
+			span = sentry.StartSpan(rootSpan.Context(), "Send message to ticket notification channel")
 			data := BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ticketId, panel, nil, ctx.PremiumTier())
 
+			// TODO: Check if channel exists
 			if msg, err := ctx.Worker().CreateMessageComplex(*settings.TicketNotificationChannel, data.IntoCreateMessageData()); err == nil {
 				joinMessageId = &msg.Id
 			} else {
 				ctx.HandleError(err)
 			}
+			span.Finish()
 		}
 	} else {
+		span = sentry.StartSpan(rootSpan.Context(), "Build permission overwrites")
 		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
 		}
+		span.Finish()
 
 		data := rest.CreateChannelData{
 			Name:                 name,
@@ -260,6 +306,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			data.ParentId = category
 		}
 
+		span = sentry.StartSpan(rootSpan.Context(), "Create channel")
 		tmp, err := ctx.Worker().CreateGuildChannel(ctx.GuildId(), data)
 		if err != nil { // Bot likely doesn't have permission
 			ctx.HandleError(err)
@@ -271,6 +318,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 			return database.Ticket{}, err
 		}
+		span.Finish()
 
 		// TODO: Remove
 		if tmp.Id == 0 {
@@ -283,8 +331,6 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 	// Let the user know the ticket has been opened
 	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
-
-	ctx.Accept()
 
 	var panelId *int
 	if panel != nil {
@@ -304,25 +350,31 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		JoinMessageId:    joinMessageId,
 	}
 
+	span = sentry.StartSpan(rootSpan.Context(), "Send welcome message")
 	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData)
 	if err != nil {
 		ctx.HandleError(err)
 	}
+	span.Finish()
 
 	if welcomeMessageId != 0 {
 		ticket.WelcomeMessageId = &welcomeMessageId
 	}
 
 	// UpdateUser channel in DB
+	span = sentry.StartSpan(rootSpan.Context(), "Update ticket properties in database")
 	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, joinMessageId, panelId); err != nil {
 		ctx.HandleError(err)
 	}
+	span.Finish()
 
+	span = sentry.StartSpan(rootSpan.Context(), "Load guild metadata from database")
 	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
 	}
+	span.Finish()
 
 	// mentions
 	{
@@ -339,7 +391,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 					content += fmt.Sprintf("<@&%d>", *metadata.OnCallRole)
 				}
 
+				span := sentry.StartSpan(rootSpan.Context(), "Get teams from database")
 				teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
+				span.Finish()
 				if err != nil {
 					ctx.HandleError(err)
 				} else {
@@ -354,7 +408,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 
 		if panel != nil {
 			// roles
+			span := sentry.StartSpan(rootSpan.Context(), "Get panel role mentions from database")
 			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.PanelId)
+			span.Finish()
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
@@ -368,6 +424,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 			}
 
 			// user
+			span = sentry.StartSpan(rootSpan.Context(), "Get panel user mention setting from database")
 			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.PanelId)
 			if err != nil {
 				ctx.HandleError(err)
@@ -376,6 +433,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 					content += fmt.Sprintf("<@%d>", ctx.UserId())
 				}
 			}
+			span.Finish()
 		}
 
 		if content != "" {
@@ -383,6 +441,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 				content = content[:2000]
 			}
 
+			span := sentry.StartSpan(rootSpan.Context(), "Send ping message")
 			pingMessage, err := ctx.Worker().CreateMessageComplex(ch.Id, rest.CreateMessageData{
 				Content: content,
 				AllowedMentions: message.AllowedMention{
@@ -393,39 +452,31 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 					},
 				},
 			})
+			span.Finish()
 
 			if err != nil {
 				ctx.HandleError(err)
 			} else {
 				// error is likely to be a permission error
+				span := sentry.StartSpan(span.Context(), "Delete ping message")
 				_ = ctx.Worker().DeleteMessage(ch.Id, pingMessage.Id)
+				span.Finish()
 			}
 		}
 	}
 
 	prometheus.LogTicketCreated(ctx.GuildId())
+
+	span = sentry.StartSpan(rootSpan.Context(), "Increment statsd counters")
 	statsd.Client.IncrementKey(statsd.KeyTickets)
 	if panel == nil {
 		statsd.Client.IncrementKey(statsd.KeyOpenCommand)
 	}
+	span.Finish()
 
 	if ctx.PremiumTier() > premium.None {
 		go createWebhook(ctx.Worker(), ticketId, ctx.GuildId(), ch.Id)
 	}
-
-	// update cache
-	go func() {
-		// retrieve member
-		// GetGuildMember will cache if not already cached
-		if _, err := ctx.Worker().GetGuildMember(ctx.GuildId(), ctx.UserId()); err != nil {
-			ctx.HandleError(err)
-		}
-
-		// cache user
-		if _, err := ctx.Worker().GetUser(ctx.UserId()); err != nil {
-			ctx.HandleError(err)
-		}
-	}()
 
 	return ticket, nil
 }

@@ -31,9 +31,10 @@ func main() {
 
 	fmt.Println("Connecting to Sentry...")
 	if err := sentry.Initialise(sentry.Options{
-		Dsn:     config.Conf.SentryDsn,
-		Project: "tickets-bot",
-		Debug:   config.Conf.DebugMode != "",
+		Dsn:              config.Conf.Sentry.Dsn,
+		Debug:            config.Conf.DebugMode != "",
+		EnableTracing:    config.Conf.Sentry.UseTracing,
+		TracesSampleRate: config.Conf.Sentry.TracingSampleRate,
 	}); err != nil {
 		fmt.Println(err.Error())
 	}

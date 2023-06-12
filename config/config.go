@@ -5,7 +5,6 @@ import (
 )
 
 type Config struct {
-	SentryDsn string `env:"WORKER_SENTRY_DSN"`
 	DebugMode string `env:"WORKER_DEBUG"`
 
 	Discord struct {
@@ -80,6 +79,12 @@ type Config struct {
 		Address string `env:"WORKER_STATSD_ADDR"`
 		Prefix  string `env:"WORKER_STATSD_PREFIX"`
 	}
+
+	Sentry struct {
+		Dsn               string  `env:"DSN"`
+		UseTracing        bool    `env:"TRACING_ENABLED"`
+		TracingSampleRate float64 `env:"TRACING_SAMPLE_RATE"`
+	} `envPrefix:"WORKER_SENTRY_"`
 }
 
 var Conf Config
