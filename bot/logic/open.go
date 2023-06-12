@@ -275,8 +275,11 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		span.Finish()
 
 		if settings.TicketNotificationChannel != nil {
-			span = sentry.StartSpan(rootSpan.Context(), "Send message to ticket notification channel")
+			span := sentry.StartSpan(rootSpan.Context(), "Send message to ticket notification channel")
+
+			buildSpan := sentry.StartSpan(span.Context(), "Build ticket notification message")
 			data := BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ticketId, panel, nil, ctx.PremiumTier())
+			buildSpan.Finish()
 
 			// TODO: Check if channel exists
 			if msg, err := ctx.Worker().CreateMessageComplex(*settings.TicketNotificationChannel, data.IntoCreateMessageData()); err == nil {
@@ -330,7 +333,9 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	}
 
 	// Let the user know the ticket has been opened
+	span = sentry.StartSpan(rootSpan.Context(), "Reply to interaction")
 	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
+	span.Finish()
 
 	var panelId *int
 	if panel != nil {
