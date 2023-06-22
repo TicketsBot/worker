@@ -50,7 +50,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// Check if thread
-	ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+	ch, err := ctx.Channel()
 	if err != nil {
 		ctx.HandleError(err)
 		return

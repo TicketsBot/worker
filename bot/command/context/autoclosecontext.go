@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -84,6 +85,15 @@ func (ctx *AutoCloseContext) ReplyWith(response command.MessageResponse) (messag
 
 func (ctx *AutoCloseContext) Accept() {}
 func (ctx *AutoCloseContext) Reject() {}
+
+func (ctx *AutoCloseContext) Channel() (channel.PartialChannel, error) {
+	ch, err := ctx.Worker().GetChannel(ctx.channelId)
+	if err != nil {
+		return channel.PartialChannel{}, err
+	}
+
+	return ch.ToPartialChannel(), nil
+}
 
 func (ctx *AutoCloseContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.guildId)

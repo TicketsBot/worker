@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -120,6 +121,10 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 func (ctx *SlashCommandContext) Accept() {}
 
 func (ctx *SlashCommandContext) Reject() {}
+
+func (ctx *SlashCommandContext) Channel() (channel.PartialChannel, error) {
+	return ctx.Interaction.Channel, nil
+}
 
 func (ctx *SlashCommandContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.GuildId())

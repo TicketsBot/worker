@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -135,6 +136,15 @@ func (ctx *DashboardContext) ReplyWith(response command.MessageResponse) (messag
 func (ctx *DashboardContext) Accept() {}
 func (ctx *DashboardContext) Reject() {}
 
+func (ctx *DashboardContext) Channel() (channel.PartialChannel, error) {
+	ch, err := ctx.Worker().GetChannel(ctx.channelId)
+	if err != nil {
+		return channel.PartialChannel{}, err
+	}
+
+	return ch.ToPartialChannel(), nil
+}
+
 func (ctx *DashboardContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.guildId)
 }
@@ -162,4 +172,3 @@ func (ctx *DashboardContext) IsBlacklisted() (bool, error) {
 	// if the command is not executed in a guild
 	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), member, permLevel)
 }
-

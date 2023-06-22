@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -113,6 +114,15 @@ func (ctx *MessageContext) Accept() {
 
 func (ctx *MessageContext) Reject() {
 	utils.ReactWithCross(ctx.worker, ctx.ChannelId(), ctx.Id)
+}
+
+func (ctx *MessageContext) Channel() (channel.PartialChannel, error) {
+	ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+	if err != nil {
+		return channel.PartialChannel{}, err
+	}
+
+	return ch.ToPartialChannel(), nil
 }
 
 func (ctx *MessageContext) Guild() (guild.Guild, error) {

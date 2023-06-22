@@ -42,8 +42,6 @@ github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e h1:tIN
 github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
-github.com/TicketsBot/common v0.0.0-20230612225808-635e11bec7a5 h1:7F4XqK1N0MWdmTKv/6rZ0i9ncKjQG8utIdQdmLFmZLA=
-github.com/TicketsBot/common v0.0.0-20230612225808-635e11bec7a5/go.mod h1:vGAGz/zhDl/ybhe++MarMX0qi1DzxJzdkdxjPm8Np50=
 github.com/TicketsBot/common v0.0.0-20230612230051-68ef27d82d89 h1:vK8lNrTd4l7ZZyHoTBsudUQSV6FuKfC8xU1fXdTw2jY=
 github.com/TicketsBot/common v0.0.0-20230612230051-68ef27d82d89/go.mod h1:vGAGz/zhDl/ybhe++MarMX0qi1DzxJzdkdxjPm8Np50=
 github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394 h1:tt6L1MuZNSrB41EHBR3HAug7PwHTy9TLoyArxtYtYqE=
@@ -382,8 +380,10 @@ github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6po
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.13.0/go.mod h1:YbFCdg8HfsridGWAh22vktObvhZbQsZXe4/zB0OKkWU=
 github.com/rs/zerolog v1.15.0/go.mod h1:xYTKnLHcpfU2225ny5qZjxnj9NvkumZYjJHlAThCjNc=
-github.com/rxdn/gdl v0.0.0-20221019104728-7259dea7ce39 h1:/3Fpouec79C41JrsriXVjdeOU0WzOqrgLBQ8/C+J7do=
-github.com/rxdn/gdl v0.0.0-20221019104728-7259dea7ce39/go.mod h1:HtxfLp4OaoPoDJHQ4JOx/QeLH2d40VgT3wNOf7ETsRE=
+github.com/rxdn/gdl v0.0.0-20230622170748-095220ce3875 h1:6ys+mdsUJumh9ooYCbnMKx9w9A8urZnqmDqTpcrX+As=
+github.com/rxdn/gdl v0.0.0-20230622170748-095220ce3875/go.mod h1:HtxfLp4OaoPoDJHQ4JOx/QeLH2d40VgT3wNOf7ETsRE=
+github.com/rxdn/gdl v0.0.0-20230622203314-5d90a36da892 h1:HB3GCcHE2UqPqCuA9I8SFJBxa5DkNCq4NhDXzCTHjBw=
+github.com/rxdn/gdl v0.0.0-20230622203314-5d90a36da892/go.mod h1:HtxfLp4OaoPoDJHQ4JOx/QeLH2d40VgT3wNOf7ETsRE=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/progressbar/v3 v3.8.2 h1:2kZJwZCpb+E/V79kGO7daeq+hUwUJW0A5QD1Wv455dA=
 github.com/schollz/progressbar/v3 v3.8.2/go.mod h1:9KHLdyuXczIsyStQwzvW8xiELskmX7fQMaZdN23nAv8=

@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/member"
@@ -140,6 +141,15 @@ func (ctx *PanelContext) ReplyWith(response command.MessageResponse) (message.Me
 
 func (ctx *PanelContext) Accept() {}
 func (ctx *PanelContext) Reject() {}
+
+func (ctx *PanelContext) Channel() (channel.PartialChannel, error) {
+	ch, err := ctx.Worker().GetChannel(ctx.channelId)
+	if err != nil {
+		return channel.PartialChannel{}, err
+	}
+
+	return ch.ToPartialChannel(), nil
+}
 
 func (ctx *PanelContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.guildId)

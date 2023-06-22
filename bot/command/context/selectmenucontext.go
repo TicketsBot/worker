@@ -11,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -111,6 +112,10 @@ func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg m
 func (ctx *SelectMenuContext) Accept() {}
 
 func (ctx *SelectMenuContext) Reject() {}
+
+func (ctx *SelectMenuContext) Channel() (channel.PartialChannel, error) {
+	return ctx.Interaction.Channel, nil
+}
 
 func (ctx *SelectMenuContext) Guild() (guild.Guild, error) {
 	return ctx.Worker().GetGuild(ctx.GuildId())

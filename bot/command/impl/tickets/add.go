@@ -68,7 +68,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	if ticket.IsThread {
 		if err := ctx.Worker().AddThreadMember(*ticket.ChannelId, userId); err != nil {
 			if err, ok := err.(request.RestError); ok && err.ApiError.Message == "Missing Access" {
-				ch, err := ctx.Worker().GetChannel(ctx.ChannelId())
+				ch, err := ctx.Channel()
 				if err != nil {
 					ctx.HandleError(err)
 					return

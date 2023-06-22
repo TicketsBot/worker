@@ -112,7 +112,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 	// Check if the parent channel is an announcement channel
 	span = sentry.StartSpan(rootSpan.Context(), "Check if parent channel is announcement channel")
 	if isThread {
-		panelChannel, err := ctx.Worker().GetChannel(ctx.ChannelId())
+		panelChannel, err := ctx.Channel()
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err

@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
@@ -55,6 +56,7 @@ type CommandContext interface {
 	GetColour(colour customisation.Colour) int
 
 	// Utility functions
+	Channel() (channel.PartialChannel, error)
 	Guild() (guild.Guild, error)
 	Member() (member.Member, error)
 	User() (user.User, error)
