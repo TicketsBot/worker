@@ -226,7 +226,7 @@ func (ctx *Context) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	shouldCacheGuild := ctx.Cache.GetOptions().Guilds
 
 	if shouldCacheEmoji && shouldCacheGuild {
-		if guild, found := ctx.Cache.GetGuild(guildId, false); found {
+		if guild, found := ctx.Cache.GetGuild(guildId); found {
 			return guild.Emojis, nil
 		}
 	}
@@ -274,7 +274,7 @@ func (ctx *Context) GetGuild(guildId uint64) (guild.Guild, error) {
 	shouldCache := ctx.Cache.GetOptions().Guilds
 
 	if shouldCache {
-		if cachedGuild, found := ctx.Cache.GetGuild(guildId, false); found {
+		if cachedGuild, found := ctx.Cache.GetGuild(guildId); found {
 			return cachedGuild, nil
 		}
 	}

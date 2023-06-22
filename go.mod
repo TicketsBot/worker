@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
-	github.com/TicketsBot/common v0.0.0-20230612230051-68ef27d82d89
+	github.com/TicketsBot/common v0.0.0-20230622204019-f2b12f59e76a
 	github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
@@ -15,7 +15,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.1
 	github.com/json-iterator/go v1.1.12
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rxdn/gdl v0.0.0-20230622203314-5d90a36da892
+	github.com/rxdn/gdl v0.0.0-20230622203838-cad65ada73f0
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.9.0
 	go.uber.org/atomic v1.10.0
