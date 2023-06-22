@@ -4,7 +4,7 @@ import "github.com/rxdn/gdl/gateway/payloads/events"
 
 var Listeners = map[events.EventType][]interface{}{
 	events.CHANNEL_DELETE:        {OnChannelDelete},
-	events.MESSAGE_CREATE:        {GetCommandListener(), OnMessage},
+	events.MESSAGE_CREATE:        {OnMessage},
 	events.GUILD_CREATE:          {OnGuildCreate},
 	events.GUILD_DELETE:          {OnGuildLeave},
 	events.GUILD_MEMBER_UPDATE:   {OnMemberUpdate},
