@@ -3,6 +3,7 @@ package tickets
 import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -33,7 +34,7 @@ func (c OpenCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (OpenCommand) Execute(ctx registry.CommandContext, providedSubject *string) {
+func (OpenCommand) Execute(ctx *context.SlashCommandContext, providedSubject *string) {
 	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)

@@ -96,10 +96,5 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 		return
 	}
 
-	if _, err = worker.GetGuildRoles(guildId); err != nil {
-		ctx.HandleError(err)
-		return
-	}
-
 	ctx.ReplyPlainPermanent("done")
 }

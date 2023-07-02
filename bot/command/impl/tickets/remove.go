@@ -45,7 +45,6 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Verify that the current channel is a real ticket
 	if ticket.UserId == 0 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
-		ctx.Reject()
 		return
 	}
 
@@ -58,7 +57,6 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Verify that the user is allowed to modify the ticket
 	if selfPermissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveNoPermission)
-		ctx.Reject()
 		return
 	}
 
@@ -77,7 +75,6 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	if permissionLevel > permcache.Everyone {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveCannotRemoveStaff)
-		ctx.Reject()
 		return
 	}
 

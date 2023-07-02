@@ -38,13 +38,6 @@ func DetermineMentionableType(ctx registry.CommandContext, id uint64) (Mentionab
 			return 0, false
 		}
 	} else {
-		// Prefer to check role first
-		if _, isRole := ctx.Worker().Cache.GetRoleInGuild(id, ctx.GuildId()); isRole {
-			return MentionableTypeRole, true
-		} else if u, err := ctx.Worker().GetUser(id); err == nil && u.Id != 0 {
-			return MentionableTypeUser, true
-		} else {
-			return 0, false
-		}
+		return 0, false
 	}
 }

@@ -33,7 +33,6 @@ func (c PrefixSetupCommand) GetExecutor() interface{} {
 func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 	if len(prefix) == 0 || len(prefix) > 8 || strings.Contains(prefix, " ") {
 		ctx.Reply(customisation.Red, i18n.TitleSetup, i18n.SetupPrefixInvalid)
-		ctx.Reject()
 		return
 	}
 
@@ -43,5 +42,4 @@ func (PrefixSetupCommand) Execute(ctx registry.CommandContext, prefix string) {
 	}
 
 	ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupPrefixComplete, prefix, prefix)
-	ctx.Accept()
 }

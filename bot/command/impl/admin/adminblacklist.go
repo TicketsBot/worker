@@ -80,5 +80,4 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		return
 	}
 
-	ctx.Accept()
 }

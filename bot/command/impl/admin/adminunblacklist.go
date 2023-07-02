@@ -43,6 +43,4 @@ func (AdminUnblacklistCommand) Execute(ctx registry.CommandContext, raw string) 
 		ctx.HandleError(err)
 		return
 	}
-
-	ctx.Accept()
 }

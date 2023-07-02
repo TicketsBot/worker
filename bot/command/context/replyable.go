@@ -9,7 +9,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/logic"
-	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
@@ -143,20 +142,25 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 
 	if restError, ok := err.(request.RestError); ok {
 		if restError.ApiError.Message == "Missing Permissions" { // Override for missing permissions
-			missingPermissions, err := r.findMissingPermissions()
-			if err == nil {
-				if len(missingPermissions) > 0 {
-					message = "I am missing the following permissions required to perform this action:\n"
-					for _, perm := range missingPermissions {
-						message += fmt.Sprintf("• `%s`\n", perm.String())
-					}
+			interactionCtx, ok := r.ctx.(registry.InteractionContext)
+			if ok {
+				missingPermissions, err := findMissingPermissions(interactionCtx)
+				if err == nil {
+					if len(missingPermissions) > 0 {
+						message = "I am missing the following permissions required to perform this action:\n"
+						for _, perm := range missingPermissions {
+							message += fmt.Sprintf("• `%s`\n", perm.String())
+						}
 
-					message += "\nPlease assign these permissions to the bot, or alternatively, the `Administrator` permission and try again."
+						message += "\nPlease assign these permissions to the bot, or alternatively, the `Administrator` permission and try again."
+					} else {
+						message = formatDiscordError(restError, eventId)
+					}
 				} else {
+					sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 					message = formatDiscordError(restError, eventId)
 				}
 			} else {
-				sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 				message = formatDiscordError(restError, eventId)
 			}
 		} else if restError.ApiError.Message == "CHANNEL_PARENT_INVALID" {
@@ -201,13 +205,8 @@ func formatDiscordError(restError request.RestError, eventId string) string {
 		restError.Error(), eventId)
 }
 
-func (r *Replyable) findMissingPermissions() ([]permission.Permission, error) {
-	permissions, err := permissionwrapper.GetEffectivePermissions(r.ctx.Worker(), r.ctx.GuildId(), r.ctx.Worker().BotId)
-	if err != nil {
-		return nil, err
-	}
-
-	if permission.HasPermissionRaw(permissions, permission.Administrator) {
+func findMissingPermissions(ctx registry.InteractionContext) ([]permission.Permission, error) {
+	if permission.HasPermissionRaw(ctx.InteractionMetadata().AppPermissions, permission.Administrator) {
 		return nil, nil
 	}
 
@@ -218,7 +217,7 @@ func (r *Replyable) findMissingPermissions() ([]permission.Permission, error) {
 
 	var missingPermissions []permission.Permission
 	for _, requiredPermission := range requiredPermissions {
-		if !permission.HasPermissionRaw(permissions, requiredPermission) {
+		if !permission.HasPermissionRaw(ctx.InteractionMetadata().AppPermissions, requiredPermission) {
 			missingPermissions = append(missingPermissions, requiredPermission)
 		}
 	}

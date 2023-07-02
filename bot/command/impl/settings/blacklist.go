@@ -46,7 +46,6 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistNoMembers, utils.ToSlice(usageEmbed))
-		ctx.Reject()
 		return
 	}
 
@@ -59,7 +58,6 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 		if ctx.UserId() == id {
 			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistSelf, utils.ToSlice(usageEmbed))
-			ctx.Reject()
 			return
 		}
 
@@ -71,14 +69,12 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 		if permLevel > permission.Everyone {
 			ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageBlacklistStaff, utils.ToSlice(usageEmbed))
-			ctx.Reject()
 			return
 		}
 
 		isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), id)
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			ctx.Reject()
 			return
 		}
 

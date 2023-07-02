@@ -176,25 +176,21 @@ func executeCommand(
 		}
 
 		if properties.PermissionLevel > permLevel {
-			interactionContext.Reject()
 			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.AdminOnly && !utils.IsBotAdmin(interactionContext.UserId()) {
-			interactionContext.Reject()
 			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerOnly)
 			return
 		}
 
 		if properties.HelperOnly && !utils.IsBotHelper(interactionContext.UserId()) {
-			interactionContext.Reject()
 			interactionContext.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return
 		}
 
 		if properties.PremiumOnly && premiumLevel == premium.None {
-			interactionContext.Reject()
 			interactionContext.Reply(customisation.Red, i18n.TitlePremiumOnly, i18n.MessagePremium)
 			return
 		}
@@ -215,7 +211,6 @@ func executeCommand(
 		fn := reflect.TypeOf(cmd.GetExecutor())
 		if len(args) != fn.NumIn()-1 { // - 1 since command context is provided
 			interactionContext.ReplyRaw(customisation.Red, "Error", "Argument count mismatch: Try creating slash commands again")
-			interactionContext.Reject()
 			return
 		}
 

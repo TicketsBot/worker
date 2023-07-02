@@ -42,7 +42,6 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Test valid ticket channel
 	if ticket.Id == 0 || ticket.ChannelId == nil {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
-		ctx.Reject()
 		return
 	}
 
@@ -55,7 +54,6 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Verify that the user is allowed to modify the ticket
 	if permissionLevel == permcache.Everyone && ticket.UserId != ctx.UserId() {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageAddNoPermission)
-		ctx.Reject()
 		return
 	}
 

@@ -15,7 +15,6 @@ import (
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
-	"github.com/TicketsBot/worker/bot/permissionwrapper"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -33,7 +32,7 @@ import (
 	"time"
 )
 
-func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
+func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	rootSpan := sentry.StartSpan(context.Background(), "Ticket open")
 	defer rootSpan.Finish()
 
@@ -291,7 +290,7 @@ func OpenTicket(ctx registry.CommandContext, panel *database.Panel, subject stri
 		}
 	} else {
 		span = sentry.StartSpan(rootSpan.Context(), "Build permission overwrites")
-		overwrites, err := CreateOverwrites(ctx.Worker(), ctx.GuildId(), ctx.UserId(), ctx.Worker().BotId, panel)
+		overwrites, err := CreateOverwrites(ctx, ctx.UserId(), panel)
 		if err != nil {
 			ctx.HandleError(err)
 			return database.Ticket{}, err
@@ -556,10 +555,10 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 }
 
-func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, panel *database.Panel, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
+func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *database.Panel, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
 	overwrites := []channel.PermissionOverwrite{ // @everyone
 		{
-			Id:    guildId,
+			Id:    ctx.GuildId(),
 			Type:  channel.PermissionTypeRole,
 			Allow: 0,
 			Deny:  permission.BuildPermissions(permission.ViewChannel),
@@ -567,7 +566,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	}
 
 	// Build permissions
-	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(guildId)
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +577,7 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 	}
 
 	// Create list of members & roles who should be added to the ticket
-	allowedUsers, allowedRoles, err := getAllowedUsersRoles(guildId, selfId, panel)
+	allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.Worker().BotId, panel)
 	if err != nil {
 		return nil, err
 	}
@@ -588,8 +587,8 @@ func CreateOverwrites(worker *worker.Context, guildId, userId, selfId uint64, pa
 		copy(allow, StandardPermissions[:]) // Do not append to StandardPermissions
 
 		// Give ourselves permissions to create webhooks
-		if member == selfId {
-			if permissionwrapper.HasPermissions(worker, guildId, selfId, permission.ManageWebhooks) {
+		if member == ctx.Worker().BotId {
+			if permission.HasPermissionRaw(ctx.InteractionMetadata().AppPermissions, permission.ManageWebhooks) {
 				allow = append(allow, permission.ManageWebhooks)
 			}
 		}

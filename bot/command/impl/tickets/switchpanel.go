@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -39,7 +40,7 @@ func (c SwitchPanelCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
+func (SwitchPanelCommand) Execute(ctx *context.SlashCommandContext, panelId int) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
@@ -50,7 +51,6 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 || ticket.ChannelId == nil {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
-		ctx.Reject()
 		return
 	}
 
@@ -174,7 +174,7 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 	// Calculate new channel permissions
 	var overwrites []channel.PermissionOverwrite
 	if claimer == 0 {
-		overwrites, err = logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, &panel, members...)
+		overwrites, err = logic.CreateOverwrites(ctx, ticket.UserId, &panel, members...)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -189,7 +189,7 @@ func (SwitchPanelCommand) Execute(ctx registry.CommandContext, panelId int) {
 		// GenerateClaimedOverwrites returns nil if the permissions are the same as an unclaimed ticket
 		// so if this is the case, we still need to calculate permissions
 		if overwrites == nil {
-			overwrites, err = logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, &panel, members...)
+			overwrites, err = logic.CreateOverwrites(ctx, ticket.UserId, &panel, members...)
 		}
 	}
 

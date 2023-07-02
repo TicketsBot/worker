@@ -46,7 +46,6 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageAddSupportNoMembers, utils.ToSlice(usageEmbed))
-		ctx.Reject()
 		return
 	}
 

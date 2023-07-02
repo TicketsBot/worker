@@ -33,7 +33,6 @@ func (c WelcomeMessageSetupCommand) GetExecutor() interface{} {
 func (WelcomeMessageSetupCommand) Execute(ctx registry.CommandContext, message string) {
 	if len(message) > 1024 {
 		ctx.Reply(customisation.Red, i18n.TitleSetup, i18n.SetupWelcomeMessageInvalid)
-		ctx.Reject()
 		return
 	}
 
@@ -43,5 +42,4 @@ func (WelcomeMessageSetupCommand) Execute(ctx registry.CommandContext, message s
 	}
 
 	ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupWelcomeMessageComplete)
-	ctx.Accept()
 }

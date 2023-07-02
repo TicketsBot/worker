@@ -11,6 +11,7 @@ import (
 	"github.com/rxdn/gdl/objects/auditlog"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
 	"time"
 )
@@ -42,6 +43,15 @@ func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
 
 		if err := dbclient.Client.GuildLeaveTime.Delete(e.Guild.Id); err != nil {
 			sentry.Error(err)
+		}
+
+		// Add roles with Administrator permission as bot admins by default
+		for _, role := range e.Roles {
+			if permission.HasPermissionRaw(role.Permissions, permission.Administrator) {
+				if err := dbclient.Client.RolePermissions.AddAdmin(e.Guild.Id, role.Id); err != nil { // TODO: Bulk
+					sentry.Error(err)
+				}
+			}
 		}
 	}
 }

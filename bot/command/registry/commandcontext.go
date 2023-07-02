@@ -13,6 +13,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 )
@@ -43,10 +44,6 @@ type CommandContext interface {
 	ReplyPlain(content string)
 	ReplyPlainPermanent(content string)
 
-	// No functionality on interactions, check / cross reaction on messages
-	Accept()
-	Reject()
-
 	SelectValidEmoji(customEmoji customisation.CustomEmoji, fallback string) *emoji.Emoji
 
 	HandleError(err error)
@@ -62,4 +59,9 @@ type CommandContext interface {
 	User() (user.User, error)
 
 	IsBlacklisted() (bool, error)
+}
+
+type InteractionContext interface {
+	CommandContext
+	InteractionMetadata() interaction.InteractionMetadata
 }

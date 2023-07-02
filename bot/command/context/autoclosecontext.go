@@ -83,9 +83,6 @@ func (ctx *AutoCloseContext) ReplyWith(response command.MessageResponse) (messag
 	return message.Message{}, nil
 }
 
-func (ctx *AutoCloseContext) Accept() {}
-func (ctx *AutoCloseContext) Reject() {}
-
 func (ctx *AutoCloseContext) Channel() (channel.PartialChannel, error) {
 	ch, err := ctx.Worker().GetChannel(ctx.channelId)
 	if err != nil {

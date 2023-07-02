@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"github.com/TicketsBot/common/chatrelay"
-	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -43,12 +42,12 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}
 
-		permLevel, err := permission.GetPermissionLevel(utils.ToRetriever(worker), e.Member, e.GuildId)
+		isStaff, err := isStaff(e, ticket)
 		if err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		} else {
 			// set ticket last message, for autoclose
-			if err := updateLastMessage(worker, e, ticket, permLevel); err != nil {
+			if err := updateLastMessage(e, ticket, isStaff); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 
@@ -57,7 +56,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 			e.Member.User = e.Author
 			if err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
-			} else if permLevel > permission.Everyone { // check the user is staff
+			} else if isStaff { // check the user is staff
 				// We don't have to check for previous responses due to ON CONFLICT DO NOTHING
 				if err := dbclient.Client.FirstResponseTime.Set(e.GuildId, e.Author.Id, ticket.Id, time.Now().Sub(ticket.OpenTime)); err != nil {
 					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
@@ -85,7 +84,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 	}
 }
 
-func updateLastMessage(worker *worker.Context, msg *events.MessageCreate, ticket database.Ticket, permissionLevel permission.PermissionLevel) error {
+func updateLastMessage(msg *events.MessageCreate, ticket database.Ticket, isStaff bool) error {
 	// If last message was sent by staff, don't reset the timer
 	lastMessage, err := dbclient.Client.TicketLastMessage.Get(ticket.GuildId, ticket.Id)
 	if err != nil {
@@ -103,9 +102,28 @@ func updateLastMessage(worker *worker.Context, msg *events.MessageCreate, ticket
 	}
 
 	// If the last message *and* this message were sent by staff members, then do not reset the timer
-	if lastMessage.UserIsStaff && permissionLevel > permission.Everyone {
+	if lastMessage.UserIsStaff && isStaff {
 		return nil
 	}
 
-	return dbclient.Client.TicketLastMessage.Set(ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, permissionLevel > permission.Everyone)
+	return dbclient.Client.TicketLastMessage.Set(ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, isStaff)
+}
+
+// This method should not be used for anything requiring elevated privileges
+func isStaff(msg *events.MessageCreate, ticket database.Ticket) (bool, error) {
+	// If the user is the ticket opener, they are not staff
+	if msg.Author.Id == ticket.UserId {
+		return false, nil
+	}
+
+	members, err := dbclient.Client.TicketMembers.Get(ticket.GuildId, ticket.Id)
+	if err != nil {
+		return false, err
+	}
+
+	if !utils.Contains(members, msg.Author.Id) {
+		return false, nil
+	}
+
+	return true, nil
 }

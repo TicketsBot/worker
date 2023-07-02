@@ -10,7 +10,7 @@ import (
 )
 
 func HasPermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint64, permissions ...permission.Permission) bool {
-	sum, err := GetEffectivePermissionsChannel(ctx, guildId, userId, channelId)
+	sum, err := getEffectivePermissionsChannel(ctx, guildId, userId, channelId)
 	if err != nil {
 		return false
 	}
@@ -32,7 +32,7 @@ func HasPermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint6
 }
 
 func HasPermissions(ctx *worker.Context, guildId, userId uint64, permissions ...permission.Permission) bool {
-	sum, err := GetEffectivePermissions(ctx, guildId, userId)
+	sum, err := getEffectivePermissions(ctx, guildId, userId)
 	if err != nil {
 		sentry.Error(err)
 		return false
@@ -54,10 +54,10 @@ func HasPermissions(ctx *worker.Context, guildId, userId uint64, permissions ...
 	return hasPermission
 }
 
-func GetAllPermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint64) []permission.Permission {
+func getAllPermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint64) []permission.Permission {
 	permissions := make([]permission.Permission, 0)
 
-	sum, err := GetEffectivePermissionsChannel(ctx, guildId, userId, channelId)
+	sum, err := getEffectivePermissionsChannel(ctx, guildId, userId, channelId)
 	if err != nil {
 		sentry.Error(err)
 		return permissions
@@ -72,10 +72,10 @@ func GetAllPermissionsChannel(ctx *worker.Context, guildId, userId, channelId ui
 	return permissions
 }
 
-func GetAllPermissions(ctx *worker.Context, guildId, userId uint64) []permission.Permission {
+func getAllPermissions(ctx *worker.Context, guildId, userId uint64) []permission.Permission {
 	permissions := make([]permission.Permission, 0)
 
-	sum, err := GetEffectivePermissions(ctx, guildId, userId)
+	sum, err := getEffectivePermissions(ctx, guildId, userId)
 	if err != nil {
 		sentry.Error(err)
 		return permissions
@@ -90,42 +90,28 @@ func GetAllPermissions(ctx *worker.Context, guildId, userId uint64) []permission
 	return permissions
 }
 
-func GetEffectivePermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint64) (uint64, error) {
-	permissions, err := GetBasePermissions(ctx, guildId)
+func getEffectivePermissionsChannel(ctx *worker.Context, guildId, userId, channelId uint64) (uint64, error) {
+	permissions, err := getBasePermissions(ctx, guildId)
 	if err != nil {
 		return 0, err
 	}
 
-	permissions, err = GetGuildTotalRolePermissions(ctx, guildId, userId, permissions)
+	permissions, err = getGuildTotalRolePermissions(ctx, guildId, userId, permissions)
 	if err != nil {
 		return 0, err
 	}
 
-	permissions, err = GetChannelBasePermissions(ctx, guildId, channelId, permissions)
+	permissions, err = getChannelBasePermissions(ctx, guildId, channelId, permissions)
 	if err != nil {
 		return 0, err
 	}
 
-	permissions, err = GetChannelTotalRolePermissions(ctx, guildId, userId, channelId, permissions)
+	permissions, err = getChannelTotalRolePermissions(ctx, guildId, userId, channelId, permissions)
 	if err != nil {
 		return 0, err
 	}
 
-	permissions, err = GetChannelMemberPermissions(ctx, userId, channelId, permissions)
-	if err != nil {
-		return 0, err
-	}
-
-	return permissions, nil
-}
-
-func GetEffectivePermissions(ctx *worker.Context, guildId, userId uint64) (uint64, error) {
-	permissions, err := GetBasePermissions(ctx, guildId)
-	if err != nil {
-		return 0, err
-	}
-
-	permissions, err = GetGuildTotalRolePermissions(ctx, guildId, userId, permissions)
+	permissions, err = getChannelMemberPermissions(ctx, userId, channelId, permissions)
 	if err != nil {
 		return 0, err
 	}
@@ -133,7 +119,21 @@ func GetEffectivePermissions(ctx *worker.Context, guildId, userId uint64) (uint6
 	return permissions, nil
 }
 
-func GetChannelMemberPermissions(ctx *worker.Context, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
+func getEffectivePermissions(ctx *worker.Context, guildId, userId uint64) (uint64, error) {
+	permissions, err := getBasePermissions(ctx, guildId)
+	if err != nil {
+		return 0, err
+	}
+
+	permissions, err = getGuildTotalRolePermissions(ctx, guildId, userId, permissions)
+	if err != nil {
+		return 0, err
+	}
+
+	return permissions, nil
+}
+
+func getChannelMemberPermissions(ctx *worker.Context, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	ch, err := ctx.GetChannel(channelId)
 	if err != nil {
 		return 0, err
@@ -149,7 +149,7 @@ func GetChannelMemberPermissions(ctx *worker.Context, userId, channelId uint64, 
 	return initialPermissions, nil
 }
 
-func GetChannelTotalRolePermissions(ctx *worker.Context, guildId, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
+func getChannelTotalRolePermissions(ctx *worker.Context, guildId, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	member, err := ctx.GetGuildMember(guildId, userId)
 	if err != nil {
 		return 0, err
@@ -187,7 +187,7 @@ func GetChannelTotalRolePermissions(ctx *worker.Context, guildId, userId, channe
 	return initialPermissions, nil
 }
 
-func GetChannelBasePermissions(ctx *worker.Context, guildId, channelId uint64, initialPermissions uint64) (uint64, error) {
+func getChannelBasePermissions(ctx *worker.Context, guildId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	roles, err := ctx.GetGuildRoles(guildId)
 	if err != nil {
 		return 0, err
@@ -221,7 +221,7 @@ func GetChannelBasePermissions(ctx *worker.Context, guildId, channelId uint64, i
 	return initialPermissions, nil
 }
 
-func GetGuildTotalRolePermissions(ctx *worker.Context, guildId, userId uint64, initialPermissions uint64) (uint64, error) {
+func getGuildTotalRolePermissions(ctx *worker.Context, guildId, userId uint64, initialPermissions uint64) (uint64, error) {
 	member, err := ctx.GetGuildMember(guildId, userId)
 	if err != nil {
 		return 0, err
@@ -243,7 +243,7 @@ func GetGuildTotalRolePermissions(ctx *worker.Context, guildId, userId uint64, i
 	return initialPermissions, nil
 }
 
-func GetBasePermissions(ctx *worker.Context, guildId uint64) (uint64, error) {
+func getBasePermissions(ctx *worker.Context, guildId uint64) (uint64, error) {
 	roles, err := ctx.GetGuildRoles(guildId)
 	if err != nil {
 		return 0, err

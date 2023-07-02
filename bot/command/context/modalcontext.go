@@ -132,10 +132,6 @@ func (ctx *ModalContext) ReplyWith(response command.MessageResponse) (msg messag
 	return
 }
 
-func (ctx *ModalContext) Accept() {}
-
-func (ctx *ModalContext) Reject() {}
-
 func (ctx *ModalContext) Channel() (channel.PartialChannel, error) {
 	return ctx.Interaction.Channel, nil
 }
@@ -193,4 +189,10 @@ func (ctx *ModalContext) IsBlacklisted() (bool, error) {
 	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
 	// if the command is not executed in a guild
 	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), utils.ValueOrZero(ctx.Interaction.Member), permLevel)
+}
+
+/// InteractionContext functions
+
+func (ctx *ModalContext) InteractionMetadata() interaction.InteractionMetadata {
+	return ctx.Interaction.InteractionMetadata
 }

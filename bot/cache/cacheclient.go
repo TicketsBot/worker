@@ -44,7 +44,7 @@ func Connect() (client cache.PgCache, err error) {
 		Users:       true,
 		Members:     true,
 		Channels:    true,
-		Roles:       true,
+		Roles:       false,
 		Emojis:      false,
 		VoiceStates: false,
 	})

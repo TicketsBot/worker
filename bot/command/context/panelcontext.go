@@ -139,9 +139,6 @@ func (ctx *PanelContext) ReplyWith(response command.MessageResponse) (message.Me
 	return msg, err
 }
 
-func (ctx *PanelContext) Accept() {}
-func (ctx *PanelContext) Reject() {}
-
 func (ctx *PanelContext) Channel() (channel.PartialChannel, error) {
 	ch, err := ctx.Worker().GetChannel(ctx.channelId)
 	if err != nil {

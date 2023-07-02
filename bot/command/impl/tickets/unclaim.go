@@ -4,6 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -30,7 +31,7 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (UnclaimCommand) Execute(ctx registry.CommandContext) {
+func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
@@ -41,7 +42,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
-		ctx.Reject()
 		return
 	}
 
@@ -60,7 +60,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	if whoClaimed == 0 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotClaimed)
-		ctx.Reject()
 		return
 	}
 
@@ -72,7 +71,6 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 
 	if permissionLevel < permission.Admin && ctx.UserId() != whoClaimed {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOnlyClaimerCanUnclaim)
-		ctx.Reject()
 		return
 	}
 
@@ -93,7 +91,7 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 		}
 	}
 
-	overwrites, err := logic.CreateOverwrites(ctx.Worker(), ctx.GuildId(), ticket.UserId, ctx.Worker().BotId, panel)
+	overwrites, err := logic.CreateOverwrites(ctx, ticket.UserId, panel)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -110,5 +108,4 @@ func (UnclaimCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	ctx.ReplyPermanent(customisation.Green, i18n.TitleUnclaimed, i18n.MessageUnclaimed)
-	ctx.Accept()
 }

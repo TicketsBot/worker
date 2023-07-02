@@ -46,5 +46,4 @@ func (AdminGetOwnerCommand) Execute(ctx registry.CommandContext, raw string) {
 	}
 
 	ctx.ReplyRaw(customisation.Green, ctx.GetMessage(i18n.Admin), fmt.Sprintf("`%s` is owned by <@%d> (%d)", guild.Name, guild.OwnerId, guild.OwnerId))
-	ctx.Accept()
 }

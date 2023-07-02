@@ -41,12 +41,10 @@ func (CategorySetupCommand) Execute(ctx registry.CommandContext, channelId uint6
 
 	if category.Type != channel.ChannelTypeGuildCategory {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.SetupCategoryInvalid)
-		ctx.Reject()
 		return
 	}
 
 	if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId(), category.Id); err == nil {
-		ctx.Accept()
 		ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupCategoryComplete, category.Name)
 	} else {
 		ctx.HandleError(err)

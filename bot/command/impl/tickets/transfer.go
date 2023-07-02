@@ -45,7 +45,6 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
-		ctx.Reject()
 		return
 	}
 
@@ -75,7 +74,6 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 
 	if permissionLevel < permission.Support {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageInvalidUser)
-		ctx.Reject()
 		return
 	}
 

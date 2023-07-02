@@ -402,7 +402,7 @@ func (ctx *Context) RemoveGuildBan(guildId, userId uint64) error {
 }
 
 func (ctx *Context) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
-	shouldCache := ctx.Cache.GetOptions().Guilds
+	shouldCache := ctx.Cache.GetOptions().Guilds && ctx.Cache.GetOptions().Roles
 	if shouldCache {
 		cached := ctx.Cache.GetGuildRoles(guildId)
 

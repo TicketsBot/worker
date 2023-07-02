@@ -30,5 +30,4 @@ func (c VoteCommand) GetExecutor() interface{} {
 
 func (VoteCommand) Execute(ctx registry.CommandContext) {
 	ctx.Reply(customisation.Green, i18n.TitleVote, i18n.MessageVote)
-	ctx.Accept()
 }

@@ -79,7 +79,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		panel = &p
 	}
 
-	ticket, err := logic.OpenTicket(ctx, panel, msg.Content, nil)
+	ticket, err := logic.OpenTicket(interaction, panel, msg.Content, nil)
 	if err != nil {
 		// Already handled
 		return
@@ -92,7 +92,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 			if err := addMessageSender(ctx, ticket, msg); err != nil {
 				ctx.HandleError(err)
 			}
-			
+
 			sendMovedMessage(ctx, ticket, msg)
 			if err := dbclient.Client.TicketMembers.Add(ticket.GuildId, ticket.Id, msg.Author.Id); err != nil {
 				ctx.HandleError(err)

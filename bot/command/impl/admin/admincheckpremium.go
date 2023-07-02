@@ -53,5 +53,4 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 	}
 
 	ctx.ReplyRaw(customisation.Green, ctx.GetMessage(i18n.Admin), fmt.Sprintf("`%s` (owner %d) has premium tier %d (src %s)", guild.Name, guild.OwnerId, tier, src.String()))
-	ctx.Accept()
 }

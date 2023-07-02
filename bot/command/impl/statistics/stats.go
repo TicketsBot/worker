@@ -42,5 +42,4 @@ func (StatsCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageInvalidArgument, utils.ToSlice(usageEmbed))
-	ctx.Reject()
 }

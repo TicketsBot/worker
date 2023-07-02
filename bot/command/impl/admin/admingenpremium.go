@@ -69,7 +69,6 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 	dmChannel, err := ctx.Worker().CreateDM(ctx.UserId())
 	if err != nil {
 		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Admin), err.Error())
-		ctx.Reject()
 		return
 	}
 
@@ -83,9 +82,6 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 	_, err = ctx.Worker().CreateMessage(dmChannel.Id, content)
 	if err != nil {
 		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Admin), err.Error())
-		ctx.Reject()
 		return
 	}
-
-	ctx.Accept()
 }

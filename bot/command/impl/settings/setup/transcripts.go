@@ -36,7 +36,6 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 	if _, err := ctx.Worker().GetChannel(channelId); err != nil {
 		if restError, ok := err.(request.RestError); ok && restError.IsClientError() {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.SetupTranscriptsInvalid, ctx.ChannelId)
-			ctx.Reject()
 		} else {
 			ctx.HandleError(err)
 		}
@@ -45,7 +44,6 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 	}
 
 	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.Ptr(channelId)); err == nil {
-		ctx.Accept()
 		ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupTranscriptsComplete, channelId)
 	} else {
 		ctx.HandleError(err)

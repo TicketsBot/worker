@@ -52,7 +52,6 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 	mentionableType, valid := context.DetermineMentionableType(ctx, id)
 	if !valid {
 		ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageRemoveAdminNoMembers, utils.ToSlice(usageEmbed))
-		ctx.Reject()
 		return
 	}
 
@@ -66,13 +65,11 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 		if guild.OwnerId == id {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageOwnerMustBeAdmin)
-			ctx.Reject()
 			return
 		}
 
 		if ctx.UserId() == id {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageRemoveStaffSelf)
-			ctx.Reject()
 			return
 		}
 

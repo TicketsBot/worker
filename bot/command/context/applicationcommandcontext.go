@@ -118,10 +118,6 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 	}
 }
 
-func (ctx *SlashCommandContext) Accept() {}
-
-func (ctx *SlashCommandContext) Reject() {}
-
 func (ctx *SlashCommandContext) Channel() (channel.PartialChannel, error) {
 	return ctx.Interaction.Channel, nil
 }
@@ -151,4 +147,10 @@ func (ctx *SlashCommandContext) IsBlacklisted() (bool, error) {
 	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
 	// if the command is not executed in a guild
 	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), utils.ValueOrZero(ctx.Interaction.Member), permLevel)
+}
+
+/// InteractionContext functions
+
+func (ctx *SlashCommandContext) InteractionMetadata() interaction.InteractionMetadata {
+	return ctx.Interaction.InteractionMetadata
 }

@@ -29,14 +29,16 @@ func main() {
 
 	config.Parse()
 
-	fmt.Println("Connecting to Sentry...")
-	if err := sentry.Initialise(sentry.Options{
-		Dsn:              config.Conf.Sentry.Dsn,
-		Debug:            config.Conf.DebugMode != "",
-		EnableTracing:    config.Conf.Sentry.UseTracing,
-		TracesSampleRate: config.Conf.Sentry.TracingSampleRate,
-	}); err != nil {
-		fmt.Println(err.Error())
+	if len(config.Conf.DebugMode) == 0 {
+		fmt.Println("Connecting to Sentry...")
+		if err := sentry.Initialise(sentry.Options{
+			Dsn:              config.Conf.Sentry.Dsn,
+			Debug:            config.Conf.DebugMode != "",
+			EnableTracing:    config.Conf.Sentry.UseTracing,
+			TracesSampleRate: config.Conf.Sentry.TracingSampleRate,
+		}); err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 
 	fmt.Println("Connected to Sentry, connect to Redis...")

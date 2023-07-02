@@ -110,7 +110,6 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		AddField("Average Ticket Duration (Weekly)", formatNullableTime(ticketDuration.Weekly), true)
 
 	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
-	ctx.Accept()
 }
 
 func formatNullableTime(duration *time.Duration) string {

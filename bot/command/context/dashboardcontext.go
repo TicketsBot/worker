@@ -133,9 +133,6 @@ func (ctx *DashboardContext) ReplyWith(response command.MessageResponse) (messag
 	return msg, err
 }
 
-func (ctx *DashboardContext) Accept() {}
-func (ctx *DashboardContext) Reject() {}
-
 func (ctx *DashboardContext) Channel() (channel.PartialChannel, error) {
 	ch, err := ctx.Worker().GetChannel(ctx.channelId)
 	if err != nil {
