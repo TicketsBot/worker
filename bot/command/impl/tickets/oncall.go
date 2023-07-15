@@ -33,7 +33,7 @@ func (c OnCallCommand) GetExecutor() interface{} {
 }
 
 func (OnCallCommand) Execute(ctx registry.CommandContext) {
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return

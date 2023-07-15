@@ -20,6 +20,7 @@ import (
 
 type PanelContext struct {
 	*Replyable
+	*StateCache
 	worker                     *worker.Context
 	guildId, channelId, userId uint64
 	premium                    premium.PremiumTier
@@ -41,6 +42,7 @@ func NewPanelContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.StateCache = NewStateCache(&ctx)
 	return ctx
 }
 

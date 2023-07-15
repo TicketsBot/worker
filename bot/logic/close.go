@@ -14,12 +14,9 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
-	"github.com/rxdn/gdl/objects/guild/emoji"
-	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
-	"strconv"
 	"time"
 )
 
@@ -58,7 +55,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 		return
 	}
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -120,12 +117,18 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 
 	success = true
 
-	// set close reason
-	if reason != nil {
-		if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, *reason); err != nil {
-			ctx.HandleError(err)
-			return
-		}
+	// set close reason + user
+	closeMetadata := database.CloseMetadata{
+		Reason: reason,
+	}
+
+	if member.User.Id != ctx.UserId() {
+		closeMetadata.ClosedBy = &member.User.Id
+	}
+
+	if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, closeMetadata); err != nil {
+		ctx.HandleError(err)
+		return
 	}
 
 	if ticket.IsThread {
@@ -206,16 +209,30 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		}
 	}
 
-	closeEmbed, closeComponents := buildCloseEmbed(ctx, ticket, settings, member, reason)
-
 	if archiveChannelExists && archiveChannelId != nil {
+		componentBuilders := [][]CloseEmbedElement{
+			{
+				TranscriptLinkElement(settings.StoreTranscripts),
+				ThreadLinkElement(ticket.IsThread && ticket.ChannelId != nil),
+			},
+		}
+
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx, ticket, member.User.Id, reason, nil, componentBuilders)
+
 		data := rest.CreateMessageData{
 			Embeds:     utils.Slice(closeEmbed),
 			Components: closeComponents,
 		}
 
-		if _, err := ctx.Worker().CreateMessageComplex(*archiveChannelId, data); err != nil {
+		msg, err := ctx.Worker().CreateMessageComplex(*archiveChannelId, data)
+		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
+		} else {
+			// Add message to archive
+			if err := dbclient.Client.ArchiveMessages.Set(ticket.GuildId, ticket.Id, *archiveChannelId, msg.Id); err != nil {
+				ctx.HandleError(err)
+				return
+			}
 		}
 	}
 
@@ -228,8 +245,6 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
-
-		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
 
 		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx.GuildId())
 		if err != nil {
@@ -246,10 +261,18 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 
 		statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
-		if feedbackEnabled && hasSentMessage {
-			closeEmbed.SetDescription("Please rate the quality of service received with the buttons below")
-			closeComponents = append(closeComponents, buildRatingActionRow(ticket))
+		componentBuilders := [][]CloseEmbedElement{
+			{
+				TranscriptLinkElement(settings.StoreTranscripts),
+				ThreadLinkElement(ticket.IsThread && ticket.ChannelId != nil),
+			},
+			{
+				FeedbackRowElement(feedbackEnabled && hasSentMessage),
+			},
 		}
+
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx, ticket, member.User.Id, reason, nil, componentBuilders)
+		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
 
 		data := rest.CreateMessageData{
 			Embeds:     utils.Slice(closeEmbed),
@@ -259,95 +282,6 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 		if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
-	}
-}
-
-func buildCloseEmbed(ctx registry.CommandContext, ticket database.Ticket, settings database.Settings, member member.Member, reason *string) (*embed.Embed, []component.Component) {
-	var formattedReason string
-	if reason == nil {
-		formattedReason = "No reason specified"
-	} else {
-		formattedReason = *reason
-		if len(formattedReason) > 1024 {
-			formattedReason = formattedReason[:1024]
-		}
-	}
-
-	var claimedBy string
-	{
-		claimUserId, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
-		if err != nil {
-			sentry.Error(err)
-		}
-
-		if claimUserId == 0 {
-			claimedBy = "Not claimed"
-		} else {
-			claimedBy = fmt.Sprintf("<@%d>", claimUserId)
-		}
-	}
-
-	// TODO: Translate titles
-	closeEmbed := embed.NewEmbed().
-		SetTitle("Ticket Closed").
-		SetColor(ctx.GetColour(customisation.Green)).
-		SetTimestamp(time.Now()).
-		AddField(formatTitle("Ticket ID", customisation.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
-		AddField(formatTitle("Opened By", customisation.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
-		AddField(formatTitle("Closed By", customisation.EmojiClose, ctx.Worker().IsWhitelabel), member.User.Mention(), true).
-		AddField(formatTitle("Open Time", customisation.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField(formatTitle("Claimed By", customisation.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true).
-		AddBlankField(true).
-		AddField(formatTitle("Reason", customisation.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
-
-	// Build action row
-	var transcriptEmoji *emoji.Emoji
-	if !ctx.Worker().IsWhitelabel {
-		transcriptEmoji = customisation.EmojiTranscript.BuildEmoji()
-	}
-
-	var threadEmoji *emoji.Emoji
-	if !ctx.Worker().IsWhitelabel {
-		threadEmoji = customisation.EmojiThread.BuildEmoji()
-	}
-
-	var transcriptButtons []component.Component
-	if settings.StoreTranscripts {
-		transcriptLink := fmt.Sprintf("https://panel.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
-
-		transcriptButtons = append(transcriptButtons, component.BuildButton(component.Button{
-			Label: "View Online Transcript",
-			Style: component.ButtonStyleLink,
-			Emoji: transcriptEmoji,
-			Url:   utils.Ptr(transcriptLink),
-		}))
-	}
-
-	if ticket.IsThread && ticket.ChannelId != nil {
-		transcriptButtons = append(transcriptButtons,
-			component.BuildButton(component.Button{
-				Label: "View Thread",
-				Style: component.ButtonStyleLink,
-				Emoji: threadEmoji,
-				Url:   utils.Ptr(fmt.Sprintf("https://discord.com/channels/%d/%d", ticket.GuildId, *ticket.ChannelId)),
-			}),
-		)
-	}
-
-	if len(transcriptButtons) == 0 {
-		return closeEmbed, nil
-	} else {
-		return closeEmbed, []component.Component{
-			component.BuildActionRow(transcriptButtons...),
-		}
-	}
-}
-
-func formatTitle(s string, emoji customisation.CustomEmoji, isWhitelabel bool) string {
-	if !isWhitelabel {
-		return fmt.Sprintf("%s %s", emoji, s)
-	} else {
-		return s
 	}
 }
 
@@ -390,30 +324,4 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 	}
 
 	return ch.Id, true
-}
-
-func buildRatingActionRow(ticket database.Ticket) component.Component {
-	buttons := make([]component.Component, 5)
-
-	for i := 1; i <= 5; i++ {
-		var style component.ButtonStyle
-		if i <= 2 {
-			style = component.ButtonStyleDanger
-		} else if i == 3 {
-			style = component.ButtonStylePrimary
-		} else {
-			style = component.ButtonStyleSuccess
-		}
-
-		buttons[i-1] = component.BuildButton(component.Button{
-			Label:    strconv.Itoa(i),
-			CustomId: fmt.Sprintf("rate_%d_%d_%d", ticket.GuildId, ticket.Id, i),
-			Style:    style,
-			Emoji: &emoji.Emoji{
-				Name: "⭐",
-			},
-		})
-	}
-
-	return component.BuildActionRow(buttons...)
 }

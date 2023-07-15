@@ -118,7 +118,7 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 }
 
 func updateChannelPermissions(ctx cmdregistry.CommandContext, id uint64, mentionableType context.MentionableType) {
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return

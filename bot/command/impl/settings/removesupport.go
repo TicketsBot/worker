@@ -44,7 +44,7 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 		Inline: false,
 	}
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return

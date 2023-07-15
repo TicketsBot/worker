@@ -25,6 +25,7 @@ import (
 type ModalContext struct {
 	*Replyable
 	*MessageComponentExtensions
+	*StateCache
 	worker          *worker.Context
 	Interaction     interaction.ModalSubmitInteraction
 	premium         premium.PremiumTier
@@ -48,6 +49,7 @@ func NewModalContext(
 
 	ctx.Replyable = NewReplyable(&ctx)
 	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
+	ctx.StateCache = NewStateCache(&ctx)
 	return &ctx
 }
 

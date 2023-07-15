@@ -118,7 +118,7 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 	e := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleAddAdmin, i18n.MessageAddAdminSuccess, nil)
 	ctx.Edit(command.NewEphemeralEmbedMessageResponse(e))
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return
