@@ -6,7 +6,7 @@ require (
 	github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20230702161316-9b2fa80535aa
-	github.com/TicketsBot/database v0.0.0-20230206184629-329da71f9394
+	github.com/TicketsBot/database v0.0.0-20230715182338-2e9789a42c47
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.8.1
@@ -88,8 +88,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.4 // indirect
-)
-
-replace (
-	github.com/TicketsBot/database => "../database"
 )
