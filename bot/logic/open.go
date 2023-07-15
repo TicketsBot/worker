@@ -99,7 +99,7 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 	}
 
 	span = sentry.StartSpan(rootSpan.Context(), "Load settings")
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err

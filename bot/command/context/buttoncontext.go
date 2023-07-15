@@ -24,6 +24,7 @@ import (
 type ButtonContext struct {
 	*Replyable
 	*MessageComponentExtensions
+	*StateCache
 	worker          *worker.Context
 	Interaction     interaction.MessageComponentInteraction
 	InteractionData interaction.ButtonInteractionData
@@ -49,6 +50,7 @@ func NewButtonContext(
 
 	ctx.Replyable = NewReplyable(&ctx)
 	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
+	ctx.StateCache = NewStateCache(&ctx)
 	return &ctx
 }
 

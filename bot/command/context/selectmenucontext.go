@@ -24,6 +24,7 @@ import (
 type SelectMenuContext struct {
 	*Replyable
 	*MessageComponentExtensions
+	*StateCache
 	worker          *worker.Context
 	Interaction     interaction.MessageComponentInteraction
 	InteractionData interaction.SelectMenuInteractionData
@@ -49,6 +50,7 @@ func NewSelectMenuContext(
 
 	ctx.Replyable = NewReplyable(&ctx)
 	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
+	ctx.StateCache = NewStateCache(&ctx)
 	return &ctx
 }
 

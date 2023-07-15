@@ -129,7 +129,7 @@ func (SwitchPanelCommand) Execute(ctx *context.SlashCommandContext, panelId int)
 	// If the ticket is a thread, we cannot update the permissions (possibly remove a small amount of  members in the
 	// future), or the parent channel (user may not have access to it. can you even move threads anyway?)
 	if ticket.IsThread {
-		settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+		settings, err := ctx.Settings()
 		if err != nil {
 			ctx.HandleError(err)
 			return

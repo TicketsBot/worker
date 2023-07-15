@@ -16,6 +16,7 @@ import (
 
 type AutoCloseContext struct {
 	*Replyable
+	*StateCache
 	worker                     *worker.Context
 	guildId, channelId, userId uint64
 	premium                    premium.PremiumTier
@@ -35,6 +36,7 @@ func NewAutoCloseContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.StateCache = NewStateCache(&ctx)
 	return &ctx
 }
 

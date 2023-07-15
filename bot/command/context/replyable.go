@@ -70,6 +70,10 @@ func (r *Replyable) ReplyWithEmbed(embed *embed.Embed) {
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
 }
 
+func (r *Replyable) ReplyWithEmbedAndComponents(embed *embed.Embed, components []component.Component) {
+	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(embed, components))
+}
+
 func (r *Replyable) ReplyWithEmbedPermanent(embed *embed.Embed) {
 	_, _ = r.ctx.ReplyWith(command.NewEmbedMessageResponse(embed))
 }
@@ -87,6 +91,11 @@ func (r *Replyable) ReplyWithFieldsPermanent(colour customisation.Colour, title,
 func (r *Replyable) ReplyRaw(colour customisation.Colour, title, content string) {
 	embed := r.buildEmbedRaw(colour, title, content)
 	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(embed))
+}
+
+func (r *Replyable) ReplyRawWithComponents(colour customisation.Colour, title, content string, components ...component.Component) {
+	embed := r.buildEmbedRaw(colour, title, content)
+	_, _ = r.ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(embed, components))
 }
 
 func (r *Replyable) ReplyRawPermanent(colour customisation.Colour, title, content string) {

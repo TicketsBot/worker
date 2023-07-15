@@ -43,7 +43,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	settings, err := dbclient.Client.Settings.Get(ctx.GuildId())
+	settings, err := ctx.Settings()
 	if err != nil {
 		ctx.HandleError(err)
 		return

@@ -20,6 +20,7 @@ import (
 
 type DashboardContext struct {
 	*Replyable
+	*StateCache
 	worker                     *worker.Context
 	guildId, channelId, userId uint64
 	premium                    premium.PremiumTier
@@ -39,6 +40,7 @@ func NewDashboardContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.StateCache = NewStateCache(&ctx)
 	return ctx
 }
 

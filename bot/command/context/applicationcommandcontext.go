@@ -22,6 +22,7 @@ import (
 
 type SlashCommandContext struct {
 	*Replyable
+	*StateCache
 	InteractionExtension
 	worker      *worker.Context
 	Interaction interaction.ApplicationCommandInteraction
@@ -49,6 +50,7 @@ func NewSlashCommandContext(
 	}
 
 	ctx.Replyable = NewReplyable(&ctx)
+	ctx.StateCache = NewStateCache(&ctx)
 	return ctx
 }
 

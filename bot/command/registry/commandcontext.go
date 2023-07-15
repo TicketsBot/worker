@@ -3,6 +3,7 @@ package registry
 import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -57,6 +58,7 @@ type CommandContext interface {
 	Guild() (guild.Guild, error)
 	Member() (member.Member, error)
 	User() (user.User, error)
+	Settings() (database.Settings, error)
 
 	IsBlacklisted() (bool, error)
 }
