@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -93,6 +94,19 @@ func getPremiumTier(worker *worker.Context, guildId uint64) (premium.PremiumTier
 }
 
 func doPropertiesChecks(guildId uint64, ctx cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
+	if properties.PermissionLevel > permission.Everyone {
+		permLevel, err := ctx.UserPermissionLevel()
+		if err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			return false, false
+		}
+
+		if permLevel < properties.PermissionLevel {
+			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
+			return false, false
+		}
+	}
+
 	if guildId == 0 && !properties.HasFlag(registry.DMsAllowed) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonGuildOnly)
 		return false, false

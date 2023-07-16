@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
@@ -26,7 +27,8 @@ func (h *ViewSurveyHandler) Matcher() matcher.Matcher {
 
 func (h *ViewSurveyHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:           registry.SumFlags(registry.GuildAllowed),
+		PermissionLevel: permission.Support,
 	}
 }
 

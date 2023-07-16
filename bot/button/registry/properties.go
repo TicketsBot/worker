@@ -1,7 +1,10 @@
 package registry
 
+import "github.com/TicketsBot/common/permission"
+
 type Properties struct {
-	Flags int
+	Flags           int
+	PermissionLevel permission.PermissionLevel
 }
 
 func (p *Properties) HasFlag(flag Flag) bool {
