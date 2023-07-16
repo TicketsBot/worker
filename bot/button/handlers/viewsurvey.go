@@ -32,10 +32,10 @@ func (h *ViewSurveyHandler) Properties() registry.Properties {
 	}
 }
 
-var viewSurveypattern = regexp.MustCompile(`view-survey-(\d+)-(\d+)`)
+var viewSurveyPattern = regexp.MustCompile(`view-survey-(\d+)-(\d+)`)
 
 func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
-	groups := viewSurveypattern.FindStringSubmatch(ctx.InteractionData.CustomId)
+	groups := viewSurveyPattern.FindStringSubmatch(ctx.InteractionData.CustomId)
 	if len(groups) != 3 {
 		return
 	}
