@@ -14,7 +14,6 @@ import (
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/rest"
 	"strconv"
-	"time"
 )
 
 type CloseEmbedElement func(worker *worker.Context, ticket database.Ticket) []component.Component
@@ -160,12 +159,15 @@ func BuildCloseEmbed(
 	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
 		SetColor(colour).
-		SetTimestamp(time.Now()).
 		AddField(formatTitle("Ticket ID", customisation.EmojiId, worker.IsWhitelabel), strconv.Itoa(ticket.Id), true).
 		AddField(formatTitle("Opened By", customisation.EmojiOpen, worker.IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
 		AddField(formatTitle("Closed By", customisation.EmojiClose, worker.IsWhitelabel), fmt.Sprintf("<@%d>", closedBy), true).
 		AddField(formatTitle("Open Time", customisation.EmojiOpenTime, worker.IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
 		AddField(formatTitle("Claimed By", customisation.EmojiClaim, worker.IsWhitelabel), claimedBy, true)
+
+	if ticket.CloseTime != nil {
+		closeEmbed.SetTimestamp(*ticket.CloseTime)
+	}
 
 	if rating == nil {
 		closeEmbed = closeEmbed.AddBlankField(true)

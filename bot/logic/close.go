@@ -116,6 +116,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 	}
 
 	success = true
+	ticket.CloseTime = utils.Ptr(time.Now())
 
 	// set close reason + user
 	closeMetadata := database.CloseMetadata{
