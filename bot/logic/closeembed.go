@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -17,10 +17,10 @@ import (
 	"time"
 )
 
-type CloseEmbedElement func(ctx registry.CommandContext, ticket database.Ticket) []component.Component
+type CloseEmbedElement func(worker *worker.Context, ticket database.Ticket) []component.Component
 
 func NoopElement() CloseEmbedElement {
-	return func(ctx registry.CommandContext, ticket database.Ticket) []component.Component {
+	return func(worker *worker.Context, ticket database.Ticket) []component.Component {
 		return nil
 	}
 }
@@ -30,9 +30,9 @@ func TranscriptLinkElement(condition bool) CloseEmbedElement {
 		return NoopElement()
 	}
 
-	return func(ctx registry.CommandContext, ticket database.Ticket) []component.Component {
+	return func(worker *worker.Context, ticket database.Ticket) []component.Component {
 		var transcriptEmoji *emoji.Emoji
-		if !ctx.Worker().IsWhitelabel {
+		if !worker.IsWhitelabel {
 			transcriptEmoji = customisation.EmojiTranscript.BuildEmoji()
 		}
 
@@ -52,9 +52,9 @@ func ThreadLinkElement(condition bool) CloseEmbedElement {
 		return NoopElement()
 	}
 
-	return func(ctx registry.CommandContext, ticket database.Ticket) []component.Component {
+	return func(worker *worker.Context, ticket database.Ticket) []component.Component {
 		var threadEmoji *emoji.Emoji
-		if !ctx.Worker().IsWhitelabel {
+		if !worker.IsWhitelabel {
 			threadEmoji = customisation.EmojiThread.BuildEmoji()
 		}
 
@@ -74,7 +74,7 @@ func ViewFeedbackElement(condition bool) CloseEmbedElement {
 		return NoopElement()
 	}
 
-	return func(ctx registry.CommandContext, ticket database.Ticket) []component.Component {
+	return func(worker *worker.Context, ticket database.Ticket) []component.Component {
 		return utils.Slice(
 			component.BuildButton(component.Button{
 				Label:    "View Exit Survey",
@@ -91,7 +91,7 @@ func FeedbackRowElement(condition bool) CloseEmbedElement {
 		return NoopElement()
 	}
 
-	return func(ctx registry.CommandContext, ticket database.Ticket) []component.Component {
+	return func(worker *worker.Context, ticket database.Ticket) []component.Component {
 		buttons := make([]component.Component, 5)
 
 		for i := 1; i <= 5; i++ {
@@ -119,7 +119,7 @@ func FeedbackRowElement(condition bool) CloseEmbedElement {
 }
 
 func BuildCloseEmbed(
-	ctx registry.CommandContext,
+	worker *worker.Context,
 	ticket database.Ticket,
 	closedBy uint64,
 	reason *string,
@@ -150,30 +150,36 @@ func BuildCloseEmbed(
 		}
 	}
 
+	colour, err := customisation.GetColourForGuild(worker, customisation.Green, ticket.GuildId)
+	if err != nil {
+		sentry.Error(err)
+		colour = customisation.Green.Default()
+	}
+
 	// TODO: Translate titles
 	closeEmbed := embed.NewEmbed().
 		SetTitle("Ticket Closed").
-		SetColor(ctx.GetColour(customisation.Green)).
+		SetColor(colour).
 		SetTimestamp(time.Now()).
-		AddField(formatTitle("Ticket ID", customisation.EmojiId, ctx.Worker().IsWhitelabel), strconv.Itoa(ticket.Id), true).
-		AddField(formatTitle("Opened By", customisation.EmojiOpen, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
-		AddField(formatTitle("Closed By", customisation.EmojiClose, ctx.Worker().IsWhitelabel), fmt.Sprintf("<@%d>", closedBy), true).
-		AddField(formatTitle("Open Time", customisation.EmojiOpenTime, ctx.Worker().IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
-		AddField(formatTitle("Claimed By", customisation.EmojiClaim, ctx.Worker().IsWhitelabel), claimedBy, true)
+		AddField(formatTitle("Ticket ID", customisation.EmojiId, worker.IsWhitelabel), strconv.Itoa(ticket.Id), true).
+		AddField(formatTitle("Opened By", customisation.EmojiOpen, worker.IsWhitelabel), fmt.Sprintf("<@%d>", ticket.UserId), true).
+		AddField(formatTitle("Closed By", customisation.EmojiClose, worker.IsWhitelabel), fmt.Sprintf("<@%d>", closedBy), true).
+		AddField(formatTitle("Open Time", customisation.EmojiOpenTime, worker.IsWhitelabel), message.BuildTimestamp(ticket.OpenTime, message.TimestampStyleShortDateTime), true).
+		AddField(formatTitle("Claimed By", customisation.EmojiClaim, worker.IsWhitelabel), claimedBy, true)
 
 	if rating == nil {
 		closeEmbed = closeEmbed.AddBlankField(true)
 	} else {
-		closeEmbed = closeEmbed.AddField(formatTitle("Rating", customisation.EmojiRating, ctx.Worker().IsWhitelabel), fmt.Sprintf("%d ⭐", *rating), true)
+		closeEmbed = closeEmbed.AddField(formatTitle("Rating", customisation.EmojiRating, worker.IsWhitelabel), fmt.Sprintf("%d ⭐", *rating), true)
 	}
 
-	closeEmbed = closeEmbed.AddField(formatTitle("Reason", customisation.EmojiReason, ctx.Worker().IsWhitelabel), formattedReason, false)
+	closeEmbed = closeEmbed.AddField(formatTitle("Reason", customisation.EmojiReason, worker.IsWhitelabel), formattedReason, false)
 
 	var rows []component.Component
 	for _, row := range components {
 		var rowElements []component.Component
 		for _, element := range row {
-			rowElements = append(rowElements, element(ctx, ticket)...)
+			rowElements = append(rowElements, element(worker, ticket)...)
 		}
 
 		if len(rowElements) > 0 {
@@ -193,7 +199,7 @@ func formatTitle(s string, emoji customisation.CustomEmoji, isWhitelabel bool) s
 }
 
 func EditGuildArchiveMessageIfExists(
-	ctx registry.CommandContext,
+	worker *worker.Context,
 	ticket database.Ticket,
 	settings database.Settings,
 	viewFeedbackButton bool,
@@ -218,8 +224,8 @@ func EditGuildArchiveMessageIfExists(
 		},
 	}
 
-	embed, components := BuildCloseEmbed(ctx, ticket, closedBy, reason, rating, componentBuilders)
-	_, err = ctx.Worker().EditMessage(archiveMessage.ChannelId, archiveMessage.MessageId, rest.EditMessageData{
+	embed, components := BuildCloseEmbed(worker, ticket, closedBy, reason, rating, componentBuilders)
+	_, err = worker.EditMessage(archiveMessage.ChannelId, archiveMessage.MessageId, rest.EditMessageData{
 		Embeds:     utils.Slice(embed),
 		Components: components,
 	})

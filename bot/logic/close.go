@@ -122,8 +122,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 		Reason: reason,
 	}
 
-	if member.User.Id != ctx.UserId() {
-		closeMetadata.ClosedBy = &member.User.Id
+	if ctx.UserId() != ctx.Worker().BotId {
+		closeMetadata.ClosedBy = utils.Ptr(ctx.UserId())
 	}
 
 	if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, closeMetadata); err != nil {
