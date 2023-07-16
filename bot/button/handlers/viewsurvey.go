@@ -73,14 +73,14 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	response, err := dbclient.Client.ExitSurveyResponses.GetResponses(ticket.GuildId, ticket.Id)
+	surveyResponse, err := dbclient.Client.ExitSurveyResponses.GetResponses(ticket.GuildId, ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	if len(response.Responses) == 0 {
-		ctx.ReplyRaw(customisation.Red, "Error", "No survey response has been recorded for this ticket.") // TODO: i18n
+	if len(surveyResponse.Responses) == 0 {
+		ctx.ReplyRaw(customisation.Red, "Error", "No survey surveyResponse has been recorded for this ticket.") // TODO: i18n
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		SetAuthor(opener.Username, "", opener.AvatarUrl(256)).
 		SetColor(ctx.GetColour(customisation.Green))
 
-	for _, answer := range response.Responses {
+	for _, answer := range surveyResponse.Responses {
 		var title string
 		if answer.Question == nil {
 			title = "Unknown Question"
@@ -103,12 +103,19 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 			title = *answer.Question
 		}
 
-		e.AddField(title, answer.Response, false)
+		var response string
+		if len(answer.Response) > 0 {
+			response = answer.Response
+		} else {
+			response = "No surveyResponse"
+		}
+
+		e.AddField(title, response, false)
 	}
 
 	var buttons []component.Component
-	buttons = append(buttons, logic.TranscriptLinkElement(ticket.HasTranscript)(ctx, ticket)...)
-	buttons = append(buttons, logic.ThreadLinkElement(ticket.ChannelId != nil && ticket.IsThread)(ctx, ticket)...)
+	buttons = append(buttons, logic.TranscriptLinkElement(ticket.HasTranscript)(ctx.Worker(), ticket)...)
+	buttons = append(buttons, logic.ThreadLinkElement(ticket.ChannelId != nil && ticket.IsThread)(ctx.Worker(), ticket)...)
 
 	if len(buttons) > 0 {
 		ctx.ReplyWithEmbedAndComponents(e, utils.Slice(component.BuildActionRow(buttons...)))

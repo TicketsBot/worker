@@ -150,7 +150,7 @@ func BuildCloseEmbed(
 		}
 	}
 
-	colour, err := customisation.GetColourForGuild(worker, customisation.Green, ticket.GuildId)
+	colour, err := utils.GetColourForGuild(worker, customisation.Green, ticket.GuildId)
 	if err != nil {
 		sentry.Error(err)
 		colour = customisation.Green.Default()

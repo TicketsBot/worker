@@ -217,7 +217,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			},
 		}
 
-		closeEmbed, closeComponents := BuildCloseEmbed(ctx, ticket, member.User.Id, reason, nil, componentBuilders)
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
 
 		data := rest.CreateMessageData{
 			Embeds:     utils.Slice(closeEmbed),
@@ -271,7 +271,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			},
 		}
 
-		closeEmbed, closeComponents := BuildCloseEmbed(ctx, ticket, member.User.Id, reason, nil, componentBuilders)
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
 		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
 
 		data := rest.CreateMessageData{

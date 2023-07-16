@@ -149,7 +149,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if err := logic.EditGuildArchiveMessageIfExists(ctx, ticket, settings, hasFeedback, closedBy, reason, &rating); err != nil {
+	if err := logic.EditGuildArchiveMessageIfExists(ctx.Worker(), ticket, settings, hasFeedback, closedBy, reason, &rating); err != nil {
 		ctx.HandleError(err)
 	}
 }
