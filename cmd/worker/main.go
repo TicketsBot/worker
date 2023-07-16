@@ -49,8 +49,7 @@ func main() {
 	fmt.Println("Connected to Redis, connect to DB...")
 	dbclient.Connect()
 
-	i18n.LoadMessages()
-	i18n.SeedCoverage()
+	i18n.Init()
 
 	fmt.Println("Connected to DB, connect to cache...")
 	pgCache, err := cache.Connect()

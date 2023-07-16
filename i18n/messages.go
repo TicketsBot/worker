@@ -2,10 +2,6 @@ package i18n
 
 type MessageId string
 
-func (m MessageId) Get(language Language, format ...interface{}) string {
-	return GetMessage(language, m, format...)
-}
-
 func (m MessageId) GetFromGuild(guildId uint64, format ...interface{}) string {
 	return GetMessageFromGuild(guildId, m, format...)
 }

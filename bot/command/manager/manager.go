@@ -161,7 +161,7 @@ func buildOption(cmd registry.Command) interaction.ApplicationCommandOption {
 	return interaction.ApplicationCommandOption{
 		Type:        interaction.OptionTypeSubCommand,
 		Name:        properties.Name,
-		Description: i18n.GetMessage(i18n.English, properties.Description),
+		Description: i18n.GetMessage(i18n.LocaleEnglish, properties.Description),
 		Default:     false,
 		Required:    false,
 		Choices:     nil,

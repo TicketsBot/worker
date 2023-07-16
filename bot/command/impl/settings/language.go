@@ -36,13 +36,10 @@ func (c LanguageCommand) GetExecutor() interface{} {
 
 func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 	var languageList string
-	for _, language := range i18n.LanguagesAlphabetical {
-		coverage := i18n.GetCoverage(language)
-		if coverage == 0 {
+	for _, locale := range i18n.Locales {
+		if locale.Coverage == 0 {
 			continue
 		}
-
-		flag := i18n.Flags[language]
 
 		bar := progressbar.NewOptions(100,
 			progressbar.OptionSetWriter(ioutil.Discard),
@@ -57,9 +54,9 @@ func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 				BarEnd:        "]",
 			}),
 		)
-		_ = bar.Set(coverage)
+		_ = bar.Set(locale.Coverage)
 
-		languageList += fmt.Sprintf("%s **%s** `%s`\n", flag, i18n.FullNamesEnglish[language], strings.TrimSpace(bar.String()))
+		languageList += fmt.Sprintf("%s **%s** `%s`\n", locale.FlagEmoji, locale.EnglishName, strings.TrimSpace(bar.String()))
 	}
 
 	languageList = strings.TrimSuffix(languageList, "\n")
@@ -72,45 +69,61 @@ func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 }
 
 func buildComponents(ctx registry.CommandContext) []component.Component {
-	components := make([]component.Component, int(math.Ceil(float64(len(i18n.LanguagesAlphabetical))/25.0)))
+	components := make([]component.Component, int(math.Ceil(float64(len(i18n.Locales))/25.0)))
 
 	var menu component.SelectMenu
-	var firstLanguage, lastLanguage i18n.Language
+	var firstLocale, lastLocale *i18n.Locale
 	var i int
-	for j, language := range i18n.LanguagesAlphabetical {
+	for j, locale := range i18n.Locales {
+		if len(locale.Messages) == 0 {
+			continue
+		}
+
 		if j%25 == 0 {
 			if j != 0 {
-				startLetter := unicode.ToUpper(rune(i18n.LocalesInverse[firstLanguage][0]))
-				endLetter := unicode.ToUpper(rune(i18n.LocalesInverse[lastLanguage][0]))
+				var startLetter, endLetter rune
+				if firstLocale != nil { // should never be nil, but just in case
+					startLetter = unicode.ToUpper(rune(firstLocale.IsoLongCode[0]))
+				}
+
+				if lastLocale != nil { // should never be nil, but just in case
+					endLetter = unicode.ToUpper(rune(lastLocale.IsoLongCode[0]))
+				}
 
 				menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
 				components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
 				i++
 			}
 
-			remainingLanguages := len(i18n.LanguagesAlphabetical) - (i * 25)
+			remainingLanguages := len(i18n.Locales) - (i * 25)
 			menu = component.SelectMenu{
 				CustomId: fmt.Sprintf("language-selector-%d", i),
 				Options:  make([]component.SelectOption, utils.Min(remainingLanguages, 25)),
 			}
 
-			firstLanguage = language
+			firstLocale = locale
 		}
 
 		menu.Options[j%25] = component.SelectOption{
-			Label:       i18n.FullNamesEnglish[language],
-			Description: i18n.FullNames[language],
-			Value:       string(language),
-			Emoji:       utils.BuildEmoji(i18n.Flags[language]),
+			Label:       locale.EnglishName,
+			Description: locale.LocalName,
+			Value:       locale.IsoShortCode,
+			Emoji:       utils.BuildEmoji(locale.FlagEmoji),
 			Default:     false,
 		}
 
-		lastLanguage = language
+		lastLocale = locale
 	}
 
 	if len(menu.Options) > 0 {
-		startLetter := unicode.ToUpper(rune(i18n.LocalesInverse[firstLanguage][0]))
-		endLetter := unicode.ToUpper(rune(i18n.LocalesInverse[lastLanguage][0]))
+		var startLetter, endLetter rune
+		if firstLocale != nil { // should never be nil, but just in case
+			startLetter = unicode.ToUpper(rune(firstLocale.IsoLongCode[0]))
+		}
+
+		if lastLocale != nil { // should never be nil, but just in case
+			endLetter = unicode.ToUpper(rune(lastLocale.IsoLongCode[0]))
+		}
 
 		menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
 		components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))

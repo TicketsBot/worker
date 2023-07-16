@@ -12,65 +12,59 @@ import (
 	"strings"
 )
 
-var messages map[Language]map[MessageId]string
-var coverage map[Language]int
-
 func LoadMessages() {
-	messages = make(map[Language]map[MessageId]string)
-
-	for locale, language := range FullLocales {
-		path := fmt.Sprintf("./locale/%s.json", locale)
+	for idx, locale := range Locales {
+		path := fmt.Sprintf("./locale/%s.json", locale.IsoLongCode)
 
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
 			fmt.Printf("Failed to read locale %s: %s\n", locale, err.Error())
 
-			if locale == "en-GB" { // Required
+			if locale.IsoLongCode == "en-GB" { // Required
 				panic(err)
 			}
 		}
 
-		messages[language] = parseCrowdInFile(data)
+		messages, err := parseCrowdInFile(data)
+		if err != nil {
+			fmt.Printf("Failed to parse locale: %s\n", err.Error())
+			Locales[idx].Messages = make(map[MessageId]string)
+			continue
+		}
+
+		Locales[idx].Messages = messages
 	}
 }
 
 func SeedCoverage() {
-	coverage = make(map[Language]int)
+	total := len(LocaleEnglish.Messages)
 
-	total := len(messages[English])
-
-	for _, language := range FullLocales {
-		translated := len(messages[language])
-		coverage[language] = translated * 100 / total
+	for _, locale := range Locales {
+		locale.Coverage = len(locale.Messages) * 100 / total
 	}
 }
 
-func GetCoverage(language Language) int {
-	coverage, ok := coverage[language]
-	if ok {
-		return coverage
-	} else {
-		return 0
+func GetMessage(locale *Locale, id MessageId, format ...interface{}) string {
+	if locale == nil {
+		locale = LocaleEnglish
 	}
-}
 
-func GetMessage(language Language, id MessageId, format ...interface{}) string {
-	if messages[language] == nil {
-		if language == English {
-			return fmt.Sprintf("Error: translations for language `%s` is missing", language)
+	if locale.Messages == nil {
+		if locale == LocaleEnglish {
+			return fmt.Sprintf("Error: translations for language `%s` is missing", locale.IsoShortCode)
 		}
 
-		language = English // default to english
-		return GetMessage(language, id, format...)
+		locale = LocaleEnglish // default to english
+		return GetMessage(locale, id, format...)
 	}
 
-	value, ok := messages[language][id]
+	value, ok := locale.Messages[id]
 	if !ok || value == "" {
-		if language == English {
+		if locale == LocaleEnglish {
 			return fmt.Sprintf("error: translation for `%s` is missing", id)
 		}
 
-		return GetMessage(English, id, format...) // default to English
+		return GetMessage(LocaleEnglish, id, format...) // default to English
 	}
 
 	return fmt.Sprintf(strings.Replace(value, "\\n", "\n", -1), format...)
@@ -83,7 +77,7 @@ func GetMessageFromGuild(guildId uint64, id MessageId, format ...interface{}) st
 	}
 
 	if activeLanguage != "" {
-		return GetMessage(Language(activeLanguage), id, format...)
+		return GetMessage(MappedByIsoShortCode[activeLanguage], id, format...)
 	}
 
 	// check preferred locale
@@ -93,15 +87,15 @@ func GetMessageFromGuild(guildId uint64, id MessageId, format ...interface{}) st
 			sentry.Error(err)
 		}
 
-		return GetMessage(English, id, format...)
+		return GetMessage(LocaleEnglish, id, format...)
 	}
 
 	if preferredLocale == nil {
-		return GetMessage(English, id, format...)
+		return GetMessage(LocaleEnglish, id, format...)
 	} else {
 		language, ok := DiscordLocales[*preferredLocale]
 		if !ok {
-			language = English
+			language = LocaleEnglish
 		}
 
 		return GetMessage(language, id, format...)
@@ -114,14 +108,13 @@ func getPreferredLocale(guildId uint64) (locale *string, err error) {
 	return
 }
 
-func parseCrowdInFile(data []byte) map[MessageId]string {
+func parseCrowdInFile(data []byte) (map[MessageId]string, error) {
 	var parsed map[string]interface{}
 	if err := json.Unmarshal(data, &parsed); err != nil {
-		fmt.Printf("Failed to parse locale: %s\n", err.Error())
-		return nil
+		return nil, err
 	}
 
-	return parseCrowdInData("", parsed)
+	return parseCrowdInData("", parsed), nil
 }
 
 func parseCrowdInData(path string, data map[string]interface{}) map[MessageId]string {

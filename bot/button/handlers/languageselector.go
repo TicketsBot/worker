@@ -41,26 +41,17 @@ func (h *LanguageSelectorHandler) Execute(ctx *context.SelectMenuContext) {
 		return
 	}
 
-	newLanguage := i18n.Language(ctx.InteractionData.Values[0])
-
-	var valid bool
-	for _, language := range i18n.LanguagesAlphabetical {
-		if newLanguage == language {
-			valid = true
-			break
-		}
-	}
-
+	newLocale, ok := i18n.MappedByIsoShortCode[ctx.InteractionData.Values[0]]
 	// Infallible
-	if !valid {
+	if !ok {
 		ctx.ReplyRaw(customisation.Red, "Error", "Invalid language")
 		return
 	}
 
-	if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), newLanguage.String()); err != nil {
+	if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), newLocale.IsoShortCode); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	ctx.Reply(customisation.Green, i18n.TitleLanguage, i18n.MessageLanguageSuccess, i18n.FullNames[newLanguage], i18n.Flags[newLanguage])
+	ctx.Reply(customisation.Green, i18n.TitleLanguage, i18n.MessageLanguageSuccess, newLocale.LocalName, newLocale.FlagEmoji)
 }
