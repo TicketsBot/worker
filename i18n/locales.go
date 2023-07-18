@@ -167,6 +167,14 @@ var Locales = []*Locale{
 		DiscordLocale: ptr("lt"),
 	},
 	{
+		IsoShortCode:  "lv",
+		IsoLongCode:   "lv-LV",
+		FlagEmoji:     "🇱🇻",
+		EnglishName:   "Latvian",
+		LocalName:     "Latviešu",
+		DiscordLocale: nil,
+	},
+	{
 		IsoShortCode:  "ne",
 		IsoLongCode:   "ne-NP",
 		FlagEmoji:     "🇳🇵",
