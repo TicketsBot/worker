@@ -71,7 +71,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if ticket.UserId != ctx.InteractionUser().Id || ticket.GuildId != guildId || ticket.Id != ticketId {
+	if ticket.GuildId != guildId || ticket.Id != ticketId {
 		return
 	}
 
