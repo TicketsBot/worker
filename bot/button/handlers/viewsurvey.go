@@ -109,7 +109,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		if len(answer.Response) > 0 {
 			response = answer.Response
 		} else {
-			response = "No surveyResponse"
+			response = "No response"
 		}
 
 		e.AddField(title, response, false)
