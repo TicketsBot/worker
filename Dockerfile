@@ -24,7 +24,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates c
 COPY --from=builder /go/src/github.com/TicketsBot/worker/locale /srv/worker/locale
 COPY --from=builder /go/src/github.com/TicketsBot/worker/main /srv/worker/main
 
-RUN chmod +x /srv/worker/worker
+RUN chmod +x /srv/worker/main
 
 RUN useradd -m container
 USER container
