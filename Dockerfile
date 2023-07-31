@@ -1,25 +1,33 @@
-FROM golang:buster
+# Build container
+FROM golang:buster AS builder
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates git zlib1g-dev
 
-RUN mkdir -p /tmp/compile
-WORKDIR /tmp/compile
+COPY . /go/src/github.com/TicketsBot/worker
+WORKDIR /go/src/github.com/TicketsBot/worker
 
-RUN git clone --recurse-submodules https://github.com/TicketsBot/worker.git .
-RUN cd locale && git pull origin master
-RUN go build -tags=jsoniter cmd/worker/main.go
+RUN set -Eeux && \
+    go mod download && \
+    go mod verify
+
+RUN GOOS=linux GOARCH=amd64 \
+    go build \
+    -tags=jsoniter \
+    -trimpath \
+    -o main cmd/worker/main.go
 
 # Prod container
 FROM ubuntu:latest
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates curl
 
-COPY --from=0 /tmp/compile/locale /srv/worker/locale
-COPY --from=0 /tmp/compile/main /srv/worker/worker
+COPY --from=builder /go/src/github.com/TicketsBot/worker/locale /srv/worker/locale
+COPY --from=builder /go/src/github.com/TicketsBot/worker/main /srv/worker/main
+
 RUN chmod +x /srv/worker/worker
 
 RUN useradd -m container
 USER container
 WORKDIR /srv/worker
 
-CMD ["/srv/worker/worker"]
+CMD ["/srv/worker/main"]
