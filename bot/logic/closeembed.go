@@ -35,7 +35,7 @@ func TranscriptLinkElement(condition bool) CloseEmbedElement {
 			transcriptEmoji = customisation.EmojiTranscript.BuildEmoji()
 		}
 
-		transcriptLink := fmt.Sprintf("https://panel.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
+		transcriptLink := fmt.Sprintf("https://dashboard.ticketsbot.net/manage/%d/transcripts/view/%d", ticket.GuildId, ticket.Id)
 
 		return utils.Slice(component.BuildButton(component.Button{
 			Label: "View Online Transcript",
