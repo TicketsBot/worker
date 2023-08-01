@@ -15,18 +15,27 @@ import (
 var Client *cache.PgCache
 
 func Connect() (client cache.PgCache, err error) {
-	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
+	uri := fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		config.Conf.Cache.Username,
 		config.Conf.Cache.Password,
 		config.Conf.Cache.Host,
 		config.Conf.Cache.Database,
 		config.Conf.Cache.Threads,
-	))
+	)
 
+	cfg, err := pgxpool.ParseConfig(uri)
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf(
+		"Connecting to cache on postgres://%s:XXYYZZ@%s/%s?pool_max_conns=%d\n",
+		config.Conf.Cache.Username,
+		config.Conf.Cache.Host,
+		config.Conf.Cache.Database,
+		config.Conf.Cache.Threads,
+	)
 
 	// TODO: Sentry
 	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
@@ -34,7 +43,10 @@ func Connect() (client cache.PgCache, err error) {
 	cfg.ConnConfig.PreferSimpleProtocol = true
 	cfg.ConnConfig.ConnectTimeout = time.Second * 15
 
-	pool, err := pgxpool.ConnectConfig(context.Background(), cfg)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancelFunc()
+
+	pool, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
 		return
 	}
