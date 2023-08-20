@@ -18,7 +18,7 @@ func LoadMessages() {
 
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
-			fmt.Printf("Failed to read locale %s: %s\n", locale, err.Error())
+			fmt.Printf("Failed to read locale %s: %s\n", locale.IsoShortCode, err.Error())
 
 			if locale.IsoLongCode == "en-GB" { // Required
 				panic(err)
