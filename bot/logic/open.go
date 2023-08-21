@@ -98,6 +98,37 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		return database.Ticket{}, nil
 	}
 
+	if panel != nil {
+		member, err := ctx.Member()
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
+
+		matchedRole, action, err := dbclient.Client.PanelAccessControlRules.GetFirstMatched(
+			context.Background(),
+			panel.PanelId,
+			append(member.Roles, ctx.GuildId()),
+		)
+
+		if err != nil {
+			ctx.HandleError(err)
+			return database.Ticket{}, err
+		}
+
+		if action == database.AccessControlActionDeny {
+			if err := sendAccessControlDeniedMessage(ctx, panel.PanelId, matchedRole); err != nil {
+				ctx.HandleError(err)
+				return database.Ticket{}, err
+			}
+
+			return database.Ticket{}, nil
+		} else if action != database.AccessControlActionAllow {
+			ctx.HandleError(fmt.Errorf("invalid access control action %s", action))
+			return database.Ticket{}, err
+		}
+	}
+
 	span = sentry.StartSpan(rootSpan.Context(), "Load settings")
 	settings, err := ctx.Settings()
 	if err != nil {
@@ -850,4 +881,40 @@ func buildJoinThreadMessage(
 			}),
 		)),
 	}
+}
+
+func sendAccessControlDeniedMessage(ctx registry.InteractionContext, panelId int, matchedRole uint64) error {
+	rules, err := dbclient.Client.PanelAccessControlRules.GetAll(context.Background(), panelId)
+	if err != nil {
+		return err
+	}
+
+	allowedRoleIds := make([]uint64, 0, len(rules))
+	for _, rule := range rules {
+		if rule.Action == database.AccessControlActionAllow {
+			allowedRoleIds = append(allowedRoleIds, rule.RoleId)
+		}
+	}
+
+	if len(allowedRoleIds) == 0 {
+		ctx.Reply(customisation.Red, i18n.MessageNoPermission, i18n.MessageOpenAclNoAllowRules)
+		return nil
+	}
+
+	if matchedRole == ctx.GuildId() {
+		mentions := make([]string, 0, len(allowedRoleIds))
+		for _, roleId := range allowedRoleIds {
+			mentions = append(mentions, fmt.Sprintf("<@&%d>", roleId))
+		}
+
+		if len(allowedRoleIds) == 1 {
+			ctx.Reply(customisation.Red, i18n.MessageNoPermission, i18n.MessageOpenAclNotAllowListedSingle, strings.Join(mentions, ", "))
+		} else {
+			ctx.Reply(customisation.Red, i18n.MessageNoPermission, i18n.MessageOpenAclNotAllowListedMultiple, strings.Join(mentions, ", "))
+		}
+	} else {
+		ctx.Reply(customisation.Red, i18n.MessageNoPermission, i18n.MessageOpenAclDenyListed, matchedRole)
+	}
+
+	return nil
 }

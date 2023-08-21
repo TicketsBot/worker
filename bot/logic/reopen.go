@@ -112,7 +112,7 @@ func ReopenTicket(ctx registry.CommandContext, ticketId int) {
 
 	ctx.Reply(customisation.Green, i18n.Success, i18n.MessageReopenSuccess, ticket.Id, *ticket.ChannelId)
 
-	embedData := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleeReopened, i18n.MessageReopenedTicket, nil, ctx.UserId())
+	embedData := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleReopened, i18n.MessageReopenedTicket, nil, ctx.UserId())
 	if _, err := ctx.Worker().CreateMessageEmbed(*ticket.ChannelId, embedData); err != nil {
 		ctx.HandleError(err)
 		return

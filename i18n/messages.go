@@ -50,7 +50,7 @@ var (
 	TitleCloseRequest      MessageId = "generic.title.close_request"
 	TitlePanelSwitched     MessageId = "generic.title.panel_switched"
 	TitleJumpToTop         MessageId = "generic.title.jump_to_top"
-	TitleeReopened         MessageId = "generic.title.reopened"
+	TitleReopened          MessageId = "generic.title.reopened"
 
 	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
 
@@ -90,6 +90,11 @@ var (
 	MessageOpenPanelForceDisabled        MessageId = "open.panel_force_disabled"
 	MessageOpenPanelDisabled             MessageId = "open.panel_disabled"
 	MessageTicketOpened                  MessageId = "open.success"
+
+	MessageOpenAclNoAllowRules           MessageId = "open.acl.no_allow_rules"
+	MessageOpenAclNotAllowListedSingle   MessageId = "open.acl.not_allow_listed.single"
+	MessageOpenAclNotAllowListedMultiple MessageId = "open.acl.not_allow_listed.multiple"
+	MessageOpenAclDenyListed             MessageId = "open.acl.deny_listed"
 
 	MessageAddAdminNoMembers   MessageId = "commands.addadmin.no_members"
 	MessageAddAdminConfirm     MessageId = "commands.addadmin.confirm"
