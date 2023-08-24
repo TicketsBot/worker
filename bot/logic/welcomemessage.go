@@ -129,7 +129,7 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 			return nil, err
 		}
 
-		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, true)
+		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, true, formAnswers)
 		return e, nil
 	}
 }
@@ -511,10 +511,11 @@ func BuildCustomEmbed(
 	fields []database.EmbedField,
 	branding bool,
 	isNewTicket bool,
+	formAnswers map[string]*string,
 ) *embed.Embed {
 	e := &embed.Embed{
 		Title:       utils.ValueOrZero(customEmbed.Title),
-		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, isNewTicket, nil),
+		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, isNewTicket, formAnswers),
 		Url:         utils.ValueOrZero(customEmbed.Url),
 		Timestamp:   customEmbed.Timestamp,
 		Color:       int(customEmbed.Colour),

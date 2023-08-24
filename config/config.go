@@ -8,9 +8,10 @@ type Config struct {
 	DebugMode string `env:"WORKER_DEBUG"`
 
 	Discord struct {
-		Token       string `env:"WORKER_PUBLIC_TOKEN"`
-		PublicBotId uint64 `env:"WORKER_PUBLIC_ID"`
-		ProxyUrl    string `env:"DISCORD_PROXY_URL"`
+		Token                 string `env:"WORKER_PUBLIC_TOKEN"`
+		PublicBotId           uint64 `env:"WORKER_PUBLIC_ID"`
+		ProxyUrl              string `env:"DISCORD_PROXY_URL"`
+		RequestTimeoutSeconds int    `env:"REQUEST_TIMEOUT_SECONDS" envDefault:"5"`
 	}
 
 	Bot struct {
