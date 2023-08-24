@@ -45,7 +45,7 @@ func Fetch(
 	isNewTicket bool,
 	formAnswers formAnswers,
 ) (map[string]string, error) {
-	prometheus.LogIntegrationRequest(integration.Id, ticket.GuildId)
+	prometheus.LogIntegrationRequest(integration, ticket.GuildId)
 
 	url := strings.ReplaceAll(integration.WebhookUrl, "%user_id%", strconv.FormatUint(ticket.UserId, 10))
 	url = strings.ReplaceAll(url, "%guild_id%", strconv.FormatUint(ticket.GuildId, 10))

@@ -1,28 +1,20 @@
 package prometheus
 
 import (
+	"github.com/TicketsBot/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"strconv"
 )
 
 var (
-	IntegrationRequests = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "tickets",
-		Subsystem: "worker",
-		Name:      "integration_requests",
-	}, []string{"integration_id", "guild_id"})
+	IntegrationRequests = newCounterVec("integration_requests", "integration_id", "integration_name", "guild_id")
+	TicketsCreated      = newCounterVec("tickets_created", "guild_id")
 
-	TicketsCreated = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "tickets",
-		Subsystem: "worker",
-		Name:      "tickets_created",
-	}, []string{"guild_id"})
-
-	Commands = newCounterVec("commands", []string{"guild_id", "command"})
+	Commands = newCounterVec("commands", "guild_id", "command")
 )
 
-func newCounterVec(name string, labels []string) *prometheus.CounterVec {
+func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
 	return promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "tickets",
 		Subsystem: "worker",
@@ -30,8 +22,12 @@ func newCounterVec(name string, labels []string) *prometheus.CounterVec {
 	}, labels)
 }
 
-func LogIntegrationRequest(integrationId int, guildId uint64) {
-	IntegrationRequests.WithLabelValues(strconv.Itoa(integrationId), strconv.FormatUint(guildId, 10)).Inc()
+func LogIntegrationRequest(integration database.CustomIntegration, guildId uint64) {
+	IntegrationRequests.WithLabelValues(
+		strconv.Itoa(integration.Id),
+		integration.Name,
+		strconv.FormatUint(guildId, 10),
+	).Inc()
 }
 
 func LogTicketCreated(guildId uint64) {
