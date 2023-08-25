@@ -6,6 +6,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates g
 COPY . /go/src/github.com/TicketsBot/worker
 WORKDIR /go/src/github.com/TicketsBot/worker
 
+RUN git submodule update --init --recursive --remote
+
 RUN set -Eeux && \
     go mod download && \
     go mod verify
