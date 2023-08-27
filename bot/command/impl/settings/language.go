@@ -43,7 +43,7 @@ func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 
 		bar := progressbar.NewOptions(100,
 			progressbar.OptionSetWriter(ioutil.Discard),
-			progressbar.OptionSetWidth(12),
+			progressbar.OptionSetWidth(15),
 			progressbar.OptionSetPredictTime(false),
 			progressbar.OptionSetRenderBlankState(true),
 			progressbar.OptionSetTheme(progressbar.Theme{
@@ -69,48 +69,47 @@ func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 }
 
 func buildComponents(ctx registry.CommandContext) []component.Component {
-	components := make([]component.Component, int(math.Ceil(float64(len(i18n.Locales))/25.0)))
+	components := make([]component.Component, 0, int(math.Ceil(float64(len(i18n.Locales))/25.0)))
 
 	var menu component.SelectMenu
 	var firstLocale, lastLocale *i18n.Locale
-	var i int
-	for j, locale := range i18n.Locales {
-		if len(locale.Messages) == 0 {
+	for _, locale := range i18n.Locales {
+		if locale.Coverage == 0 {
 			continue
 		}
 
-		if j%25 == 0 {
-			if j != 0 {
-				var startLetter, endLetter rune
-				if firstLocale != nil { // should never be nil, but just in case
-					startLetter = unicode.ToUpper(rune(firstLocale.IsoLongCode[0]))
-				}
-
-				if lastLocale != nil { // should never be nil, but just in case
-					endLetter = unicode.ToUpper(rune(lastLocale.IsoLongCode[0]))
-				}
-
-				menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
-				components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
-				i++
+		if len(menu.Options) == 25 {
+			var startLetter, endLetter rune
+			if firstLocale != nil { // should never be nil, but just in case
+				startLetter = unicode.ToUpper(rune(firstLocale.IsoLongCode[0]))
 			}
 
-			remainingLanguages := len(i18n.Locales) - (i * 25)
+			if lastLocale != nil { // should never be nil, but just in case
+				endLetter = unicode.ToUpper(rune(lastLocale.IsoLongCode[0]))
+			}
+
+			menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
+			components = append(components, component.BuildActionRow(component.BuildSelectMenu(menu)))
+
+			menu = component.SelectMenu{}
+		}
+
+		if len(menu.Options) == 0 {
 			menu = component.SelectMenu{
-				CustomId: fmt.Sprintf("language-selector-%d", i),
-				Options:  make([]component.SelectOption, utils.Min(remainingLanguages, 25)),
+				CustomId: fmt.Sprintf("language-selector-%d", len(components)),
+				Options:  make([]component.SelectOption, 0, 25),
 			}
 
 			firstLocale = locale
 		}
 
-		menu.Options[j%25] = component.SelectOption{
+		menu.Options = append(menu.Options, component.SelectOption{
 			Label:       locale.EnglishName,
 			Description: locale.LocalName,
 			Value:       locale.IsoShortCode,
 			Emoji:       utils.BuildEmoji(locale.FlagEmoji),
 			Default:     false,
-		}
+		})
 
 		lastLocale = locale
 	}
@@ -126,7 +125,7 @@ func buildComponents(ctx registry.CommandContext) []component.Component {
 		}
 
 		menu.Placeholder = ctx.GetMessage(i18n.MessageLanguageSelect, startLetter, endLetter)
-		components[i] = component.BuildActionRow(component.BuildSelectMenu(menu))
+		components = append(components, component.BuildActionRow(component.BuildSelectMenu(menu)))
 	}
 
 	return components
