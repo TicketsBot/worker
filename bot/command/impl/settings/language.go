@@ -43,7 +43,7 @@ func (c *LanguageCommand) Execute(ctx registry.CommandContext) {
 
 		bar := progressbar.NewOptions(100,
 			progressbar.OptionSetWriter(ioutil.Discard),
-			progressbar.OptionSetWidth(15),
+			progressbar.OptionSetWidth(12),
 			progressbar.OptionSetPredictTime(false),
 			progressbar.OptionSetRenderBlankState(true),
 			progressbar.OptionSetTheme(progressbar.Theme{
