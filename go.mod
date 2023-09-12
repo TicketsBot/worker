@@ -6,7 +6,7 @@ require (
 	github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
 	github.com/TicketsBot/common v0.0.0-20230819234541-7678a70af5f1
-	github.com/TicketsBot/database v0.0.0-20230821182620-0130c7c2c5ad
+	github.com/TicketsBot/database v0.0.0-20230912230123-6e05ad6a515c
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/gin-gonic/gin v1.9.1

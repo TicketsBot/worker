@@ -12,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
@@ -607,8 +606,19 @@ func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *dat
 		overwrites = append(overwrites, BuildUserOverwrite(snowflake, additionalPermissions))
 	}
 
+	// Add the bot to the overwrites
+	selfAllow := [1 + len(StandardPermissions)]permission.Permission{permission.ManageWebhooks}
+	copy(selfAllow[1:], StandardPermissions[:]) // Do not append to StandardPermissions
+
+	overwrites = append(overwrites, channel.PermissionOverwrite{
+		Id:    ctx.Worker().BotId,
+		Type:  channel.PermissionTypeMember,
+		Allow: permission.BuildPermissions(selfAllow[:]...),
+		Deny:  0,
+	})
+
 	// Create list of members & roles who should be added to the ticket
-	allowedUsers, allowedRoles, err := getAllowedUsersRoles(ctx.GuildId(), ctx.Worker().BotId, panel)
+	allowedUsers, allowedRoles, err := GetAllowedStaffUsersAndRoles(ctx.GuildId(), panel)
 	if err != nil {
 		return nil, err
 	}
@@ -644,14 +654,10 @@ func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *dat
 	return overwrites, nil
 }
 
-func getAllowedUsersRoles(guildId, selfId uint64, panel *database.Panel) ([]uint64, []uint64, error) {
-	errorContext := errorcontext.WorkerErrorContext{
-		Guild: guildId,
-	}
-
+func GetAllowedStaffUsersAndRoles(guildId uint64, panel *database.Panel) ([]uint64, []uint64, error) {
 	// Create list of members & roles who should be added to the ticket
 	// Add the sender & self
-	allowedUsers := []uint64{selfId}
+	allowedUsers := make([]uint64, 0)
 	allowedRoles := make([]uint64, 0)
 
 	// Should we add the default team
@@ -659,7 +665,7 @@ func getAllowedUsersRoles(guildId, selfId uint64, panel *database.Panel) ([]uint
 		// Get support reps & admins
 		supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			return nil, nil, err
 		}
 
 		allowedUsers = append(allowedUsers, supportUsers...)
@@ -667,7 +673,7 @@ func getAllowedUsersRoles(guildId, selfId uint64, panel *database.Panel) ([]uint
 		// Get support roles & admin roles
 		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
 		if err != nil {
-			sentry.ErrorWithContext(err, errorContext)
+			return nil, nil, err
 		}
 
 		allowedRoles = append(allowedUsers, supportRoles...)

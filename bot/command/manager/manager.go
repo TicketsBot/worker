@@ -47,7 +47,6 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["setup"] = setup.SetupCommand{}
 	cm.registry["viewstaff"] = settings.ViewStaffCommand{}
 
-	//cm.registry["sync"] = settings.SyncCommand{}
 	cm.registry["stats"] = statistics.StatsCommand{}
 
 	cm.registry["managetags"] = tags.ManageTagsCommand{}
@@ -57,6 +56,7 @@ func (cm *CommandManager) RegisterCommands() {
 	cm.registry["claim"] = tickets.ClaimCommand{}
 	cm.registry["close"] = tickets.CloseCommand{}
 	cm.registry["closerequest"] = tickets.CloseRequestCommand{}
+	cm.registry["notes"] = tickets.NotesCommand{}
 	cm.registry["on-call"] = tickets.OnCallCommand{}
 	cm.registry["open"] = tickets.OpenCommand{}
 	cm.registry["Start Ticket"] = tickets.StartTicketCommand{}

@@ -225,6 +225,11 @@ var (
 	MessageReopenSuccess        MessageId = "commands.reopen.success"
 	MessageReopenedTicket       MessageId = "commands.reopen.in_ticket"
 
+	MessageNotesChannelModeOnly MessageId = "commands.notes.channel_mode_only"
+	MessageNotesThreadName      MessageId = "commands.notes.thread_name"
+	MessageNotesAddedToExisting MessageId = "commands.notes.added_to_existing"
+	MessageNotesCreated         MessageId = "commands.notes.created"
+
 	MessageJoinClosedTicket       MessageId = "button.join_thread.closed_ticket"
 	MessageJoinThreadNoPermission MessageId = "button.join_thread.no_permission"
 	MessageAlreadyJoinedThread    MessageId = "button.join_thread.already_joined"
@@ -313,6 +318,7 @@ var (
 	HelpClaim              MessageId = "help.claim"
 	HelpClose              MessageId = "help.close"
 	HelpCloseRequest       MessageId = "help.close_request"
+	HelpNotes              MessageId = "help.notes"
 	HelpOpen               MessageId = "help.open"
 	HelpRemove             MessageId = "help.remove"
 	HelpRename             MessageId = "help.rename"
