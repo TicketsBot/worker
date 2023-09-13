@@ -27,7 +27,6 @@ func (SetupCommand) Properties() registry.Properties {
 			AutoSetupCommand{},
 			LimitSetupCommand{},
 			TranscriptsSetupCommand{},
-			CategorySetupCommand{},
 			ThreadsSetupCommand{},
 		},
 	}
