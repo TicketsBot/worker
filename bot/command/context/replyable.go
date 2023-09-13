@@ -172,7 +172,7 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 			} else {
 				message = formatDiscordError(restError, eventId)
 			}
-		} else if restError.ApiError.Message == "CHANNEL_PARENT_INVALID" {
+		} else if strings.Contains(restError.ApiError.Message, "CHANNEL_PARENT_INVALID") {
 			message = fmt.Sprintf("Invalid channel category. Tell an administrator to visit the [dashboard](https://dashboard.ticketsbot.net/manage/%d/panels) and assign a valid channel category to this ticket panel.\nError ID: `%s`", r.ctx.GuildId(), eventId)
 			imageUrl = utils.Ptr("https://docs.ticketsbot.net/img/multi_panel_category.png")
 		} else {

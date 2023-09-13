@@ -607,8 +607,12 @@ func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *dat
 	}
 
 	// Add the bot to the overwrites
-	selfAllow := [1 + len(StandardPermissions)]permission.Permission{permission.ManageWebhooks}
-	copy(selfAllow[1:], StandardPermissions[:]) // Do not append to StandardPermissions
+	selfAllow := make([]permission.Permission, len(StandardPermissions), len(StandardPermissions)+1)
+	copy(selfAllow, StandardPermissions[:]) // Do not append to StandardPermissions
+
+	if permission.HasPermissionRaw(ctx.InteractionMetadata().AppPermissions, permission.ManageWebhooks) {
+		selfAllow = append(selfAllow, permission.ManageWebhooks)
+	}
 
 	overwrites = append(overwrites, channel.PermissionOverwrite{
 		Id:    ctx.Worker().BotId,
@@ -627,11 +631,8 @@ func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *dat
 		allow := make([]permission.Permission, len(StandardPermissions))
 		copy(allow, StandardPermissions[:]) // Do not append to StandardPermissions
 
-		// Give ourselves permissions to create webhooks
 		if member == ctx.Worker().BotId {
-			if permission.HasPermissionRaw(ctx.InteractionMetadata().AppPermissions, permission.ManageWebhooks) {
-				allow = append(allow, permission.ManageWebhooks)
-			}
+			continue // Already added overwrite above
 		}
 
 		overwrites = append(overwrites, channel.PermissionOverwrite{
