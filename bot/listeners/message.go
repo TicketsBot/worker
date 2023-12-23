@@ -121,7 +121,7 @@ func isStaff(msg *events.MessageCreate, ticket database.Ticket) (bool, error) {
 		return false, err
 	}
 
-	if !utils.Contains(members, msg.Author.Id) {
+	if utils.Contains(members, msg.Author.Id) {
 		return false, nil
 	}
 
