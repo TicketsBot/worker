@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
@@ -36,6 +37,25 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 	defer rootSpan.Finish()
 
 	span := sentry.StartSpan(rootSpan.Context(), "Check ticket limit")
+
+	lockCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	mu, err := redis.TakeTicketOpenLock(lockCtx, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
+	unlocked := false
+	defer func() {
+		if !unlocked {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			defer cancel()
+
+			mu.UnlockContext(ctx)
+		}
+	}()
 
 	// Make sure ticket count is within ticket limit
 	// Check ticket limit before ratelimit token to prevent 1 person from stopping everyone opening tickets
@@ -231,7 +251,8 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 						// Verify that the overflow category still exists
 						span := sentry.StartSpan(span.Context(), "Check if overflow category exists")
 						if _, err := ctx.Worker().GetChannel(category); err != nil {
-							if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
+							var restError request.RestError
+							if errors.As(err, &restError) && restError.StatusCode == 404 {
 								if err := dbclient.Client.Settings.SetOverflow(ctx.GuildId(), false, nil); err != nil {
 									ctx.HandleError(err)
 									return database.Ticket{}, err
@@ -270,6 +291,12 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		return database.Ticket{}, err
 	}
 	span.Finish()
+
+	unlocked = true
+	if _, err := mu.UnlockContext(context.Background()); err != nil && !errors.Is(err, redis.ErrLockExpired) {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
 
 	span = sentry.StartSpan(rootSpan.Context(), "Generate channel name")
 	name, err := GenerateChannelName(ctx, panel, ticketId, ctx.UserId(), nil)
