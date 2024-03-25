@@ -127,7 +127,7 @@ func (StatsUserCommand) Execute(c registry.CommandContext, userId uint64) {
 		_, _ = c.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 		span.Finish()
 	} else { // Support rep stats
-		group, _ := errgroup.WithContext(context.Background())
+		group, _ := errgroup.WithContext(ctx)
 
 		var feedbackRating float32
 		var feedbackCount int
