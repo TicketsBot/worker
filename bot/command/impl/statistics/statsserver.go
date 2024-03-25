@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/analytics-client"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -38,18 +39,27 @@ func (c StatsServerCommand) GetExecutor() interface{} {
 }
 
 func (StatsServerCommand) Execute(ctx registry.CommandContext) {
+	span := sentry.StartSpan(context.Background(), "/stats server")
+	defer span.Finish()
+
 	group, _ := errgroup.WithContext(context.Background())
 
 	var totalTickets, openTickets int
 
 	// totalTickets
 	group.Go(func() (err error) {
+		span := sentry.StartSpan(span.Context(), "GetTotalTicketCount")
+		defer span.Finish()
+
 		totalTickets, err = dbclient.Client.Tickets.GetTotalTicketCount(ctx.GuildId())
 		return
 	})
 
 	// openTickets
 	group.Go(func() error {
+		span := sentry.StartSpan(span.Context(), "GetGuildOpenTickets")
+		defer span.Finish()
+
 		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx.GuildId())
 		openTickets = len(tickets)
 		return err
@@ -59,11 +69,17 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	var feedbackCount int
 
 	group.Go(func() (err error) {
+		span := sentry.StartSpan(span.Context(), "GetAverageFeedbackRating")
+		defer span.Finish()
+
 		feedbackRating, err = dbclient.Client.ServiceRatings.GetAverage(ctx.GuildId())
 		return
 	})
 
 	group.Go(func() (err error) {
+		span := sentry.StartSpan(span.Context(), "GetFeedbackCount")
+		defer span.Finish()
+
 		feedbackCount, err = dbclient.Client.ServiceRatings.GetCount(ctx.GuildId())
 		return
 	})
@@ -71,7 +87,10 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	// first response times
 	var firstResponseTime analytics.TripleWindow
 	group.Go(func() (err error) {
-		context, cancel := utils.ContextTimeout(time.Second * 3)
+		span := sentry.StartSpan(span.Context(), "GetFirstResponseTimeStats")
+		defer span.Finish()
+
+		context, cancel := utils.ContextTimeout(time.Minute)
 		defer cancel()
 
 		firstResponseTime, err = dbclient.Analytics.GetFirstResponseTimeStats(context, ctx.GuildId())
@@ -81,7 +100,10 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	// ticket duration
 	var ticketDuration analytics.TripleWindow
 	group.Go(func() (err error) {
-		context, cancel := utils.ContextTimeout(time.Second * 3)
+		span := sentry.StartSpan(span.Context(), "GetTicketDurationStats")
+		defer span.Finish()
+
+		context, cancel := utils.ContextTimeout(time.Minute)
 		defer cancel()
 
 		ticketDuration, err = dbclient.Analytics.GetTicketDurationStats(context, ctx.GuildId())
@@ -92,6 +114,8 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		ctx.HandleError(err)
 		return
 	}
+
+	span = sentry.StartSpan(span.Context(), "Send Message")
 
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
@@ -110,6 +134,7 @@ func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 		AddField("Average Ticket Duration (Weekly)", formatNullableTime(ticketDuration.Weekly), true)
 
 	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
+	span.Finish()
 }
 
 func formatNullableTime(duration *time.Duration) string {
