@@ -45,7 +45,7 @@ func (StatsUserCommand) Execute(c registry.CommandContext, userId uint64) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
-	span := sentry.StartSpan(ctx, "/stats user")
+	span := sentry.StartTransaction(ctx, "/stats user")
 	defer span.Finish()
 
 	member, err := c.Worker().GetGuildMember(c.GuildId(), userId)

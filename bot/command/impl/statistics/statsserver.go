@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/TicketsBot/analytics-client"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/getsentry/sentry-go"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"golang.org/x/sync/errgroup"
@@ -42,7 +42,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
-	span := sentry.StartSpan(ctx, "/stats server")
+	span := sentry.StartTransaction(ctx, "/stats server")
 	defer span.Finish()
 
 	group, _ := errgroup.WithContext(ctx)
