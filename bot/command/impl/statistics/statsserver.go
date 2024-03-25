@@ -39,7 +39,7 @@ func (c StatsServerCommand) GetExecutor() interface{} {
 }
 
 func (StatsServerCommand) Execute(c registry.CommandContext) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
 	span := sentry.StartSpan(ctx, "/stats server")
@@ -54,18 +54,17 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetTotalTicketCount")
 		defer span.Finish()
 
-		totalTickets, err = dbclient.Client.Tickets.GetTotalTicketCount(c.GuildId())
+		totalTickets, err = dbclient.Analytics.GetTotalTicketCount(ctx, c.GuildId())
 		return
 	})
 
 	// openTickets
-	group.Go(func() error {
+	group.Go(func() (err error) {
 		span := sentry.StartSpan(span.Context(), "GetGuildOpenTickets")
 		defer span.Finish()
 
-		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(c.GuildId())
-		openTickets = len(tickets)
-		return err
+		openTickets, err = dbclient.Analytics.GetTotalOpenTicketCount(ctx, c.GuildId())
+		return
 	})
 
 	var feedbackRating float32
@@ -75,7 +74,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetAverageFeedbackRating")
 		defer span.Finish()
 
-		feedbackRating, err = dbclient.Client.ServiceRatings.GetAverage(c.GuildId())
+		feedbackRating, err = dbclient.Analytics.GetAverageFeedbackRatingGuild(ctx, c.GuildId())
 		return
 	})
 
@@ -83,7 +82,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetFeedbackCount")
 		defer span.Finish()
 
-		feedbackCount, err = dbclient.Client.ServiceRatings.GetCount(c.GuildId())
+		feedbackCount, err = dbclient.Analytics.GetFeedbackCountGuild(ctx, c.GuildId())
 		return
 	})
 
