@@ -47,7 +47,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 
 	group, _ := errgroup.WithContext(ctx)
 
-	var totalTickets, openTickets int
+	var totalTickets, openTickets uint64
 
 	// totalTickets
 	group.Go(func() (err error) {
@@ -68,7 +68,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	})
 
 	var feedbackRating float32
-	var feedbackCount int
+	var feedbackCount uint64
 
 	group.Go(func() (err error) {
 		span := sentry.StartSpan(span.Context(), "GetAverageFeedbackRating")
@@ -116,11 +116,11 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
 		SetColor(c.GetColour(customisation.Green)).
-		AddField("Total Tickets", strconv.Itoa(totalTickets), true).
-		AddField("Open Tickets", strconv.Itoa(openTickets), true).
+		AddField("Total Tickets", strconv.FormatUint(totalTickets, 10), true).
+		AddField("Open Tickets", strconv.FormatUint(openTickets, 10), true).
 		AddBlankField(true).
 		AddField("Feedback Rating", fmt.Sprintf("%.1f / 5 ⭐", feedbackRating), true).
-		AddField("Feedback Count", fmt.Sprintf("%d", feedbackCount), true).
+		AddField("Feedback Count", strconv.FormatUint(feedbackCount, 10), true).
 		AddBlankField(true).
 		AddField("Average First Response Time (Total)", formatNullableTime(firstResponseTime.AllTime), true).
 		AddField("Average First Response Time (Monthly)", formatNullableTime(firstResponseTime.Monthly), true).

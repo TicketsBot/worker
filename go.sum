@@ -42,6 +42,8 @@ github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e h1:tIN
 github.com/TicketsBot/analytics-client v0.0.0-20230607214124-b2b1f3643e8e/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/analytics-client v0.0.0-20240325210241-1b94418d0c65 h1:j8EU3+iCD3GiO3EP7IFw/SwxzBi6M6k5e8zFexhVmxM=
 github.com/TicketsBot/analytics-client v0.0.0-20240325210241-1b94418d0c65/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
+github.com/TicketsBot/analytics-client v0.0.0-20240325211228-ac269336aa09 h1:yWF90Xc00BfOw50MzJ2NAVRPnV0LOvUdL8tOGWmgA9s=
+github.com/TicketsBot/analytics-client v0.0.0-20240325211228-ac269336aa09/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
 github.com/TicketsBot/common v0.0.0-20230819234541-7678a70af5f1 h1:ulEWPU9i9uNPkduWyUZoIHgaKmoUoLW5LguCD2iXX7U=
