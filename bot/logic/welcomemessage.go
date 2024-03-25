@@ -272,6 +272,8 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 // TODO: Error handling
 type PlaceholderSubstitutionFunc func(*worker.Context, database.Ticket) string
 
+const substitutionTimeout = time.Millisecond * 1500
+
 var substitutions = map[string]PlaceholderSubstitutionFunc{
 	"user": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<@%d>", ticket.UserId)
@@ -290,13 +292,19 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 		guild, _ := ctx.GetGuild(ticket.GuildId)
 		return guild.Name
 	},
-	"open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		open, _ := dbclient.Client.Tickets.GetGuildOpenTickets(ticket.GuildId)
-		return strconv.Itoa(len(open))
+	"open_tickets": func(_ *worker.Context, ticket database.Ticket) string {
+		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
+		defer cancel()
+
+		open, _ := dbclient.Analytics.GetTotalOpenTicketCount(ctx, ticket.GuildId)
+		return strconv.FormatUint(open, 10)
 	},
-	"total_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		count, _ := dbclient.Client.Tickets.GetTotalTicketCount(ticket.GuildId)
-		return strconv.Itoa(count)
+	"total_tickets": func(_ *worker.Context, ticket database.Ticket) string {
+		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
+		defer cancel()
+
+		count, _ := dbclient.Analytics.GetTotalTicketCount(ctx, ticket.GuildId)
+		return strconv.FormatUint(count, 10)
 	},
 	"user_open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
 		count, _ := dbclient.Client.Tickets.GetOpenCountByUser(ticket.GuildId, ticket.UserId)
@@ -310,12 +318,18 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 		limit, _ := dbclient.Client.TicketLimit.Get(ticket.GuildId)
 		return strconv.Itoa(int(limit))
 	},
-	"rating_count": func(ctx *worker.Context, ticket database.Ticket) string {
-		ratingCount, _ := dbclient.Client.ServiceRatings.GetCount(ticket.GuildId)
-		return strconv.Itoa(ratingCount)
+	"rating_count": func(_ *worker.Context, ticket database.Ticket) string {
+		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
+		defer cancel()
+
+		ratingCount, _ := dbclient.Analytics.GetFeedbackCountGuild(ctx, ticket.GuildId)
+		return strconv.FormatUint(ratingCount, 10)
 	},
-	"average_rating": func(ctx *worker.Context, ticket database.Ticket) string {
-		average, _ := dbclient.Client.ServiceRatings.GetAverage(ticket.GuildId)
+	"average_rating": func(_ *worker.Context, ticket database.Ticket) string {
+		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
+		defer cancel()
+
+		average, _ := dbclient.Analytics.GetAverageFeedbackRatingGuild(ctx, ticket.GuildId)
 		return fmt.Sprintf("%.1f", average)
 	},
 	"time": func(ctx *worker.Context, ticket database.Ticket) string {

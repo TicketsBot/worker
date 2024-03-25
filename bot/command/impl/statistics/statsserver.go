@@ -67,7 +67,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		return
 	})
 
-	var feedbackRating float32
+	var feedbackRating float64
 	var feedbackCount uint64
 
 	group.Go(func() (err error) {
