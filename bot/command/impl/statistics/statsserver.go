@@ -154,7 +154,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		AddField("Average Ticket Duration (Total)", formatNullableTime(ticketDuration.AllTime), true).
 		AddField("Average Ticket Duration (Monthly)", formatNullableTime(ticketDuration.Monthly), true).
 		AddField("Average Ticket Duration (Weekly)", formatNullableTime(ticketDuration.Weekly), true).
-		AddField("Ticket Volume", ticketVolumeTable, false)
+		AddField("Ticket Volume", fmt.Sprintf("```\n%s\n```", ticketVolumeTable), false)
 
 	_, _ = c.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	span.Finish()
