@@ -236,7 +236,7 @@ func (StatsUserCommand) Execute(c registry.CommandContext, userId uint64) {
 
 		// weeklyClaimed
 		group.Go(func() (err error) {
-			span := sentry.StartSpan(span.Context(), "GetClaimedSinceCount")
+			span := sentry.StartSpan(span.Context(), "GetClaimedSinceCount_Weekly")
 			defer span.Finish()
 
 			weeklyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(c.GuildId(), userId, time.Hour*24*7)
@@ -245,7 +245,7 @@ func (StatsUserCommand) Execute(c registry.CommandContext, userId uint64) {
 
 		// monthlyClaimed
 		group.Go(func() (err error) {
-			span := sentry.StartSpan(span.Context(), "GetClaimedSinceCount")
+			span := sentry.StartSpan(span.Context(), "GetClaimedSinceCount_Monthly")
 			defer span.Finish()
 
 			monthlyClaimedTickets, err = dbclient.Client.TicketClaims.GetClaimedSinceCount(c.GuildId(), userId, time.Hour*24*28)
