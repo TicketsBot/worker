@@ -27,14 +27,22 @@ import (
 )
 
 // returns msg id
-func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel, formData map[database.FormInput]string) (uint64, error) {
+func SendWelcomeMessage(
+	ctx registry.CommandContext,
+	ticket database.Ticket,
+	subject string,
+	panel *database.Panel,
+	formData map[database.FormInput]string,
+	// Only custom integration placeholders for now - prevent making duplicate requests
+	additionalPlaceholders map[string]string,
+) (uint64, error) {
 	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
 	if err != nil {
 		return 0, err
 	}
 
 	// Build embeds
-	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel, true, getFormAnswers(formData))
+	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel, additionalPlaceholders)
 	if err != nil {
 		return 0, err
 	}
@@ -102,8 +110,14 @@ func SendWelcomeMessage(ctx registry.CommandContext, ticket database.Ticket, sub
 	return msg.Id, nil
 }
 
-func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticket, subject string, panel *database.Panel, isNewTicket bool, formAnswers map[string]*string) (*embed.Embed, error) {
-	// Send welcome message
+func BuildWelcomeMessageEmbed(
+	ctx registry.CommandContext,
+	ticket database.Ticket,
+	subject string,
+	panel *database.Panel,
+	// Only custom integration placeholders for now - prevent making duplicate requests
+	additionalPlaceholders map[string]string,
+) (*embed.Embed, error) {
 	if panel == nil || panel.WelcomeMessageEmbed == nil {
 		welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
 		if err != nil {
@@ -115,7 +129,7 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 		}
 
 		// Replace variables
-		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket, isNewTicket, formAnswers)
+		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket, additionalPlaceholders)
 
 		return utils.BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier()), nil
 	} else {
@@ -129,12 +143,18 @@ func BuildWelcomeMessageEmbed(ctx registry.CommandContext, ticket database.Ticke
 			return nil, err
 		}
 
-		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, true, formAnswers)
+		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, additionalPlaceholders)
 		return e, nil
 	}
 }
 
-func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket database.Ticket, isNewTicket bool, formAnswers map[string]*string) string {
+func DoPlaceholderSubstitutions(
+	message string,
+	ctx *worker.Context,
+	ticket database.Ticket,
+	// Only custom integration placeholders for now - prevent making duplicate requests
+	additionalPlaceholders map[string]string,
+) string {
 	var lock sync.Mutex
 
 	// do DB lookups in parallel
@@ -197,11 +217,28 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 		}
 	}
 
+	for placeholder, replacement := range additionalPlaceholders {
+		formatted := fmt.Sprintf("%%%s%%", placeholder)
+		lock.Lock()
+		message = strings.Replace(message, formatted, replacement, -1)
+		lock.Unlock()
+	}
+
+	if err := group.Wait(); err != nil {
+		sentry.Error(err)
+	}
+
+	return message
+}
+
+func fetchCustomIntegrationPlaceholders(
+	ticket database.Ticket,
+	formAnswers map[string]*string,
+) (map[string]string, error) {
 	// Custom integrations
 	guildIntegrations, err := dbclient.Client.CustomIntegrationGuilds.GetGuildIntegrations(ticket.GuildId)
 	if err != nil {
-		sentry.Error(err)
-		return message
+		return nil, err
 	}
 
 	// Fetch integrations
@@ -213,8 +250,7 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 
 		placeholders, err := dbclient.Client.CustomIntegrationPlaceholders.GetAllActivatedInGuild(ticket.GuildId)
 		if err != nil {
-			sentry.Error(err)
-			return message
+			return nil, err
 		}
 
 		// Determine which integrations we need to fetch
@@ -229,44 +265,52 @@ func DoPlaceholderSubstitutions(message string, ctx *worker.Context, ticket data
 
 		secrets, err := dbclient.Client.CustomIntegrationSecretValues.GetAll(ticket.GuildId, integrationIds)
 		if err != nil {
-			sentry.Error(err)
-			return message
+			return nil, err
 		}
 
 		headers, err := dbclient.Client.CustomIntegrationHeaders.GetAll(integrationIds)
 		if err != nil {
-			sentry.Error(err)
-			return message
+			return nil, err
 		}
 
 		// Replace placeholders
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		group, _ := errgroup.WithContext(ctx)
+
+		var lock sync.Mutex
+		m := make(map[string]string) // Merge responses into 1 map
+
 		for _, integration := range guildIntegrations {
 			integration := integration
 			integrationSecrets := secrets[integration.Id]
 
 			group.Go(func() error {
-				response, err := integrations.Fetch(integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id], isNewTicket, formAnswers)
+				response, err := integrations.Fetch(integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id], formAnswers)
 				if err != nil {
 					return err
 				}
 
-				for placeholder, replacement := range response {
-					formatted := fmt.Sprintf("%%%s%%", placeholder)
-					lock.Lock()
-					message = strings.Replace(message, formatted, replacement, -1)
-					lock.Unlock()
+				lock.Lock()
+				defer lock.Unlock()
+
+				for key, value := range response {
+					m[key] = value
 				}
 
 				return nil
 			})
 		}
-	}
 
-	if err := group.Wait(); err != nil {
-		sentry.Error(err)
-	}
+		if err := group.Wait(); err != nil {
+			return nil, err
+		}
 
-	return message
+		return m, nil
+	} else {
+		return make(map[string]string), nil
+	}
 }
 
 // TODO: Error handling
@@ -460,7 +504,7 @@ var groupSubstitutions = []GroupSubstitutor{
 	),
 }
 
-func getFormAnswers(formData map[database.FormInput]string) map[string]*string {
+func formAnswersToMap(formData map[database.FormInput]string) map[string]*string {
 	// Get form inputs in the same order they are presented on the dashboard
 	i := 0
 	inputs := make([]database.FormInput, len(formData))
@@ -524,12 +568,12 @@ func BuildCustomEmbed(
 	customEmbed database.CustomEmbed,
 	fields []database.EmbedField,
 	branding bool,
-	isNewTicket bool,
-	formAnswers map[string]*string,
+	// Only custom integration placeholders for now - prevent making duplicate requests
+	additionalPlaceholders map[string]string,
 ) *embed.Embed {
 	e := &embed.Embed{
 		Title:       utils.ValueOrZero(customEmbed.Title),
-		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, isNewTicket, formAnswers),
+		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, additionalPlaceholders),
 		Url:         utils.ValueOrZero(customEmbed.Url),
 		Timestamp:   customEmbed.Timestamp,
 		Color:       int(customEmbed.Colour),
@@ -554,7 +598,7 @@ func BuildCustomEmbed(
 	}
 
 	for _, field := range fields {
-		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket, isNewTicket, nil), field.Inline)
+		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket, additionalPlaceholders), field.Inline)
 	}
 
 	return e

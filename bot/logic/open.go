@@ -411,8 +411,17 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		JoinMessageId:    joinMessageId,
 	}
 
+	span = sentry.StartSpan(rootSpan.Context(), "Fetch custom integration placeholders")
+	additionalPlaceholders, err := fetchCustomIntegrationPlaceholders(ticket, formAnswersToMap(formData))
+	if err != nil {
+		// TODO: Log for integration author and server owner on the dashboard, rather than spitting out a message.
+		// A failing integration should not block the ticket creation process.
+		ctx.HandleError(err)
+	}
+	span.Finish()
+
 	span = sentry.StartSpan(rootSpan.Context(), "Send welcome message")
-	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData)
+	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData, additionalPlaceholders)
 	if err != nil {
 		ctx.HandleError(err)
 	}

@@ -70,13 +70,13 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 
 	var content string
 	if tag.Content != nil {
-		content = logic.DoPlaceholderSubstitutions(*tag.Content, ctx.Worker(), ticket, false, nil)
+		content = logic.DoPlaceholderSubstitutions(*tag.Content, ctx.Worker(), ticket, nil)
 	}
 
 	var embeds []*embed.Embed
 	if tag.Embed != nil {
 		embeds = []*embed.Embed{
-			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, false, false, nil),
+			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, false, nil),
 		}
 	}
 

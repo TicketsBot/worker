@@ -42,7 +42,6 @@ func Fetch(
 	secrets []database.SecretWithValue,
 	headers []database.CustomIntegrationHeader,
 	placeholders []database.CustomIntegrationPlaceholder, // Only include placeholders that are actually used
-	isNewTicket bool,
 	formAnswers formAnswers,
 ) (map[string]string, error) {
 	prometheus.LogIntegrationRequest(integration, ticket.GuildId)
@@ -77,7 +76,7 @@ func Fetch(
 			UserId:          ticket.UserId,
 			TicketId:        ticket.Id,
 			TicketChannelId: ticket.ChannelId,
-			IsNewTicket:     isNewTicket,
+			IsNewTicket:     true,
 		}
 
 		if !integration.Public {
