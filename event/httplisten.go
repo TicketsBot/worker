@@ -32,6 +32,8 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
+const CallbackTimeout = time.Millisecond * 1000
+
 func newErrorResponse(err error) errorResponse {
 	return errorResponse{
 		response: response{
@@ -147,7 +149,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := time.NewTimer(time.Millisecond * 1500)
+			timeout := time.NewTimer(CallbackTimeout)
 
 			select {
 			case <-timeout.C:
@@ -177,7 +179,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
-			timeout := time.NewTimer(time.Millisecond * 1500)
+			timeout := time.NewTimer(CallbackTimeout)
 
 			select {
 			case <-timeout.C:
