@@ -134,6 +134,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 		switch payload.InteractionType {
 		case interaction.InteractionTypeApplicationCommand:
+			timeout := time.After(CallbackTimeout)
+
 			var interactionData interaction.ApplicationCommandInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)
@@ -149,10 +151,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := time.NewTimer(CallbackTimeout)
-
 			select {
-			case <-timeout.C:
+			case <-timeout:
 				var flags uint
 				if deferDefault {
 					flags = message.SumFlags(message.FlagEphemeral)
@@ -170,6 +170,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			// Message components
 		case interaction.InteractionTypeMessageComponent:
+			timeout := time.After(CallbackTimeout)
+
 			var interactionData interaction.MessageComponentInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)
@@ -179,10 +181,8 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
-			timeout := time.NewTimer(CallbackTimeout)
-
 			select {
-			case <-timeout.C:
+			case <-timeout:
 				res := interaction.NewResponseDeferredMessageUpdate()
 				ctx.JSON(200, res)
 				ctx.Writer.Flush()
