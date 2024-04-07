@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/gin-gonic/gin"
@@ -141,7 +142,11 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := createTimer(interactionData.Id)
+			timeToDefer := calculateTimeToDefer(interactionData.Id)
+
+			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
+			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
+
 			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
 			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
@@ -152,7 +157,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			}
 
 			select {
-			case <-timeout:
+			case <-time.After(timeToDefer):
 				var flags uint
 				if deferDefault {
 					flags = message.SumFlags(message.FlagEphemeral)
@@ -176,13 +181,16 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeout := createTimer(interactionData.Id)
+			timeToDefer := calculateTimeToDefer(interactionData.Id)
+
+			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
+			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
 			select {
-			case <-timeout:
+			case <-time.After(timeToDefer):
 				res := interaction.NewResponseDeferredMessageUpdate()
 				ctx.JSON(200, res)
 				ctx.Writer.Flush()
@@ -346,8 +354,12 @@ func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOpti
 	return "", nil, false
 }
 
-func createTimer(interactionId uint64) <-chan time.Time {
+func calculateTimeToReceive(interactionId uint64) time.Duration {
 	generated := utils.SnowflakeToTime(interactionId)
-	diff := generated.Add(CallbackTimeout).Sub(time.Now())
-	return time.After(diff)
+	return time.Now().Sub(generated)
+}
+
+func calculateTimeToDefer(interactionId uint64) time.Duration {
+	generated := utils.SnowflakeToTime(interactionId)
+	return generated.Add(CallbackTimeout).Sub(time.Now())
 }
