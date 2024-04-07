@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -32,7 +33,7 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-const CallbackTimeout = time.Millisecond * 1000
+const CallbackTimeout = time.Millisecond * 2000
 
 func newErrorResponse(err error) errorResponse {
 	return errorResponse{
@@ -134,14 +135,13 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 		switch payload.InteractionType {
 		case interaction.InteractionTypeApplicationCommand:
-			timeout := time.After(CallbackTimeout)
-
 			var interactionData interaction.ApplicationCommandInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)
 				return
 			}
 
+			timeout := createTimer(interactionData.Id)
 			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
 			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
@@ -170,13 +170,13 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			// Message components
 		case interaction.InteractionTypeMessageComponent:
-			timeout := time.After(CallbackTimeout)
-
 			var interactionData interaction.MessageComponentInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
 				logrus.Warnf("error parsing application payload data: %v", err)
 				return
 			}
+
+			timeout := createTimer(interactionData.Id)
 
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
@@ -344,4 +344,10 @@ func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOpti
 	}
 
 	return "", nil, false
+}
+
+func createTimer(interactionId uint64) <-chan time.Time {
+	generated := utils.SnowflakeToTime(interactionId)
+	diff := generated.Add(CallbackTimeout).Sub(time.Now())
+	return time.After(diff)
 }
