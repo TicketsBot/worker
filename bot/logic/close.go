@@ -78,8 +78,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 
 			if err != nil {
 				// First rest interaction, check for 403
-				var err request.RestError
-				if errors.As(err, &err) && err.StatusCode == 403 {
+				var restError request.RestError
+				if errors.As(restError, &restError) && restError.StatusCode == 403 {
 					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
 						sentry.ErrorWithContext(err, errorContext)
 					}
