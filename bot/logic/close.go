@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -63,34 +64,36 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 
 	// Archive
 	if settings.StoreTranscripts {
-		msgs := make([]message.Message, 0)
+		msgs := make([]message.Message, 0, 50)
+
+		const limit = 100
 
 		lastId := uint64(0)
-		count := -1
-		for count != 0 {
-			array, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
+		lastChunkSize := limit
+		for lastChunkSize == limit {
+			chunk, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
 				Before: lastId,
-				Limit:  100,
+				Limit:  limit,
 			})
 
-			count = len(array)
 			if err != nil {
-				count = 0
-				sentry.ErrorWithContext(err, errorContext)
-
 				// First rest interaction, check for 403
-				if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
+				var err request.RestError
+				if errors.As(err, &err) && err.StatusCode == 403 {
 					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
 						sentry.ErrorWithContext(err, errorContext)
 					}
 				}
 
-				break
+				ctx.HandleError(err)
+				return
 			}
 
-			if count > 0 {
-				lastId = array[len(array)-1].Id
-				msgs = append(msgs, array...)
+			lastChunkSize = len(chunk)
+
+			if lastChunkSize > 0 {
+				lastId = chunk[len(chunk)-1].Id
+				msgs = append(msgs, chunk...)
 			}
 		}
 
@@ -99,13 +102,14 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 			msgs[i], msgs[j] = msgs[j], msgs[i]
 		}
 
-		err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None)
-		if err == nil {
-			if err := dbclient.Client.Tickets.SetHasTranscript(ctx.GuildId(), ticket.Id, true); err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-			}
-		} else {
-			sentry.ErrorWithContext(err, errorContext)
+		if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if err := dbclient.Client.Tickets.SetHasTranscript(ctx.GuildId(), ticket.Id, true); err != nil {
+			ctx.HandleError(err)
+			return
 		}
 	}
 
@@ -149,7 +153,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 		}
 
 		// Discord has a race condition
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 250)
 
 		data := rest.ModifyChannelData{
 			ThreadMetadataModifyData: &rest.ThreadMetadataModifyData{
@@ -165,7 +169,8 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 	} else {
 		if _, err := ctx.Worker().DeleteChannel(ctx.ChannelId()); err != nil {
 			// Check if we should exclude this from autoclose
-			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 403 {
+			var restError request.RestError
+			if errors.As(err, &restError) && restError.StatusCode == 403 {
 				if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
 					sentry.ErrorWithContext(err, errorContext)
 				}
