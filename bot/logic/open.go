@@ -34,6 +34,7 @@ import (
 
 func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject string, formData map[database.FormInput]string) (database.Ticket, error) {
 	rootSpan := sentry.StartSpan(context.Background(), "Ticket open")
+	rootSpan.SetTag("guild", strconv.FormatUint(ctx.GuildId(), 10))
 	defer rootSpan.Finish()
 
 	span := sentry.StartSpan(rootSpan.Context(), "Check ticket limit")

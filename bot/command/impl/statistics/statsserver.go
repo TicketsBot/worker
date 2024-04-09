@@ -45,6 +45,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	defer cancel()
 
 	span := sentry.StartTransaction(ctx, "/stats server")
+	span.SetTag("guild", strconv.FormatUint(c.GuildId(), 10))
 	defer span.Finish()
 
 	group, _ := errgroup.WithContext(ctx)

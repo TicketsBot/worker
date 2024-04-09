@@ -46,6 +46,8 @@ func (StatsUserCommand) Execute(c registry.CommandContext, userId uint64) {
 	defer cancel()
 
 	span := sentry.StartTransaction(ctx, "/stats user")
+	span.SetTag("guild", strconv.FormatUint(c.GuildId(), 10))
+	span.SetTag("user", strconv.FormatUint(userId, 10))
 	defer span.Finish()
 
 	member, err := c.Worker().GetGuildMember(c.GuildId(), userId)
