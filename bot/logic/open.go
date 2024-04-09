@@ -551,7 +551,7 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 	// Create webhook
 	if ctx.PremiumTier() > premium.None {
 		group.Go(func() error {
-			return createWebhook(ctx, ticketId, ctx.GuildId(), ch.Id)
+			return createWebhook(rootSpan.Context(), ctx, ticketId, ctx.GuildId(), ch.Id)
 		})
 	}
 
@@ -606,11 +606,15 @@ func getTicketLimit(ctx registry.CommandContext) (bool, int) {
 	return len(openedTickets) >= int(ticketLimit), int(ticketLimit)
 }
 
-func createWebhook(c registry.CommandContext, ticketId int, guildId, channelId uint64) error {
+func createWebhook(ctx context.Context, c registry.CommandContext, ticketId int, guildId, channelId uint64) error {
 	// TODO: Re-add permission check
 	//if permission.HasPermissionsChannel(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), channelId, permission.ManageWebhooks) { // Do we actually need this?
+	root := sentry.StartSpan(ctx, "Create webhook")
+	defer root.Finish()
 
+	span := sentry.StartSpan(root.Context(), "Get bot user")
 	self, err := c.Worker().Self()
+	span.Finish()
 	if err != nil {
 		return err
 	}
@@ -620,7 +624,9 @@ func createWebhook(c registry.CommandContext, ticketId int, guildId, channelId u
 		Avatar:   self.AvatarUrl(256),
 	}
 
+	span = sentry.StartSpan(root.Context(), "Get bot user")
 	webhook, err := c.Worker().CreateWebhook(channelId, data)
+	span.Finish()
 	if err != nil {
 		sentry.ErrorWithContext(err, c.ToErrorContext())
 		return nil // Silently fail
@@ -631,6 +637,8 @@ func createWebhook(c registry.CommandContext, ticketId int, guildId, channelId u
 		Token: webhook.Token,
 	}
 
+	span = sentry.StartSpan(root.Context(), "Store webhook in database")
+	defer span.Finish()
 	if err := dbclient.Client.Webhooks.Create(guildId, ticketId, dbWebhook); err != nil {
 		return err
 	}
