@@ -1,17 +1,14 @@
 package admin
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/rest/ratelimit"
 	"strconv"
 )
 
@@ -69,7 +66,7 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 			BotId:        bot.BotId,
 			IsWhitelabel: true,
 			Cache:        ctx.Worker().Cache,
-			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, fmt.Sprintf("ratelimiter:%d", bot.BotId)), 1),
+			RateLimiter:  nil, // Use http-proxy ratelimit functionality
 		}
 	} else { // Public bot
 		w = ctx.Worker()

@@ -1,7 +1,6 @@
 package messagequeue
 
 import (
-	"fmt"
 	"github.com/TicketsBot/common/closerelay"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -13,7 +12,6 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
-	"github.com/rxdn/gdl/rest/ratelimit"
 )
 
 // TODO: Make this good
@@ -73,30 +71,19 @@ func ListenTicketClose() {
 				}
 			}
 
-			// Create ratelimiter
-			var keyPrefix string
-			if botId != 0 { // If is whitelabel
-				keyPrefix = fmt.Sprintf("ratelimiter:%d", botId)
-			} else {
-				keyPrefix = "ratelimiter:public"
-			}
-
-			// TODO: Handle large sharding buckets - envvar?
-			rateLimiter := ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, keyPrefix), 1)
-
-			// Get whether the guild is premium for log archiver
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, rateLimiter)
-			if err != nil {
-				sentry.ErrorWithContext(err, errorContext)
-				return
-			}
-
 			// Create worker context
 			workerCtx := &worker.Context{
 				Token:        token,
 				IsWhitelabel: botId != 0,
 				Cache:        cache.Client, // TODO: Less hacky
-				RateLimiter:  rateLimiter,
+				RateLimiter:  nil,          // Use http-proxy ratelimit functionality
+			}
+
+			// Get whether the guild is premium for log archiver
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, workerCtx.RateLimiter)
+			if err != nil {
+				sentry.ErrorWithContext(err, errorContext)
+				return
 			}
 
 			// if ticket didnt open in the first place, no channel ID is assigned.

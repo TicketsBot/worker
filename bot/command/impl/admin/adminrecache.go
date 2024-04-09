@@ -2,16 +2,13 @@ package admin
 
 import (
 	"errors"
-	"fmt"
 	"github.com/TicketsBot/common/permission"
 	w "github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/dbclient"
-	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
-	"github.com/rxdn/gdl/rest/ratelimit"
 	"strconv"
 )
 
@@ -80,7 +77,7 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 			IsWhitelabel: true,
 			ShardId:      0,
 			Cache:        ctx.Worker().Cache,
-			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis.Client, fmt.Sprintf("ratelimiter:%d", bot.BotId)), 1),
+			RateLimiter:  nil, // Use http-proxy ratelimit functionality
 		}
 	} else {
 		worker = ctx.Worker()

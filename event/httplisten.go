@@ -19,7 +19,6 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
-	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
@@ -77,21 +76,13 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 			return
 		}
 
-		var keyPrefix string
-
-		if event.IsWhitelabel {
-			keyPrefix = fmt.Sprintf("ratelimiter:%d", event.BotId)
-		} else {
-			keyPrefix = "ratelimiter:public"
-		}
-
 		workerCtx := &worker.Context{
 			Token:        event.BotToken,
 			BotId:        event.BotId,
 			IsWhitelabel: event.IsWhitelabel,
 			ShardId:      event.ShardId,
 			Cache:        cache,
-			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
+			RateLimiter:  nil, // Use http-proxy ratelimit functionality
 		}
 
 		ctx.AbortWithStatusJSON(200, successResponse)
@@ -118,20 +109,12 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			return
 		}
 
-		var keyPrefix string
-
-		if payload.IsWhitelabel {
-			keyPrefix = fmt.Sprintf("ratelimiter:%d", payload.BotId)
-		} else {
-			keyPrefix = "ratelimiter:public"
-		}
-
 		worker := &worker.Context{
 			Token:        payload.BotToken,
 			BotId:        payload.BotId,
 			IsWhitelabel: payload.IsWhitelabel,
 			Cache:        cache,
-			RateLimiter:  ratelimit.NewRateLimiter(ratelimit.NewRedisStore(redis, keyPrefix), 1),
+			RateLimiter:  nil, // Use http-proxy ratelimit functionality
 		}
 
 		switch payload.InteractionType {
