@@ -389,16 +389,25 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		ch = tmp
 	}
 
+	prometheus.LogTicketCreated(ctx.GuildId())
+
+	// Parallelise as much as possible
+	group, _ := errgroup.WithContext(context.Background())
+
 	// Let the user know the ticket has been opened
-	span = sentry.StartSpan(rootSpan.Context(), "Reply to interaction")
-	ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
-	span.Finish()
+	group.Go(func() error {
+		span := sentry.StartSpan(rootSpan.Context(), "Reply to interaction")
+		ctx.Reply(customisation.Green, i18n.Ticket, i18n.MessageTicketOpened, ch.Mention())
+		span.Finish()
+		return nil
+	})
 
 	var panelId *int
 	if panel != nil {
 		panelId = &panel.PanelId
 	}
 
+	// WelcomeMessageId is modified in the welcome message goroutine
 	ticket := database.Ticket{
 		Id:               ticketId,
 		GuildId:          ctx.GuildId(),
@@ -412,43 +421,44 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		JoinMessageId:    joinMessageId,
 	}
 
-	span = sentry.StartSpan(rootSpan.Context(), "Fetch custom integration placeholders")
-	additionalPlaceholders, err := fetchCustomIntegrationPlaceholders(ticket, formAnswersToMap(formData))
-	if err != nil {
-		// TODO: Log for integration author and server owner on the dashboard, rather than spitting out a message.
-		// A failing integration should not block the ticket creation process.
-		ctx.HandleError(err)
-	}
-	span.Finish()
+	// Welcome message
+	group.Go(func() error {
+		span = sentry.StartSpan(rootSpan.Context(), "Fetch custom integration placeholders")
+		additionalPlaceholders, err := fetchCustomIntegrationPlaceholders(ticket, formAnswersToMap(formData))
+		if err != nil {
+			// TODO: Log for integration author and server owner on the dashboard, rather than spitting out a message.
+			// A failing integration should not block the ticket creation process.
+			ctx.HandleError(err)
+		}
+		span.Finish()
 
-	span = sentry.StartSpan(rootSpan.Context(), "Send welcome message")
-	welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData, additionalPlaceholders)
-	if err != nil {
-		ctx.HandleError(err)
-	}
-	span.Finish()
+		span = sentry.StartSpan(rootSpan.Context(), "Send welcome message")
+		welcomeMessageId, err := SendWelcomeMessage(ctx, ticket, subject, panel, formData, additionalPlaceholders)
+		span.Finish()
+		if err != nil {
+			return err
+		}
 
-	if welcomeMessageId != 0 {
-		ticket.WelcomeMessageId = &welcomeMessageId
-	}
+		// UpdateUser channel in DB
+		span = sentry.StartSpan(rootSpan.Context(), "Update ticket properties in database")
+		defer span.Finish()
+		if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, joinMessageId, panelId); err != nil {
+			return err
+		}
 
-	// UpdateUser channel in DB
-	span = sentry.StartSpan(rootSpan.Context(), "Update ticket properties in database")
-	if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, joinMessageId, panelId); err != nil {
-		ctx.HandleError(err)
-	}
-	span.Finish()
+		return nil
+	})
 
-	span = sentry.StartSpan(rootSpan.Context(), "Load guild metadata from database")
-	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
-	if err != nil {
-		ctx.HandleError(err)
-		return database.Ticket{}, err
-	}
-	span.Finish()
+	// Send mentions
+	group.Go(func() error {
+		span := sentry.StartSpan(rootSpan.Context(), "Load guild metadata from database")
+		metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+		span.Finish()
+		if err != nil {
+			return err
+		}
 
-	// mentions
-	{
+		// mentions
 		var content string
 
 		// Append on-call role pings
@@ -466,7 +476,7 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 				teams, err := dbclient.Client.PanelTeams.GetTeams(panel.PanelId)
 				span.Finish()
 				if err != nil {
-					ctx.HandleError(err)
+					return err
 				} else {
 					for _, team := range teams {
 						if team.OnCallRole != nil {
@@ -483,7 +493,7 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 			roles, err := dbclient.Client.PanelRoleMentions.GetRoles(panel.PanelId)
 			span.Finish()
 			if err != nil {
-				ctx.HandleError(err)
+				return err
 			} else {
 				for _, roleId := range roles {
 					if roleId == ctx.GuildId() {
@@ -497,14 +507,14 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 			// user
 			span = sentry.StartSpan(rootSpan.Context(), "Get panel user mention setting from database")
 			shouldMentionUser, err := dbclient.Client.PanelUserMention.ShouldMentionUser(panel.PanelId)
+			span.Finish()
 			if err != nil {
-				ctx.HandleError(err)
+				return err
 			} else {
 				if shouldMentionUser {
 					content += fmt.Sprintf("<@%d>", ctx.UserId())
 				}
 			}
-			span.Finish()
 		}
 
 		if content != "" {
@@ -526,17 +536,29 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 			span.Finish()
 
 			if err != nil {
-				ctx.HandleError(err)
-			} else {
-				// error is likely to be a permission error
-				span := sentry.StartSpan(span.Context(), "Delete ping message")
-				_ = ctx.Worker().DeleteMessage(ch.Id, pingMessage.Id)
-				span.Finish()
+				return err
 			}
+
+			// error is likely to be a permission error
+			span = sentry.StartSpan(span.Context(), "Delete ping message")
+			_ = ctx.Worker().DeleteMessage(ch.Id, pingMessage.Id)
+			span.Finish()
 		}
+
+		return nil
+	})
+
+	// Create webhook
+	if ctx.PremiumTier() > premium.None {
+		group.Go(func() error {
+			return createWebhook(ctx, ticketId, ctx.GuildId(), ch.Id)
+		})
 	}
 
-	prometheus.LogTicketCreated(ctx.GuildId())
+	if err := group.Wait(); err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
 
 	span = sentry.StartSpan(rootSpan.Context(), "Increment statsd counters")
 	statsd.Client.IncrementKey(statsd.KeyTickets)
@@ -544,10 +566,6 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		statsd.Client.IncrementKey(statsd.KeyOpenCommand)
 	}
 	span.Finish()
-
-	if ctx.PremiumTier() > premium.None {
-		go createWebhook(ctx.Worker(), ticketId, ctx.GuildId(), ch.Id)
-	}
 
 	return ticket, nil
 }
@@ -588,28 +606,24 @@ func getTicketLimit(ctx registry.CommandContext) (bool, int) {
 	return len(openedTickets) >= int(ticketLimit), int(ticketLimit)
 }
 
-func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint64) {
+func createWebhook(c registry.CommandContext, ticketId int, guildId, channelId uint64) error {
 	// TODO: Re-add permission check
 	//if permission.HasPermissionsChannel(ctx.Shard, ctx.GuildId, ctx.Shard.SelfId(), channelId, permission.ManageWebhooks) { // Do we actually need this?
 
-	var data rest.WebhookData
-
-	self, err := worker.Self()
-	if err == nil {
-		data = rest.WebhookData{
-			Username: self.Username,
-			Avatar:   self.AvatarUrl(256),
-		}
-	} else {
-		data = rest.WebhookData{
-			Username: "Tickets",
-		}
+	self, err := c.Worker().Self()
+	if err != nil {
+		return err
 	}
 
-	webhook, err := worker.CreateWebhook(channelId, data)
+	data := rest.WebhookData{
+		Username: self.Username,
+		Avatar:   self.AvatarUrl(256),
+	}
+
+	webhook, err := c.Worker().CreateWebhook(channelId, data)
 	if err != nil {
-		sentry.Error(err)
-		return
+		sentry.ErrorWithContext(err, c.ToErrorContext())
+		return nil // Silently fail
 	}
 
 	dbWebhook := database.Webhook{
@@ -618,8 +632,10 @@ func createWebhook(worker *worker.Context, ticketId int, guildId, channelId uint
 	}
 
 	if err := dbclient.Client.Webhooks.Create(guildId, ticketId, dbWebhook); err != nil {
-		sentry.Error(err)
+		return err
 	}
+
+	return nil
 }
 
 func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *database.Panel, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
