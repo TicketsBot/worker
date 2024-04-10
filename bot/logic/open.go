@@ -549,7 +549,9 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 	})
 
 	// Create webhook
-	if ctx.PremiumTier() > premium.None {
+	// TODO: Create webhook on use, rather than on ticket creation.
+	// TODO: Webhooks for threads should be created on the parent channel.
+	if ctx.PremiumTier() > premium.None && !ticket.IsThread {
 		group.Go(func() error {
 			return createWebhook(rootSpan.Context(), ctx, ticketId, ctx.GuildId(), ch.Id)
 		})
