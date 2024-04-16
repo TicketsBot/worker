@@ -337,11 +337,8 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 		return guild.Name
 	},
 	"open_tickets": func(_ *worker.Context, ticket database.Ticket) string {
-		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
-		defer cancel()
-
-		open, _ := dbclient.Analytics.GetTotalOpenTicketCount(ctx, ticket.GuildId)
-		return strconv.FormatUint(open, 10)
+		open, _ := dbclient.Client.Tickets.GetGuildOpenTickets(ticket.GuildId)
+		return strconv.Itoa(len(open))
 	},
 	"total_tickets": func(_ *worker.Context, ticket database.Ticket) string {
 		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)

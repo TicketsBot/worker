@@ -62,12 +62,17 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	})
 
 	// openTickets
-	group.Go(func() (err error) {
+	group.Go(func() error {
 		span := sentry.StartSpan(span.Context(), "GetGuildOpenTickets")
 		defer span.Finish()
 
-		openTickets, err = dbclient.Analytics.GetTotalOpenTicketCount(ctx, c.GuildId())
-		return
+		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(c.GuildId())
+		if err != nil {
+			return err
+		}
+
+		openTickets = uint64(len(tickets))
+		return nil
 	})
 
 	var feedbackRating float64
