@@ -24,7 +24,7 @@ import (
 // Returns whether the handler may edit the message
 func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Context, data interaction.MessageComponentInteraction, responseCh chan button.Response) bool {
 	// Safety checks - guild interactions only
-	if data.GuildId.Value != 0 || data.Member == nil {
+	if data.GuildId.Value == 0 || data.Member == nil {
 		return false
 	}
 
