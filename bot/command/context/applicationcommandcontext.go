@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -91,6 +92,10 @@ func (ctx *SlashCommandContext) PremiumTier() premium.PremiumTier {
 
 func (ctx *SlashCommandContext) IsInteraction() bool {
 	return true
+}
+
+func (ctx *SlashCommandContext) Source() registry.Source {
+	return registry.SourceDiscord
 }
 
 func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext {

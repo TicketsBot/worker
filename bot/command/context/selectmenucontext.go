@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -84,6 +85,10 @@ func (ctx *SelectMenuContext) PremiumTier() premium.PremiumTier {
 
 func (ctx *SelectMenuContext) IsInteraction() bool {
 	return true
+}
+
+func (ctx *SelectMenuContext) Source() registry.Source {
+	return registry.SourceDiscord
 }
 
 func (ctx *SelectMenuContext) ToErrorContext() errorcontext.WorkerErrorContext {

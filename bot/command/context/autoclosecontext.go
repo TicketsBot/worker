@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/channel"
@@ -67,6 +68,10 @@ func (ctx *AutoCloseContext) PremiumTier() premium.PremiumTier {
 
 func (ctx *AutoCloseContext) IsInteraction() bool {
 	return true
+}
+
+func (ctx *AutoCloseContext) Source() registry.Source {
+	return registry.SourceAutoClose
 }
 
 func (ctx *AutoCloseContext) ToErrorContext() errorcontext.WorkerErrorContext {

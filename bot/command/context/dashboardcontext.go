@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -75,6 +76,10 @@ func (ctx *DashboardContext) PremiumTier() premium.PremiumTier {
 
 func (ctx *DashboardContext) IsInteraction() bool {
 	return true
+}
+
+func (ctx *DashboardContext) Source() registry.Source {
+	return registry.SourceDashboard
 }
 
 func (ctx *DashboardContext) ToErrorContext() errorcontext.WorkerErrorContext {

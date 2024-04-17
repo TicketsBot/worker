@@ -6,7 +6,6 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
-	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -66,7 +65,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 
 	// Check the channel still exists - if it does not, just set to closed in the database, as this must be a request
 	// from the dashboard for a ticket with a channel that does not exist.
-	if _, ok := ctx.(*context.DashboardContext); ok {
+	if ctx.Source() == registry.SourceDashboard {
 		channelExists, err := checkChannelExists(ctx, ticket)
 		if err != nil {
 			ctx.HandleError(err)

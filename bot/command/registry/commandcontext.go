@@ -29,6 +29,7 @@ type CommandContext interface {
 	UserPermissionLevel() (permcache.PermissionLevel, error)
 	PremiumTier() premium.PremiumTier
 	IsInteraction() bool
+	Source() Source
 	ToErrorContext() errorcontext.WorkerErrorContext
 
 	Reply(colour customisation.Colour, title, content i18n.MessageId, format ...interface{})
