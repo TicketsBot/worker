@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
@@ -8,20 +9,22 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/button/registry"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"golang.org/x/sync/errgroup"
 )
 
 // Returns whether the handler may edit the message
 func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Context, data interaction.MessageComponentInteraction, responseCh chan button.Response) bool {
-	// Safety checks
-	if data.GuildId.Value != 0 && data.Member == nil {
+	// Safety checks - guild interactions only
+	if data.GuildId.Value != 0 || data.Member == nil {
 		return false
 	}
 
@@ -29,14 +32,66 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		return false
 	}
 
-	premiumTier, err := getPremiumTier(worker, data.GuildId.Value)
-	if err != nil {
-		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
+	// Fetch premium tier
+	var premiumTier = premium.None
+	{
+		tier, err := getPremiumTier(worker, data.GuildId.Value)
+		if err != nil {
+			// TODO: Better handling
+			// Allow executing to continue, assuming no premium
+			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
+				Guild:   data.GuildId.Value,
+				Channel: data.ChannelId,
+			})
+		} else {
+			premiumTier = tier
+		}
+	}
+
+	var ctx cmdregistry.InteractionContext
+	switch data.Data.Type() {
+	case component.ComponentButton:
+		ctx = cmdcontext.NewButtonContext(worker, data, premiumTier, responseCh)
+	case component.ComponentSelectMenu:
+		ctx = cmdcontext.NewSelectMenuContext(worker, data, premiumTier, responseCh)
+	default:
+		sentry.ErrorWithContext(fmt.Errorf("invalid message component type: %d", data.Data.ComponentType), errorcontext.WorkerErrorContext{
+			Guild:   data.GuildId.Value,
+			Channel: data.ChannelId,
+		})
+		return false
+	}
+
+	// Parallelise checks
+	group, _ := errgroup.WithContext(context.Background())
+
+	// Check if the user is blacklisted at guild / global level
+	var userBlacklisted bool
+	group.Go(func() (err error) {
+		userBlacklisted, err = ctx.IsBlacklisted()
+		return
+	})
+
+	// Check for guild-wide blacklist
+	var guildBlacklisted bool
+	group.Go(func() (err error) {
+		guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
+		return
+	})
+
+	if err := group.Wait(); err != nil {
+		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   data.GuildId.Value,
 			Channel: data.ChannelId,
 		})
 
-		premiumTier = premium.None
+		ctx.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
+		return false
+	}
+
+	if userBlacklisted || guildBlacklisted {
+		ctx.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
+		return false
 	}
 
 	switch data.Data.Type() {
@@ -46,10 +101,9 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			return false
 		}
 
-		ctx := context.NewButtonContext(worker, data, premiumTier, responseCh)
 		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
-			go handler.Execute(ctx)
+			go handler.Execute(ctx.(*cmdcontext.ButtonContext))
 		}
 
 		return canEdit
@@ -59,10 +113,9 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			return false
 		}
 
-		ctx := context.NewSelectMenuContext(worker, data, premiumTier, responseCh)
 		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
-			go handler.Execute(ctx)
+			go handler.Execute(ctx.(*cmdcontext.SelectMenuContext))
 		}
 
 		return canEdit

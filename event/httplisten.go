@@ -169,7 +169,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
 			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 
-			responseCh := make(chan button.Response, 1)
+			responseCh := make(chan button.Response, 1) // Buffer > 0 is important, or it could hang!
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
 			select {
