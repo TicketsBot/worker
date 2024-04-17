@@ -183,7 +183,7 @@ func executeCommand(
 		})
 
 		// Get permission level
-		var permLevel permission.PermissionLevel
+		var permLevel = permission.Everyone
 		group.Go(func() error {
 			res, err := permission.GetPermissionLevel(utils.ToRetriever(ctx), *data.Member, data.GuildId.Value)
 			if err != nil {
