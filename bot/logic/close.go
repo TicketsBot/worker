@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
+	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -18,6 +19,7 @@ import (
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest"
 	"github.com/rxdn/gdl/rest/request"
+	"net/http"
 	"time"
 )
 
@@ -60,6 +62,25 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 	if err != nil {
 		ctx.HandleError(err)
 		return
+	}
+
+	// Check the channel still exists - if it does not, just set to closed in the database, as this must be a request
+	// from the dashboard for a ticket with a channel that does not exist.
+	if _, ok := ctx.(*context.DashboardContext); ok {
+		channelExists, err := checkChannelExists(ctx, ticket)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if !channelExists {
+			if err := dbclient.Client.Tickets.Close(ticket.Id, ticket.GuildId); err != nil {
+				ctx.HandleError(err)
+				return
+			}
+
+			return
+		}
 	}
 
 	// Archive
@@ -330,4 +351,22 @@ func getDmChannel(ctx registry.CommandContext, userId uint64) (uint64, bool) {
 	}
 
 	return ch.Id, true
+}
+
+func checkChannelExists(ctx registry.CommandContext, ticket database.Ticket) (bool, error) {
+	if ticket.ChannelId == nil {
+		return false, nil
+	}
+
+	// If the channel does not exist, it will trigger a cache miss and then attempt to fetch it from the API
+	if _, err := ctx.Worker().GetChannel(*ticket.ChannelId); err != nil {
+		var restError request.RestError
+		if errors.As(err, &restError) && restError.StatusCode == http.StatusNotFound {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
