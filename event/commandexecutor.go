@@ -1,7 +1,9 @@
 package event
 
 import (
+	"context"
 	"fmt"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
@@ -9,11 +11,13 @@ import (
 	commandContext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"golang.org/x/sync/errgroup"
 	"reflect"
 	"runtime/debug"
 	"strconv"
@@ -27,7 +31,8 @@ func executeCommand(
 	data interaction.ApplicationCommandInteraction,
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) (bool, error) {
-	if data.GuildId.Value == 0 {
+	// data.Member is needed for permission level lookup
+	if data.GuildId.Value == 0 || data.Member == nil {
 		responseCh <- interaction.ApplicationCommandCallbackData{
 			Content: "Commands in DMs are not currently supported. Please run this command in a server.",
 		}
@@ -159,19 +164,61 @@ func executeCommand(
 			}
 		}()
 
-		// get premium tier
-		// TODO: guild id null check
-		premiumLevel, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
-		if err != nil {
-			sentry.Error(err)
-			premiumLevel = premium.None
+		// Parallelise queries
+		group, _ := errgroup.WithContext(context.Background())
+
+		// Get premium level
+		var premiumLevel = premium.None
+		group.Go(func() error {
+			tier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+			if err != nil {
+				// TODO: Better error handling
+				// But do not hard fail, as Patreon / premium proxy may be experiencing some issues
+				sentry.Error(err)
+			} else {
+				premiumLevel = tier
+			}
+
+			return nil
+		})
+
+		// Get permission level
+		var permLevel permission.PermissionLevel
+		group.Go(func() error {
+			res, err := permission.GetPermissionLevel(utils.ToRetriever(ctx), *data.Member, data.GuildId.Value)
+			if err != nil {
+				return err
+			}
+
+			permLevel = res
+			return nil
+		})
+
+		// Get guild blacklisted in guild
+		var guildBlacklisted bool
+		group.Go(func() error {
+			res, err := dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
+			if err != nil {
+				return err
+			}
+
+			guildBlacklisted = res
+			return nil
+		})
+
+		if err := group.Wait(); err != nil {
+			errorId := sentry.Error(err)
+			responseCh <- interaction.ApplicationCommandCallbackData{
+				Content: fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId),
+			}
+			return
 		}
 
 		interactionContext := commandContext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
-		permLevel, err := interactionContext.UserPermissionLevel()
-		if err != nil {
-			interactionContext.HandleError(err)
+		if guildBlacklisted {
+			// TODO: Better message?
+			interactionContext.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 			return
 		}
 
@@ -195,7 +242,7 @@ func executeCommand(
 			return
 		}
 
-		// Check for blacklist
+		// Check for user blacklist - cannot parallelise as relies on permission level
 		// If data.Member is nil, it does not matter, as it is not checked if the command is not executed in a guild
 		blacklisted, err := interactionContext.IsBlacklisted()
 		if err != nil {
