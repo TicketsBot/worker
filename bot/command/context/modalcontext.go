@@ -188,6 +188,11 @@ func (ctx *ModalContext) IntoPanelContext() PanelContext {
 }
 
 func (ctx *ModalContext) IsBlacklisted() (bool, error) {
+	// TODO: Check user blacklist
+	if ctx.GuildId() == 0 {
+		return false, nil
+	}
+
 	permLevel, err := ctx.UserPermissionLevel()
 	if err != nil {
 		return false, err

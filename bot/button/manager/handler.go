@@ -24,7 +24,7 @@ import (
 // Returns whether the handler may edit the message
 func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Context, data interaction.MessageComponentInteraction, responseCh chan button.Response) bool {
 	// Safety checks - guild interactions only
-	if data.GuildId.Value == 0 || data.Member == nil {
+	if data.GuildId.Value != 0 && data.Member == nil {
 		return false
 	}
 
@@ -34,7 +34,8 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 
 	// Fetch premium tier
 	var premiumTier = premium.None
-	{
+	if data.GuildId.Value != 0 {
+		// TODO: Re-architecture system to tie DMs to guilds
 		tier, err := getPremiumTier(worker, data.GuildId.Value)
 		if err != nil {
 			// TODO: Better handling
@@ -73,11 +74,13 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 	})
 
 	// Check for guild-wide blacklist
-	var guildBlacklisted bool
-	group.Go(func() (err error) {
-		guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
-		return
-	})
+	var guildBlacklisted = false
+	if data.GuildId.Value != 0 {
+		group.Go(func() (err error) {
+			guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
+			return
+		})
+	}
 
 	if err := group.Wait(); err != nil {
 		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
