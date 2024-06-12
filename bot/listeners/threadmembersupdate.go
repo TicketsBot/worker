@@ -11,7 +11,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnThreadMembersUpdate(worker *worker.Context, e *events.ThreadMembersUpdate) {
+func OnThreadMembersUpdate(worker *worker.Context, e events.ThreadMembersUpdate) {
 	settings, err := dbclient.Client.Settings.Get(e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func OnRoleDelete(worker *worker.Context, e *events.GuildRoleDelete) {
+func OnRoleDelete(worker *worker.Context, e events.GuildRoleDelete) {
 	errorCtx := errorcontext.WorkerErrorContext{Guild: e.GuildId}
 
 	group, _ := errgroup.WithContext(context.Background())
@@ -27,7 +27,7 @@ func OnRoleDelete(worker *worker.Context, e *events.GuildRoleDelete) {
 		return dbclient.Client.PanelRoleMentions.DeleteAllRole(e.RoleId)
 	})
 
-	if err := group.Wait(); err  != nil {
+	if err := group.Wait(); err != nil {
 		sentry.ErrorWithContext(err, errorCtx)
 	}
 }

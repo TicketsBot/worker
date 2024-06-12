@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"github.com/TicketsBot/common/permission"
 	w "github.com/TicketsBot/worker"
@@ -47,9 +48,9 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 	}
 
 	// purge cache
-	ctx.Worker().Cache.DeleteGuild(guildId)
-	ctx.Worker().Cache.DeleteGuildChannels(guildId)
-	ctx.Worker().Cache.DeleteGuildRoles(guildId)
+	ctx.Worker().Cache.DeleteGuild(context.Background(), guildId)
+	ctx.Worker().Cache.DeleteGuildChannels(context.Background(), guildId)
+	ctx.Worker().Cache.DeleteGuildRoles(context.Background(), guildId)
 
 	// re-cache
 	botId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)

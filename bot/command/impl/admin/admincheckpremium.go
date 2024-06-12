@@ -40,9 +40,9 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 		return
 	}
 
-	guild, found := ctx.Worker().Cache.GetGuild(guildId)
-	if !found {
-		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Error), "Guild not found")
+	guild, err := ctx.Worker().GetGuild(guildId)
+	if err != nil {
+		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Error), err.Error())
 		return
 	}
 

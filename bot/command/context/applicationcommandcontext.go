@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -110,7 +111,7 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 	hasReplied := ctx.hasReplied.Swap(true)
 
 	if hasReplied {
-		msg, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
+		msg, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
 
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())

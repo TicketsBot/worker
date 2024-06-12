@@ -17,7 +17,7 @@ import (
 )
 
 // Fires when we receive a guild
-func OnGuildCreate(worker *worker.Context, e *events.GuildCreate) {
+func OnGuildCreate(worker *worker.Context, e events.GuildCreate) {
 	// check if guild is blacklisted
 	if blacklisted, err := dbclient.Client.ServerBlacklist.IsBlacklisted(e.Guild.Id); err == nil {
 		if blacklisted {

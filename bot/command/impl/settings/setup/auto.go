@@ -1,10 +1,11 @@
 package setup
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -40,7 +41,7 @@ func (c AutoSetupCommand) GetExecutor() interface{} {
 
 // TODO: Separate into diff functions
 func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
-	interaction, ok := ctx.(*context.SlashCommandContext)
+	interaction, ok := ctx.(*cmdcontext.SlashCommandContext)
 	if !ok {
 		return
 	}
@@ -134,12 +135,12 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	}
 }
 
-func edit(ctx *context.SlashCommandContext, e *embed.Embed) error {
+func edit(ctx *cmdcontext.SlashCommandContext, e *embed.Embed) error {
 	data := rest.WebhookEditBody{
 		Embeds: utils.Slice(e),
 	}
 
-	_, err := rest.EditOriginalInteractionResponse(ctx.Interaction.Token, ctx.Worker().RateLimiter, ctx.Worker().BotId, data)
+	_, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.Worker().RateLimiter, ctx.Worker().BotId, data)
 	return err
 }
 

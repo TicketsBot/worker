@@ -13,7 +13,7 @@ import (
 )
 
 // Remove user permissions when they leave
-func OnMemberLeave(worker *worker.Context, e *events.GuildMemberRemove) {
+func OnMemberLeave(worker *worker.Context, e events.GuildMemberRemove) {
 	if err := dbclient.Client.Permissions.RemoveSupport(e.GuildId, e.User.Id); err != nil {
 		sentry.Error(err)
 	}

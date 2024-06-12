@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -130,7 +131,7 @@ func (ctx *ModalContext) ReplyWith(response command.MessageResponse) (msg messag
 			Data: response,
 		}
 	} else {
-		msg, err = rest.CreateFollowupMessage(ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
+		msg, err = rest.CreateFollowupMessage(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
 		}

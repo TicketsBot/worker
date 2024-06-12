@@ -13,7 +13,7 @@ import (
  * The inner payload is an unavailable guild object.
  * If the unavailable field is not set, the user was removed from the guild.
  */
-func OnGuildLeave(worker *worker.Context, e *events.GuildDelete) {
+func OnGuildLeave(worker *worker.Context, e events.GuildDelete) {
 	if e.Unavailable == nil {
 		statsd.Client.IncrementKey(statsd.KeyLeaves)
 

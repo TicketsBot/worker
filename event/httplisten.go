@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/eventforwarding"
 	"github.com/TicketsBot/common/sentry"
@@ -286,7 +287,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 			Components:      data.Components,
 		}
 
-		if _, err := rest.EditOriginalInteractionResponse(interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
+		if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
 			sentry.LogWithContext(err, buildErrorContext(interactionData))
 			return
 		}

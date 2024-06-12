@@ -8,7 +8,7 @@ import (
 )
 
 // Remove user permissions when they leave
-func OnMemberUpdate(worker *worker.Context, e *events.GuildMemberUpdate) {
+func OnMemberUpdate(worker *worker.Context, e events.GuildMemberUpdate) {
 	if err := utils.ToRetriever(worker).Cache().DeleteCachedPermissionLevel(e.GuildId, e.User.Id); err != nil {
 		sentry.Error(err)
 	}

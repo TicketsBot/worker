@@ -7,7 +7,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnChannelDelete(worker *worker.Context, e *events.ChannelDelete) {
+func OnChannelDelete(worker *worker.Context, e events.ChannelDelete) {
 	// if this is an ticket channel, close it
 	if err := dbclient.Client.Tickets.CloseByChannel(e.Id); err != nil {
 		sentry.Error(err)
@@ -23,4 +23,3 @@ func OnChannelDelete(worker *worker.Context, e *events.ChannelDelete) {
 		sentry.Error(err)
 	}
 }
-

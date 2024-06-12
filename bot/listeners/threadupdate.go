@@ -12,7 +12,7 @@ import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
 )
 
-func OnThreadUpdate(worker *worker.Context, e *events.ThreadUpdate) {
+func OnThreadUpdate(worker *worker.Context, e events.ThreadUpdate) {
 	if e.ThreadMetadata == nil {
 		return
 	}

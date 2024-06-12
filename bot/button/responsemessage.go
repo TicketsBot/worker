@@ -1,6 +1,7 @@
 package button
 
 import (
+	"context"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -20,6 +21,6 @@ func (r ResponseMessage) Build() interface{} {
 }
 
 func (r ResponseMessage) HandleDeferred(interactionData interaction.MessageComponentInteraction, worker *worker.Context) error {
-	_, err := rest.CreateFollowupMessage(interactionData.Token, worker.RateLimiter, worker.BotId, r.Data.IntoWebhookBody())
+	_, err := rest.CreateFollowupMessage(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, r.Data.IntoWebhookBody())
 	return err
 }

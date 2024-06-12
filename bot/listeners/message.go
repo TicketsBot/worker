@@ -15,7 +15,7 @@ import (
 )
 
 // proxy messages to web UI + set last message id
-func OnMessage(worker *worker.Context, e *events.MessageCreate) {
+func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	statsd.Client.IncrementKey(statsd.KeyMessages)
 
 	// ignore DMs
@@ -84,7 +84,7 @@ func OnMessage(worker *worker.Context, e *events.MessageCreate) {
 	}
 }
 
-func updateLastMessage(msg *events.MessageCreate, ticket database.Ticket, isStaff bool) error {
+func updateLastMessage(msg events.MessageCreate, ticket database.Ticket, isStaff bool) error {
 	// If last message was sent by staff, don't reset the timer
 	lastMessage, err := dbclient.Client.TicketLastMessage.Get(ticket.GuildId, ticket.Id)
 	if err != nil {
@@ -110,7 +110,7 @@ func updateLastMessage(msg *events.MessageCreate, ticket database.Ticket, isStaf
 }
 
 // This method should not be used for anything requiring elevated privileges
-func isStaff(msg *events.MessageCreate, ticket database.Ticket) (bool, error) {
+func isStaff(msg events.MessageCreate, ticket database.Ticket) (bool, error) {
 	// If the user is the ticket opener, they are not staff
 	if msg.Author.Id == ticket.UserId {
 		return false, nil

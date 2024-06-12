@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"context"
+	"errors"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/rxdn/gdl/cache"
 )
 
 func ToRetriever(worker *worker.Context) permission.Retriever {
@@ -31,9 +34,11 @@ func (wr WorkerRetriever) IsBotAdmin(userId uint64) bool {
 }
 
 func (wr WorkerRetriever) GetGuildOwner(guildId uint64) (uint64, error) {
-	cachedOwner, exists := wr.ctx.Cache.GetGuildOwner(guildId)
-	if exists {
+	cachedOwner, err := wr.ctx.Cache.GetGuildOwner(context.Background(), guildId)
+	if err == nil {
 		return cachedOwner, nil
+	} else if !errors.Is(err, cache.ErrNotFound) {
+		return 0, err
 	}
 
 	guild, err := wr.ctx.GetGuild(guildId)
@@ -41,6 +46,6 @@ func (wr WorkerRetriever) GetGuildOwner(guildId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	go wr.ctx.Cache.StoreGuild(guild)
+	go wr.ctx.Cache.StoreGuild(context.Background(), guild)
 	return guild.OwnerId, nil
 }
