@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3
 	github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc
-	github.com/TicketsBot/common v0.0.0-20240612165932-2519f6c30015
+	github.com/TicketsBot/common v0.0.0-20240612231650-19e086365244
 	github.com/TicketsBot/database v0.0.0-20230913010851-15cd49b12133
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/containerd/containerd v1.6.8

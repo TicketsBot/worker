@@ -1,6 +1,7 @@
 package messagequeue
 
 import (
+	"context"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -10,6 +11,7 @@ import (
 
 func buildContext(ticket database.Ticket, cache *cache.PgCache) (ctx *worker.Context, err error) {
 	ctx = &worker.Context{
+		Context:     context.Background(),
 		Cache:       cache,
 		RateLimiter: nil, // Use http-proxy ratelimiting functionality
 	}

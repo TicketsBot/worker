@@ -1,11 +1,13 @@
 package event
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
+	"github.com/getsentry/sentry-go"
 	"github.com/rxdn/gdl/gateway/payloads"
 )
 
@@ -15,7 +17,12 @@ func execute(c *worker.Context, event []byte) error {
 		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))
 	}
 
-	if err := listeners.HandleEvent(c, payload); err != nil {
+	ctx := context.Background()
+
+	span := sentry.StartTransaction(ctx, "Handle Event")
+	span.SetTag("event", payload.EventName)
+
+	if err := listeners.HandleEvent(c, span, payload); err != nil {
 		return err
 	}
 

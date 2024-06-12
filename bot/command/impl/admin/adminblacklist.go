@@ -62,6 +62,7 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		}
 
 		w = &worker.Context{
+			Context:      ctx.Worker().Context,
 			Token:        bot.Token,
 			BotId:        bot.BotId,
 			IsWhitelabel: true,

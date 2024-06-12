@@ -1,11 +1,12 @@
 package messagequeue
 
 import (
+	"context"
 	"github.com/TicketsBot/common/closerelay"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -73,6 +74,7 @@ func ListenTicketClose() {
 
 			// Create worker context
 			workerCtx := &worker.Context{
+				Context:      context.Background(),
 				Token:        token,
 				IsWhitelabel: botId != 0,
 				Cache:        cache.Client, // TODO: Less hacky
@@ -96,7 +98,7 @@ func ListenTicketClose() {
 			}
 
 			// ticket.ChannelId cannot be nil
-			ctx := context.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
+			ctx := cmdcontext.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
 
 			logic.CloseTicket(&ctx, &payload.Reason, false)
 		}()

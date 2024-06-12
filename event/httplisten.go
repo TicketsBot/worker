@@ -60,7 +60,7 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 	}
 
 	// Routes
-	router.POST("/event", eventHandler(redis, cache))
+	router.POST("/event", eventHandler(cache))
 	router.POST("/interaction", interactionHandler(redis, cache))
 
 	if err := router.Run(config.Conf.Bot.HttpAddress); err != nil {
@@ -68,16 +68,17 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 	}
 }
 
-func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) {
-	return func(ctx *gin.Context) {
+func eventHandler(cache *cache.PgCache) func(*gin.Context) {
+	return func(c *gin.Context) {
 		var event eventforwarding.Event
-		if err := ctx.BindJSON(&event); err != nil {
+		if err := c.BindJSON(&event); err != nil {
 			sentry.Error(err)
-			ctx.JSON(400, newErrorResponse(err))
+			c.JSON(400, newErrorResponse(err))
 			return
 		}
 
 		workerCtx := &worker.Context{
+			Context:      context.Background(),
 			Token:        event.BotToken,
 			BotId:        event.BotId,
 			IsWhitelabel: event.IsWhitelabel,
@@ -86,7 +87,7 @@ func eventHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Context) 
 			RateLimiter:  nil, // Use http-proxy ratelimit functionality
 		}
 
-		ctx.AbortWithStatusJSON(200, successResponse)
+		c.AbortWithStatusJSON(200, successResponse)
 
 		if err := execute(workerCtx, event.Event); err != nil {
 			marshalled, _ := json.Marshal(event)
@@ -111,6 +112,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 		}
 
 		worker := &worker.Context{
+			Context:      context.Background(),
 			Token:        payload.BotToken,
 			BotId:        payload.BotId,
 			IsWhitelabel: payload.IsWhitelabel,
