@@ -31,10 +31,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range {{.}}Listeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     {{end}}
     default:
