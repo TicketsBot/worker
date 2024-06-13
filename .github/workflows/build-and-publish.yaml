@@ -11,6 +11,22 @@ on:
     branches: [ "master" ]
 
 jobs:
+  verify-codegen:
+    runs-on: golang:1
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Verify codegen
+        run: |
+          go generate ./...
+          git diff --exit-code
+
   publish-image:
     runs-on: ubuntu-latest
     permissions:

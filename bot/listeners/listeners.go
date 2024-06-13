@@ -74,10 +74,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ChannelCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.CHANNEL_DELETE:
@@ -87,10 +84,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ChannelDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.CHANNEL_PINS_UPDATE:
@@ -100,10 +94,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ChannelPinsUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.CHANNEL_UPDATE:
@@ -113,10 +104,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ChannelUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_BAN_ADD:
@@ -126,10 +114,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildBanAddListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_BAN_REMOVE:
@@ -139,10 +124,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildBanRemoveListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_CREATE:
@@ -152,10 +134,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_DELETE:
@@ -165,10 +144,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_EMOJIS_UPDATE:
@@ -178,10 +154,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildEmojisUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_INTEGRATIONS_UPDATE:
@@ -191,10 +164,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildIntegrationsUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_MEMBER_ADD:
@@ -204,10 +174,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildMemberAddListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_MEMBER_REMOVE:
@@ -217,10 +184,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildMemberRemoveListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_MEMBER_UPDATE:
@@ -230,10 +194,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildMemberUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_MEMBERS_CHUNK:
@@ -243,10 +204,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildMembersChunkListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_ROLE_CREATE:
@@ -256,10 +214,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildRoleCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_ROLE_DELETE:
@@ -269,10 +224,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildRoleDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_ROLE_UPDATE:
@@ -282,10 +234,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildRoleUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.GUILD_UPDATE:
@@ -295,10 +244,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range GuildUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.INVALID_SESSION:
@@ -308,10 +254,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range InvalidSessionListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.INVITE_CREATE:
@@ -321,10 +264,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range InviteCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.INVITE_DELETE:
@@ -334,10 +274,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range InviteDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_CREATE:
@@ -347,10 +284,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_DELETE:
@@ -360,10 +294,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_DELETE_BULK:
@@ -373,10 +304,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageDeleteBulkListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_REACTION_ADD:
@@ -386,10 +314,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageReactionAddListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_REACTION_REMOVE:
@@ -399,10 +324,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageReactionRemoveListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_REACTION_REMOVE_ALL:
@@ -412,10 +334,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageReactionRemoveAllListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_REACTION_REMOVE_EMOJI:
@@ -425,10 +344,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageReactionRemoveEmojiListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.MESSAGE_UPDATE:
@@ -438,10 +354,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range MessageUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.PRESENCE_UPDATE:
@@ -451,10 +364,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range PresenceUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.READY:
@@ -464,10 +374,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ReadyListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.RECONNECT:
@@ -477,10 +384,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ReconnectListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.RESUMED:
@@ -490,10 +394,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ResumedListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_CREATE:
@@ -503,10 +404,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadCreateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_DELETE:
@@ -516,10 +414,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadDeleteListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_LIST_SYNC:
@@ -529,10 +424,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadListSyncListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_MEMBER_UPDATE:
@@ -542,10 +434,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadMemberUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_MEMBERS_UPDATE:
@@ -555,10 +444,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadMembersUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.THREAD_UPDATE:
@@ -568,10 +454,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ThreadUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.TYPING_START:
@@ -581,10 +464,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range TypingStartListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.USER_UPDATE:
@@ -594,10 +474,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range UserUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.VOICE_SERVER_UPDATE:
@@ -607,10 +484,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range VoiceServerUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.VOICE_STATE_UPDATE:
@@ -620,10 +494,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range VoiceStateUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     case events.WEBHOOKS_UPDATE:
@@ -633,10 +504,7 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range WebhooksUpdateListeners {
-            go func() {
-                listener(c, event)
-                span.Finish()
-            }()
+            listener(c, event)
         }
     
     default:

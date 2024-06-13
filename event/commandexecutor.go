@@ -2,14 +2,15 @@ package event
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
-	commandContext "github.com/TicketsBot/worker/bot/command/context"
-	"github.com/TicketsBot/worker/bot/command/registry"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
+	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
@@ -18,16 +19,14 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"golang.org/x/sync/errgroup"
-	"reflect"
 	"runtime/debug"
-	"strconv"
 )
 
 // TODO: Command not found messages
 // (defaultDefer, error)
 func executeCommand(
 	ctx *worker.Context,
-	registry registry.Registry,
+	registry cmdregistry.Registry,
 	data interaction.ApplicationCommandInteraction,
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) (bool, error) {
@@ -64,94 +63,6 @@ func executeCommand(
 		options = subCommand.Options
 	}
 
-	var args []interface{}
-	for _, argument := range cmd.Properties().Arguments {
-		if !argument.SlashCommandCompatible {
-			args = append(args, nil)
-			continue
-		}
-
-		var found bool
-		for _, option := range options {
-			if option.Name == argument.Name {
-				found = true
-
-				// Discord does not validate types server side, so we must or risk panicking
-				switch argument.Type {
-				case interaction.OptionTypeString:
-					if _, ok := option.Value.(string); !ok {
-						return false, fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
-					}
-
-					args = append(args, option.Value)
-
-				case interaction.OptionTypeInteger:
-					raw, ok := option.Value.(float64)
-					if !ok {
-						return false, fmt.Errorf("option %s of type %d was not an integer", option.Name, argument.Type)
-					}
-
-					args = append(args, int(raw))
-
-				case interaction.OptionTypeBoolean:
-					if _, ok := option.Value.(bool); !ok {
-						return false, fmt.Errorf("option %s of type %d was not a boolean", option.Name, argument.Type)
-					}
-
-					args = append(args, option.Value)
-
-				// Parse snowflakes
-				case interaction.OptionTypeUser:
-					fallthrough
-				case interaction.OptionTypeChannel:
-					fallthrough
-				case interaction.OptionTypeRole:
-					fallthrough
-				case interaction.OptionTypeMentionable:
-					raw, ok := option.Value.(string)
-					if !ok {
-						return false, fmt.Errorf("option %s of type %d was not a string", option.Name, argument.Type)
-					}
-
-					id, err := strconv.ParseUint(raw, 10, 64)
-					if err != nil {
-						return false, err
-					}
-
-					args = append(args, id)
-				case interaction.OptionTypeNumber:
-					raw, ok := option.Value.(float64)
-					if !ok {
-						return false, fmt.Errorf("option %s of type %d was not an number", option.Name, argument.Type)
-					}
-
-					args = append(args, raw)
-				default:
-					return false, fmt.Errorf("unknown argument type: %d", argument.Type)
-				}
-			}
-		}
-
-		if !found {
-			args = append(args, nil)
-		}
-
-		if !found && argument.Required {
-			if ctx.IsWhitelabel {
-				content := `This command registration is outdated. Please ask the server administrators to visit the whitelabel dashboard and press "Create Slash Commands" again.`
-				embed := utils.BuildEmbedRaw(customisation.GetDefaultColour(customisation.Red), "Outdated Command", content, nil, premium.Whitelabel)
-				res := command.NewEphemeralEmbedMessageResponse(embed)
-				go func() { // Must be in a goroutine
-					responseCh <- res.IntoApplicationCommandData()
-				}()
-
-				return false, nil
-			} else {
-				return false, fmt.Errorf("argument %s was missing for command %s", argument.Name, cmd.Properties().Name)
-			}
-		}
-	}
-
 	properties := cmd.Properties()
 
 	go func() {
@@ -159,8 +70,6 @@ func executeCommand(
 			if r := recover(); r != nil {
 				fmt.Printf("Recovering panicking goroutine while executing command %s: %v\n", properties.Name, r)
 				debug.PrintStack()
-
-				fmt.Printf("Command: %s\nArgs: %v\nData: %v\n", cmd.Properties().Name, args, data)
 			}
 		}()
 
@@ -214,7 +123,7 @@ func executeCommand(
 			return
 		}
 
-		interactionContext := commandContext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
+		interactionContext := cmdcontext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
 
 		if guildBlacklisted {
 			// TODO: Better message?
@@ -255,44 +164,32 @@ func executeCommand(
 			return
 		}
 
-		fn := reflect.TypeOf(cmd.GetExecutor())
-		if len(args) != fn.NumIn()-1 { // - 1 since command context is provided
-			interactionContext.ReplyRaw(customisation.Red, "Error", "Argument count mismatch: Try creating slash commands again")
-			return
-		}
+		statsd.Client.IncrementKey(statsd.KeySlashCommands)
+		statsd.Client.IncrementKey(statsd.KeyCommands)
+		prometheus.LogCommand(data.GuildId.Value, data.Data.Name)
 
-		valueArgs := make([]reflect.Value, len(args)+1)
-		valueArgs[0] = reflect.ValueOf(&interactionContext)
+		if err := callCommand(cmd, &interactionContext, options); err != nil {
+			if errors.Is(err, ErrArgumentNotFound) {
+				if ctx.IsWhitelabel {
+					content := `This command registration is outdated. Please ask the server administrators to visit the whitelabel dashboard and press "Create Slash Commands" again.`
+					embed := utils.BuildEmbedRaw(customisation.GetDefaultColour(customisation.Red), "Outdated Command", content, nil, premium.Whitelabel)
+					res := command.NewEphemeralEmbedMessageResponse(embed)
+					go func() { // Must be in a goroutine
+						responseCh <- res.IntoApplicationCommandData()
+					}()
 
-		for i, arg := range args {
-			var value reflect.Value
-			if properties.Arguments[i].Required && arg != nil {
-				value = reflect.ValueOf(arg)
-			} else {
-				if arg == nil {
-					value = reflect.ValueOf(arg)
+					return
 				} else {
-					value = reflect.New(reflect.TypeOf(arg))
-					tmp := value.Elem()
-					tmp.Set(reflect.ValueOf(arg))
+					res := command.NewEphemeralTextMessageResponse("argument is missing")
+					go func() {
+						responseCh <- res.IntoApplicationCommandData()
+					}()
 				}
+			} else {
+				go interactionContext.HandleError(err)
+				return
 			}
-
-			if !value.IsValid() {
-				value = reflect.New(fn.In(i + 1)).Elem()
-			}
-
-			valueArgs[i+1] = value
 		}
-
-		// Goroutine because recording metrics is blocking
-		go func() {
-			statsd.Client.IncrementKey(statsd.KeySlashCommands)
-			statsd.Client.IncrementKey(statsd.KeyCommands)
-			prometheus.LogCommand(data.GuildId.Value, data.Data.Name)
-		}()
-
-		reflect.ValueOf(cmd.GetExecutor()).Call(valueArgs)
 	}()
 
 	return properties.DefaultEphemeral, nil

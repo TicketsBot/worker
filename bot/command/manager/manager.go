@@ -134,10 +134,6 @@ func buildOption(cmd registry.Command) interaction.ApplicationCommandOption {
 	}
 
 	for _, argument := range properties.Arguments {
-		if !argument.SlashCommandCompatible {
-			continue
-		}
-
 		option := interaction.ApplicationCommandOption{
 			Type:         argument.Type,
 			Name:         argument.Name,

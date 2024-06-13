@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	EventNameType = "EventType"
-	PackageName   = "github.com/rxdn/gdl/gateway/payloads/events"
+	PackageName = "github.com/rxdn/gdl/gateway/payloads/events"
 )
 
 //go:embed listeners.tmpl

@@ -18,12 +18,10 @@ func FormatHelp(c Command, guildId uint64, commandId *uint64) string {
 	if commandId == nil {
 		var args []string
 		for _, arg := range c.Properties().Arguments {
-			if arg.SlashCommandCompatible {
-				if arg.Required {
-					args = append(args, fmt.Sprintf("[%s] ", arg.Name))
-				} else {
-					args = append(args, fmt.Sprintf("<%s> ", arg.Name))
-				}
+			if arg.Required {
+				args = append(args, fmt.Sprintf("[%s] ", arg.Name))
+			} else {
+				args = append(args, fmt.Sprintf("<%s> ", arg.Name))
 			}
 		}
 
