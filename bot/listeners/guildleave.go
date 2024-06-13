@@ -14,6 +14,9 @@ import (
  * If the unavailable field is not set, the user was removed from the guild.
  */
 func OnGuildLeave(worker *worker.Context, e events.GuildDelete) {
+	span := sentry.StartSpan(worker.Context, "OnGuildLeave")
+	defer span.Finish()
+
 	if e.Unavailable == nil {
 		statsd.Client.IncrementKey(statsd.KeyLeaves)
 

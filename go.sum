@@ -45,6 +45,8 @@ github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3 h1:lSv
 github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc h1:n15W8Eg+ik3/0yqPzZVRP2oZJcIZCIgQ071cZleedKo=
 github.com/TicketsBot/archiverclient v0.0.0-20220326163414-558fd52746dc/go.mod h1:2KcfHS0JnSsgcxZBs3NyWMXNQzEo67mBSGOyzHPWOCc=
+github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2 h1:x2AZWm2zeyIJxVJbq9JQB1Q2mAaaTuCbCiPIU1E8G1o=
+github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2/go.mod h1:sc1kAppJn1fX6ZCsiU3ltGiXIj9GEZkjkdh8fbmwxWQ=
 github.com/TicketsBot/common v0.0.0-20230819234541-7678a70af5f1 h1:ulEWPU9i9uNPkduWyUZoIHgaKmoUoLW5LguCD2iXX7U=
 github.com/TicketsBot/common v0.0.0-20230819234541-7678a70af5f1/go.mod h1:rZuaTbjajlxscl628aBgUGiUZcOVLvF6pfsPL+2JOac=
 github.com/TicketsBot/common v0.0.0-20240612165932-2519f6c30015 h1:K/MKRXXEgvKTk4QetvUeX8kqIGttsgXCqN8mcaUIYrE=
@@ -53,6 +55,8 @@ github.com/TicketsBot/common v0.0.0-20240612231537-744e5ece4b45 h1:MUFvgHaZVlXP5
 github.com/TicketsBot/common v0.0.0-20240612231537-744e5ece4b45/go.mod h1:UZ6Kzobh9akWyon7iGLPb4w/9gmKV+sLuR6PmthsS+U=
 github.com/TicketsBot/common v0.0.0-20240612231650-19e086365244 h1:LpPQLAIXEBfMJxpxCWct7JOu5O3anHRdFNo6dlvMrvQ=
 github.com/TicketsBot/common v0.0.0-20240612231650-19e086365244/go.mod h1:UZ6Kzobh9akWyon7iGLPb4w/9gmKV+sLuR6PmthsS+U=
+github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37 h1:NC5fn+uAup0JxLiX85+bjVdyfUUXW3pKZYmp72/29hw=
+github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37/go.mod h1:UZ6Kzobh9akWyon7iGLPb4w/9gmKV+sLuR6PmthsS+U=
 github.com/TicketsBot/database v0.0.0-20230913010851-15cd49b12133 h1:YHwa9VFz7XGOh2WhoNJCo27kkLccpKd6myWip86olIs=
 github.com/TicketsBot/database v0.0.0-20230913010851-15cd49b12133/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
