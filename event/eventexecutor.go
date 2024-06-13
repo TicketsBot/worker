@@ -19,6 +19,9 @@ func execute(c *worker.Context, event []byte) error {
 	span := sentry.StartTransaction(c.Context, "Handle Event")
 	span.SetTag("event", payload.EventName)
 
+	// TODO: This might be bad
+	c.Context = span.Context()
+
 	if err := listeners.HandleEvent(c, span, payload); err != nil {
 		return err
 	}
