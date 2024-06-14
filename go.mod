@@ -2,8 +2,6 @@ module github.com/TicketsBot/worker
 
 go 1.21
 
-toolchain go1.22.4
-
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3
 	github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2
