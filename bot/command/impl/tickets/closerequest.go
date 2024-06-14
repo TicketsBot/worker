@@ -41,7 +41,7 @@ func (c CloseRequestCommand) GetExecutor() interface{} {
 }
 
 func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int, reason *string) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

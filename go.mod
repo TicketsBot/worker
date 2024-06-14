@@ -6,7 +6,7 @@ require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3
 	github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2
 	github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37
-	github.com/TicketsBot/database v0.0.0-20230913010851-15cd49b12133
+	github.com/TicketsBot/database v0.0.0-20240614143550-e9b219d41743
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/getsentry/sentry-go v0.21.0

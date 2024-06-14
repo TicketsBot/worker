@@ -32,7 +32,7 @@ func (c JumpToTopCommand) GetExecutor() interface{} {
 }
 
 func (JumpToTopCommand) Execute(ctx registry.CommandContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker(), ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

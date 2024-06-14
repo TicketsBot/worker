@@ -24,9 +24,12 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(worker.Context, time.Second*3)
+	defer cancel()
+
 	// Verify that this is a ticket
 	ticket, err := sentry.WithSpan2(worker, "Get ticket by channel", func(span *sentry.Span) (database.Ticket, error) {
-		return dbclient.Client.Tickets.GetByChannelAndGuild(e.ChannelId, e.GuildId)
+		return dbclient.Client.Tickets.GetByChannelAndGuild(ctx, e.ChannelId, e.GuildId)
 	})
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
@@ -42,7 +45,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	if e.Author.Id != worker.BotId && !e.Author.Bot {
 		// set participants, for logging
 		sentry.WithSpan0(worker, "Add participant", func(span *sentry.Span) {
-			if err := dbclient.Client.Participants.Set(e.GuildId, ticket.Id, e.Author.Id); err != nil {
+			if err := dbclient.Client.Participants.Set(ctx, e.GuildId, ticket.Id, e.Author.Id); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 		})

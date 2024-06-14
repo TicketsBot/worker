@@ -18,7 +18,7 @@ func OnThreadMembersUpdate(worker *worker.Context, e events.ThreadMembersUpdate)
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(e.ThreadId, e.GuildId)
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(worker.Context, e.ThreadId, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 		return

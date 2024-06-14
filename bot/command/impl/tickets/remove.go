@@ -36,7 +36,7 @@ func (c RemoveCommand) GetExecutor() interface{} {
 
 func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

@@ -30,7 +30,7 @@ func (h *CloseHandler) Properties() registry.Properties {
 
 func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 	// Get the ticket properties
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

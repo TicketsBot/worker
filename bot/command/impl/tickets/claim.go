@@ -32,7 +32,7 @@ func (c ClaimCommand) GetExecutor() interface{} {
 
 func (ClaimCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

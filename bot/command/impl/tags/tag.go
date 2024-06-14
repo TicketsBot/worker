@@ -53,7 +53,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
@@ -62,7 +62,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
 	if ticket.GuildId != 0 {
 		go func() {
-			if err := dbclient.Client.Participants.Set(ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
+			if err := dbclient.Client.Participants.Set(ctx.Worker().Context, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			}
 		}()

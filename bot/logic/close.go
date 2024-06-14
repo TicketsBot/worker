@@ -27,7 +27,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 	errorContext := ctx.ToErrorContext()
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker(), ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

@@ -33,7 +33,7 @@ func (c AddCommand) GetExecutor() interface{} {
 }
 
 func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

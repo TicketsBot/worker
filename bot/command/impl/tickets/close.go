@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -42,7 +43,7 @@ func (CloseCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoC
 	var err error
 
 	// Get ticket
-	ticket, e := dbclient.Client.Tickets.GetByChannelAndGuild(data.ChannelId, data.GuildId.Value)
+	ticket, e := dbclient.Client.Tickets.GetByChannelAndGuild(context.Background(), data.ChannelId, data.GuildId.Value)
 	if e != nil {
 		sentry.Error(e) // TODO: Context
 		return nil

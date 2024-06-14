@@ -42,7 +42,7 @@ func (c SwitchPanelCommand) GetExecutor() interface{} {
 
 func (SwitchPanelCommand) Execute(ctx *context.SlashCommandContext, panelId int) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

@@ -26,7 +26,7 @@ func (h *CloseRequestDenyHandler) Properties() registry.Properties {
 }
 
 func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
