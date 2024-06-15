@@ -117,6 +117,8 @@ func callCommand(
 
         v.Execute(ctx{{range $i, $arg := .Arguments}}, arg{{$i}}{{end}})
     {{- end}}
+    default:
+        return fmt.Errorf("unknown command %s", cmd.Properties().Name)
     }
 
     return nil
