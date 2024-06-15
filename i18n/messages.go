@@ -169,6 +169,7 @@ var (
 	MessageRenamed           MessageId = "commands.rename.success"
 	MessageRenameMissingName MessageId = "commands.rename.missing_name"
 	MessageRenameTooLong     MessageId = "commands.rename.too_long"
+	MessageRenameRatelimited MessageId = "commands.rename.ratelimited"
 
 	MessageNotClaimed            MessageId = "commands.unclaim.not_claimed"
 	MessageOnlyClaimerCanUnclaim MessageId = "commands.unclaim.not_claimer"
