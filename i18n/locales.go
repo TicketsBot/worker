@@ -135,6 +135,14 @@ var Locales = []*Locale{
 		DiscordLocale: ptr("hr"),
 	},
 	{
+		IsoShortCode:  "id",
+		IsoLongCode:   "id-ID",
+		FlagEmoji:     "🇮🇩",
+		EnglishName:   "Indonesian",
+		LocalName:     "Bahasa Indonesia",
+		DiscordLocale: ptr("id"),
+	},
+	{
 		IsoShortCode:  "it",
 		IsoLongCode:   "it-IT",
 		FlagEmoji:     "🇮🇹",
