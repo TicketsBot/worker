@@ -2,12 +2,14 @@ package listeners
 
 import (
 	"context"
+	"errors"
 	"github.com/TicketsBot/common/chatrelay"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -27,17 +29,14 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	ctx, cancel := context.WithTimeout(worker.Context, time.Second*3)
 	defer cancel()
 
-	// Verify that this is a ticket
-	ticket, err := sentry.WithSpan2(worker, "Get ticket by channel", func(span *sentry.Span) (database.Ticket, error) {
-		return dbclient.Client.Tickets.GetByChannelAndGuild(ctx, e.ChannelId, e.GuildId)
-	})
+	ticket, isTicket, err := getTicket(ctx, e.GuildId, e.ChannelId)
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return
 	}
 
 	// ensure valid ticket channel
-	if ticket.Id == 0 {
+	if !isTicket || ticket.Id == 0 {
 		return
 	}
 
@@ -139,4 +138,37 @@ func isStaff(msg events.MessageCreate, ticket database.Ticket) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func getTicket(ctx context.Context, guildId, channelId uint64) (database.Ticket, bool, error) {
+	isTicket, err := sentry.WithSpan2(ctx, "IsTicketChannel redis lookup", func(span *sentry.Span) (bool, error) {
+		return redis.IsTicketChannel(ctx, channelId)
+	})
+
+	cacheHit := err == nil
+
+	if err == nil && !isTicket {
+		prometheus.LogOnMessageTicketLookup(false, cacheHit)
+		return database.Ticket{}, false, nil
+	} else if !errors.Is(err, redis.ErrTicketStatusNotCached) {
+		return database.Ticket{}, false, err
+	}
+
+	// Either cache miss or the ticket *does* exist, so we need to fetch the object from the database
+	ticket, err := sentry.WithSpan2(ctx, "Get ticket by channel", func(span *sentry.Span) (database.Ticket, error) {
+		return dbclient.Client.Tickets.GetByChannelAndGuild(ctx, channelId, guildId)
+	})
+
+	if err != nil {
+		return database.Ticket{}, false, err
+	}
+
+	if ticket.Id == 0 {
+		prometheus.LogOnMessageTicketLookup(false, cacheHit)
+		return database.Ticket{}, false, nil
+	}
+
+	prometheus.LogOnMessageTicketLookup(true, cacheHit)
+
+	return ticket, true, nil
 }

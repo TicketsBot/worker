@@ -20,6 +20,8 @@ var (
 
 	InteractionTimeToDefer   = newHistogram("interaction_time_to_defer")
 	InteractionTimeToReceive = newHistogram("interaction_time_to_receive")
+
+	OnMessageTicketLookup = newCounterVec("on_message_ticket_lookup", "is_ticket", "cache_hit")
 )
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
@@ -52,4 +54,8 @@ func LogTicketCreated(guildId uint64) {
 
 func LogCommand(guildId uint64, command string) {
 	Commands.WithLabelValues(strconv.FormatUint(guildId, 10), command).Inc()
+}
+
+func LogOnMessageTicketLookup(isTicket, cacheHit bool) {
+	OnMessageTicketLookup.WithLabelValues(strconv.FormatBool(isTicket), strconv.FormatBool(cacheHit)).Inc()
 }

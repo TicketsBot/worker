@@ -45,6 +45,8 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		return
 	}
 
+	ctx.ReplyPlainPermanent("🔨")
+
 	// Check if whitelabel
 	botId, ok, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)
 	if err != nil {
@@ -77,5 +79,4 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		ctx.HandleError(err)
 		return
 	}
-
 }
