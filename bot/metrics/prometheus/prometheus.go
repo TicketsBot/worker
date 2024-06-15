@@ -21,7 +21,7 @@ var (
 	InteractionTimeToDefer   = newHistogram("interaction_time_to_defer")
 	InteractionTimeToReceive = newHistogram("interaction_time_to_receive")
 
-	OnMessageTicketLookup = newCounterVec("on_message_ticket_lookup", "is_ticket", "cache_hit")
+	OnMessageTicketLookup = newCounterVec("on_message_ticket_lookup_count", "is_ticket", "cache_hit")
 )
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
