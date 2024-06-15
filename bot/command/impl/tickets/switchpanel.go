@@ -1,15 +1,17 @@
 package tickets
 
 import (
+	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
+	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
@@ -17,6 +19,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
 	"strings"
+	"time"
 )
 
 type SwitchPanelCommand struct {
@@ -40,7 +43,7 @@ func (c SwitchPanelCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (SwitchPanelCommand) Execute(ctx *context.SlashCommandContext, panelId int) {
+func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId int) {
 	// Get ticket struct
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
@@ -51,6 +54,21 @@ func (SwitchPanelCommand) Execute(ctx *context.SlashCommandContext, panelId int)
 	// Verify this is a ticket channel
 	if ticket.UserId == 0 || ticket.ChannelId == nil {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
+		return
+	}
+
+	// Check ratelimit
+	ratelimitCtx, cancel := context.WithTimeout(ctx.Worker(), time.Second*3)
+	defer cancel()
+
+	allowed, err := redis.TakeRenameRatelimit(ratelimitCtx, ctx.ChannelId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if !allowed {
+		ctx.Reply(customisation.Red, i18n.TitleRename, i18n.MessageRenameRatelimited)
 		return
 	}
 
