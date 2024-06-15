@@ -163,6 +163,10 @@ func getTicket(ctx context.Context, guildId, channelId uint64) (database.Ticket,
 		return database.Ticket{}, false, err
 	}
 
+	if err := redis.SetTicketChannelStatus(ctx, channelId, ticket.Id != 0); err != nil {
+		return database.Ticket{}, false, err
+	}
+
 	if ticket.Id == 0 {
 		prometheus.LogOnMessageTicketLookup(false, cacheHit)
 		return database.Ticket{}, false, nil
