@@ -29,7 +29,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	ctx, cancel := context.WithTimeout(worker.Context, time.Second*3)
 	defer cancel()
 
-	ticket, isTicket, err := getTicket(ctx, e.GuildId, e.ChannelId)
+	ticket, isTicket, err := getTicket(ctx, e.ChannelId)
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return
@@ -140,7 +140,7 @@ func isStaff(msg events.MessageCreate, ticket database.Ticket) (bool, error) {
 	return true, nil
 }
 
-func getTicket(ctx context.Context, guildId, channelId uint64) (database.Ticket, bool, error) {
+func getTicket(ctx context.Context, channelId uint64) (database.Ticket, bool, error) {
 	isTicket, err := sentry.WithSpan2(ctx, "IsTicketChannel redis lookup", func(span *sentry.Span) (bool, error) {
 		return redis.IsTicketChannel(ctx, channelId)
 	})
@@ -156,7 +156,16 @@ func getTicket(ctx context.Context, guildId, channelId uint64) (database.Ticket,
 
 	// Either cache miss or the ticket *does* exist, so we need to fetch the object from the database
 	ticket, err := sentry.WithSpan2(ctx, "Get ticket by channel", func(span *sentry.Span) (database.Ticket, error) {
-		return dbclient.Client.Tickets.GetByChannelAndGuild(ctx, channelId, guildId)
+		ticket, ok, err := dbclient.Client.Tickets.GetByChannel(ctx, channelId)
+		if err != nil {
+			return database.Ticket{}, err
+		}
+
+		if !ok {
+			return database.Ticket{}, nil
+		}
+
+		return ticket, nil
 	})
 
 	if err != nil {
