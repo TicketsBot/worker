@@ -319,16 +319,11 @@ func (ctx *Context) GetGuildChannels(guildId uint64) ([]channel.Channel, error) 
 
 	if shouldCache {
 		cached, err := ctx.Cache.GetGuildChannels(context.Background(), guildId)
-		if err == nil {
-			return cached, nil
-		} else if !errors.Is(err, cache.ErrNotFound) {
+		if err != nil && !errors.Is(err, cache.ErrNotFound) {
 			return nil, err
-		} // else, continue
-
-		// either not cached (more likely), or guild has no channels
-		if len(cached) > 0 {
+		} else if err == nil && len(cached) > 0 { // either not cached (more likely), or guild has no channels
 			return cached, nil
-		}
+		} // else continue
 	}
 
 	channels, err := rest.GetGuildChannels(context.Background(), ctx.Token, ctx.RateLimiter, guildId)
@@ -428,16 +423,11 @@ func (ctx *Context) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 	shouldCache := ctx.Cache.Options().Guilds && ctx.Cache.Options().Roles
 	if shouldCache {
 		cached, err := ctx.Cache.GetGuildRoles(context.Background(), guildId)
-		if err == nil {
-			return cached, nil
-		} else if !errors.Is(err, cache.ErrNotFound) {
+		if err != nil && !errors.Is(err, cache.ErrNotFound) {
 			return nil, err
-		} // else, continue
-
-		// either not cached (more likely), or guild has no channels
-		if len(cached) > 0 {
+		} else if err == nil && len(cached) > 0 { // either not cached (more likely), or guild has no roles
 			return cached, nil
-		}
+		} // else continue
 	}
 
 	roles, err := rest.GetGuildRoles(context.Background(), ctx.Token, ctx.RateLimiter, guildId)
