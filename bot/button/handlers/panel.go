@@ -90,13 +90,13 @@ func (h *PanelHandler) Execute(ctx *context.ButtonContext) {
 func buildForm(panel database.Panel, form database.Form, inputs []database.FormInput) button.ResponseModal {
 	components := make([]component.Component, len(inputs))
 	for i, input := range inputs {
-		style := component.TextStyleTypes(input.Style) // wrap
+		var minLength, maxLength *uint32
+		if input.MinLength != nil && *input.MinLength > 0 {
+			minLength = utils.Ptr(uint32(*input.MinLength))
+		}
 
-		var maxLength uint32
-		if style == component.TextStyleShort {
-			maxLength = 255
-		} else if style == component.TextStyleParagraph {
-			maxLength = 1024 // Max embed field value
+		if input.MaxLength != nil {
+			maxLength = utils.Ptr(uint32(*input.MaxLength))
 		}
 
 		components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
@@ -104,8 +104,8 @@ func buildForm(panel database.Panel, form database.Form, inputs []database.FormI
 			CustomId:    input.CustomId,
 			Label:       input.Label,
 			Placeholder: input.Placeholder,
-			MinLength:   nil,
-			MaxLength:   &maxLength,
+			MinLength:   minLength,
+			MaxLength:   maxLength,
 			Required:    utils.Ptr(input.Required),
 		}))
 	}

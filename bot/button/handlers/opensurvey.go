@@ -126,13 +126,22 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 
 	components := make([]component.Component, len(formInputs))
 	for i, input := range formInputs {
+		var minLength, maxLength *uint32
+		if input.MinLength != nil && *input.MinLength > 0 {
+			minLength = utils.Ptr(uint32(*input.MinLength))
+		}
+
+		if input.MaxLength != nil {
+			maxLength = utils.Ptr(uint32(*input.MaxLength))
+		}
+
 		components[i] = component.BuildActionRow(component.BuildInputText(component.InputText{
 			Style:       component.TextStyleTypes(input.Style),
 			CustomId:    input.CustomId,
 			Label:       input.Label,
 			Placeholder: input.Placeholder,
-			MinLength:   nil,
-			MaxLength:   utils.Ptr(uint32(1024)),
+			MinLength:   minLength,
+			MaxLength:   maxLength,
 			Required:    utils.Ptr(input.Required),
 			Value:       nil,
 		}))
