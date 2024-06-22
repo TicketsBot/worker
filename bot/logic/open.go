@@ -284,9 +284,14 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		}
 	}
 
+	var panelId *int
+	if panel != nil {
+		panelId = &panel.PanelId
+	}
+
 	// Create channel
 	span = sentry.StartSpan(rootSpan.Context(), "Create ticket in database")
-	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId(), isThread)
+	ticketId, err := dbclient.Client.Tickets.Create(ctx.GuildId(), ctx.UserId(), isThread, panelId)
 	if err != nil {
 		ctx.HandleError(err)
 		return database.Ticket{}, err
@@ -389,6 +394,11 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		ch = tmp
 	}
 
+	if err := dbclient.Client.Tickets.SetChannelId(ctx.GuildId(), ticketId, ch.Id); err != nil {
+		ctx.HandleError(err)
+		return database.Ticket{}, err
+	}
+
 	prometheus.LogTicketCreated(ctx.GuildId())
 
 	// Parallelise as much as possible
@@ -401,11 +411,6 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 		span.Finish()
 		return nil
 	})
-
-	var panelId *int
-	if panel != nil {
-		panelId = &panel.PanelId
-	}
 
 	// WelcomeMessageId is modified in the welcome message goroutine
 	ticket := database.Ticket{
@@ -439,10 +444,10 @@ func OpenTicket(ctx registry.InteractionContext, panel *database.Panel, subject 
 			return err
 		}
 
-		// UpdateUser channel in DB
+		// Update message IDs in DB
 		span = sentry.StartSpan(rootSpan.Context(), "Update ticket properties in database")
 		defer span.Finish()
-		if err := dbclient.Client.Tickets.SetTicketProperties(ctx.GuildId(), ticketId, ch.Id, welcomeMessageId, joinMessageId, panelId); err != nil {
+		if err := dbclient.Client.Tickets.SetMessageIds(ctx.GuildId(), ticketId, welcomeMessageId, joinMessageId); err != nil {
 			return err
 		}
 
