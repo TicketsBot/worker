@@ -38,6 +38,14 @@ var Locales = []*Locale{
 		DiscordLocale: ptr("bg"),
 	},
 	{
+		IsoShortCode:  "ca",
+		IsoLongCode:   "ca-ES",
+		FlagEmoji:     "🇪🇸",
+		EnglishName:   "Catalan",
+		LocalName:     "Català",
+		DiscordLocale: nil,
+	},
+	{
 		IsoShortCode:  "cz",
 		IsoLongCode:   "cs-CZ",
 		FlagEmoji:     "🇨🇿",
