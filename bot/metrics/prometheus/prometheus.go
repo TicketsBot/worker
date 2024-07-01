@@ -22,6 +22,8 @@ var (
 	InteractionTimeToReceive = newHistogram("interaction_time_to_receive")
 
 	OnMessageTicketLookup = newCounterVec("on_message_ticket_lookup_count", "is_ticket", "cache_hit")
+
+	ActiveHttpRequests = newGauge("active_http_requests")
 )
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
@@ -34,6 +36,14 @@ func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
 
 func newHistogram(name string) prometheus.Histogram {
 	return promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      name,
+	})
+}
+
+func newGauge(name string) prometheus.Gauge {
+	return promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: Namespace,
 		Subsystem: Subsystem,
 		Name:      name,

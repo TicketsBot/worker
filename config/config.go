@@ -83,6 +83,7 @@ type Config struct {
 
 	Sentry struct {
 		Dsn               string  `env:"DSN"`
+		SampleRate        float64 `env:"SAMPLE_RATE" envDefault:"1.0"`
 		UseTracing        bool    `env:"TRACING_ENABLED"`
 		TracingSampleRate float64 `env:"TRACING_SAMPLE_RATE"`
 	} `envPrefix:"WORKER_SENTRY_"`

@@ -34,6 +34,7 @@ func main() {
 		if err := sentry.Initialise(sentry.Options{
 			Dsn:              config.Conf.Sentry.Dsn,
 			Debug:            config.Conf.DebugMode != "",
+			SampleRate:       config.Conf.Sentry.SampleRate,
 			EnableTracing:    config.Conf.Sentry.UseTracing,
 			TracesSampleRate: config.Conf.Sentry.TracingSampleRate,
 		}); err != nil {
@@ -66,7 +67,7 @@ func main() {
 	fmt.Println("Configuring proxy...")
 	if config.Conf.Discord.ProxyUrl != "" {
 		request.Client.Timeout = time.Second * 30
-		request.RegisterHook(utils.ProxyHook)
+		request.RegisterPreRequestHook(utils.ProxyHook)
 	}
 
 	fmt.Println("Retrieved command list, initialising microservice clients...")
@@ -87,9 +88,12 @@ func main() {
 	if err != nil {
 		sentry.Error(err)
 	} else {
-		request.RegisterHook(statsd.RestHook)
+		request.RegisterPreRequestHook(statsd.RestHook)
 		go statsd.Client.StartDaemon()
 	}
+
+	request.RegisterPreRequestHook(prometheus.PreRequestHook)
+	request.RegisterPostRequestHook(prometheus.PostRequestHook)
 
 	integrations.InitIntegrations()
 

@@ -19,7 +19,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/rxdn/gdl v0.0.0-20240612163900-621eccf40179
+	github.com/rxdn/gdl v0.0.0-20240701173821-dcaab4d0c5bc
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/atomic v1.10.0
