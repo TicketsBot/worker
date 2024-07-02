@@ -23,7 +23,8 @@ var (
 
 	OnMessageTicketLookup = newCounterVec("on_message_ticket_lookup_count", "is_ticket", "cache_hit")
 
-	ActiveHttpRequests = newGauge("active_http_requests")
+	ActiveHttpRequests  = newGauge("active_http_requests")
+	HttpRequestDuration = newHistogram("http_request_duration")
 )
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
