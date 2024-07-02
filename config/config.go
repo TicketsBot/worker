@@ -1,17 +1,18 @@
 package config
 
 import (
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v10"
+	"time"
 )
 
 type Config struct {
 	DebugMode string `env:"WORKER_DEBUG"`
 
 	Discord struct {
-		Token                 string `env:"WORKER_PUBLIC_TOKEN"`
-		PublicBotId           uint64 `env:"WORKER_PUBLIC_ID"`
-		ProxyUrl              string `env:"DISCORD_PROXY_URL"`
-		RequestTimeoutSeconds int    `env:"REQUEST_TIMEOUT_SECONDS" envDefault:"5"`
+		Token          string        `env:"WORKER_PUBLIC_TOKEN"`
+		PublicBotId    uint64        `env:"WORKER_PUBLIC_ID"`
+		ProxyUrl       string        `env:"DISCORD_PROXY_URL"`
+		RequestTimeout time.Duration `env:"DISCORD_REQUEST_TIMEOUT" envDefault:"15s"`
 	}
 
 	Bot struct {
@@ -22,20 +23,20 @@ type Config struct {
 	}
 
 	PremiumProxy struct {
-		Url string `env:"WORKER_PROXY_URL"`
-		Key string `env:"WORKER_PROXY_KEY"`
-	}
+		Url string `env:"URL"`
+		Key string `env:"KEY"`
+	} `envPrefix:"WORKER_PROXY_"`
 
 	Archiver struct {
-		Url    string `env:"WORKER_ARCHIVER_URL"`
-		AesKey string `env:"WORKER_ARCHIVER_AES_KEY"`
-	}
+		Url    string `env:"URL"`
+		AesKey string `env:"AES_KEY"`
+	} `envPrefix:"WORKER_ARCHIVER_"`
 
 	WebProxy struct {
-		Url             string `env:"WEB_PROXY_URL"`
-		AuthHeaderName  string `env:"WEB_PROXY_AUTH_HEADER_NAME"`
-		AuthHeaderValue string `env:"WEB_PROXY_AUTH_HEADER_VALUE"`
-	}
+		Url             string `env:"URL"`
+		AuthHeaderName  string `env:"AUTH_HEADER_NAME"`
+		AuthHeaderValue string `env:"AUTH_HEADER_VALUE"`
+	} `envPrefix:"WEB_PROXY_"`
 
 	Integrations struct {
 		BloxlinkApiKey string `env:"BLOXLINK_API_KEY"`
@@ -67,19 +68,19 @@ type Config struct {
 	} `envPrefix:"CACHE_"`
 
 	Redis struct {
-		Address  string `env:"WORKER_REDIS_ADDR"`
-		Password string `env:"WORKER_REDIS_PASSWD"`
-		Threads  int    `env:"WORKER_REDIS_THREADS"`
-	}
+		Address  string `env:"ADDR"`
+		Password string `env:"PASSWD"`
+		Threads  int    `env:"THREADS"`
+	} `envPrefix:"WORKER_REDIS_"`
 
 	Prometheus struct {
 		Address string `env:"PROMETHEUS_SERVER_ADDR"`
 	}
 
 	Statsd struct {
-		Address string `env:"WORKER_STATSD_ADDR"`
-		Prefix  string `env:"WORKER_STATSD_PREFIX"`
-	}
+		Address string `env:"ADDR"`
+		Prefix  string `env:"PREFIX"`
+	} `envPrefix:"WORKER_STATSD_"`
 
 	Sentry struct {
 		Dsn               string  `env:"DSN"`

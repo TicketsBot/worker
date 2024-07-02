@@ -66,7 +66,7 @@ func main() {
 	// Configure HTTP proxy
 	fmt.Println("Configuring proxy...")
 	if config.Conf.Discord.ProxyUrl != "" {
-		request.Client.Timeout = time.Second * 30
+		request.Client.Timeout = config.Conf.Discord.RequestTimeout
 		request.RegisterPreRequestHook(utils.ProxyHook)
 	}
 
@@ -77,7 +77,7 @@ func main() {
 		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
 		utils.PremiumClient = &c
 
-		request.Client.Timeout = time.Second * 30
+		request.Client.Timeout = time.Second * 10
 	}
 
 	utils.ArchiverClient = archiverclient.NewArchiverClient(config.Conf.Archiver.Url, []byte(config.Conf.Archiver.AesKey))
