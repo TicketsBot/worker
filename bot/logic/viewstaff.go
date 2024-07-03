@@ -99,7 +99,7 @@ func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed,
 				upper = len(supportUsers)
 			}
 
-			content := "Warning: Users in support teams are now deprecated. Please migrate to roles."
+			content := "**Warning:** Users in support teams are now deprecated. Please migrate to roles.\n\n"
 			for i := lower; i < upper; i++ {
 				userId := supportUsers[i]
 				content += fmt.Sprintf("• <@%d> (`%d`)\n", userId, userId)
