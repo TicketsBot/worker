@@ -26,7 +26,7 @@ func (AddSupportCommand) Properties() registry.Properties {
 		Category:        command.Settings,
 		InteractionOnly: true,
 		Arguments: command.Arguments(
-			command.NewRequiredArgument("user_or_role", "User or role to apply the support representative permission to", interaction.OptionTypeMentionable, i18n.MessageAddSupportNoMembers),
+			command.NewRequiredArgument("role", "Role to apply the support representative permission to", interaction.OptionTypeMentionable, i18n.MessageAddSupportNoMembers),
 		),
 		DefaultEphemeral: true,
 	}
@@ -39,7 +39,7 @@ func (c AddSupportCommand) GetExecutor() interface{} {
 func (c AddSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 	usageEmbed := embed.EmbedField{
 		Name:   "Usage",
-		Value:  "`/addsupport @User`\n`/addsupport @Role`",
+		Value:  "`/addsupport @Role`",
 		Inline: false,
 	}
 
@@ -51,7 +51,10 @@ func (c AddSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 
 	var mention string
 	if mentionableType == context.MentionableTypeUser {
-		mention = fmt.Sprintf("<@%d>", id)
+		ctx.ReplyRaw(customisation.Red, "Error", "Users in support teams are now deprecated. Please use roles instead.")
+		return
+
+		//mention = fmt.Sprintf("<@%d>", id)
 	} else if mentionableType == context.MentionableTypeRole {
 		mention = fmt.Sprintf("<@&%d>", id)
 	} else {

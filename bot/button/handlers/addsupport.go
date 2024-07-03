@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
@@ -71,6 +70,11 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	if mentionableType == context.MentionableTypeUser {
+		ctx.ReplyRaw(customisation.Red, "Error", "Users in support teams are now deprecated. Please use roles instead.")
+		return
+
+		/* TODO: Remove if Discord does not resolve the performance issues
+
 		// Guild owner doesn't need to be added
 		guild, err := ctx.Guild()
 		if err != nil {
@@ -91,6 +95,7 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 			ctx.HandleError(err)
 			return
 		}
+		*/
 	} else if mentionableType == context.MentionableTypeRole {
 		if id == ctx.GuildId() {
 			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageAddSupportEveryone)
