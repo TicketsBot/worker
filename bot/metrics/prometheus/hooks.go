@@ -13,8 +13,12 @@ func PreRequestHook(_ string, req *http.Request) {
 	*req = *req.WithContext(ctx)
 }
 
-func PostRequestHook(_ string, res *http.Response) {
+func PostRequestHook(res *http.Response) {
 	ActiveHttpRequests.Dec()
+
+	if res == nil {
+		return
+	}
 
 	if requestTime := res.Request.Context().Value("rt"); requestTime != nil {
 		duration := time.Since(requestTime.(time.Time))

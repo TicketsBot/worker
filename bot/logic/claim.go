@@ -99,9 +99,14 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 		return nil, err
 	}
 
+	integrationRoleId, err := GetIntegrationRoleId(worker, ticket.GuildId)
+	if err != nil {
+		return nil, err
+	}
+
 	// Support can't view the ticket, and therefore can't type either
 	if !claimSettings.SupportCanView {
-		return overwritesCantView(claimer, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles, additionalPermissions), nil
+		return overwritesCantView(claimer, worker.BotId, ticket.UserId, ticket.GuildId, adminUsers, adminRoles, integrationRoleId, additionalPermissions), nil
 	}
 
 	// Support can view the ticket, but can't type
@@ -146,7 +151,7 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 			}
 		}
 
-		return overwritesCantType(claimer, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles, additionalPermissions), nil
+		return overwritesCantType(claimer, worker.BotId, ticket.UserId, ticket.GuildId, supportUsers, supportRoles, adminUsers, adminRoles, integrationRoleId, additionalPermissions), nil
 	}
 
 	// Unreachable
@@ -155,7 +160,7 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 
 // We should build new overwrites from scratch
 // TODO: Instead of append(), set indices
-func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, adminRoles []uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
+func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, adminRoles []uint64, integrationRoleId *uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
 	overwrites = append(overwrites, BuildUserOverwrite(openerId, additionalPermissions),
 		channel.PermissionOverwrite{ // @everyone
 			Id:    guildId,
@@ -165,7 +170,23 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		},
 	)
 
-	for _, userId := range append(adminUsers, claimer, selfId) {
+	// Add claimer to ticket, and attempt to add self by user
+	adminUserTargets := make([]uint64, len(adminUsers)+1, len(adminUsers)+2)
+	adminRoleTargets := make([]uint64, len(adminRoles), len(adminRoles)+1)
+
+	copy(adminUserTargets, adminUsers)
+	copy(adminRoleTargets, adminRoles)
+
+	adminUserTargets[len(adminUserTargets)-1] = claimer
+
+	if integrationRoleId == nil {
+		adminUserTargets = append(adminUserTargets, selfId)
+	} else {
+		adminRoleTargets = append(adminRoleTargets, *integrationRoleId)
+	}
+
+	// Build overwrites
+	for _, userId := range adminUserTargets {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
@@ -174,7 +195,7 @@ func overwritesCantView(claimer, selfId, openerId, guildId uint64, adminUsers, a
 		})
 	}
 
-	for _, roleId := range adminRoles {
+	for _, roleId := range adminRoleTargets {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
@@ -190,7 +211,7 @@ var readOnlyAllowed = []permission.Permission{permission.ViewChannel, permission
 var readOnlyDenied = []permission.Permission{permission.SendMessages, permission.AddReactions}
 
 // support & admins are not mutually exclusive due to support teams
-func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
+func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUsers, supportRoles, adminUsers, adminRoles []uint64, integrationRoleId *uint64, additionalPermissions database.TicketPermissions) (overwrites []channel.PermissionOverwrite) {
 	overwrites = append(overwrites, BuildUserOverwrite(openerId, additionalPermissions),
 		channel.PermissionOverwrite{ // @everyone
 			Id:    guildId,
@@ -200,7 +221,22 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		},
 	)
 
-	for _, userId := range append(adminUsers, claimerId, selfId) {
+	// Add claimer to ticket, and attempt to add self by user
+	adminUserTargets := make([]uint64, len(adminUsers)+1, len(adminUsers)+2)
+	adminRoleTargets := make([]uint64, len(adminRoles), len(adminRoles)+1)
+
+	copy(adminUserTargets, adminUsers)
+	copy(adminRoleTargets, adminRoles)
+
+	adminUserTargets[len(adminUserTargets)-1] = claimerId
+
+	if integrationRoleId == nil {
+		adminUserTargets = append(adminUserTargets, selfId)
+	} else {
+		adminRoleTargets = append(adminRoleTargets, *integrationRoleId)
+	}
+
+	for _, userId := range adminUserTargets {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    userId,
 			Type:  channel.PermissionTypeMember,
@@ -209,7 +245,7 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 		})
 	}
 
-	for _, roleId := range adminRoles {
+	for _, roleId := range adminRoleTargets {
 		overwrites = append(overwrites, channel.PermissionOverwrite{
 			Id:    roleId,
 			Type:  channel.PermissionTypeRole,
@@ -239,6 +275,10 @@ func overwritesCantType(claimerId, selfId, openerId, guildId uint64, supportUser
 	}
 
 	for _, roleId := range supportRoles {
+		if integrationRoleId != nil && roleId == *integrationRoleId {
+			continue
+		}
+
 		// Don't exclude claimer, self or admins
 		for _, adminRoleId := range adminUsers {
 			if roleId == adminRoleId {

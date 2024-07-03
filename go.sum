@@ -421,6 +421,8 @@ github.com/rs/zerolog v1.13.0/go.mod h1:YbFCdg8HfsridGWAh22vktObvhZbQsZXe4/zB0OK
 github.com/rs/zerolog v1.15.0/go.mod h1:xYTKnLHcpfU2225ny5qZjxnj9NvkumZYjJHlAThCjNc=
 github.com/rxdn/gdl v0.0.0-20240701173821-dcaab4d0c5bc h1:+QlFDg0P8bpuOmUvd8o5gALj/I6rbn5F+nOUt+G7t7c=
 github.com/rxdn/gdl v0.0.0-20240701173821-dcaab4d0c5bc/go.mod h1:HtxfLp4OaoPoDJHQ4JOx/QeLH2d40VgT3wNOf7ETsRE=
+github.com/rxdn/gdl v0.0.0-20240703190458-ff6c6d2f8730 h1:ZjGAZx4DYcHUjCNFIjWJNbPgkGzwvJduIsojX2zydUE=
+github.com/rxdn/gdl v0.0.0-20240703190458-ff6c6d2f8730/go.mod h1:HtxfLp4OaoPoDJHQ4JOx/QeLH2d40VgT3wNOf7ETsRE=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/progressbar/v3 v3.8.2 h1:2kZJwZCpb+E/V79kGO7daeq+hUwUJW0A5QD1Wv455dA=
 github.com/schollz/progressbar/v3 v3.8.2/go.mod h1:9KHLdyuXczIsyStQwzvW8xiELskmX7fQMaZdN23nAv8=

@@ -682,12 +682,26 @@ func CreateOverwrites(ctx registry.InteractionContext, userId uint64, panel *dat
 		selfAllow = append(selfAllow, permission.ManageWebhooks)
 	}
 
-	overwrites = append(overwrites, channel.PermissionOverwrite{
-		Id:    ctx.Worker().BotId,
-		Type:  channel.PermissionTypeMember,
-		Allow: permission.BuildPermissions(selfAllow[:]...),
-		Deny:  0,
-	})
+	integrationRoleId, err := GetIntegrationRoleId(ctx.Worker(), ctx.GuildId())
+	if err != nil {
+		return nil, err
+	}
+
+	if integrationRoleId == nil {
+		overwrites = append(overwrites, channel.PermissionOverwrite{
+			Id:    ctx.Worker().BotId,
+			Type:  channel.PermissionTypeMember,
+			Allow: permission.BuildPermissions(selfAllow[:]...),
+			Deny:  0,
+		})
+	} else {
+		overwrites = append(overwrites, channel.PermissionOverwrite{
+			Id:    *integrationRoleId,
+			Type:  channel.PermissionTypeRole,
+			Allow: permission.BuildPermissions(selfAllow[:]...),
+			Deny:  0,
+		})
+	}
 
 	// Create list of members & roles who should be added to the ticket
 	allowedUsers, allowedRoles, err := GetAllowedStaffUsersAndRoles(ctx.GuildId(), panel)
@@ -780,6 +794,38 @@ func GetAllowedStaffUsersAndRoles(guildId uint64, panel *database.Panel) ([]uint
 	}
 
 	return allowedUsers, allowedRoles, nil
+}
+
+func GetIntegrationRoleId(worker *worker.Context, guildId uint64) (*uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	cachedId, err := redis.GetIntegrationRole(ctx, guildId, worker.BotId)
+	if err == nil {
+		return &cachedId, nil
+	} else if !errors.Is(err, redis.ErrIntegrationRoleNotCached) {
+		return nil, err
+	}
+
+	roles, err := worker.GetGuildRoles(guildId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, role := range roles {
+		if role.Tags.BotId != nil && *role.Tags.BotId == worker.BotId {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+			defer cancel() // defer is okay here as we return in every case
+
+			if err := redis.SetIntegrationRole(ctx, guildId, worker.BotId, role.Id); err != nil {
+				return nil, err
+			}
+
+			return &role.Id, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func GenerateChannelName(ctx registry.CommandContext, panel *database.Panel, ticketId int, openerId uint64, claimer *uint64) (string, error) {
