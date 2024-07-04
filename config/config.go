@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	DebugMode string `env:"WORKER_DEBUG"`
+	DebugMode   string `env:"WORKER_DEBUG"`
+	PremiumOnly bool   `env:"WORKER_PREMIUM_ONLY" envDefault:"false"`
 
 	Discord struct {
 		Token          string        `env:"WORKER_PUBLIC_TOKEN"`

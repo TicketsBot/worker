@@ -15,6 +15,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
+	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
@@ -47,6 +48,10 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		} else {
 			premiumTier = tier
 		}
+	}
+
+	if premiumTier == premium.None && config.Conf.PremiumOnly {
+		return false
 	}
 
 	var ctx cmdregistry.InteractionContext

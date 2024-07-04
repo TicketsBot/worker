@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/errorcontext"
+	"github.com/TicketsBot/worker/config"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -30,6 +31,10 @@ func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker
 		premiumTier = premium.None
 	}
 
+	if premiumTier == premium.None && config.Conf.PremiumOnly {
+		return false
+	}
+
 	handler := manager.MatchModal(data.Data.CustomId)
 	if handler == nil {
 		return false
@@ -43,4 +48,3 @@ func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker
 
 	return canEdit
 }
-
