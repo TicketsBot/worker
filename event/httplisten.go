@@ -282,6 +282,10 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	case <-timeout.C:
 		return
 	case data := <-responseCh:
+		if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+			return
+		}
+
 		restData := rest.WebhookEditBody{
 			Content:         data.Content,
 			Embeds:          data.Embeds,
@@ -303,6 +307,10 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 	case <-timeout.C:
 		return
 	case data := <-ch:
+		if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+			return
+		}
+
 		if err := data.HandleDeferred(interactionData, worker); err != nil {
 			sentry.Error(err) // TODO: Context
 		}
