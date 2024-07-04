@@ -8,7 +8,7 @@ env:
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "feature/instant-defer" ]
 
 jobs:
   publish-image:

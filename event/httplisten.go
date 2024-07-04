@@ -126,11 +126,6 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeToDefer := calculateTimeToDefer(interactionData.Id)
-
-			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
-			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
-
 			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
 			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
@@ -139,25 +134,18 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
 				return
 			}
-
-			select {
-			case <-time.After(timeToDefer):
-				var flags uint
-				if deferDefault {
-					flags = message.SumFlags(message.FlagEphemeral)
-				}
-
-				res := interaction.NewResponseAckWithSource(flags)
-				ctx.JSON(200, res)
-				ctx.Writer.Flush()
-
-				go handleApplicationCommandResponseAfterDefer(interactionData, worker, responseCh)
-			case data := <-responseCh:
-				res := interaction.NewResponseChannelMessage(data)
-				ctx.JSON(200, res)
+			var flags uint
+			if deferDefault {
+				flags = message.SumFlags(message.FlagEphemeral)
 			}
 
-			// Message components
+			res := interaction.NewResponseAckWithSource(flags)
+			ctx.JSON(200, res)
+			ctx.Writer.Flush()
+
+			go handleApplicationCommandResponseAfterDefer(interactionData, worker, responseCh)
+
+			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 		case interaction.InteractionTypeMessageComponent:
 			var interactionData interaction.MessageComponentInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
@@ -165,25 +153,16 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
-			timeToDefer := calculateTimeToDefer(interactionData.Id)
-
-			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
-			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
-
 			responseCh := make(chan button.Response, 1) // Buffer > 0 is important, or it could hang!
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
-			select {
-			case <-time.After(timeToDefer):
-				res := interaction.NewResponseDeferredMessageUpdate()
-				ctx.JSON(200, res)
-				ctx.Writer.Flush()
+			res := interaction.NewResponseDeferredMessageUpdate()
+			ctx.JSON(200, res)
+			ctx.Writer.Flush()
 
-				go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
-			case data := <-responseCh:
-				ctx.JSON(200, data.Build())
-			}
+			go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
 
+			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 		case interaction.InteractionTypeApplicationCommandAutoComplete:
 			var interactionData interaction.ApplicationCommandAutoCompleteInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
@@ -349,11 +328,4 @@ func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOpti
 func calculateTimeToReceive(interactionId uint64) time.Duration {
 	generated := utils.SnowflakeToTime(interactionId)
 	return time.Now().Sub(generated)
-}
-
-func calculateTimeToDefer(interactionId uint64) time.Duration {
-	generated := utils.SnowflakeToTime(interactionId)
-
-	// Call max incase the snowflake timestamp is off
-	return max(generated.Add(config.Conf.Discord.CallbackTimeout).Sub(time.Now()), config.Conf.Discord.CallbackTimeout)
 }
