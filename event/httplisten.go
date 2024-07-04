@@ -254,7 +254,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
 
 			// Can't defer a modal submit response
-			ctx.JSON(200, button.ResponseAck{})
+			ctx.JSON(200, interaction.NewResponseDeferredMessageUpdate())
 		}
 	}
 }
