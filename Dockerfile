@@ -1,5 +1,5 @@
 # Build container
-FROM golang:buster AS builder
+FROM golang:1.22 AS builder
 
 RUN go version
 

@@ -1,6 +1,6 @@
 module github.com/TicketsBot/worker
 
-go 1.21
+go 1.22
 
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3
