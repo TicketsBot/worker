@@ -26,6 +26,7 @@ import (
 
 type ModalContext struct {
 	*Replyable
+	*ReplyCounter
 	*MessageComponentExtensions
 	*StateCache
 	worker          *worker.Context
@@ -42,6 +43,7 @@ func NewModalContext(
 	responseChannel chan button.Response,
 ) *ModalContext {
 	ctx := ModalContext{
+		ReplyCounter:    NewReplyCounter(),
 		worker:          worker,
 		Interaction:     interaction,
 		premium:         premium,
@@ -125,6 +127,10 @@ func (ctx *ModalContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *ModalContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
+
+	if err := ctx.ReplyCounter.Try(); err != nil {
+		return message.Message{}, err
+	}
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseMessage{

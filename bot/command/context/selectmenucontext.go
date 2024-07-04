@@ -25,6 +25,7 @@ import (
 
 type SelectMenuContext struct {
 	*Replyable
+	*ReplyCounter
 	*MessageComponentExtensions
 	*StateCache
 	worker          *worker.Context
@@ -42,6 +43,7 @@ func NewSelectMenuContext(
 	responseChannel chan button.Response,
 ) *SelectMenuContext {
 	ctx := SelectMenuContext{
+		ReplyCounter:    NewReplyCounter(),
 		worker:          worker,
 		Interaction:     interaction,
 		InteractionData: interaction.Data.AsSelectMenu(),
@@ -102,6 +104,10 @@ func (ctx *SelectMenuContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
+
+	if err := ctx.ReplyCounter.Try(); err != nil {
+		return message.Message{}, err
+	}
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseMessage{

@@ -25,6 +25,7 @@ import (
 
 type ButtonContext struct {
 	*Replyable
+	*ReplyCounter
 	*MessageComponentExtensions
 	*StateCache
 	worker          *worker.Context
@@ -42,6 +43,7 @@ func NewButtonContext(
 	responseChannel chan button.Response,
 ) *ButtonContext {
 	ctx := ButtonContext{
+		ReplyCounter:    NewReplyCounter(),
 		worker:          worker,
 		Interaction:     interaction,
 		InteractionData: interaction.Data.AsButton(),
@@ -102,6 +104,10 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 
 func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
 	hasReplied := ctx.hasReplied.Swap(true)
+
+	if err := ctx.ReplyCounter.Try(); err != nil {
+		return message.Message{}, err
+	}
 
 	if !hasReplied {
 		ctx.responseChannel <- button.ResponseMessage{

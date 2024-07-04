@@ -24,6 +24,7 @@ import (
 
 type SlashCommandContext struct {
 	*Replyable
+	*ReplyCounter
 	*StateCache
 	InteractionExtension
 	worker      *worker.Context
@@ -41,6 +42,8 @@ func NewSlashCommandContext(
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) SlashCommandContext {
 	ctx := SlashCommandContext{
+		ReplyCounter: NewReplyCounter(),
+
 		InteractionExtension: NewInteractionExtension(interaction),
 
 		worker:      worker,
@@ -109,6 +112,10 @@ func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext
 
 func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
 	hasReplied := ctx.hasReplied.Swap(true)
+
+	if err := ctx.ReplyCounter.Try(); err != nil {
+		return message.Message{}, err
+	}
 
 	if hasReplied {
 		msg, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
