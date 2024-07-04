@@ -10,10 +10,11 @@ type Config struct {
 	PremiumOnly bool   `env:"WORKER_PREMIUM_ONLY" envDefault:"false"`
 
 	Discord struct {
-		Token          string        `env:"WORKER_PUBLIC_TOKEN"`
-		PublicBotId    uint64        `env:"WORKER_PUBLIC_ID"`
-		ProxyUrl       string        `env:"DISCORD_PROXY_URL"`
-		RequestTimeout time.Duration `env:"DISCORD_REQUEST_TIMEOUT" envDefault:"15s"`
+		Token           string        `env:"WORKER_PUBLIC_TOKEN"`
+		PublicBotId     uint64        `env:"WORKER_PUBLIC_ID"`
+		ProxyUrl        string        `env:"DISCORD_PROXY_URL"`
+		RequestTimeout  time.Duration `env:"DISCORD_REQUEST_TIMEOUT" envDefault:"15s"`
+		CallbackTimeout time.Duration `env:"DISCORD_CALLBACK_TIMEOUT" envDefault:"2000ms"`
 	}
 
 	Bot struct {

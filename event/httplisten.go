@@ -34,8 +34,6 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-const CallbackTimeout = time.Millisecond * 2000
-
 func newErrorResponse(err error) errorResponse {
 	return errorResponse{
 		response: response{
@@ -355,5 +353,5 @@ func calculateTimeToReceive(interactionId uint64) time.Duration {
 
 func calculateTimeToDefer(interactionId uint64) time.Duration {
 	generated := utils.SnowflakeToTime(interactionId)
-	return generated.Add(CallbackTimeout).Sub(time.Now())
+	return generated.Add(config.Conf.Discord.CallbackTimeout).Sub(time.Now())
 }
