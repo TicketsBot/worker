@@ -111,7 +111,10 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 
 		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
-			go handler.Execute(ctx.(*cmdcontext.ButtonContext))
+			go func() {
+				defer close(responseCh)
+				handler.Execute(ctx.(*cmdcontext.ButtonContext))
+			}()
 		}
 
 		return canEdit
@@ -123,7 +126,10 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 
 		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
 		if shouldExecute {
-			go handler.Execute(ctx.(*cmdcontext.SelectMenuContext))
+			go func() {
+				defer close(responseCh)
+				handler.Execute(ctx.(*cmdcontext.SelectMenuContext))
+			}()
 		}
 
 		return canEdit

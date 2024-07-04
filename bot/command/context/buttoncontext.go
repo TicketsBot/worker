@@ -1,7 +1,6 @@
 package context
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -19,9 +18,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
-	"github.com/rxdn/gdl/rest"
 	"go.uber.org/atomic"
-	"time"
 )
 
 type ButtonContext struct {
@@ -104,26 +101,32 @@ func (ctx *ButtonContext) ToErrorContext() errorcontext.WorkerErrorContext {
 }
 
 func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
-	hasReplied := ctx.hasReplied.Swap(true)
+	//hasReplied := ctx.hasReplied.Swap(true)
 
 	if err := ctx.ReplyCounter.Try(); err != nil {
 		return message.Message{}, err
 	}
 
-	if !hasReplied {
-		ctx.responseChannel <- button.ResponseMessage{
-			Data: response,
-		}
-	} else {
-		if time.Now().Sub(utils.SnowflakeToTime(ctx.interaction.Id)) > time.Minute*14 {
-			return
-		}
-
-		msg, err = rest.CreateFollowupMessage(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
-		if err != nil {
-			sentry.LogWithContext(err, ctx.ToErrorContext())
-		}
+	ctx.responseChannel <- button.ResponseMessage{
+		Data: response,
 	}
+
+	/*
+		if !hasReplied {
+			ctx.responseChannel <- button.ResponseMessage{
+				Data: response,
+			}
+		} else {
+			if time.Now().Sub(utils.SnowflakeToTime(ctx.interaction.Id)) > time.Minute*14 {
+				return
+			}
+
+			msg, err = rest.CreateFollowupMessage(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
+			if err != nil {
+				sentry.LogWithContext(err, ctx.ToErrorContext())
+			}
+		}
+	*/
 
 	return
 }

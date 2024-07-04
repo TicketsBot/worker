@@ -153,16 +153,24 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
+			timeToDefer := calculateTimeToDefer(interactionData.Id)
+
 			responseCh := make(chan button.Response, 1) // Buffer > 0 is important, or it could hang!
 			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
 
-			res := interaction.NewResponseDeferredMessageUpdate()
-			ctx.JSON(200, res)
-			ctx.Writer.Flush()
+			select {
+			case <-time.After(timeToDefer):
+				res := interaction.NewResponseDeferredMessageUpdate()
+				ctx.JSON(200, res)
+				ctx.Writer.Flush()
 
-			go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+				go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+			case data := <-responseCh:
+				ctx.JSON(200, data.Build())
+			}
 
 			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
+			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
 		case interaction.InteractionTypeApplicationCommandAutoComplete:
 			var interactionData interaction.ApplicationCommandAutoCompleteInteraction
 			if err := json.Unmarshal(payload.Event, &interactionData); err != nil {
@@ -246,8 +254,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
 
 			// Can't defer a modal submit response
-			data := <-responseCh
-			ctx.JSON(200, data.Build())
+			ctx.JSON(200, button.ResponseAck{})
 		}
 	}
 }
@@ -278,18 +285,22 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 }
 
 func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, ch chan button.Response) {
-	timeout := time.NewTimer(time.Second * 15)
-
-	select {
-	case <-timeout.C:
-		return
-	case data := <-ch:
-		if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+	for {
+		select {
+		case <-time.After(time.Second * 15):
 			return
-		}
+		case data, ok := <-ch:
+			if !ok {
+				return
+			}
 
-		if err := data.HandleDeferred(interactionData, worker); err != nil {
-			sentry.Error(err) // TODO: Context
+			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+				return
+			}
+
+			if err := data.HandleDeferred(interactionData, worker); err != nil {
+				sentry.Error(err) // TODO: Context
+			}
 		}
 	}
 }
@@ -328,4 +339,11 @@ func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOpti
 func calculateTimeToReceive(interactionId uint64) time.Duration {
 	generated := utils.SnowflakeToTime(interactionId)
 	return time.Now().Sub(generated)
+}
+
+func calculateTimeToDefer(interactionId uint64) time.Duration {
+	generated := utils.SnowflakeToTime(interactionId)
+
+	// Call max incase the snowflake timestamp is off
+	return max(generated.Add(config.Conf.Discord.CallbackTimeout).Sub(time.Now()), config.Conf.Discord.CallbackTimeout)
 }

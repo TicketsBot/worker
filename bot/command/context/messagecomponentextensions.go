@@ -43,7 +43,7 @@ func (e *MessageComponentExtensions) Modal(res button.ResponseModal) {
 
 func (e *MessageComponentExtensions) Ack() {
 	e.hasReplied.Store(true)
-	e.responseChannel <- button.ResponseAck{}
+	//e.responseChannel <- button.ResponseAck{}
 }
 
 func (e *MessageComponentExtensions) Edit(data command.MessageResponse) {
