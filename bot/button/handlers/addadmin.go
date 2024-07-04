@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/button/registry"
@@ -149,7 +150,8 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
-			if restError, ok := err.(request.RestError); ok && restError.StatusCode == 404 {
+			var restError request.RestError
+			if errors.As(err, &restError) && restError.StatusCode == 404 {
 				if restError.StatusCode == 404 {
 					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
 						ctx.HandleError(err)
@@ -160,10 +162,9 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 				} else if restError.StatusCode == 403 {
 					break
 				}
-			} else {
-				ctx.HandleError(err)
-				return
 			}
+
+			continue
 		}
 
 		// Apply overwrites to existing channels
@@ -180,7 +181,19 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 		}
 
 		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
-			ctx.HandleError(err)
+			var restError request.RestError
+			if errors.As(err, &restError) {
+				if restError.StatusCode == 403 {
+					break
+				} else if restError.StatusCode == 404 {
+					continue
+				} else {
+					ctx.HandleError(err)
+				}
+			} else {
+				ctx.HandleError(err)
+			}
+
 			return
 		}
 	}
