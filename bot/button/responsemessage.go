@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
+	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest"
+	"time"
 )
 
 type ResponseMessage struct {
@@ -21,6 +23,10 @@ func (r ResponseMessage) Build() interface{} {
 }
 
 func (r ResponseMessage) HandleDeferred(interactionData interaction.MessageComponentInteraction, worker *worker.Context) error {
+	if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+		return nil
+	}
+
 	_, err := rest.CreateFollowupMessage(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, r.Data.IntoWebhookBody())
 	return err
 }

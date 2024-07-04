@@ -21,6 +21,7 @@ import (
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
 	"go.uber.org/atomic"
+	"time"
 )
 
 type ButtonContext struct {
@@ -114,6 +115,10 @@ func (ctx *ButtonContext) ReplyWith(response command.MessageResponse) (msg messa
 			Data: response,
 		}
 	} else {
+		if time.Now().Sub(utils.SnowflakeToTime(ctx.interaction.Id)) > time.Minute*14 {
+			return
+		}
+
 		msg, err = rest.CreateFollowupMessage(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
 		if err != nil {
 			sentry.LogWithContext(err, ctx.ToErrorContext())
