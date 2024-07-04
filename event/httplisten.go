@@ -353,5 +353,7 @@ func calculateTimeToReceive(interactionId uint64) time.Duration {
 
 func calculateTimeToDefer(interactionId uint64) time.Duration {
 	generated := utils.SnowflakeToTime(interactionId)
-	return generated.Add(config.Conf.Discord.CallbackTimeout).Sub(time.Now())
+
+	// Call max incase the snowflake timestamp is off
+	return max(generated.Add(config.Conf.Discord.CallbackTimeout).Sub(time.Now()), config.Conf.Discord.CallbackTimeout)
 }
