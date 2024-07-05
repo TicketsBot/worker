@@ -20,11 +20,12 @@ type PremiumCommand struct {
 
 func (PremiumCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "premium",
-		Description:     i18n.HelpPremium,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Admin,
-		Category:        command.Settings,
+		Name:             "premium",
+		Description:      i18n.HelpPremium,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Admin,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 

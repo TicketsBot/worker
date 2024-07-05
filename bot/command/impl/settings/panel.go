@@ -14,11 +14,12 @@ type PanelCommand struct {
 
 func (PanelCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "panel",
-		Description:     i18n.HelpPanel,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Admin,
-		Category:        command.Settings,
+		Name:             "panel",
+		Description:      i18n.HelpPanel,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Admin,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 

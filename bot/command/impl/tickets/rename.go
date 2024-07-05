@@ -29,6 +29,7 @@ func (RenameCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("name", "New name for the ticket", interaction.OptionTypeString, i18n.MessageRenameMissingName),
 		),
+		DefaultEphemeral: true,
 	}
 }
 

@@ -26,7 +26,8 @@ func (ManageTagsCommand) Properties() registry.Properties {
 			ManageTagsDeleteCommand{},
 			ManageTagsListCommand{},
 		},
-		Category: command.Tags,
+		Category:         command.Tags,
+		DefaultEphemeral: true,
 	}
 }
 

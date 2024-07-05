@@ -260,26 +260,33 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 }
 
 func handleApplicationCommandResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, worker *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
-	timeout := time.NewTimer(time.Second * 15)
+	deferredAt := time.Now()
 
-	select {
-	case <-timeout.C:
-		return
-	case data := <-responseCh:
-		if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+	for {
+		select {
+		case <-time.After(time.Second * 15):
 			return
-		}
+		case data, ok := <-responseCh:
+			if !ok {
+				return
+			}
 
-		restData := rest.WebhookEditBody{
-			Content:         data.Content,
-			Embeds:          data.Embeds,
-			AllowedMentions: data.AllowedMentions,
-			Components:      data.Components,
-		}
+			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 ||
+				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
+				return
+			}
 
-		if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
-			sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
-			return
+			restData := rest.WebhookEditBody{
+				Content:         data.Content,
+				Embeds:          data.Embeds,
+				AllowedMentions: data.AllowedMentions,
+				Components:      data.Components,
+			}
+
+			if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
+				sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
+				return
+			}
 		}
 	}
 }
@@ -294,7 +301,8 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 				return
 			}
 
-			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 || deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
+			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 ||
+				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
 				return
 			}
 

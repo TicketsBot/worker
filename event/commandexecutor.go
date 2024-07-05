@@ -173,25 +173,23 @@ func executeCommand(
 		statsd.Client.IncrementKey(statsd.KeyCommands)
 		prometheus.LogCommand(data.GuildId.Value, data.Data.Name)
 
+		defer close(responseCh)
+
 		if err := callCommand(cmd, &interactionContext, options); err != nil {
 			if errors.Is(err, ErrArgumentNotFound) {
 				if ctx.IsWhitelabel {
 					content := `This command registration is outdated. Please ask the server administrators to visit the whitelabel dashboard and press "Create Slash Commands" again.`
 					embed := utils.BuildEmbedRaw(customisation.GetDefaultColour(customisation.Red), "Outdated Command", content, nil, premium.Whitelabel)
 					res := command.NewEphemeralEmbedMessageResponse(embed)
-					go func() { // Must be in a goroutine
-						responseCh <- res.IntoApplicationCommandData()
-					}()
+					responseCh <- res.IntoApplicationCommandData()
 
 					return
 				} else {
 					res := command.NewEphemeralTextMessageResponse("argument is missing")
-					go func() {
-						responseCh <- res.IntoApplicationCommandData()
-					}()
+					responseCh <- res.IntoApplicationCommandData()
 				}
 			} else {
-				go interactionContext.HandleError(err)
+				interactionContext.HandleError(err)
 				return
 			}
 		}

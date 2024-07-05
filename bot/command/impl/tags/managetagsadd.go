@@ -29,6 +29,7 @@ func (ManageTagsAddCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("id", "Identifier for the tag", interaction.OptionTypeString, i18n.MessageTagCreateInvalidArguments),
 			command.NewRequiredArgument("content", "Tag contents to be sent when /tag is used", interaction.OptionTypeString, i18n.MessageTagCreateInvalidArguments),
 		),
+		DefaultEphemeral: true,
 	}
 }
 

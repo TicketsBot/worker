@@ -18,11 +18,12 @@ type ManageTagsListCommand struct {
 
 func (ManageTagsListCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "list",
-		Description:     i18n.HelpTagList,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Support,
-		Category:        command.Tags,
+		Name:             "list",
+		Description:      i18n.HelpTagList,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Support,
+		Category:         command.Tags,
+		DefaultEphemeral: true,
 	}
 }
 

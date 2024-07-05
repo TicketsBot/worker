@@ -18,11 +18,12 @@ type ViewStaffCommand struct {
 
 func (ViewStaffCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "viewstaff",
-		Description:     i18n.HelpViewStaff,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Everyone,
-		Category:        command.Settings,
+		Name:             "viewstaff",
+		Description:      i18n.HelpViewStaff,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Everyone,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 

@@ -29,6 +29,7 @@ func (BlacklistCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user_or_role", "User or role to blacklist or unblacklist", interaction.OptionTypeMentionable, i18n.MessageBlacklistNoMembers),
 		),
+		DefaultEphemeral: true,
 	}
 }
 

@@ -22,11 +22,12 @@ type LanguageCommand struct {
 
 func (c LanguageCommand) Properties() registry.Properties {
 	return registry.Properties{
-		Name:            "language",
-		Description:     i18n.HelpLanguage,
-		Type:            interaction.ApplicationCommandTypeChatInput,
-		PermissionLevel: permission.Admin,
-		Category:        command.Settings,
+		Name:             "language",
+		Description:      i18n.HelpLanguage,
+		Type:             interaction.ApplicationCommandTypeChatInput,
+		PermissionLevel:  permission.Admin,
+		Category:         command.Settings,
+		DefaultEphemeral: true,
 	}
 }
 
