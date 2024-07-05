@@ -164,10 +164,12 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				ctx.JSON(200, res)
 				ctx.Writer.Flush()
 
-				go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
 			case data := <-responseCh:
 				ctx.JSON(200, data.Build())
+				ctx.Writer.Flush()
 			}
+
+			go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
 
 			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
