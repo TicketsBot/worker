@@ -162,13 +162,12 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				res := interaction.NewResponseDeferredMessageUpdate()
 				ctx.JSON(200, res)
 				ctx.Writer.Flush()
-
 			case data := <-responseCh:
 				ctx.JSON(200, data.Build())
 				ctx.Writer.Flush()
 			}
 
-			go handleButtonResponseAfterDefer(interactionData, worker, responseCh)
+			go handleButtonResponseAfterDefer(interactionData, worker, time.Now(), responseCh)
 
 			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
@@ -285,9 +284,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	}
 }
 
-func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, ch chan button.Response) {
-	time.Sleep(time.Millisecond * 500)
-
+func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, deferredAt time.Time, ch chan button.Response) {
 	for {
 		select {
 		case <-time.After(time.Second * 15):
@@ -297,10 +294,10 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 				return
 			}
 
-			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
+			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 || deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
 				return
 			}
-			interactionData.Data.AsButton()
+
 			if err := data.HandleDeferred(interactionData, worker); err != nil {
 				sentry.ErrorWithContext(err, NewMessageComponentInteractionErrorContext(interactionData))
 			}
