@@ -10,7 +10,6 @@ import (
 	btn_manager "github.com/TicketsBot/worker/bot/button/manager"
 	"github.com/TicketsBot/worker/bot/command"
 	cmd_manager "github.com/TicketsBot/worker/bot/command/manager"
-	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
@@ -280,13 +279,15 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 		}
 
 		if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
-			sentry.LogWithContext(err, buildErrorContext(interactionData))
+			sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
 			return
 		}
 	}
 }
 
 func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, ch chan button.Response) {
+	time.Sleep(time.Millisecond * 500)
+
 	for {
 		select {
 		case <-time.After(time.Second * 15):
@@ -299,26 +300,11 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 {
 				return
 			}
-
+			interactionData.Data.AsButton()
 			if err := data.HandleDeferred(interactionData, worker); err != nil {
-				sentry.Error(err) // TODO: Context
+				sentry.ErrorWithContext(err, NewMessageComponentInteractionErrorContext(interactionData))
 			}
 		}
-	}
-}
-
-func buildErrorContext(data interaction.ApplicationCommandInteraction) sentry.ErrorContext {
-	var userId uint64
-	if data.User != nil {
-		userId = data.User.Id
-	} else if data.Member != nil {
-		userId = data.Member.User.Id
-	}
-
-	return errorcontext.WorkerErrorContext{
-		Guild:   data.GuildId.Value,
-		User:    userId,
-		Channel: data.ChannelId,
 	}
 }
 
