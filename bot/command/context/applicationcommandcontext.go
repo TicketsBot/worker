@@ -1,7 +1,6 @@
 package context
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -18,7 +17,6 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
-	"github.com/rxdn/gdl/rest"
 	"go.uber.org/atomic"
 )
 
@@ -111,26 +109,32 @@ func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext
 }
 
 func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
-	hasReplied := ctx.hasReplied.Swap(true)
+	//hasReplied := ctx.hasReplied.Swap(true)
 
 	if err := ctx.ReplyCounter.Try(); err != nil {
 		return message.Message{}, err
 	}
 
-	if hasReplied {
-		msg, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
+	ctx.responseCh <- response.IntoApplicationCommandData()
 
-		if err != nil {
-			sentry.LogWithContext(err, ctx.ToErrorContext())
+	return message.Message{}, nil
+
+	/*
+		if hasReplied {
+			msg, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
+
+			if err != nil {
+				sentry.LogWithContext(err, ctx.ToErrorContext())
+			}
+
+			return msg, err
+		} else {
+			ctx.responseCh <- response.IntoApplicationCommandData()
+
+			// todo: uhm
+			return message.Message{}, nil
 		}
-
-		return msg, err
-	} else {
-		ctx.responseCh <- response.IntoApplicationCommandData()
-
-		// todo: uhm
-		return message.Message{}, nil
-	}
+	*/
 }
 
 func (ctx *SlashCommandContext) Channel() (channel.PartialChannel, error) {

@@ -261,6 +261,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 func handleApplicationCommandResponseAfterDefer(interactionData interaction.ApplicationCommandInteraction, worker *worker.Context, responseCh chan interaction.ApplicationCommandCallbackData) {
 	deferredAt := time.Now()
+	hasReplied := false
 
 	for {
 		select {
@@ -276,16 +277,32 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 				return
 			}
 
-			restData := rest.WebhookEditBody{
-				Content:         data.Content,
-				Embeds:          data.Embeds,
-				AllowedMentions: data.AllowedMentions,
-				Components:      data.Components,
-			}
+			if hasReplied {
+				restData := rest.WebhookBody{
+					Content:         data.Content,
+					Embeds:          data.Embeds,
+					AllowedMentions: data.AllowedMentions,
+					Components:      data.Components,
+				}
 
-			if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
-				sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
-				return
+				if _, err := rest.CreateFollowupMessage(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
+					sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
+					return
+				}
+			} else {
+				hasReplied = true
+
+				restData := rest.WebhookEditBody{
+					Content:         data.Content,
+					Embeds:          data.Embeds,
+					AllowedMentions: data.AllowedMentions,
+					Components:      data.Components,
+				}
+
+				if _, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, worker.BotId, restData); err != nil {
+					sentry.ErrorWithContext(err, NewApplicationCommandInteractionErrorContext(interactionData))
+					return
+				}
 			}
 		}
 	}
