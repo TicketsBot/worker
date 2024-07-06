@@ -273,7 +273,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 			}
 
 			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 ||
-				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
+				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > config.Conf.Discord.DeferHardTimeout {
 				return
 			}
 
@@ -319,7 +319,7 @@ func handleButtonResponseAfterDefer(interactionData interaction.MessageComponent
 			}
 
 			if time.Now().Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Minute*14 ||
-				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > time.Millisecond*2500 {
+				deferredAt.Sub(utils.SnowflakeToTime(interactionData.Id)) > config.Conf.Discord.DeferHardTimeout {
 				return
 			}
 

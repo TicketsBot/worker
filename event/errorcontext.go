@@ -5,6 +5,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"strconv"
+	"time"
 )
 
 type InteractionErrorContext struct {
@@ -20,6 +21,7 @@ func NewApplicationCommandInteractionErrorContext(data interaction.ApplicationCo
 		data: map[string]string{
 			"interaction_id":        strconv.FormatUint(data.Id, 10),
 			"interaction_timestamp": utils.SnowflakeToTime(data.Id).String(),
+			"current_time":          time.Now().String(),
 			"command_name":          data.Data.Name,
 		},
 	}
@@ -29,6 +31,7 @@ func NewMessageComponentInteractionErrorContext(data interaction.MessageComponen
 	m := map[string]string{
 		"interaction_id":        strconv.FormatUint(data.Id, 10),
 		"interaction_timestamp": utils.SnowflakeToTime(data.Id).String(),
+		"current_time":          time.Now().String(),
 		"component_type":        strconv.Itoa(int(data.Data.ComponentType)),
 	}
 
