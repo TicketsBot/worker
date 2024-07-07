@@ -20,7 +20,7 @@ func (r ResponseEdit) Build() interface{} {
 	return interaction.NewResponseUpdateMessage(r.Data.IntoUpdateMessageResponse())
 }
 
-func (r ResponseEdit) HandleDeferred(interactionData interaction.MessageComponentInteraction, worker *worker.Context) error {
+func (r ResponseEdit) HandleDeferred(interactionData interaction.InteractionMetadata, worker *worker.Context) error {
 	_, err := rest.EditOriginalInteractionResponse(context.Background(), interactionData.Token, worker.RateLimiter, interactionData.ApplicationId, r.Data.IntoWebhookEditBody())
 	return err
 }

@@ -167,7 +167,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				ctx.Writer.Flush()
 			}
 
-			go handleButtonResponseAfterDefer(interactionData, worker, time.Now(), responseCh)
+			go handleButtonResponseAfterDefer(interactionData.InteractionMetadata, worker, time.Now(), responseCh)
 
 			prometheus.InteractionTimeToReceive.Observe(calculateTimeToReceive(interactionData.Id).Seconds())
 			prometheus.InteractionTimeToDefer.Observe(timeToDefer.Seconds())
@@ -250,11 +250,13 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				return
 			}
 
+			ctx.JSON(200, interaction.NewResponseDeferredMessageUpdate())
+			ctx.Writer.Flush()
+
 			responseCh := make(chan button.Response, 1)
 			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
 
-			// Can't defer a modal submit response
-			ctx.JSON(200, interaction.NewResponseDeferredMessageUpdate())
+			go handleButtonResponseAfterDefer(interactionData.InteractionMetadata, worker, time.Now(), responseCh)
 		}
 	}
 }
@@ -308,7 +310,7 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	}
 }
 
-func handleButtonResponseAfterDefer(interactionData interaction.MessageComponentInteraction, worker *worker.Context, deferredAt time.Time, ch chan button.Response) {
+func handleButtonResponseAfterDefer(interactionData interaction.InteractionMetadata, worker *worker.Context, deferredAt time.Time, ch chan button.Response) {
 	for {
 		select {
 		case <-time.After(time.Second * 15):

@@ -8,7 +8,7 @@ import (
 type Response interface {
 	Type() ResponseType
 	Build() interface{} // Returns the interaction response struct
-	HandleDeferred(interactionData interaction.MessageComponentInteraction, worker *worker.Context) error
+	HandleDeferred(interactionData interaction.InteractionMetadata, worker *worker.Context) error
 }
 
 type ResponseType uint8
