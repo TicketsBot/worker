@@ -26,8 +26,9 @@ var (
 	ActiveHttpRequests  = newGauge("active_http_requests")
 	HttpRequestDuration = newHistogram("http_request_duration")
 
-	InboundRequests    = newCounterVec("inbound_requests", "route")
-	ActiveInteractions = newGauge("active_interactions")
+	InboundRequests           = newCounterVec("inbound_requests", "route")
+	ActiveInteractions        = newGauge("active_interactions")
+	InteractionTimeToComplete = newHistogram("interaction_time_to_complete")
 )
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {

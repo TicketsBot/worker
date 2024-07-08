@@ -272,7 +272,12 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	deferredAt := time.Now()
 	hasReplied := false
 
+	start := time.Now()
 	prometheus.ActiveInteractions.Inc()
+	defer func() {
+		prometheus.ActiveInteractions.Dec()
+		prometheus.InteractionTimeToComplete.Observe(time.Since(start).Seconds())
+	}()
 
 	for {
 		select {
@@ -280,7 +285,6 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 			return
 		case data, ok := <-responseCh:
 			if !ok {
-				prometheus.ActiveInteractions.Dec()
 				return
 			}
 
@@ -321,7 +325,12 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 }
 
 func handleButtonResponseAfterDefer(interactionData interaction.InteractionMetadata, worker *worker.Context, deferredAt time.Time, ch chan button.Response) {
+	start := time.Now()
 	prometheus.ActiveInteractions.Inc()
+	defer func() {
+		prometheus.ActiveInteractions.Dec()
+		prometheus.InteractionTimeToComplete.Observe(time.Since(start).Seconds())
+	}()
 
 	for {
 		select {
@@ -329,7 +338,6 @@ func handleButtonResponseAfterDefer(interactionData interaction.InteractionMetad
 			return
 		case data, ok := <-ch:
 			if !ok {
-				prometheus.ActiveInteractions.Dec()
 				return
 			}
 
