@@ -26,6 +26,7 @@ var (
 	ActiveHttpRequests  = newGauge("active_http_requests")
 	HttpRequestDuration = newHistogram("http_request_duration")
 
+	InboundRequests    = newCounterVec("inbound_requests", "route")
 	ActiveInteractions = newGauge("active_interactions")
 )
 

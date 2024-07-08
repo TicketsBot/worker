@@ -51,6 +51,7 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 
 	// Middleware
 	router.Use(gin.Recovery())
+	router.Use(metricsMiddleware)
 
 	if gin.Mode() != gin.ReleaseMode {
 		router.Use(gin.Logger())
@@ -63,6 +64,11 @@ func HttpListen(redis *redis.Client, cache *cache.PgCache) {
 	if err := router.Run(config.Conf.Bot.HttpAddress); err != nil {
 		panic(err)
 	}
+}
+
+func metricsMiddleware(c *gin.Context) {
+	prometheus.InboundRequests.WithLabelValues(c.Request.URL.Path).Inc()
+	c.Next()
 }
 
 func eventHandler(cache *cache.PgCache) func(*gin.Context) {
