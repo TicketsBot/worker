@@ -133,6 +133,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
 				return
 			}
+
 			var flags uint
 			if deferDefault {
 				flags = message.SumFlags(message.FlagEphemeral)
@@ -265,12 +266,15 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 	deferredAt := time.Now()
 	hasReplied := false
 
+	prometheus.ActiveInteractions.Inc()
+
 	for {
 		select {
 		case <-time.After(time.Second * 15):
 			return
 		case data, ok := <-responseCh:
 			if !ok {
+				prometheus.ActiveInteractions.Dec()
 				return
 			}
 
@@ -311,12 +315,15 @@ func handleApplicationCommandResponseAfterDefer(interactionData interaction.Appl
 }
 
 func handleButtonResponseAfterDefer(interactionData interaction.InteractionMetadata, worker *worker.Context, deferredAt time.Time, ch chan button.Response) {
+	prometheus.ActiveInteractions.Inc()
+
 	for {
 		select {
 		case <-time.After(time.Second * 15):
 			return
 		case data, ok := <-ch:
 			if !ok {
+				prometheus.ActiveInteractions.Dec()
 				return
 			}
 
