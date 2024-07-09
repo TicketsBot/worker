@@ -68,9 +68,9 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		}()
 	}
 
-	var content string
-	if tag.Content != nil && ticket.Id != 0 {
-		content = logic.DoPlaceholderSubstitutions(*tag.Content, ctx.Worker(), ticket, nil)
+	content := utils.ValueOrZero(tag.Content)
+	if ticket.Id != 0 {
+		content = logic.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket, nil)
 	}
 
 	var embeds []*embed.Embed

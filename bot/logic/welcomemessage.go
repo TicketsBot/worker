@@ -568,9 +568,14 @@ func BuildCustomEmbed(
 	// Only custom integration placeholders for now - prevent making duplicate requests
 	additionalPlaceholders map[string]string,
 ) *embed.Embed {
+	description := utils.ValueOrZero(customEmbed.Description)
+	if ticket.Id != 0 {
+		description = DoPlaceholderSubstitutions(description, ctx, ticket, additionalPlaceholders)
+	}
+
 	e := &embed.Embed{
 		Title:       utils.ValueOrZero(customEmbed.Title),
-		Description: DoPlaceholderSubstitutions(utils.ValueOrZero(customEmbed.Description), ctx, ticket, additionalPlaceholders),
+		Description: description,
 		Url:         utils.ValueOrZero(customEmbed.Url),
 		Timestamp:   customEmbed.Timestamp,
 		Color:       int(customEmbed.Colour),
@@ -595,7 +600,12 @@ func BuildCustomEmbed(
 	}
 
 	for _, field := range fields {
-		e.AddField(field.Name, DoPlaceholderSubstitutions(field.Value, ctx, ticket, additionalPlaceholders), field.Inline)
+		value := field.Value
+		if ticket.Id != 0 {
+			value = DoPlaceholderSubstitutions(value, ctx, ticket, additionalPlaceholders)
+		}
+
+		e.AddField(field.Name, value, field.Inline)
 	}
 
 	return e
