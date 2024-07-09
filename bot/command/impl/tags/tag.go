@@ -69,7 +69,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	}
 
 	var content string
-	if tag.Content != nil {
+	if tag.Content != nil && ticket.Id != 0 {
 		content = logic.DoPlaceholderSubstitutions(*tag.Content, ctx.Worker(), ticket, nil)
 	}
 
