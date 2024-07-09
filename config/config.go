@@ -91,6 +91,11 @@ type Config struct {
 		UseTracing        bool    `env:"TRACING_ENABLED"`
 		TracingSampleRate float64 `env:"TRACING_SAMPLE_RATE"`
 	} `envPrefix:"WORKER_SENTRY_"`
+
+	CloudProfiler struct {
+		Enabled   bool   `env:"ENABLED" envDefault:"false"`
+		ProjectId string `env:"PROJECT_ID"`
+	} `envPrefix:"WORKER_CLOUD_PROFILER_"`
 }
 
 var Conf Config

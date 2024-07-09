@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cloud.google.com/go/profiler"
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/premium"
@@ -28,6 +29,18 @@ func main() {
 	}()
 
 	config.Parse()
+
+	if config.Conf.CloudProfiler.Enabled {
+		cfg := profiler.Config{
+			Service:        utils.GetServiceName(),
+			ServiceVersion: "1.0.0",
+			ProjectID:      config.Conf.CloudProfiler.ProjectId,
+		}
+
+		if err := profiler.Start(cfg); err != nil {
+			fmt.Printf("Failed to start the profiler: %v", err)
+		}
+	}
 
 	if len(config.Conf.DebugMode) == 0 {
 		fmt.Println("Connecting to Sentry...")
