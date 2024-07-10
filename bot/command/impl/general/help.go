@@ -13,6 +13,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"sort"
 	"strings"
+	"time"
 )
 
 type HelpCommand struct {
@@ -28,6 +29,7 @@ func (HelpCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Everyone,
 		Category:         command.General,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -43,7 +45,7 @@ func (c HelpCommand) Execute(ctx registry.CommandContext) {
 		commandCategories.Set(category, nil)
 	}
 
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return

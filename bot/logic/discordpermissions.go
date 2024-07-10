@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -60,31 +61,31 @@ func BuildUserOverwrite(userId uint64, additionalPermissions database.TicketPerm
 	}
 }
 
-func RemoveOnCallRoles(ctx registry.CommandContext, userId uint64) error {
-	member, err := ctx.Worker().GetGuildMember(ctx.GuildId(), userId)
+func RemoveOnCallRoles(ctx context.Context, cmd registry.CommandContext, userId uint64) error {
+	member, err := cmd.Worker().GetGuildMember(cmd.GuildId(), userId)
 	if err != nil {
 		return err
 	}
 
-	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+	metadata, err := dbclient.Client.GuildMetadata.Get(ctx, cmd.GuildId())
 	if err != nil {
 		return err
 	}
 
 	if metadata.OnCallRole != nil && member.HasRole(*metadata.OnCallRole) {
-		if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), userId, *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
+		if err := cmd.Worker().RemoveGuildMemberRole(cmd.GuildId(), userId, *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
 			return err
 		}
 	}
 
-	teams, err := dbclient.Client.SupportTeam.Get(ctx.GuildId())
+	teams, err := dbclient.Client.SupportTeam.Get(ctx, cmd.GuildId())
 	if err != nil {
 		return err
 	}
 
 	for _, team := range teams {
 		if team.OnCallRole != nil && member.HasRole(*team.OnCallRole) {
-			if err := ctx.Worker().RemoveGuildMemberRole(ctx.GuildId(), userId, *team.OnCallRole); err != nil && !isUnknownRoleError(err) {
+			if err := cmd.Worker().RemoveGuildMemberRole(cmd.GuildId(), userId, *team.OnCallRole); err != nil && !isUnknownRoleError(err) {
 				return err
 			}
 		}
@@ -93,9 +94,9 @@ func RemoveOnCallRoles(ctx registry.CommandContext, userId uint64) error {
 	return nil
 }
 
-func RecreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam) error {
+func RecreateOnCallRole(ctx context.Context, cmd registry.CommandContext, team *database.SupportTeam) error {
 	if team == nil {
-		metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+		metadata, err := dbclient.Client.GuildMetadata.Get(ctx, cmd.GuildId())
 		if err != nil {
 			return err
 		}
@@ -104,15 +105,15 @@ func RecreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam)
 			return nil
 		}
 
-		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), nil); err != nil {
+		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx, cmd.GuildId(), nil); err != nil {
 			return nil
 		}
 
-		if err := ctx.Worker().DeleteGuildRole(ctx.GuildId(), *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
+		if err := cmd.Worker().DeleteGuildRole(cmd.GuildId(), *metadata.OnCallRole); err != nil && !isUnknownRoleError(err) {
 			return err
 		}
 
-		if _, err := CreateOnCallRole(ctx, nil); err != nil {
+		if _, err := CreateOnCallRole(ctx, cmd, nil); err != nil {
 			return err
 		}
 
@@ -124,15 +125,15 @@ func RecreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam)
 		}
 
 		// Delete role
-		if err := dbclient.Client.SupportTeam.SetOnCallRole(team.Id, nil); err != nil {
+		if err := dbclient.Client.SupportTeam.SetOnCallRole(ctx, team.Id, nil); err != nil {
 			return err
 		}
 
-		if err := ctx.Worker().DeleteGuildRole(ctx.GuildId(), *team.OnCallRole); err != nil && !isUnknownRoleError(err) {
+		if err := cmd.Worker().DeleteGuildRole(cmd.GuildId(), *team.OnCallRole); err != nil && !isUnknownRoleError(err) {
 			return err
 		}
 
-		if _, err := CreateOnCallRole(ctx, team); err != nil {
+		if _, err := CreateOnCallRole(ctx, cmd, team); err != nil {
 			return err
 		}
 
@@ -142,7 +143,7 @@ func RecreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam)
 	return nil
 }
 
-func CreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam) (uint64, error) {
+func CreateOnCallRole(ctx context.Context, cmd registry.CommandContext, team *database.SupportTeam) (uint64, error) {
 	var roleName string
 	if team == nil {
 		roleName = "On Call" // TODO: Translate
@@ -156,17 +157,17 @@ func CreateOnCallRole(ctx registry.CommandContext, team *database.SupportTeam) (
 		Mentionable: utils.Ptr(false),
 	}
 
-	role, err := ctx.Worker().CreateGuildRole(ctx.GuildId(), data)
+	role, err := cmd.Worker().CreateGuildRole(cmd.GuildId(), data)
 	if err != nil {
 		return 0, err
 	}
 
 	if team == nil {
-		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), &role.Id); err != nil {
+		if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx, cmd.GuildId(), &role.Id); err != nil {
 			return 0, err
 		}
 	} else {
-		if err := dbclient.Client.SupportTeam.SetOnCallRole(team.Id, &role.Id); err != nil {
+		if err := dbclient.Client.SupportTeam.SetOnCallRole(ctx, team.Id, &role.Id); err != nil {
 			return 0, err
 		}
 	}

@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -13,20 +14,20 @@ import (
 // each msg is
 const perField = 8
 
-func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed, bool) {
+func BuildViewStaffMessage(ctx context.Context, cmd registry.CommandContext, page int) (*embed.Embed, bool) {
 	isBlank := true
 
-	self, _ := ctx.Worker().Self()
+	self, _ := cmd.Worker().Self()
 	embed := embed.NewEmbed().
-		SetColor(ctx.GetColour(customisation.Green)).
+		SetColor(cmd.GetColour(customisation.Green)).
 		SetTitle("Staff").
 		SetFooter(fmt.Sprintf("Page %d", page+1), self.AvatarUrl(256))
 
 	// Add field for admin users
 	{
-		adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx.GuildId())
+		adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx, cmd.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, cmd.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -53,9 +54,9 @@ func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed,
 
 	// Add field for admin roles
 	{
-		adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx.GuildId())
+		adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx, cmd.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, cmd.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -84,9 +85,9 @@ func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed,
 
 	// Add field for support representatives
 	{
-		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ctx.GuildId())
+		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ctx, cmd.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, cmd.ToErrorContext())
 		}
 
 		lower := perField * page
@@ -113,9 +114,9 @@ func BuildViewStaffMessage(ctx registry.CommandContext, page int) (*embed.Embed,
 
 	// Add field for support roles
 	{
-		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ctx.GuildId())
+		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ctx, cmd.GuildId())
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, cmd.ToErrorContext())
 		}
 
 		lower := perField * page

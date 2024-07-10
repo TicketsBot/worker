@@ -12,6 +12,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type AddAdminCommand struct{}
@@ -28,6 +29,7 @@ func (AddAdminCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("user_or_role", "User or role to apply the administrator permission to", interaction.OptionTypeMentionable, i18n.MessageAddAdminNoMembers),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 

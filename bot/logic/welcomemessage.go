@@ -28,7 +28,8 @@ import (
 
 // returns msg id
 func SendWelcomeMessage(
-	ctx registry.CommandContext,
+	ctx context.Context,
+	cmd registry.CommandContext,
 	ticket database.Ticket,
 	subject string,
 	panel *database.Panel,
@@ -36,13 +37,13 @@ func SendWelcomeMessage(
 	// Only custom integration placeholders for now - prevent making duplicate requests
 	additionalPlaceholders map[string]string,
 ) (uint64, error) {
-	settings, err := dbclient.Client.Settings.Get(ticket.GuildId)
+	settings, err := dbclient.Client.Settings.Get(ctx, ticket.GuildId)
 	if err != nil {
 		return 0, err
 	}
 
 	// Build embeds
-	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, ticket, subject, panel, additionalPlaceholders)
+	welcomeMessageEmbed, err := BuildWelcomeMessageEmbed(ctx, cmd, ticket, subject, panel, additionalPlaceholders)
 	if err != nil {
 		return 0, err
 	}
@@ -59,7 +60,7 @@ func SendWelcomeMessage(
 			formAnswersEmbed.AddField(field.Name, field.Value, field.Inline)
 		}
 
-		if ctx.PremiumTier() == premium.None {
+		if cmd.PremiumTier() == premium.None {
 			formAnswersEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
 		}
 
@@ -68,13 +69,13 @@ func SendWelcomeMessage(
 
 	buttons := []component.Component{
 		component.BuildButton(component.Button{
-			Label:    ctx.GetMessage(i18n.TitleClose),
+			Label:    cmd.GetMessage(i18n.TitleClose),
 			CustomId: "close",
 			Style:    component.ButtonStyleDanger,
 			Emoji:    &emoji.Emoji{Name: "🔒"},
 		}),
 		component.BuildButton(component.Button{
-			Label:    ctx.GetMessage(i18n.TitleCloseWithReason),
+			Label:    cmd.GetMessage(i18n.TitleCloseWithReason),
 			CustomId: "close_with_reason",
 			Style:    component.ButtonStyleDanger,
 			Emoji:    &emoji.Emoji{Name: "🔒"},
@@ -83,7 +84,7 @@ func SendWelcomeMessage(
 
 	if !settings.HideClaimButton && !ticket.IsThread {
 		buttons = append(buttons, component.BuildButton(component.Button{
-			Label:    ctx.GetMessage(i18n.TitleClaim),
+			Label:    cmd.GetMessage(i18n.TitleClaim),
 			CustomId: "claim",
 			Style:    component.ButtonStyleSuccess,
 			Emoji:    &emoji.Emoji{Name: "🙋‍♂️"},
@@ -102,7 +103,7 @@ func SendWelcomeMessage(
 		return 0, fmt.Errorf("channel is nil")
 	}
 
-	msg, err := ctx.Worker().CreateMessageComplex(*ticket.ChannelId, data)
+	msg, err := cmd.Worker().CreateMessageComplex(*ticket.ChannelId, data)
 	if err != nil {
 		return 0, err
 	}
@@ -111,7 +112,8 @@ func SendWelcomeMessage(
 }
 
 func BuildWelcomeMessageEmbed(
-	ctx registry.CommandContext,
+	ctx context.Context,
+	cmd registry.CommandContext,
 	ticket database.Ticket,
 	subject string,
 	panel *database.Panel,
@@ -119,7 +121,7 @@ func BuildWelcomeMessageEmbed(
 	additionalPlaceholders map[string]string,
 ) (*embed.Embed, error) {
 	if panel == nil || panel.WelcomeMessageEmbed == nil {
-		welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(ticket.GuildId)
+		welcomeMessage, err := dbclient.Client.WelcomeMessages.Get(ctx, ticket.GuildId)
 		if err != nil {
 			return nil, err
 		}
@@ -129,28 +131,29 @@ func BuildWelcomeMessageEmbed(
 		}
 
 		// Replace variables
-		welcomeMessage = DoPlaceholderSubstitutions(welcomeMessage, ctx.Worker(), ticket, additionalPlaceholders)
+		welcomeMessage = DoPlaceholderSubstitutions(ctx, welcomeMessage, cmd.Worker(), ticket, additionalPlaceholders)
 
-		return utils.BuildEmbedRaw(ctx.GetColour(customisation.Green), subject, welcomeMessage, nil, ctx.PremiumTier()), nil
+		return utils.BuildEmbedRaw(cmd.GetColour(customisation.Green), subject, welcomeMessage, nil, cmd.PremiumTier()), nil
 	} else {
-		data, err := dbclient.Client.Embeds.GetEmbed(*panel.WelcomeMessageEmbed)
+		data, err := dbclient.Client.Embeds.GetEmbed(ctx, *panel.WelcomeMessageEmbed)
 		if err != nil {
 			return nil, err
 		}
 
-		fields, err := dbclient.Client.EmbedFields.GetFieldsForEmbed(*panel.WelcomeMessageEmbed)
+		fields, err := dbclient.Client.EmbedFields.GetFieldsForEmbed(ctx, *panel.WelcomeMessageEmbed)
 		if err != nil {
 			return nil, err
 		}
 
-		e := BuildCustomEmbed(ctx.Worker(), ticket, data, fields, ctx.PremiumTier() == premium.None, additionalPlaceholders)
+		e := BuildCustomEmbed(ctx, cmd.Worker(), ticket, data, fields, cmd.PremiumTier() == premium.None, additionalPlaceholders)
 		return e, nil
 	}
 }
 
 func DoPlaceholderSubstitutions(
+	ctx context.Context,
 	message string,
-	ctx *worker.Context,
+	worker *worker.Context,
 	ticket database.Ticket,
 	// Only custom integration placeholders for now - prevent making duplicate requests
 	additionalPlaceholders map[string]string,
@@ -158,7 +161,7 @@ func DoPlaceholderSubstitutions(
 	var lock sync.Mutex
 
 	// do DB lookups in parallel
-	group, _ := errgroup.WithContext(context.Background())
+	group, _ := errgroup.WithContext(ctx)
 	for placeholder, f := range substitutions {
 		placeholder := placeholder
 		f := f
@@ -167,7 +170,10 @@ func DoPlaceholderSubstitutions(
 
 		if strings.Contains(message, formatted) {
 			group.Go(func() error {
-				replacement := f(ctx, ticket)
+				ctx, cancel := context.WithTimeout(ctx, substitutionTimeout)
+				defer cancel()
+
+				replacement := f(ctx, worker, ticket)
 
 				lock.Lock()
 				message = strings.Replace(message, formatted, replacement, -1)
@@ -193,7 +199,10 @@ func DoPlaceholderSubstitutions(
 
 		if contains {
 			group.Go(func() error {
-				replacements := substitutor.F(ctx, ticket)
+				ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+				defer cancel()
+
+				replacements := substitutor.F(ctx, worker, ticket)
 				if replacements == nil {
 					replacements = make(map[string]string)
 				}
@@ -232,11 +241,12 @@ func DoPlaceholderSubstitutions(
 }
 
 func fetchCustomIntegrationPlaceholders(
+	ctx context.Context,
 	ticket database.Ticket,
 	formAnswers map[string]*string,
 ) (map[string]string, error) {
 	// Custom integrations
-	guildIntegrations, err := dbclient.Client.CustomIntegrationGuilds.GetGuildIntegrations(ticket.GuildId)
+	guildIntegrations, err := dbclient.Client.CustomIntegrationGuilds.GetGuildIntegrations(ctx, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +258,7 @@ func fetchCustomIntegrationPlaceholders(
 			integrationIds[i] = integration.Id
 		}
 
-		placeholders, err := dbclient.Client.CustomIntegrationPlaceholders.GetAllActivatedInGuild(ticket.GuildId)
+		placeholders, err := dbclient.Client.CustomIntegrationPlaceholders.GetAllActivatedInGuild(ctx, ticket.GuildId)
 		if err != nil {
 			return nil, err
 		}
@@ -263,20 +273,17 @@ func fetchCustomIntegrationPlaceholders(
 			placeholderMap[placeholder.IntegrationId] = append(placeholderMap[placeholder.IntegrationId], placeholder)
 		}
 
-		secrets, err := dbclient.Client.CustomIntegrationSecretValues.GetAll(ticket.GuildId, integrationIds)
+		secrets, err := dbclient.Client.CustomIntegrationSecretValues.GetAll(ctx, ticket.GuildId, integrationIds)
 		if err != nil {
 			return nil, err
 		}
 
-		headers, err := dbclient.Client.CustomIntegrationHeaders.GetAll(integrationIds)
+		headers, err := dbclient.Client.CustomIntegrationHeaders.GetAll(ctx, integrationIds)
 		if err != nil {
 			return nil, err
 		}
 
 		// Replace placeholders
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-
 		group, _ := errgroup.WithContext(ctx)
 
 		var lock sync.Mutex
@@ -287,7 +294,7 @@ func fetchCustomIntegrationPlaceholders(
 			integrationSecrets := secrets[integration.Id]
 
 			group.Go(func() error {
-				response, err := integrations.Fetch(integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id], formAnswers)
+				response, err := integrations.Fetch(ctx, integration, ticket, integrationSecrets, headers[integration.Id], placeholderMap[integration.Id], formAnswers)
 				if err != nil {
 					return err
 				}
@@ -314,77 +321,71 @@ func fetchCustomIntegrationPlaceholders(
 }
 
 // TODO: Error handling
-type PlaceholderSubstitutionFunc func(*worker.Context, database.Ticket) string
+type PlaceholderSubstitutionFunc func(context.Context, *worker.Context, database.Ticket) string
 
 const substitutionTimeout = time.Millisecond * 1500
 
 var substitutions = map[string]PlaceholderSubstitutionFunc{
-	"user": func(ctx *worker.Context, ticket database.Ticket) string {
+	"user": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<@%d>", ticket.UserId)
 	},
-	"ticket_id": func(ctx *worker.Context, ticket database.Ticket) string {
+	"ticket_id": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return strconv.Itoa(ticket.Id)
 	},
-	"channel": func(ctx *worker.Context, ticket database.Ticket) string {
+	"channel": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<#%d>", ticket.ChannelId)
 	},
-	"username": func(ctx *worker.Context, ticket database.Ticket) string {
-		user, _ := ctx.GetUser(ticket.UserId)
+	"username": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		user, _ := worker.GetUser(ticket.UserId)
 		return user.Username
 	},
-	"server": func(ctx *worker.Context, ticket database.Ticket) string {
-		guild, _ := ctx.GetGuild(ticket.GuildId)
+	"server": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		guild, _ := worker.GetGuild(ticket.GuildId)
 		return guild.Name
 	},
-	"open_tickets": func(_ *worker.Context, ticket database.Ticket) string {
-		open, _ := dbclient.Client.Tickets.GetGuildOpenTickets(ticket.GuildId)
+	"open_tickets": func(ctx context.Context, _ *worker.Context, ticket database.Ticket) string {
+		open, _ := dbclient.Client.Tickets.GetGuildOpenTickets(ctx, ticket.GuildId)
 		return strconv.Itoa(len(open))
 	},
-	"total_tickets": func(_ *worker.Context, ticket database.Ticket) string {
-		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
-		defer cancel()
-
+	"total_tickets": func(ctx context.Context, _ *worker.Context, ticket database.Ticket) string {
 		count, _ := dbclient.Analytics.GetTotalTicketCount(ctx, ticket.GuildId)
 		return strconv.FormatUint(count, 10)
 	},
-	"user_open_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		count, _ := dbclient.Client.Tickets.GetOpenCountByUser(ticket.GuildId, ticket.UserId)
+	"user_open_tickets": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		count, _ := dbclient.Client.Tickets.GetOpenCountByUser(ctx, ticket.GuildId, ticket.UserId)
 		return strconv.Itoa(count)
 	},
-	"user_total_tickets": func(ctx *worker.Context, ticket database.Ticket) string {
-		tickets, _ := dbclient.Client.Tickets.GetTotalCountByUser(ticket.GuildId, ticket.UserId)
+	"user_total_tickets": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		tickets, _ := dbclient.Client.Tickets.GetTotalCountByUser(ctx, ticket.GuildId, ticket.UserId)
 		return strconv.Itoa(tickets)
 	},
-	"ticket_limit": func(ctx *worker.Context, ticket database.Ticket) string {
-		limit, _ := dbclient.Client.TicketLimit.Get(ticket.GuildId)
+	"ticket_limit": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		limit, _ := dbclient.Client.TicketLimit.Get(ctx, ticket.GuildId)
 		return strconv.Itoa(int(limit))
 	},
-	"rating_count": func(_ *worker.Context, ticket database.Ticket) string {
+	"rating_count": func(ctx context.Context, _ *worker.Context, ticket database.Ticket) string {
 		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
 		defer cancel()
 
 		ratingCount, _ := dbclient.Analytics.GetFeedbackCountGuild(ctx, ticket.GuildId)
 		return strconv.FormatUint(ratingCount, 10)
 	},
-	"average_rating": func(_ *worker.Context, ticket database.Ticket) string {
-		ctx, cancel := context.WithTimeout(context.Background(), substitutionTimeout)
-		defer cancel()
-
+	"average_rating": func(ctx context.Context, _ *worker.Context, ticket database.Ticket) string {
 		average, _ := dbclient.Analytics.GetAverageFeedbackRatingGuild(ctx, ticket.GuildId)
 		return fmt.Sprintf("%.1f", average)
 	},
-	"time": func(ctx *worker.Context, ticket database.Ticket) string {
+	"time": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:t>", time.Now().Unix())
 	},
-	"date": func(ctx *worker.Context, ticket database.Ticket) string {
+	"date": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:d>", time.Now().Unix())
 	},
-	"datetime": func(ctx *worker.Context, ticket database.Ticket) string {
+	"datetime": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:f>", time.Now().Unix())
 	},
-	"first_response_time_weekly": func(ctx *worker.Context, ticket database.Ticket) string {
-		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+	"first_response_time_weekly": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		if !worker.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, ticket.GuildId, true, worker.Token, worker.RateLimiter)
 			if err != nil {
 				sentry.Error(err)
 				return ""
@@ -395,10 +396,7 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 			}
 		}
 
-		context, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
-		defer cancel()
-
-		data, err := dbclient.Analytics.GetFirstResponseTimeStats(context, ticket.GuildId)
+		data, err := dbclient.Analytics.GetFirstResponseTimeStats(ctx, ticket.GuildId)
 		if err != nil {
 			sentry.Error(err)
 			return ""
@@ -406,9 +404,9 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 
 		return utils.FormatNullableTime(data.Weekly)
 	},
-	"first_response_time_monthly": func(ctx *worker.Context, ticket database.Ticket) string {
-		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+	"first_response_time_monthly": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		if !worker.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, ticket.GuildId, true, worker.Token, worker.RateLimiter)
 			if err != nil {
 				sentry.Error(err)
 				return ""
@@ -419,10 +417,7 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 			}
 		}
 
-		context, cancel := context.WithTimeout(context.Background(), time.Millisecond*1500)
-		defer cancel()
-
-		data, err := dbclient.Analytics.GetFirstResponseTimeStats(context, ticket.GuildId)
+		data, err := dbclient.Analytics.GetFirstResponseTimeStats(ctx, ticket.GuildId)
 		if err != nil {
 			sentry.Error(err)
 			return ""
@@ -430,9 +425,9 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 
 		return utils.FormatNullableTime(data.Monthly)
 	},
-	"first_response_time_all_time": func(ctx *worker.Context, ticket database.Ticket) string {
-		if !ctx.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, ctx.Token, ctx.RateLimiter)
+	"first_response_time_all_time": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
+		if !worker.IsWhitelabel { // If whitelabel, the bot must be premium, so we don't need to do extra checks
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, ticket.GuildId, true, worker.Token, worker.RateLimiter)
 			if err != nil {
 				sentry.Error(err)
 				return ""
@@ -454,15 +449,15 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 
 		return utils.FormatNullableTime(data.AllTime)
 	},
-	"discord_account_creation_date": func(ctx *worker.Context, ticket database.Ticket) string {
+	"discord_account_creation_date": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:d>", utils.SnowflakeToTime(ticket.UserId).Unix())
 	},
-	"discord_account_age": func(ctx *worker.Context, ticket database.Ticket) string {
+	"discord_account_age": func(ctx context.Context, worker *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<t:%d:R>", utils.SnowflakeToTime(ticket.UserId).Unix())
 	},
 }
 
-type GroupSubstitutionFunc func(*worker.Context, database.Ticket) map[string]string
+type GroupSubstitutionFunc func(context.Context, *worker.Context, database.Ticket) map[string]string
 
 type GroupSubstitutor struct {
 	Placeholders []string
@@ -478,8 +473,8 @@ func NewGroupSubstitutor(placeholders []string, f GroupSubstitutionFunc) GroupSu
 
 var groupSubstitutions = []GroupSubstitutor{
 	NewGroupSubstitutor([]string{"roblox_username", "roblox_id", "roblox_display_name", "roblox_profile_url", "roblox_account_age", "roblox_account_created"},
-		func(ctx *worker.Context, ticket database.Ticket) map[string]string {
-			user, err := integrations.Bloxlink.GetRobloxUser(ticket.UserId)
+		func(ctx context.Context, worker *worker.Context, ticket database.Ticket) map[string]string {
+			user, err := integrations.Bloxlink.GetRobloxUser(ctx, ticket.UserId)
 			if err != nil {
 				if err == bloxlink.ErrUserNotFound {
 					return nil
@@ -560,7 +555,7 @@ func getFormDataFields(formData map[database.FormInput]string) []embed.EmbedFiel
 }
 
 func BuildCustomEmbed(
-	ctx *worker.Context,
+	ctx context.Context, worker *worker.Context,
 	ticket database.Ticket,
 	customEmbed database.CustomEmbed,
 	fields []database.EmbedField,
@@ -570,7 +565,7 @@ func BuildCustomEmbed(
 ) *embed.Embed {
 	description := utils.ValueOrZero(customEmbed.Description)
 	if ticket.Id != 0 {
-		description = DoPlaceholderSubstitutions(description, ctx, ticket, additionalPlaceholders)
+		description = DoPlaceholderSubstitutions(ctx, description, worker, ticket, additionalPlaceholders)
 	}
 
 	e := &embed.Embed{
@@ -602,7 +597,7 @@ func BuildCustomEmbed(
 	for _, field := range fields {
 		value := field.Value
 		if ticket.Id != 0 {
-			value = DoPlaceholderSubstitutions(value, ctx, ticket, additionalPlaceholders)
+			value = DoPlaceholderSubstitutions(ctx, value, worker, ticket, additionalPlaceholders)
 		}
 
 		e.AddField(field.Name, value, field.Inline)

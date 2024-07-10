@@ -32,6 +32,7 @@ func (AdminGenPremiumCommand) Properties() registry.Properties {
 			command.NewOptionalArgument("amount", "Amount of keys to generate", interaction.OptionTypeInteger, i18n.MessageInvalidArgument),
 			command.NewOptionalArgument("whitelabel", "Should the keys be for premium or whitelabel", interaction.OptionTypeBoolean, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -58,7 +59,7 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 			continue
 		}
 
-		err = dbclient.Client.PremiumKeys.Create(key, time.Hour*24*time.Duration(length), int(tier))
+		err = dbclient.Client.PremiumKeys.Create(ctx, key, time.Hour*24*time.Duration(length), int(tier))
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		} else {
@@ -84,4 +85,6 @@ func (AdminGenPremiumCommand) Execute(ctx registry.CommandContext, length int, a
 		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Admin), err.Error())
 		return
 	}
+
+	ctx.ReplyPlainPermanent("Check your DMs")
 }

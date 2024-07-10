@@ -12,6 +12,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
+	"time"
 )
 
 type RemoveCommand struct {
@@ -27,6 +28,7 @@ func (RemoveCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user", "User to remove from the current ticket", interaction.OptionTypeUser, i18n.MessageRemoveAdminNoMembers),
 		),
+		Timeout: time.Second * 8,
 	}
 }
 
@@ -36,7 +38,7 @@ func (c RemoveCommand) GetExecutor() interface{} {
 
 func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -48,7 +50,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	selfPermissionLevel, err := ctx.UserPermissionLevel()
+	selfPermissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -67,7 +69,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	permissionLevel, err := permcache.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	permissionLevel, err := permcache.GetPermissionLevel(ctx, utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -79,7 +81,7 @@ func (RemoveCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// Remove user from ticket in DB
-	if err := dbclient.Client.TicketMembers.Delete(ctx.GuildId(), ticket.Id, userId); err != nil {
+	if err := dbclient.Client.TicketMembers.Delete(ctx, ctx.GuildId(), ticket.Id, userId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

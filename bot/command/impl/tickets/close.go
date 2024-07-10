@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -27,6 +28,7 @@ func (c CloseCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewOptionalAutocompleteableArgument("reason", "The reason the ticket was closed", interaction.OptionTypeString, "infallible", c.AutoCompleteHandler), // should never fail
 		),
+		Timeout: constants.TimeoutCloseTicket,
 	}
 }
 
@@ -35,7 +37,7 @@ func (c CloseCommand) GetExecutor() interface{} {
 }
 
 func (CloseCommand) Execute(ctx registry.CommandContext, reason *string) {
-	logic.CloseTicket(ctx, reason, false)
+	logic.CloseTicket(ctx, ctx, reason, false)
 }
 
 func (CloseCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {

@@ -71,7 +71,8 @@ func GetMessage(locale *Locale, id MessageId, format ...interface{}) string {
 }
 
 func GetMessageFromGuild(guildId uint64, id MessageId, format ...interface{}) string {
-	activeLanguage, err := dbclient.Client.ActiveLanguage.Get(guildId)
+	// TODO: Propagate context
+	activeLanguage, err := dbclient.Client.ActiveLanguage.Get(context.Background(), guildId)
 	if err != nil {
 		sentry.Error(err)
 	}

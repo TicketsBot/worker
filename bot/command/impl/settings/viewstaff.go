@@ -11,6 +11,7 @@ import (
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type ViewStaffCommand struct {
@@ -24,6 +25,7 @@ func (ViewStaffCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Everyone,
 		Category:         command.Settings,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -32,7 +34,7 @@ func (c ViewStaffCommand) GetExecutor() interface{} {
 }
 
 func (ViewStaffCommand) Execute(ctx registry.CommandContext) {
-	msgEmbed, _ := logic.BuildViewStaffMessage(ctx, 0)
+	msgEmbed, _ := logic.BuildViewStaffMessage(ctx, ctx, 0)
 
 	res := command.MessageResponse{
 		Embeds: []*embed.Embed{msgEmbed},

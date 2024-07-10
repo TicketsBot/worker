@@ -17,21 +17,21 @@ import (
 )
 
 // ClaimTicket TODO: Keep /add members
-func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uint64) error {
+func ClaimTicket(ctx context.Context, cmd registry.CommandContext, ticket database.Ticket, userId uint64) error {
 	if ticket.ChannelId == nil {
 		return errors.New("channel ID is nil")
 	}
 
 	// Check if thread
 	if ticket.IsThread {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageClaimThread)
 		return nil
 	}
 
 	// Get panel
 	var panel *database.Panel
 	if ticket.PanelId != nil {
-		tmp, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		tmp, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 		if err != nil {
 			return err
 		}
@@ -42,18 +42,18 @@ func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uin
 	}
 
 	// Set to claimed in DB
-	if err := dbclient.Client.TicketClaims.Set(ticket.GuildId, ticket.Id, userId); err != nil {
+	if err := dbclient.Client.TicketClaims.Set(ctx, ticket.GuildId, ticket.Id, userId); err != nil {
 		return err
 	}
 
-	newOverwrites, err := GenerateClaimedOverwrites(ctx.Worker(), ticket, userId)
+	newOverwrites, err := GenerateClaimedOverwrites(ctx, cmd.Worker(), ticket, userId)
 	if err != nil {
 		return err
 	}
 
 	// If newOverwrites = nil, no changes to permissions should be made
 	if newOverwrites != nil {
-		channelName, err := GenerateChannelName(ctx, panel, ticket.Id, ticket.UserId, &userId)
+		channelName, err := GenerateChannelName(ctx, cmd, panel, ticket.Id, ticket.UserId, &userId)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uin
 			PermissionOverwrites: newOverwrites,
 		}
 
-		if _, err = ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
+		if _, err = cmd.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
 			return err
 		}
 	}
@@ -73,9 +73,9 @@ func ClaimTicket(ctx registry.CommandContext, ticket database.Ticket, userId uin
 }
 
 // GenerateClaimedOverwrites If support reps can still view and type, returns (nil, nil)
-func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, claimer uint64, otherUsers ...uint64) ([]channel.PermissionOverwrite, error) {
+func GenerateClaimedOverwrites(ctx context.Context, worker *worker.Context, ticket database.Ticket, claimer uint64) ([]channel.PermissionOverwrite, error) {
 	// Get claim settings for guild
-	claimSettings, err := dbclient.Client.ClaimSettings.Get(ticket.GuildId)
+	claimSettings, err := dbclient.Client.ClaimSettings.Get(ctx, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
@@ -84,22 +84,22 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 		return nil, nil
 	}
 
-	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ticket.GuildId)
+	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
 
-	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ticket.GuildId)
+	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
 
-	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ticket.GuildId)
+	additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
 
-	integrationRoleId, err := GetIntegrationRoleId(worker, ticket.GuildId)
+	integrationRoleId, err := GetIntegrationRoleId(ctx, worker, ticket.GuildId)
 	if err != nil {
 		return nil, err
 	}
@@ -111,22 +111,22 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 
 	// Support can view the ticket, but can't type
 	if !claimSettings.SupportCanType {
-		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ticket.GuildId)
+		supportUsers, err := dbclient.Client.Permissions.GetSupportOnly(ctx, ticket.GuildId)
 		if err != nil {
 			return nil, err
 		}
 
-		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ticket.GuildId)
+		supportRoles, err := dbclient.Client.RolePermissions.GetSupportRolesOnly(ctx, ticket.GuildId)
 		if err != nil {
 			return nil, err
 		}
 
 		if ticket.PanelId != nil {
-			group, _ := errgroup.WithContext(context.Background())
+			group, _ := errgroup.WithContext(ctx)
 
 			// Get users for support teams of panel
 			group.Go(func() error {
-				userIds, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(*ticket.PanelId)
+				userIds, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(ctx, *ticket.PanelId)
 				if err != nil {
 					return err
 				}
@@ -137,7 +137,7 @@ func GenerateClaimedOverwrites(worker *worker.Context, ticket database.Ticket, c
 
 			// Get roles for support teams of panel
 			group.Go(func() error {
-				roleIds, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(*ticket.PanelId)
+				roleIds, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(ctx, *ticket.PanelId)
 				if err != nil {
 					return err
 				}

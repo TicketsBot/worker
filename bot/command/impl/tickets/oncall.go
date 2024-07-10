@@ -13,6 +13,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/rest/request"
+	"time"
 )
 
 type OnCallCommand struct {
@@ -26,6 +27,7 @@ func (OnCallCommand) Properties() registry.Properties {
 		PermissionLevel:  permcache.Support,
 		Category:         command.Tickets,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 8,
 	}
 }
 
@@ -52,25 +54,25 @@ func (OnCallCommand) Execute(ctx registry.CommandContext) {
 	}
 
 	// Reflects *new* state
-	onCall, err := dbclient.Client.OnCall.Toggle(ctx.GuildId(), ctx.UserId())
+	onCall, err := dbclient.Client.OnCall.Toggle(ctx, ctx.GuildId(), ctx.UserId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	defaultTeam, teamIds, err := logic.GetMemberTeamsWithMember(ctx.GuildId(), ctx.UserId(), member)
+	defaultTeam, teamIds, err := logic.GetMemberTeamsWithMember(ctx, ctx.GuildId(), ctx.UserId(), member)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	teams, err := dbclient.Client.SupportTeam.GetMulti(ctx.GuildId(), teamIds)
+	teams, err := dbclient.Client.SupportTeam.GetMulti(ctx, ctx.GuildId(), teamIds)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	metadata, err := dbclient.Client.GuildMetadata.Get(ctx.GuildId())
+	metadata, err := dbclient.Client.GuildMetadata.Get(ctx, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -142,7 +144,7 @@ func assignOnCallRole(ctx registry.CommandContext, member member.Member, roleId 
 
 	// Create role if it does not exist  yet
 	if roleId == nil {
-		tmp, err := logic.CreateOnCallRole(ctx, team)
+		tmp, err := logic.CreateOnCallRole(ctx, ctx, team)
 		if err != nil {
 			return err
 		}
@@ -154,11 +156,11 @@ func assignOnCallRole(ctx registry.CommandContext, member member.Member, roleId 
 		// If role was deleted, recreate it
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 404 && err.ApiError.Message == "Unknown Role" {
 			if team == nil {
-				if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx.GuildId(), nil); err != nil {
+				if err := dbclient.Client.GuildMetadata.SetOnCallRole(ctx, ctx.GuildId(), nil); err != nil {
 					return err
 				}
 			} else {
-				if err := dbclient.Client.SupportTeam.SetOnCallRole(team.Id, nil); err != nil {
+				if err := dbclient.Client.SupportTeam.SetOnCallRole(ctx, team.Id, nil); err != nil {
 					return err
 				}
 			}

@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -22,6 +23,7 @@ import (
 )
 
 type SelectMenuContext struct {
+	context.Context
 	*Replyable
 	*ReplyCounter
 	*MessageComponentExtensions
@@ -34,13 +36,17 @@ type SelectMenuContext struct {
 	responseChannel chan button.Response
 }
 
+var _ registry.CommandContext = (*SelectMenuContext)(nil)
+
 func NewSelectMenuContext(
+	ctx context.Context,
 	worker *worker.Context,
 	interaction interaction.MessageComponentInteraction,
 	premium premium.PremiumTier,
 	responseChannel chan button.Response,
 ) *SelectMenuContext {
-	ctx := SelectMenuContext{
+	c := SelectMenuContext{
+		Context:         ctx,
 		ReplyCounter:    NewReplyCounter(),
 		worker:          worker,
 		Interaction:     interaction,
@@ -50,80 +56,80 @@ func NewSelectMenuContext(
 		responseChannel: responseChannel,
 	}
 
-	ctx.Replyable = NewReplyable(&ctx)
-	ctx.MessageComponentExtensions = NewMessageComponentExtensions(&ctx, interaction.InteractionMetadata, responseChannel, ctx.hasReplied)
-	ctx.StateCache = NewStateCache(&ctx)
-	return &ctx
+	c.Replyable = NewReplyable(&c)
+	c.MessageComponentExtensions = NewMessageComponentExtensions(&c, interaction.InteractionMetadata, responseChannel, c.hasReplied)
+	c.StateCache = NewStateCache(&c)
+	return &c
 }
 
-func (ctx *SelectMenuContext) Worker() *worker.Context {
-	return ctx.worker
+func (c *SelectMenuContext) Worker() *worker.Context {
+	return c.worker
 }
 
-func (ctx *SelectMenuContext) GuildId() uint64 {
-	return ctx.Interaction.GuildId.Value // TODO: Null check
+func (c *SelectMenuContext) GuildId() uint64 {
+	return c.Interaction.GuildId.Value // TODO: Null check
 }
 
-func (ctx *SelectMenuContext) ChannelId() uint64 {
-	return ctx.Interaction.ChannelId
+func (c *SelectMenuContext) ChannelId() uint64 {
+	return c.Interaction.ChannelId
 }
 
-func (ctx *SelectMenuContext) UserId() uint64 {
-	return ctx.InteractionUser().Id
+func (c *SelectMenuContext) UserId() uint64 {
+	return c.InteractionUser().Id
 }
 
-func (ctx *SelectMenuContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
-	if ctx.Interaction.Member == nil {
+func (c *SelectMenuContext) UserPermissionLevel(ctx context.Context) (permcache.PermissionLevel, error) {
+	if c.Interaction.Member == nil {
 		return permcache.Everyone, errors.New("member was nil")
 	}
 
-	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), *ctx.Interaction.Member, ctx.GuildId())
+	return permcache.GetPermissionLevel(ctx, utils.ToRetriever(c.worker), *c.Interaction.Member, c.GuildId())
 }
 
-func (ctx *SelectMenuContext) PremiumTier() premium.PremiumTier {
-	return ctx.premium
+func (c *SelectMenuContext) PremiumTier() premium.PremiumTier {
+	return c.premium
 }
 
-func (ctx *SelectMenuContext) IsInteraction() bool {
+func (c *SelectMenuContext) IsInteraction() bool {
 	return true
 }
 
-func (ctx *SelectMenuContext) Source() registry.Source {
+func (c *SelectMenuContext) Source() registry.Source {
 	return registry.SourceDiscord
 }
 
-func (ctx *SelectMenuContext) ToErrorContext() errorcontext.WorkerErrorContext {
+func (c *SelectMenuContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
-		Guild:   ctx.GuildId(),
-		User:    ctx.UserId(),
-		Channel: ctx.ChannelId(),
+		Guild:   c.GuildId(),
+		User:    c.UserId(),
+		Channel: c.ChannelId(),
 	}
 }
 
-func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
-	//hasReplied := ctx.hasReplied.Swap(true)
+func (c *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg message.Message, err error) {
+	//hasReplied := c.hasReplied.Swap(true)
 
-	if err := ctx.ReplyCounter.Try(); err != nil {
+	if err := c.ReplyCounter.Try(); err != nil {
 		return message.Message{}, err
 	}
 
-	ctx.responseChannel <- button.ResponseMessage{
+	c.responseChannel <- button.ResponseMessage{
 		Data: response,
 	}
 
 	/*
 		if !hasReplied {
-			ctx.responseChannel <- button.ResponseMessage{
+			c.responseChannel <- button.ResponseMessage{
 				Data: response,
 			}
 		} else {
-			if time.Now().Sub(utils.SnowflakeToTime(ctx.interaction.Id)) > time.Minute*14 {
+			if time.Now().Sub(utils.SnowflakeToTime(c.interaction.Id)) > time.Minute*14 {
 				return
 			}
 
-			msg, err = rest.CreateFollowupMessage(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookBody())
+			msg, err = rest.CreateFollowupMessage(context.Background(), c.Interaction.Token, c.worker.RateLimiter, c.worker.BotId, response.IntoWebhookBody())
 			if err != nil {
-				sentry.LogWithContext(err, ctx.ToErrorContext())
+				sentry.LogWithContext(err, c.ToErrorContext())
 			}
 		}
 	*/
@@ -131,72 +137,72 @@ func (ctx *SelectMenuContext) ReplyWith(response command.MessageResponse) (msg m
 	return
 }
 
-func (ctx *SelectMenuContext) Channel() (channel.PartialChannel, error) {
-	return ctx.Interaction.Channel, nil
+func (c *SelectMenuContext) Channel() (channel.PartialChannel, error) {
+	return c.Interaction.Channel, nil
 }
 
-func (ctx *SelectMenuContext) Guild() (guild.Guild, error) {
-	return ctx.Worker().GetGuild(ctx.GuildId())
+func (c *SelectMenuContext) Guild() (guild.Guild, error) {
+	return c.Worker().GetGuild(c.GuildId())
 }
 
-func (ctx *SelectMenuContext) Member() (member.Member, error) {
-	if ctx.GuildId() == 0 {
+func (c *SelectMenuContext) Member() (member.Member, error) {
+	if c.GuildId() == 0 {
 		return member.Member{}, fmt.Errorf("button was not clicked in a guild")
 	}
 
-	if ctx.Interaction.Member != nil {
-		return *ctx.Interaction.Member, nil
+	if c.Interaction.Member != nil {
+		return *c.Interaction.Member, nil
 	} else {
-		return ctx.Worker().GetGuildMember(ctx.GuildId(), ctx.UserId())
+		return c.Worker().GetGuildMember(c.GuildId(), c.UserId())
 	}
 }
 
-func (ctx *SelectMenuContext) InteractionMember() member.Member {
-	if ctx.Interaction.Member != nil {
-		return *ctx.Interaction.Member
+func (c *SelectMenuContext) InteractionMember() member.Member {
+	if c.Interaction.Member != nil {
+		return *c.Interaction.Member
 	} else {
-		sentry.ErrorWithContext(fmt.Errorf("SelectMenuContext.InteractionMember was called when Member is nil"), ctx.ToErrorContext())
+		sentry.ErrorWithContext(fmt.Errorf("SelectMenuContext.InteractionMember was called when Member is nil"), c.ToErrorContext())
 		return member.Member{}
 	}
 }
 
-func (ctx *SelectMenuContext) User() (user.User, error) {
-	return ctx.InteractionUser(), nil
+func (c *SelectMenuContext) User() (user.User, error) {
+	return c.InteractionUser(), nil
 }
 
-func (ctx *SelectMenuContext) InteractionUser() user.User {
-	if ctx.Interaction.Member != nil {
-		return ctx.Interaction.Member.User
-	} else if ctx.Interaction.User != nil {
-		return *ctx.Interaction.User
+func (c *SelectMenuContext) InteractionUser() user.User {
+	if c.Interaction.Member != nil {
+		return c.Interaction.Member.User
+	} else if c.Interaction.User != nil {
+		return *c.Interaction.User
 	} else { // Infallible
-		sentry.ErrorWithContext(fmt.Errorf("infallible: SelectMenuContext.InteractionUser was called when User is nil"), ctx.ToErrorContext())
+		sentry.ErrorWithContext(fmt.Errorf("infallible: SelectMenuContext.InteractionUser was called when User is nil"), c.ToErrorContext())
 		return user.User{}
 	}
 }
 
-func (ctx *SelectMenuContext) IntoPanelContext() PanelContext {
-	return NewPanelContext(ctx.worker, ctx.GuildId(), ctx.ChannelId(), ctx.InteractionUser().Id, ctx.PremiumTier())
+func (c *SelectMenuContext) IntoPanelContext() PanelContext {
+	return NewPanelContext(c.Context, c.worker, c.GuildId(), c.ChannelId(), c.InteractionUser().Id, c.PremiumTier())
 }
 
-func (ctx *SelectMenuContext) IsBlacklisted() (bool, error) {
+func (c *SelectMenuContext) IsBlacklisted(ctx context.Context) (bool, error) {
 	// TODO: Check user blacklist
-	if ctx.GuildId() == 0 {
+	if c.GuildId() == 0 {
 		return false, nil
 	}
 
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := c.UserPermissionLevel(ctx)
 	if err != nil {
 		return false, err
 	}
 
 	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
 	// if the command is not executed in a guild
-	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), utils.ValueOrZero(ctx.Interaction.Member), permLevel)
+	return utils.IsBlacklisted(ctx, c.GuildId(), c.UserId(), utils.ValueOrZero(c.Interaction.Member), permLevel)
 }
 
 /// InteractionContext functions
 
-func (ctx *SelectMenuContext) InteractionMetadata() interaction.InteractionMetadata {
-	return ctx.Interaction.InteractionMetadata
+func (c *SelectMenuContext) InteractionMetadata() interaction.InteractionMetadata {
+	return c.Interaction.InteractionMetadata
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type ManageTagsAddCommand struct {
@@ -30,6 +31,7 @@ func (ManageTagsAddCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("content", "Tag contents to be sent when /tag is used", interaction.OptionTypeString, i18n.MessageTagCreateInvalidArguments),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 
@@ -45,7 +47,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	// Limit of 200 tags
-	count, err := dbclient.Client.Tag.GetTagCount(ctx.GuildId())
+	count, err := dbclient.Client.Tag.GetTagCount(ctx, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -63,7 +65,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	// Verify a tag with the ID doesn't already exist
-	exists, err := dbclient.Client.Tag.Exists(ctx.GuildId(), tagId)
+	exists, err := dbclient.Client.Tag.Exists(ctx, ctx.GuildId(), tagId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -82,7 +84,7 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 		Embed:           nil,
 	}
 
-	if err := dbclient.Client.Tag.Set(tag); err != nil {
+	if err := dbclient.Client.Tag.Set(ctx, tag); err != nil {
 		ctx.HandleError(err)
 		return
 	}

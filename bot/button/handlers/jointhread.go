@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type JoinThreadHandler struct{}
@@ -26,7 +27,8 @@ func (h *JoinThreadHandler) Matcher() matcher.Matcher {
 
 func (h *JoinThreadHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -42,7 +44,7 @@ func (h *JoinThreadHandler) Execute(ctx *context.ButtonContext) {
 	ticketId, _ := strconv.Atoi(groups[1])
 
 	// Get ticket
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -68,7 +70,7 @@ func (h *JoinThreadHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Check permission
-	hasPermission, err := logic.HasPermissionForTicket(ctx.Worker(), ticket, ctx.UserId())
+	hasPermission, err := logic.HasPermissionForTicket(ctx, ctx.Worker(), ticket, ctx.UserId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

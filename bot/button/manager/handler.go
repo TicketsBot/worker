@@ -20,10 +20,11 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"golang.org/x/sync/errgroup"
+	"time"
 )
 
 // Returns whether the handler may edit the message
-func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Context, data interaction.MessageComponentInteraction, responseCh chan button.Response) bool {
+func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager, worker *worker.Context, data interaction.MessageComponentInteraction, responseCh chan button.Response) bool {
 	// Safety checks - guild interactions only
 	if data.GuildId.Value != 0 && data.Member == nil {
 		return false
@@ -33,11 +34,14 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		return false
 	}
 
+	lookupCtx, cancelLookupCtx := context.WithTimeout(ctx, time.Second*2)
+	defer cancelLookupCtx()
+
 	// Fetch premium tier
 	var premiumTier = premium.None
 	if data.GuildId.Value != 0 {
 		// TODO: Re-architecture system to tie DMs to guilds
-		tier, err := getPremiumTier(worker, data.GuildId.Value)
+		tier, err := getPremiumTier(lookupCtx, worker, data.GuildId.Value)
 		if err != nil {
 			// TODO: Better handling
 			// Allow executing to continue, assuming no premium
@@ -54,12 +58,12 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 		return false
 	}
 
-	var ctx cmdregistry.InteractionContext
+	var cc cmdregistry.InteractionContext
 	switch data.Data.Type() {
 	case component.ComponentButton:
-		ctx = cmdcontext.NewButtonContext(worker, data, premiumTier, responseCh)
+		cc = cmdcontext.NewButtonContext(ctx, worker, data, premiumTier, responseCh)
 	case component.ComponentSelectMenu:
-		ctx = cmdcontext.NewSelectMenuContext(worker, data, premiumTier, responseCh)
+		cc = cmdcontext.NewSelectMenuContext(ctx, worker, data, premiumTier, responseCh)
 	default:
 		sentry.ErrorWithContext(fmt.Errorf("invalid message component type: %d", data.Data.ComponentType), errorcontext.WorkerErrorContext{
 			Guild:   data.GuildId.Value,
@@ -69,12 +73,12 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 	}
 
 	// Parallelise checks
-	group, _ := errgroup.WithContext(context.Background())
+	group, _ := errgroup.WithContext(lookupCtx)
 
 	// Check if the user is blacklisted at guild / global level
 	var userBlacklisted bool
 	group.Go(func() (err error) {
-		userBlacklisted, err = ctx.IsBlacklisted()
+		userBlacklisted, err = cc.IsBlacklisted(lookupCtx)
 		return
 	})
 
@@ -82,7 +86,7 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 	var guildBlacklisted = false
 	if data.GuildId.Value != 0 {
 		group.Go(func() (err error) {
-			guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
+			guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
 			return
 		})
 	}
@@ -93,14 +97,17 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			Channel: data.ChannelId,
 		})
 
-		ctx.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
+		cc.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
 		return false
 	}
 
 	if userBlacklisted || guildBlacklisted {
-		ctx.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
+		cc.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 		return false
 	}
+
+	checkCtx, cancel := context.WithTimeout(ctx, time.Second*2)
+	defer cancel()
 
 	switch data.Data.Type() {
 	case component.ComponentButton:
@@ -109,11 +116,18 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			return false
 		}
 
-		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
+		shouldExecute, canEdit := doPropertiesChecks(checkCtx, data.GuildId.Value, cc, handler.Properties())
 		if shouldExecute {
 			go func() {
 				defer close(responseCh)
-				handler.Execute(ctx.(*cmdcontext.ButtonContext))
+
+				cc := cc.(*cmdcontext.ButtonContext)
+
+				var cancel context.CancelFunc
+				cc.Context, cancel = context.WithTimeout(cc.Context, handler.Properties().Timeout)
+				defer cancel()
+
+				handler.Execute(cc)
 			}()
 		}
 
@@ -124,11 +138,18 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 			return false
 		}
 
-		shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
+		shouldExecute, canEdit := doPropertiesChecks(checkCtx, data.GuildId.Value, cc, handler.Properties())
 		if shouldExecute {
 			go func() {
 				defer close(responseCh)
-				handler.Execute(ctx.(*cmdcontext.SelectMenuContext))
+
+				cc := cc.(*cmdcontext.SelectMenuContext)
+
+				var cancel context.CancelFunc
+				cc.Context, cancel = context.WithTimeout(cc.Context, handler.Properties().Timeout)
+				defer cancel()
+
+				handler.Execute(cc)
 			}()
 		}
 
@@ -142,7 +163,7 @@ func HandleInteraction(manager *ComponentInteractionManager, worker *worker.Cont
 	}
 }
 
-func getPremiumTier(worker *worker.Context, guildId uint64) (premium.PremiumTier, error) {
+func getPremiumTier(ctx context.Context, worker *worker.Context, guildId uint64) (premium.PremiumTier, error) {
 	// Psuedo premium if DM command
 	if guildId == 0 {
 		if worker.IsWhitelabel {
@@ -151,7 +172,7 @@ func getPremiumTier(worker *worker.Context, guildId uint64) (premium.PremiumTier
 			return premium.Premium, nil
 		}
 	} else {
-		premiumTier, err := utils.PremiumClient.GetTierByGuildId(guildId, true, worker.Token, worker.RateLimiter)
+		premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, guildId, true, worker.Token, worker.RateLimiter)
 		if err != nil {
 			return premium.None, err
 		}
@@ -160,27 +181,27 @@ func getPremiumTier(worker *worker.Context, guildId uint64) (premium.PremiumTier
 	}
 }
 
-func doPropertiesChecks(guildId uint64, ctx cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
+func doPropertiesChecks(ctx context.Context, guildId uint64, cmd cmdregistry.CommandContext, properties registry.Properties) (shouldExecute, canEdit bool) {
 	if properties.PermissionLevel > permission.Everyone {
-		permLevel, err := ctx.UserPermissionLevel()
+		permLevel, err := cmd.UserPermissionLevel(ctx)
 		if err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, cmd.ToErrorContext())
 			return false, false
 		}
 
 		if permLevel < properties.PermissionLevel {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
+			cmd.Reply(customisation.Red, i18n.Error, i18n.MessageNoPermission)
 			return false, false
 		}
 	}
 
 	if guildId == 0 && !properties.HasFlag(registry.DMsAllowed) {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonGuildOnly)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageButtonGuildOnly)
 		return false, false
 	}
 
 	if guildId != 0 && !properties.HasFlag(registry.GuildAllowed) {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageButtonDMOnly)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageButtonDMOnly)
 		return false, false
 	}
 

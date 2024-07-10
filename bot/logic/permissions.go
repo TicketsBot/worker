@@ -14,13 +14,13 @@ import (
 	"sync"
 )
 
-func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId uint64) (bool, error) {
+func HasPermissionForTicket(ctx context.Context, worker *worker.Context, ticket database.Ticket, userId uint64) (bool, error) {
 	if ticket.UserId == userId {
 		return true, nil
 	}
 
 	// Check if user is the guild owner
-	guild, err := ctx.GetGuild(ticket.GuildId)
+	guild, err := worker.GetGuild(ticket.GuildId)
 	if err != nil {
 		return false, err
 	}
@@ -30,18 +30,18 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 	}
 
 	// Get member object
-	member, err := ctx.GetGuildMember(ticket.GuildId, userId)
+	member, err := worker.GetGuildMember(ticket.GuildId, userId)
 	if err != nil {
 		return false, err
 	}
 
 	// Get admin users and roles
-	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ticket.GuildId)
+	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx, ticket.GuildId)
 	if err != nil {
 		return false, err
 	}
 
-	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ticket.GuildId)
+	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx, ticket.GuildId)
 	if err != nil {
 		return false, err
 	}
@@ -59,7 +59,7 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 	}
 
 	// Check claim
-	claimedBy, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
+	claimedBy, err := dbclient.Client.TicketClaims.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return false, err
 	}
@@ -75,10 +75,10 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 	}
 
 	if ticket.PanelId == nil {
-		return IsInDefaultTeam(ticket.GuildId, userId, member)
+		return IsInDefaultTeam(ctx, ticket.GuildId, userId, member)
 	} else {
 		// Get panel for ticket
-		panel, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		panel, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 		if err != nil {
 			return false, err
 		}
@@ -89,7 +89,7 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 
 		// Check default team, if assigned to panel
 		if panel.WithDefaultTeam {
-			hasPermission, err := IsInDefaultTeam(ticket.GuildId, userId, member)
+			hasPermission, err := IsInDefaultTeam(ctx, ticket.GuildId, userId, member)
 			if err != nil {
 				return false, err
 			}
@@ -100,7 +100,7 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 		}
 
 		// Check whether user is part of a team directly
-		teamUsers, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(panel.PanelId)
+		teamUsers, err := dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(ctx, panel.PanelId)
 		if err != nil {
 			return false, err
 		}
@@ -110,7 +110,7 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 		}
 
 		// Check whether user has any of the roles
-		teamRoles, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(panel.PanelId)
+		teamRoles, err := dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(ctx, panel.PanelId)
 		if err != nil {
 			return false, err
 		}
@@ -125,9 +125,9 @@ func HasPermissionForTicket(ctx *worker.Context, ticket database.Ticket, userId 
 	return false, nil
 }
 
-func IsInDefaultTeam(guildId, userId uint64, member member.Member) (bool, error) {
+func IsInDefaultTeam(ctx context.Context, guildId, userId uint64, member member.Member) (bool, error) {
 	// Check users
-	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
+	supportUsers, err := dbclient.Client.Permissions.GetSupport(ctx, guildId)
 	if err != nil {
 		return false, err
 	}
@@ -137,7 +137,7 @@ func IsInDefaultTeam(guildId, userId uint64, member member.Member) (bool, error)
 	}
 
 	// Check roles
-	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
+	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(ctx, guildId)
 	if err != nil {
 		return false, err
 	}
@@ -153,6 +153,7 @@ func IsInDefaultTeam(guildId, userId uint64, member member.Member) (bool, error)
 
 // FilterStaffMembers Ignores ticket opener
 func FilterStaffMembers(
+	ctx context.Context,
 	worker *worker.Context,
 	guildId uint64,
 	ticket database.Ticket,
@@ -162,7 +163,7 @@ func FilterStaffMembers(
 ) ([]uint64, error) {
 	var panel *database.Panel
 	if ticket.PanelId != nil {
-		tmp, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		tmp, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 		if err != nil {
 			return nil, err
 		}
@@ -174,22 +175,22 @@ func FilterStaffMembers(
 
 	// Retrieve permissions data
 	// Get admin users and roles
-	adminUsers, err := dbclient.Client.Permissions.GetAdmins(guildId)
+	adminUsers, err := dbclient.Client.Permissions.GetAdmins(ctx, guildId)
 	if err != nil {
 		return nil, err
 	}
 
-	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(guildId)
+	adminRoles, err := dbclient.Client.RolePermissions.GetAdminRoles(ctx, guildId)
 	if err != nil {
 		return nil, err
 	}
 
-	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
+	supportUsers, err := dbclient.Client.Permissions.GetSupport(ctx, guildId)
 	if err != nil {
 		return nil, err
 	}
 
-	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
+	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(ctx, guildId)
 	if err != nil {
 		return nil, err
 	}
@@ -197,19 +198,19 @@ func FilterStaffMembers(
 	var teamUsers, teamRoles []uint64
 	if panel != nil {
 		// Check whether user is part of a team directly
-		teamUsers, err = dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(panel.PanelId)
+		teamUsers, err = dbclient.Client.SupportTeamMembers.GetAllSupportMembersForPanel(ctx, panel.PanelId)
 		if err != nil {
 			return nil, err
 		}
 
 		// Check whether user has any of the roles
-		teamRoles, err = dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(panel.PanelId)
+		teamRoles, err = dbclient.Client.SupportTeamRoles.GetAllSupportRolesForPanel(ctx, panel.PanelId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	group, _ := errgroup.WithContext(context.Background())
+	group, _ := errgroup.WithContext(ctx)
 
 	var staffIds []uint64
 	var mu sync.Mutex
@@ -282,7 +283,7 @@ func FilterStaffMembers(
 	return staffIds, nil
 }
 
-func GetStaffInThread(worker *worker.Context, ticket database.Ticket, threadId uint64) ([]uint64, error) {
+func GetStaffInThread(ctx context.Context, worker *worker.Context, ticket database.Ticket, threadId uint64) ([]uint64, error) {
 	// Calculate how many staff members there are
 	members, err := worker.ListThreadMembers(threadId) // TODO: Should we try and maintain a cache
 	if err != nil {
@@ -294,7 +295,7 @@ func GetStaffInThread(worker *worker.Context, ticket database.Ticket, threadId u
 		memberIds[i] = member.UserId
 	}
 
-	staffIds, err := FilterStaffMembers(worker, ticket.GuildId, ticket, memberIds, true, true)
+	staffIds, err := FilterStaffMembers(ctx, worker, ticket.GuildId, ticket, memberIds, true, true)
 	if err != nil {
 		return nil, err
 	}
@@ -303,23 +304,23 @@ func GetStaffInThread(worker *worker.Context, ticket database.Ticket, threadId u
 }
 
 // GetMemberTeams Returns (default_team, team_ids, error)
-func GetMemberTeams(worker *worker.Context, guildId, userId uint64) (bool, []int, error) {
+func GetMemberTeams(ctx context.Context, worker *worker.Context, guildId, userId uint64) (bool, []int, error) {
 	member, err := worker.GetGuildMember(guildId, userId)
 	if err != nil {
 		return false, nil, err
 	}
 
-	return GetMemberTeamsWithMember(guildId, userId, member)
+	return GetMemberTeamsWithMember(ctx, guildId, userId, member)
 }
 
-func GetMemberTeamsWithMember(guildId, userId uint64, member member.Member) (bool, []int, error) {
+func GetMemberTeamsWithMember(ctx context.Context, guildId, userId uint64, member member.Member) (bool, []int, error) {
 	// Determine whether the user is part of the default support team
-	supportUsers, err := dbclient.Client.Permissions.GetSupport(guildId)
+	supportUsers, err := dbclient.Client.Permissions.GetSupport(ctx, guildId)
 	if err != nil {
 		return false, nil, err
 	}
 
-	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(guildId)
+	supportRoles, err := dbclient.Client.RolePermissions.GetSupportRoles(ctx, guildId)
 	if err != nil {
 		return false, nil, err
 	}
@@ -329,7 +330,7 @@ func GetMemberTeamsWithMember(guildId, userId uint64, member member.Member) (boo
 	// Retrieve IDs of additional support teams
 	teamIds := collections.NewSet[int]() // Use set to eliminate duplicate entries
 
-	userTeamIds, err := dbclient.Client.SupportTeamMembers.GetAllTeamsForUser(guildId, userId)
+	userTeamIds, err := dbclient.Client.SupportTeamMembers.GetAllTeamsForUser(ctx, guildId, userId)
 	if err != nil {
 		return false, nil, err
 	}
@@ -338,7 +339,7 @@ func GetMemberTeamsWithMember(guildId, userId uint64, member member.Member) (boo
 		teamIds.Add(id)
 	}
 
-	roleTeamIds, err := dbclient.Client.SupportTeamRoles.GetAllTeamsForRoles(guildId, member.Roles)
+	roleTeamIds, err := dbclient.Client.SupportTeamRoles.GetAllTeamsForRoles(ctx, guildId, member.Roles)
 	if err != nil {
 		return false, nil, err
 	}

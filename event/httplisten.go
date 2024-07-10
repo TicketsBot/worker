@@ -81,7 +81,6 @@ func eventHandler(cache *cache.PgCache) func(*gin.Context) {
 		}
 
 		workerCtx := &worker.Context{
-			Context:      context.Background(),
 			Token:        event.BotToken,
 			BotId:        event.BotId,
 			IsWhitelabel: event.IsWhitelabel,
@@ -115,7 +114,6 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 		}
 
 		worker := &worker.Context{
-			Context:      context.Background(),
 			Token:        payload.BotToken,
 			BotId:        payload.BotId,
 			IsWhitelabel: payload.IsWhitelabel,
@@ -133,7 +131,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 
 			responseCh := make(chan interaction.ApplicationCommandCallbackData, 1)
 
-			deferDefault, err := executeCommand(worker, commandManager.GetCommands(), interactionData, responseCh)
+			deferDefault, err := executeCommand(ctx, worker, commandManager.GetCommands(), interactionData, responseCh)
 			if err != nil {
 				marshalled, _ := json.Marshal(payload)
 				logrus.Warnf("error executing payload: %v (payload: %s)", err, string(marshalled))
@@ -162,7 +160,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			timeToDefer := calculateTimeToDefer(interactionData.Id)
 
 			responseCh := make(chan button.Response, 1) // Buffer > 0 is important, or it could hang!
-			btn_manager.HandleInteraction(buttonManager, worker, interactionData, responseCh)
+			btn_manager.HandleInteraction(ctx, buttonManager, worker, interactionData, responseCh)
 
 			select {
 			case <-time.After(timeToDefer):
@@ -261,7 +259,7 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 			ctx.Writer.Flush()
 
 			responseCh := make(chan button.Response, 1)
-			btn_manager.HandleModalInteraction(buttonManager, worker, interactionData, responseCh)
+			btn_manager.HandleModalInteraction(ctx, buttonManager, worker, interactionData, responseCh)
 
 			go handleButtonResponseAfterDefer(interactionData.InteractionMetadata, worker, time.Now(), responseCh)
 		}

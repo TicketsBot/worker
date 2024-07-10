@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminWhitelabelAssignGuildCommand struct {
@@ -27,6 +28,7 @@ func (AdminWhitelabelAssignGuildCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("bot_id", "ID of the bot to assign to the guild", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 			command.NewRequiredArgument("guild_id", "ID of the guild to assign the bot to", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -47,7 +49,7 @@ func (AdminWhitelabelAssignGuildCommand) Execute(ctx registry.CommandContext, bo
 		return
 	}
 
-	bot, err := dbclient.Client.Whitelabel.GetByBotId(botId)
+	bot, err := dbclient.Client.Whitelabel.GetByBotId(ctx, botId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -58,7 +60,7 @@ func (AdminWhitelabelAssignGuildCommand) Execute(ctx registry.CommandContext, bo
 		return
 	}
 
-	if err := dbclient.Client.WhitelabelGuilds.Add(botId, guildId); err != nil {
+	if err := dbclient.Client.WhitelabelGuilds.Add(ctx, botId, guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

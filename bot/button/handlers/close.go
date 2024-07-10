@@ -4,7 +4,8 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -24,13 +25,14 @@ func (h *CloseHandler) Matcher() matcher.Matcher {
 
 func (h *CloseHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: constants.TimeoutCloseTicket,
 	}
 }
 
-func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
+func (h *CloseHandler) Execute(ctx *cmdcontext.ButtonContext) {
 	// Get the ticket properties
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -42,12 +44,12 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// This is checked by the close function, but we need to check before showing close confirmation
-	if !utils.CanClose(ctx, ticket) {
+	if !utils.CanClose(ctx, ctx, ticket) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}
 
-	closeConfirmation, err := dbclient.Client.CloseConfirmation.Get(ctx.GuildId())
+	closeConfirmation, err := dbclient.Client.CloseConfirmation.Get(ctx, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -76,6 +78,6 @@ func (h *CloseHandler) Execute(ctx *context.ButtonContext) {
 		}
 	} else {
 		// TODO: IntoPanelContext()?
-		logic.CloseTicket(ctx, nil, false)
+		logic.CloseTicket(ctx.Context, ctx, nil, false)
 	}
 }

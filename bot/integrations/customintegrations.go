@@ -2,6 +2,7 @@ package integrations
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,6 +38,7 @@ type integrationWebhookBody struct {
 }
 
 func Fetch(
+	ctx context.Context,
 	integration database.CustomIntegration,
 	ticket database.Ticket,
 	secrets []database.SecretWithValue,
@@ -86,7 +88,7 @@ func Fetch(
 		body = postBody
 	}
 
-	res, err := SecureProxy.DoRequest(integration.HttpMethod, url, headerMap, body)
+	res, err := SecureProxy.DoRequest(ctx, integration.HttpMethod, url, headerMap, body)
 	if err != nil {
 		return nil, err
 	}

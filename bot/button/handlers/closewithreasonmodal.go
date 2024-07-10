@@ -11,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type CloseWithReasonModalHandler struct{}
@@ -23,12 +24,13 @@ func (h *CloseWithReasonModalHandler) Matcher() matcher.Matcher {
 
 func (h *CloseWithReasonModalHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 3,
 	}
 }
 
 func (h *CloseWithReasonModalHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -39,7 +41,7 @@ func (h *CloseWithReasonModalHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if !utils.CanClose(ctx, ticket) {
+	if !utils.CanClose(ctx.Context, ctx, ticket) {
 		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}

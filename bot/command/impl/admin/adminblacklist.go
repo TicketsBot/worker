@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminBlacklistCommand struct {
@@ -26,6 +27,7 @@ func (AdminBlacklistCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -40,7 +42,7 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 		return
 	}
 
-	if err := dbclient.Client.ServerBlacklist.Add(guildId); err != nil {
+	if err := dbclient.Client.ServerBlacklist.Add(ctx, guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -48,7 +50,7 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 	ctx.ReplyPlainPermanent("🔨")
 
 	// Check if whitelabel
-	botId, ok, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)
+	botId, ok, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ctx, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -57,14 +59,13 @@ func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
 	var w *worker.Context
 	if ok { // Whitelabel bot
 		// Get bot
-		bot, err := dbclient.Client.Whitelabel.GetByBotId(botId)
+		bot, err := dbclient.Client.Whitelabel.GetByBotId(ctx, botId)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
 		w = &worker.Context{
-			Context:      ctx.Worker().Context,
 			Token:        bot.Token,
 			BotId:        bot.BotId,
 			IsWhitelabel: true,

@@ -19,15 +19,15 @@ import (
 
 // proxy messages to web UI + set last message id
 func OnMessage(worker *worker.Context, e events.MessageCreate) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5) // TODO: Propagate context
+	defer cancel()
+
 	statsd.Client.IncrementKey(statsd.KeyMessages)
 
 	// ignore DMs
 	if e.GuildId == 0 {
 		return
 	}
-
-	ctx, cancel := context.WithTimeout(worker.Context, time.Second*3)
-	defer cancel()
 
 	ticket, isTicket, err := getTicket(ctx, e.ChannelId)
 	if err != nil {
@@ -43,28 +43,28 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	// ignore our own messages
 	if e.Author.Id != worker.BotId && !e.Author.Bot {
 		// set participants, for logging
-		sentry.WithSpan0(worker, "Add participant", func(span *sentry.Span) {
+		sentry.WithSpan0(ctx, "Add participant", func(span *sentry.Span) {
 			if err := dbclient.Client.Participants.Set(ctx, e.GuildId, ticket.Id, e.Author.Id); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 		})
 
-		isStaff, err := sentry.WithSpan2(worker, "Update ticket last activity", func(span *sentry.Span) (bool, error) {
-			return isStaff(e, ticket)
+		isStaff, err := sentry.WithSpan2(ctx, "Update ticket last activity", func(span *sentry.Span) (bool, error) {
+			return isStaff(ctx, e, ticket)
 		})
 
 		if err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		} else {
 			// set ticket last message, for autoclose
-			if err := updateLastMessage(worker.Context, e, ticket, isStaff); err != nil {
+			if err := updateLastMessage(ctx, e, ticket, isStaff); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 
 			if isStaff { // check the user is staff
 				// We don't have to check for previous responses due to ON CONFLICT DO NOTHING
-				sentry.WithSpan0(worker, "Set first response time", func(span *sentry.Span) {
-					if err := dbclient.Client.FirstResponseTime.Set(e.GuildId, e.Author.Id, ticket.Id, time.Now().Sub(ticket.OpenTime)); err != nil {
+				sentry.WithSpan0(ctx, "Set first response time", func(span *sentry.Span) {
+					if err := dbclient.Client.FirstResponseTime.Set(ctx, e.GuildId, e.Author.Id, ticket.Id, time.Now().Sub(ticket.OpenTime)); err != nil {
 						sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 					}
 				})
@@ -72,7 +72,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 		}
 	}
 
-	premiumTier, err := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, e.GuildId, true, worker.Token, worker.RateLimiter)
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return
@@ -85,7 +85,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 			Message: e.Message,
 		}
 
-		span := sentry.StartSpan(worker, "Relay message to dashboard")
+		span := sentry.StartSpan(ctx, "Relay message to dashboard")
 		if err := chatrelay.PublishMessage(redis.Client, data); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}
@@ -98,19 +98,19 @@ func updateLastMessage(ctx context.Context, msg events.MessageCreate, ticket dat
 	defer span.Finish()
 
 	// If last message was sent by staff, don't reset the timer
-	lastMessage, err := dbclient.Client.TicketLastMessage.Get(ticket.GuildId, ticket.Id)
+	lastMessage, err := dbclient.Client.TicketLastMessage.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return err
 	}
 
 	// No last message, or last message was before we started storing user IDs
 	if lastMessage.UserId == nil {
-		return dbclient.Client.TicketLastMessage.Set(ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, false)
+		return dbclient.Client.TicketLastMessage.Set(ctx, ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, false)
 	}
 
 	// If the last message was sent by the ticket opener, we can skip the rest of the logic, and update straight away
 	if ticket.UserId == msg.Author.Id {
-		return dbclient.Client.TicketLastMessage.Set(ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, false)
+		return dbclient.Client.TicketLastMessage.Set(ctx, ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, false)
 	}
 
 	// If the last message *and* this message were sent by staff members, then do not reset the timer
@@ -118,17 +118,17 @@ func updateLastMessage(ctx context.Context, msg events.MessageCreate, ticket dat
 		return nil
 	}
 
-	return dbclient.Client.TicketLastMessage.Set(ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, isStaff)
+	return dbclient.Client.TicketLastMessage.Set(ctx, ticket.GuildId, ticket.Id, msg.Id, msg.Author.Id, isStaff)
 }
 
 // This method should not be used for anything requiring elevated privileges
-func isStaff(msg events.MessageCreate, ticket database.Ticket) (bool, error) {
+func isStaff(ctx context.Context, msg events.MessageCreate, ticket database.Ticket) (bool, error) {
 	// If the user is the ticket opener, they are not staff
 	if msg.Author.Id == ticket.UserId {
 		return false, nil
 	}
 
-	members, err := dbclient.Client.TicketMembers.Get(ticket.GuildId, ticket.Id)
+	members, err := dbclient.Client.TicketMembers.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return false, err
 	}

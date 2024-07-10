@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -21,6 +22,7 @@ import (
 )
 
 type SlashCommandContext struct {
+	context.Context
 	*Replyable
 	*ReplyCounter
 	*StateCache
@@ -33,13 +35,18 @@ type SlashCommandContext struct {
 	responseCh chan interaction.ApplicationCommandCallbackData
 }
 
+var _ registry.CommandContext = (*SlashCommandContext)(nil)
+
 func NewSlashCommandContext(
+	ctx context.Context,
 	worker *worker.Context,
 	interaction interaction.ApplicationCommandInteraction,
 	premium premium.PremiumTier,
 	responseCh chan interaction.ApplicationCommandCallbackData,
 ) SlashCommandContext {
-	ctx := SlashCommandContext{
+	c := SlashCommandContext{
+		Context: ctx,
+
 		ReplyCounter: NewReplyCounter(),
 
 		InteractionExtension: NewInteractionExtension(interaction),
@@ -52,84 +59,84 @@ func NewSlashCommandContext(
 		responseCh: responseCh,
 	}
 
-	ctx.Replyable = NewReplyable(&ctx)
-	ctx.StateCache = NewStateCache(&ctx)
-	return ctx
+	c.Replyable = NewReplyable(&c)
+	c.StateCache = NewStateCache(&c)
+	return c
 }
 
-func (ctx *SlashCommandContext) Worker() *worker.Context {
-	return ctx.worker
+func (c *SlashCommandContext) Worker() *worker.Context {
+	return c.worker
 }
 
-func (ctx *SlashCommandContext) GuildId() uint64 {
-	return ctx.Interaction.GuildId.Value // TODO: Null check
+func (c *SlashCommandContext) GuildId() uint64 {
+	return c.Interaction.GuildId.Value // TODO: Null check
 }
 
-func (ctx *SlashCommandContext) ChannelId() uint64 {
-	return ctx.Interaction.ChannelId
+func (c *SlashCommandContext) ChannelId() uint64 {
+	return c.Interaction.ChannelId
 }
 
-func (ctx *SlashCommandContext) UserId() uint64 {
-	if ctx.Interaction.Member != nil {
-		return ctx.Interaction.Member.User.Id
-	} else if ctx.Interaction.User != nil {
-		return ctx.Interaction.User.Id
+func (c *SlashCommandContext) UserId() uint64 {
+	if c.Interaction.Member != nil {
+		return c.Interaction.Member.User.Id
+	} else if c.Interaction.User != nil {
+		return c.Interaction.User.Id
 	} else {
-		sentry.ErrorWithContext(fmt.Errorf("infallible: interaction.member and interaction.user are both null"), ctx.ToErrorContext())
+		sentry.ErrorWithContext(fmt.Errorf("infallible: interaction.member and interaction.user are both null"), c.ToErrorContext())
 		return 0
 	}
 }
 
-func (ctx *SlashCommandContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
-	if ctx.Interaction.Member == nil {
+func (c *SlashCommandContext) UserPermissionLevel(ctx context.Context) (permcache.PermissionLevel, error) {
+	if c.Interaction.Member == nil {
 		return permcache.Everyone, errors.New("member was nil")
 	}
 
-	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), *ctx.Interaction.Member, ctx.GuildId())
+	return permcache.GetPermissionLevel(ctx, utils.ToRetriever(c.worker), *c.Interaction.Member, c.GuildId())
 }
 
-func (ctx *SlashCommandContext) PremiumTier() premium.PremiumTier {
-	return ctx.premium
+func (c *SlashCommandContext) PremiumTier() premium.PremiumTier {
+	return c.premium
 }
 
-func (ctx *SlashCommandContext) IsInteraction() bool {
+func (c *SlashCommandContext) IsInteraction() bool {
 	return true
 }
 
-func (ctx *SlashCommandContext) Source() registry.Source {
+func (c *SlashCommandContext) Source() registry.Source {
 	return registry.SourceDiscord
 }
 
-func (ctx *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext {
+func (c *SlashCommandContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
-		Guild:   ctx.GuildId(),
-		User:    ctx.Interaction.Member.User.Id,
-		Channel: ctx.ChannelId(),
+		Guild:   c.GuildId(),
+		User:    c.Interaction.Member.User.Id,
+		Channel: c.ChannelId(),
 	}
 }
 
-func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
-	//hasReplied := ctx.hasReplied.Swap(true)
+func (c *SlashCommandContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
+	//hasReplied := c.hasReplied.Swap(true)
 
-	if err := ctx.ReplyCounter.Try(); err != nil {
+	if err := c.ReplyCounter.Try(); err != nil {
 		return message.Message{}, err
 	}
 
-	ctx.responseCh <- response.IntoApplicationCommandData()
+	c.responseCh <- response.IntoApplicationCommandData()
 
 	return message.Message{}, nil
 
 	/*
 		if hasReplied {
-			msg, err := rest.EditOriginalInteractionResponse(context.Background(), ctx.Interaction.Token, ctx.worker.RateLimiter, ctx.worker.BotId, response.IntoWebhookEditBody())
+			msg, err := rest.EditOriginalInteractionResponse(context.Background(), c.Interaction.Token, c.worker.RateLimiter, c.worker.BotId, response.IntoWebhookEditBody())
 
 			if err != nil {
-				sentry.LogWithContext(err, ctx.ToErrorContext())
+				sentry.LogWithContext(err, c.ToErrorContext())
 			}
 
 			return msg, err
 		} else {
-			ctx.responseCh <- response.IntoApplicationCommandData()
+			c.responseCh <- response.IntoApplicationCommandData()
 
 			// todo: uhm
 			return message.Message{}, nil
@@ -137,39 +144,39 @@ func (ctx *SlashCommandContext) ReplyWith(response command.MessageResponse) (mes
 	*/
 }
 
-func (ctx *SlashCommandContext) Channel() (channel.PartialChannel, error) {
-	return ctx.Interaction.Channel, nil
+func (c *SlashCommandContext) Channel() (channel.PartialChannel, error) {
+	return c.Interaction.Channel, nil
 }
 
-func (ctx *SlashCommandContext) Guild() (guild.Guild, error) {
-	return ctx.Worker().GetGuild(ctx.GuildId())
+func (c *SlashCommandContext) Guild() (guild.Guild, error) {
+	return c.Worker().GetGuild(c.GuildId())
 }
 
-func (ctx *SlashCommandContext) Member() (member.Member, error) {
-	if ctx.Interaction.Member != nil {
-		return *ctx.Interaction.Member, nil
+func (c *SlashCommandContext) Member() (member.Member, error) {
+	if c.Interaction.Member != nil {
+		return *c.Interaction.Member, nil
 	} else {
-		return ctx.Worker().GetGuildMember(ctx.GuildId(), ctx.UserId())
+		return c.Worker().GetGuildMember(c.GuildId(), c.UserId())
 	}
 }
 
-func (ctx *SlashCommandContext) User() (user.User, error) {
-	return ctx.Worker().GetUser(ctx.UserId())
+func (c *SlashCommandContext) User() (user.User, error) {
+	return c.Worker().GetUser(c.UserId())
 }
 
-func (ctx *SlashCommandContext) IsBlacklisted() (bool, error) {
-	permLevel, err := ctx.UserPermissionLevel()
+func (c *SlashCommandContext) IsBlacklisted(ctx context.Context) (bool, error) {
+	permLevel, err := c.UserPermissionLevel(ctx)
 	if err != nil {
 		return false, err
 	}
 
 	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
 	// if the command is not executed in a guild
-	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), utils.ValueOrZero(ctx.Interaction.Member), permLevel)
+	return utils.IsBlacklisted(ctx, c.GuildId(), c.UserId(), utils.ValueOrZero(c.Interaction.Member), permLevel)
 }
 
 /// InteractionContext functions
 
-func (ctx *SlashCommandContext) InteractionMetadata() interaction.InteractionMetadata {
-	return ctx.Interaction.InteractionMetadata
+func (c *SlashCommandContext) InteractionMetadata() interaction.InteractionMetadata {
+	return c.Interaction.InteractionMetadata
 }

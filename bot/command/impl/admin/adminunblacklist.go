@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminUnblacklistCommand struct {
@@ -25,6 +26,7 @@ func (AdminUnblacklistCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to unblacklist", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -39,7 +41,7 @@ func (AdminUnblacklistCommand) Execute(ctx registry.CommandContext, raw string) 
 		return
 	}
 
-	if err := dbclient.Client.ServerBlacklist.Delete(guildId); err != nil {
+	if err := dbclient.Client.ServerBlacklist.Delete(ctx, guildId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

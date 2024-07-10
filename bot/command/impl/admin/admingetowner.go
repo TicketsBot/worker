@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminGetOwnerCommand struct {
@@ -25,6 +26,7 @@ func (AdminGetOwnerCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to get the owner of", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 

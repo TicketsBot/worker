@@ -14,6 +14,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
+	"time"
 )
 
 type RemoveAdminCommand struct{}
@@ -29,6 +30,7 @@ func (RemoveAdminCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("user_or_role", "User or role to remove the administrator permission from", interaction.OptionTypeMentionable, i18n.MessageRemoveAdminNoMembers),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -74,22 +76,22 @@ func (c RemoveAdminCommand) Execute(ctx registry.CommandContext, id uint64) {
 			return
 		}
 
-		if err := dbclient.Client.Permissions.RemoveAdmin(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.Permissions.RemoveAdmin(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Support); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	} else if mentionableType == context.MentionableTypeRole {
-		if err := dbclient.Client.RolePermissions.RemoveAdmin(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.RolePermissions.RemoveAdmin(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Support); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}

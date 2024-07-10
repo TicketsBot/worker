@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -24,13 +25,14 @@ func (h *ClaimHandler) Matcher() matcher.Matcher {
 
 func (h *ClaimHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
 func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	// Get permission level
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -42,7 +44,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -54,7 +56,7 @@ func (h *ClaimHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx, ticket, ctx.UserId()); err != nil {
+	if err := logic.ClaimTicket(ctx.Context, ctx, ticket, ctx.UserId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}

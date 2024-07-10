@@ -1,10 +1,12 @@
 package messagequeue
 
 import (
+	"context"
 	"github.com/TicketsBot/common/autoclose"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -24,15 +26,18 @@ func ListenAutoClose() {
 
 		ticket := ticket
 		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), constants.TimeoutCloseTicket)
+			defer cancel()
+
 			// get ticket
-			ticket, err := dbclient.Client.Tickets.Get(ticket.TicketId, ticket.GuildId)
+			ticket, err := dbclient.Client.Tickets.Get(ctx, ticket.TicketId, ticket.GuildId)
 			if err != nil {
 				sentry.Error(err)
 				return
 			}
 
 			// get worker
-			worker, err := buildContext(ticket, cache.Client)
+			worker, err := buildContext(ctx, ticket, cache.Client)
 			if err != nil {
 				sentry.Error(err)
 				return
@@ -44,14 +49,14 @@ func ListenAutoClose() {
 			}
 
 			// get premium status
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ticket.GuildId, true, worker.Token, worker.RateLimiter)
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, ticket.GuildId, true, worker.Token, worker.RateLimiter)
 			if err != nil {
 				sentry.Error(err)
 				return
 			}
 
-			ctx := context.NewAutoCloseContext(worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
-			logic.CloseTicket(ctx, gdlUtils.StrPtr(AutoCloseReason), true)
+			cc := cmdcontext.NewAutoCloseContext(ctx, worker, ticket.GuildId, *ticket.ChannelId, worker.BotId, premiumTier)
+			logic.CloseTicket(ctx, cc, gdlUtils.StrPtr(AutoCloseReason), true)
 		}()
 	}
 }

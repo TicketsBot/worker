@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -54,14 +55,14 @@ func BuildEmbedRaw(
 	return msgEmbed
 }
 
-func GetColourForGuild(worker *worker.Context, colour customisation.Colour, guildId uint64) (int, error) {
-	premiumTier, err := PremiumClient.GetTierByGuildId(guildId, true, worker.Token, worker.RateLimiter)
+func GetColourForGuild(ctx context.Context, worker *worker.Context, colour customisation.Colour, guildId uint64) (int, error) {
+	premiumTier, err := PremiumClient.GetTierByGuildId(ctx, guildId, true, worker.Token, worker.RateLimiter)
 	if err != nil {
 		return 0, err
 	}
 
 	if premiumTier > premium.None {
-		colourCode, ok, err := dbclient.Client.CustomColours.Get(guildId, colour.Int16())
+		colourCode, ok, err := dbclient.Client.CustomColours.Get(ctx, guildId, colour.Int16())
 		if err != nil {
 			return 0, err
 		} else if !ok {

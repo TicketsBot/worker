@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"context"
 	"errors"
 	"github.com/TicketsBot/common/permission"
 	w "github.com/TicketsBot/worker"
@@ -11,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminRecacheCommand struct {
@@ -27,6 +27,7 @@ func (AdminRecacheCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewOptionalArgument("guildid", "ID of the guild to recache", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -48,12 +49,12 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 	}
 
 	// purge cache
-	ctx.Worker().Cache.DeleteGuild(context.Background(), guildId)
-	ctx.Worker().Cache.DeleteGuildChannels(context.Background(), guildId)
-	ctx.Worker().Cache.DeleteGuildRoles(context.Background(), guildId)
+	ctx.Worker().Cache.DeleteGuild(ctx, guildId)
+	ctx.Worker().Cache.DeleteGuildChannels(ctx, guildId)
+	ctx.Worker().Cache.DeleteGuildRoles(ctx, guildId)
 
 	// re-cache
-	botId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(guildId)
+	botId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ctx, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -61,7 +62,7 @@ func (AdminRecacheCommand) Execute(ctx registry.CommandContext, providedGuildId 
 
 	var worker *w.Context
 	if isWhitelabel {
-		bot, err := dbclient.Client.Whitelabel.GetByBotId(botId)
+		bot, err := dbclient.Client.Whitelabel.GetByBotId(ctx, botId)
 		if err != nil {
 			ctx.HandleError(err)
 			return

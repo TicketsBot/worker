@@ -1,11 +1,13 @@
 package listeners
 
 import (
+	"context"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	"time"
 )
 
 /*
@@ -14,24 +16,27 @@ import (
  * If the unavailable field is not set, the user was removed from the guild.
  */
 func OnGuildLeave(worker *worker.Context, e events.GuildDelete) {
-	span := sentry.StartSpan(worker.Context, "OnGuildLeave")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3) // TODO: Propagate context
+	defer cancel()
+
+	span := sentry.StartSpan(ctx, "OnGuildLeave")
 	defer span.Finish()
 
 	if e.Unavailable == nil {
 		statsd.Client.IncrementKey(statsd.KeyLeaves)
 
 		if worker.IsWhitelabel {
-			if err := dbclient.Client.WhitelabelGuilds.Delete(worker.BotId, e.Guild.Id); err != nil {
+			if err := dbclient.Client.WhitelabelGuilds.Delete(ctx, worker.BotId, e.Guild.Id); err != nil {
 				sentry.Error(err)
 			}
 		}
 
 		// Exclude from autoclose
-		if err := dbclient.Client.AutoCloseExclude.ExcludeAll(e.Guild.Id); err != nil {
+		if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx, e.Guild.Id); err != nil {
 			sentry.Error(err)
 		}
 
-		if err := dbclient.Client.GuildLeaveTime.Set(e.Guild.Id); err != nil {
+		if err := dbclient.Client.GuildLeaveTime.Set(ctx, e.Guild.Id); err != nil {
 			sentry.Error(err)
 		}
 	}

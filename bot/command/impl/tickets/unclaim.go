@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -24,6 +25,7 @@ func (UnclaimCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
+		Timeout:         constants.TimeoutOpenTicket,
 	}
 }
 
@@ -33,7 +35,7 @@ func (c UnclaimCommand) GetExecutor() interface{} {
 
 func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -52,7 +54,7 @@ func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 	}
 
 	// Get who claimed
-	whoClaimed, err := dbclient.Client.TicketClaims.Get(ctx.GuildId(), ticket.Id)
+	whoClaimed, err := dbclient.Client.TicketClaims.Get(ctx, ctx.GuildId(), ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -63,7 +65,7 @@ func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 		return
 	}
 
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -75,7 +77,7 @@ func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 	}
 
 	// Set to unclaimed in DB
-	if err := dbclient.Client.TicketClaims.Delete(ctx.GuildId(), ticket.Id); err != nil {
+	if err := dbclient.Client.TicketClaims.Delete(ctx, ctx.GuildId(), ticket.Id); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -84,14 +86,14 @@ func (UnclaimCommand) Execute(ctx *context.SlashCommandContext) {
 	var panel *database.Panel
 	if ticket.PanelId != nil {
 		var derefPanel database.Panel
-		derefPanel, err = dbclient.Client.Panel.GetById(*ticket.PanelId)
+		derefPanel, err = dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 
 		if derefPanel.PanelId != 0 {
 			panel = &derefPanel
 		}
 	}
 
-	overwrites, err := logic.CreateOverwrites(ctx, ticket.UserId, panel)
+	overwrites, err := logic.CreateOverwrites(ctx.Context, ctx, ticket.UserId, panel)
 	if err != nil {
 		ctx.HandleError(err)
 		return

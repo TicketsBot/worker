@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type PanelCommand struct {
@@ -20,6 +21,7 @@ func (PanelCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Admin,
 		Category:         command.Settings,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 

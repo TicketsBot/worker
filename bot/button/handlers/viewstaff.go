@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ViewStaffHandler struct{}
@@ -27,7 +28,8 @@ func (h *ViewStaffHandler) Matcher() matcher.Matcher {
 
 func (h *ViewStaffHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -48,7 +50,7 @@ func (h *ViewStaffHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	msgEmbed, isBlank := logic.BuildViewStaffMessage(ctx, page)
+	msgEmbed, isBlank := logic.BuildViewStaffMessage(ctx.Context, ctx, page)
 	if !isBlank {
 		ctx.Edit(command.MessageResponse{
 			Embeds: []*embed.Embed{msgEmbed},

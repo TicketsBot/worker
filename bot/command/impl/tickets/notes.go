@@ -14,6 +14,7 @@ import (
 	"github.com/rxdn/gdl/rest"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type NotesCommand struct {
@@ -27,6 +28,7 @@ func (NotesCommand) Properties() registry.Properties {
 		PermissionLevel:  permcache.Support,
 		Category:         command.Tickets,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 7,
 	}
 }
 
@@ -35,7 +37,7 @@ func (c NotesCommand) GetExecutor() interface{} {
 }
 
 func (NotesCommand) Execute(ctx registry.CommandContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -54,7 +56,7 @@ func (NotesCommand) Execute(ctx registry.CommandContext) {
 
 	var panel *database.Panel
 	if ticket.PanelId != nil {
-		tmp, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		tmp, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -67,7 +69,7 @@ func (NotesCommand) Execute(ctx registry.CommandContext) {
 		// Check if user is staff member
 		// HasPermissionForTicket returns true if the user opened the ticket, but the command's properties enforces
 		// requiring the user to be a staff member
-		hasPermission, err := logic.HasPermissionForTicket(ctx.Worker(), ticket, ctx.UserId())
+		hasPermission, err := logic.HasPermissionForTicket(ctx, ctx.Worker(), ticket, ctx.UserId())
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -85,7 +87,7 @@ func (NotesCommand) Execute(ctx registry.CommandContext) {
 
 		ctx.Reply(customisation.Green, i18n.Success, i18n.MessageNotesAddedToExisting, *ticket.NotesThreadId)
 	} else {
-		allowedUsers, allowedRoles, err := logic.GetAllowedStaffUsersAndRoles(ctx.GuildId(), panel)
+		allowedUsers, allowedRoles, err := logic.GetAllowedStaffUsersAndRoles(ctx, ctx.GuildId(), panel)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -128,7 +130,7 @@ func (NotesCommand) Execute(ctx registry.CommandContext) {
 			return
 		}
 
-		if err := dbclient.Client.Tickets.SetNotesThreadId(ticket.GuildId, ticket.Id, thread.Id); err != nil {
+		if err := dbclient.Client.Tickets.SetNotesThreadId(ctx, ticket.GuildId, ticket.Id, thread.Id); err != nil {
 			ctx.HandleError(err)
 			return
 		}

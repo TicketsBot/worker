@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -10,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type ReopenCommand struct {
@@ -26,6 +28,7 @@ func (c ReopenCommand) Properties() registry.Properties {
 			command.NewRequiredAutocompleteableArgument("ticket_id", "ID of the ticket to reopen", interaction.OptionTypeInteger, i18n.MessageInvalidArgument, c.AutoCompleteHandler),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 10,
 	}
 }
 
@@ -34,7 +37,7 @@ func (c ReopenCommand) GetExecutor() interface{} {
 }
 
 func (ReopenCommand) Execute(ctx registry.CommandContext, ticketId int) {
-	logic.ReopenTicket(ctx, ticketId)
+	logic.ReopenTicket(ctx, ctx, ticketId)
 }
 
 func (ReopenCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
@@ -46,7 +49,10 @@ func (ReopenCommand) AutoCompleteHandler(data interaction.ApplicationCommandAuto
 		return nil
 	}
 
-	tickets, err := dbclient.Client.Tickets.GetClosedByUserPrefixed(data.GuildId.Value, data.Member.User.Id, value, 25)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3) // TODO: Propagate contxet
+	defer cancel()
+
+	tickets, err := dbclient.Client.Tickets.GetClosedByUserPrefixed(ctx, data.GuildId.Value, data.Member.User.Id, value, 25)
 	if err != nil {
 		sentry.Error(err)
 		return nil

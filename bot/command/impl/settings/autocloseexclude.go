@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type AutoCloseExcludeCommand struct {
@@ -21,6 +22,7 @@ func (AutoCloseExcludeCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Support,
 		Category:         command.Settings,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -29,7 +31,7 @@ func (c AutoCloseExcludeCommand) GetExecutor() interface{} {
 }
 
 func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -40,7 +42,7 @@ func (AutoCloseExcludeCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	if err := dbclient.Client.AutoCloseExclude.Exclude(ctx.GuildId(), ticket.Id); err != nil {
+	if err := dbclient.Client.AutoCloseExclude.Exclude(ctx, ctx.GuildId(), ticket.Id); err != nil {
 		ctx.HandleError(err)
 		return
 	}

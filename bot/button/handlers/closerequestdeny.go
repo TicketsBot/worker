@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"time"
 )
 
 type CloseRequestDenyHandler struct{}
@@ -21,12 +22,13 @@ func (h *CloseRequestDenyHandler) Matcher() matcher.Matcher {
 
 func (h *CloseRequestDenyHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 3,
 	}
 }
 
 func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -42,7 +44,7 @@ func (h *CloseRequestDenyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if err := dbclient.Client.CloseRequest.Delete(ctx.GuildId(), ticket.Id); err != nil {
+	if err := dbclient.Client.CloseRequest.Delete(ctx, ctx.GuildId(), ticket.Id); err != nil {
 		ctx.HandleError(err)
 		return
 	}

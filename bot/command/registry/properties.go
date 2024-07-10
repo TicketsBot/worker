@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type Properties struct {
@@ -23,6 +24,7 @@ type Properties struct {
 	MainBotOnly      bool
 	Arguments        []command.Argument
 	DefaultEphemeral bool
+	Timeout          time.Duration
 
 	SetupFunc func()
 }

@@ -1,16 +1,11 @@
 package setup
 
 import (
-	"context"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
-	"golang.org/x/sync/errgroup"
 )
 
 type SetupCommand struct {
@@ -37,9 +32,11 @@ func (c SetupCommand) GetExecutor() interface{} {
 }
 
 func (c SetupCommand) Execute(ctx registry.CommandContext) {
-	ctx.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleSetup, i18n.SetupChoose, c.buildFields(ctx))
+	// Parent commands cannot be called
+	//ctx.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleSetup, i18n.SetupChoose, c.buildFields(ctx))
 }
 
+/* TODO: Remove
 func (SetupCommand) buildFields(ctx registry.CommandContext) []embed.EmbedField {
 	fields := make([]embed.EmbedField, 9)
 
@@ -82,3 +79,4 @@ func getFieldFunc(ctx registry.CommandContext, fields []embed.EmbedField, index 
 		return nil
 	}
 }
+*/

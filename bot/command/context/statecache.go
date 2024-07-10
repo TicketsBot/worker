@@ -33,7 +33,7 @@ func (s *StateCache) Settings() (database.Settings, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	settings, err := dbclient.Client.Settings.GetWithContext(ctx, s.ctx.GuildId())
+	settings, err := dbclient.Client.Settings.Get(ctx, s.ctx.GuildId())
 	if err != nil {
 		return database.Settings{}, err
 	}

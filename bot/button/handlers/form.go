@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -23,7 +24,8 @@ func (h *FormHandler) Matcher() matcher.Matcher {
 
 func (h *FormHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
@@ -32,7 +34,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 	customId := strings.TrimPrefix(data.CustomId, "form_") // get the custom id that is used in the database
 
 	// Form IDs aren't unique to a panel, so we submit the modal with a custom id of `form_panelcustomid`
-	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx.GuildId(), customId)
+	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx, ctx.GuildId(), customId)
 	if err != nil {
 		sentry.Error(err) // TODO: Proper context
 		return
@@ -45,7 +47,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := ctx.IsBlacklisted()
+		blacklisted, err := ctx.IsBlacklisted(ctx)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -56,7 +58,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 			return
 		}
 
-		inputs, err := dbclient.Client.FormInput.GetAllInputsByCustomId(ctx.GuildId())
+		inputs, err := dbclient.Client.FormInput.GetAllInputsByCustomId(ctx, ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -94,7 +96,7 @@ func (h *FormHandler) Execute(ctx *context.ModalContext) {
 		}
 
 		ctx.Defer()
-		_, _ = logic.OpenTicket(ctx, &panel, panel.Title, formAnswers)
+		_, _ = logic.OpenTicket(ctx.Context, ctx, &panel, panel.Title, formAnswers)
 
 		return
 	}

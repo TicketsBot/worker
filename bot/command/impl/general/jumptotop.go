@@ -11,6 +11,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type JumpToTopCommand struct {
@@ -24,6 +25,7 @@ func (JumpToTopCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Everyone,
 		Category:         command.General,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -32,7 +34,7 @@ func (c JumpToTopCommand) GetExecutor() interface{} {
 }
 
 func (JumpToTopCommand) Execute(ctx registry.CommandContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker(), ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return

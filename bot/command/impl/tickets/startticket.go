@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -30,6 +31,7 @@ func (StartTicketCommand) Properties() registry.Properties {
 		Category:         command.Tickets,
 		InteractionOnly:  true,
 		DefaultEphemeral: true,
+		Timeout:          constants.TimeoutOpenTicket,
 	}
 }
 
@@ -49,7 +51,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	userPermissionLevel, err := ctx.UserPermissionLevel()
+	userPermissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -70,7 +72,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 
 	var panel *database.Panel
 	if settings.ContextMenuPanel != nil {
-		p, err := dbclient.Client.Panel.GetById(*settings.ContextMenuPanel)
+		p, err := dbclient.Client.Panel.GetById(ctx, *settings.ContextMenuPanel)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -79,7 +81,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 		panel = &p
 	}
 
-	ticket, err := logic.OpenTicket(interaction, panel, msg.Content, nil)
+	ticket, err := logic.OpenTicket(ctx, interaction, panel, msg.Content, nil)
 	if err != nil {
 		// Already handled
 		return
@@ -94,7 +96,7 @@ func (StartTicketCommand) Execute(ctx registry.CommandContext) {
 			}
 
 			sendMovedMessage(ctx, ticket, msg)
-			if err := dbclient.Client.TicketMembers.Add(ticket.GuildId, ticket.Id, msg.Author.Id); err != nil {
+			if err := dbclient.Client.TicketMembers.Add(ctx, ticket.GuildId, ticket.Id, msg.Author.Id); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -155,7 +157,7 @@ func addMessageSender(ctx registry.CommandContext, ticket database.Ticket, msg m
 		}
 
 		// Build permissions
-		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx, ctx.GuildId())
 		if err != nil {
 			return err
 		}

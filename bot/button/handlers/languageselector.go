@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"strings"
+	"time"
 )
 
 type LanguageSelectorHandler struct{}
@@ -21,12 +22,13 @@ func (h *LanguageSelectorHandler) Matcher() matcher.Matcher {
 
 func (h *LanguageSelectorHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 3,
 	}
 }
 
 func (h *LanguageSelectorHandler) Execute(ctx *context.SelectMenuContext) {
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -48,7 +50,7 @@ func (h *LanguageSelectorHandler) Execute(ctx *context.SelectMenuContext) {
 		return
 	}
 
-	if err := dbclient.Client.ActiveLanguage.Set(ctx.GuildId(), newLocale.IsoShortCode); err != nil {
+	if err := dbclient.Client.ActiveLanguage.Set(ctx, ctx.GuildId(), newLocale.IsoShortCode); err != nil {
 		ctx.HandleError(err)
 		return
 	}

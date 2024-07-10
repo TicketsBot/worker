@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type AboutCommand struct {
@@ -21,6 +22,7 @@ func (AboutCommand) Properties() registry.Properties {
 		Category:         command.General,
 		MainBotOnly:      true,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 

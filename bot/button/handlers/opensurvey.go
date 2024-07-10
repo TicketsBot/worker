@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type OpenSurveyHandler struct{}
@@ -28,7 +29,8 @@ func (h *OpenSurveyHandler) Matcher() matcher.Matcher {
 
 func (h *OpenSurveyHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.DMsAllowed),
+		Flags:   registry.SumFlags(registry.DMsAllowed),
+		Timeout: time.Second * 3,
 	}
 }
 
@@ -53,7 +55,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	premiumTier, err := utils.PremiumClient.GetTierByGuildId(guildId, true, ctx.Worker().Token, ctx.Worker().RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, guildId, true, ctx.Worker().Token, ctx.Worker().RateLimiter)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -65,7 +67,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Get ticket
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, guildId)
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -75,7 +77,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(guildId)
+	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -91,7 +93,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	panel, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+	panel, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -107,7 +109,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	form, ok, err := dbclient.Client.Forms.Get(*panel.ExitSurveyFormId)
+	form, ok, err := dbclient.Client.Forms.Get(ctx, *panel.ExitSurveyFormId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -118,7 +120,7 @@ func (h *OpenSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	formInputs, err := dbclient.Client.FormInput.GetInputs(form.Id)
+	formInputs, err := dbclient.Client.FormInput.GetInputs(ctx, form.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return

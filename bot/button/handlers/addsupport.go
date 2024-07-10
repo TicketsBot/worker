@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
@@ -21,6 +22,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type AddSupportHandler struct{}
@@ -33,7 +35,8 @@ func (h *AddSupportHandler) Matcher() matcher.Matcher {
 
 func (h *AddSupportHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: time.Second * 30,
 	}
 }
 
@@ -41,7 +44,7 @@ var addSupportPattern = regexp.MustCompile(`addsupport-(\d)-(\d+)`)
 
 func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 	// Permission check
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -103,12 +106,12 @@ func (h *AddSupportHandler) Execute(ctx *context.ButtonContext) {
 			return
 		}
 
-		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.RolePermissions.AddSupport(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Support); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Support); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -140,7 +143,13 @@ func updateChannelPermissions(ctx cmdregistry.CommandContext, id uint64, mention
 		})
 	}
 
-	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx.GuildId())
+	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx, ctx.GuildId())
+	if err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	panels, err := dbclient.Client.Panel.GetByGuild(ctx, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -152,13 +161,31 @@ func updateChannelPermissions(ctx cmdregistry.CommandContext, id uint64, mention
 			continue
 		}
 
+		if ticket.PanelId != nil {
+			var panel *database.Panel
+			for _, p := range panels {
+				if p.PanelId == *ticket.PanelId {
+					panel = &p
+					break
+				}
+			}
+
+			if panel == nil {
+				continue
+			}
+
+			if !panel.WithDefaultTeam {
+				continue
+			}
+		}
+
 		ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
 		if err != nil {
 			// Check if the channel has been deleted
 			var restError request.RestError
 			if errors.As(err, &restError) {
 				if restError.StatusCode == 404 {
-					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+					if err := dbclient.Client.Tickets.CloseByChannel(ctx, *ticket.ChannelId); err != nil {
 						ctx.HandleError(err)
 						return
 					}

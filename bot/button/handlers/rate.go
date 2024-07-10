@@ -6,7 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type RateHandler struct{}
@@ -30,13 +31,14 @@ func (h *RateHandler) Matcher() matcher.Matcher {
 
 func (h *RateHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.DMsAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.DMsAllowed, registry.CanEdit),
+		Timeout: time.Second * 10,
 	}
 }
 
 var ratePattern = regexp.MustCompile(`rate_(\d+)_(\d+)_([1-5])`)
 
-func (h *RateHandler) Execute(ctx *context.ButtonContext) {
+func (h *RateHandler) Execute(ctx *cmdcontext.ButtonContext) {
 	groups := ratePattern.FindStringSubmatch(ctx.InteractionData.CustomId)
 	if len(groups) < 4 {
 		return
@@ -64,7 +66,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 	rating := uint8(ratingRaw)
 
 	// Get ticket
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, guildId)
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -74,7 +76,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(guildId)
+	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -85,14 +87,14 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	if err := dbclient.Client.ServiceRatings.Set(guildId, ticketId, rating); err != nil {
+	if err := dbclient.Client.ServiceRatings.Set(ctx, guildId, ticketId, rating); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
 	// Exit survey
 	if ctx.PremiumTier() > premium.None && ticket.PanelId != nil {
-		panel, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+		panel, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -121,7 +123,7 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Add star rating to message in archive channel
-	closeMetadata, ok, err := dbclient.Client.CloseReason.Get(guildId, ticket.Id)
+	closeMetadata, ok, err := dbclient.Client.CloseReason.Get(ctx, guildId, ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -137,19 +139,19 @@ func (h *RateHandler) Execute(ctx *context.ButtonContext) {
 		}
 	}
 
-	settings, err := dbclient.Client.Settings.Get(guildId)
+	settings, err := dbclient.Client.Settings.Get(ctx, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	hasFeedback, err := dbclient.Client.ExitSurveyResponses.HasResponse(guildId, ticketId)
+	hasFeedback, err := dbclient.Client.ExitSurveyResponses.HasResponse(ctx, guildId, ticketId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
-	if err := logic.EditGuildArchiveMessageIfExists(ctx.Worker(), ticket, settings, hasFeedback, closedBy, reason, &rating); err != nil {
+	if err := logic.EditGuildArchiveMessageIfExists(ctx, ctx.Worker(), ticket, settings, hasFeedback, closedBy, reason, &rating); err != nil {
 		ctx.HandleError(err)
 	}
 }

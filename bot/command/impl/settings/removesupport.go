@@ -15,6 +15,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/permission"
+	"time"
 )
 
 type RemoveSupportCommand struct{}
@@ -30,6 +31,7 @@ func (RemoveSupportCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("user_or_role", "User or role to remove the support representative permission from", interaction.OptionTypeMentionable, i18n.MessageRemoveSupportNoMembers),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -75,32 +77,32 @@ func (c RemoveSupportCommand) Execute(ctx registry.CommandContext, id uint64) {
 			return
 		}
 
-		if err := dbclient.Client.Permissions.RemoveSupport(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.Permissions.RemoveSupport(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Everyone); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Everyone); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := logic.RemoveOnCallRoles(ctx, id); err != nil {
+		if err := logic.RemoveOnCallRoles(ctx, ctx, id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	} else if mentionableType == context.MentionableTypeRole {
-		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.RolePermissions.RemoveSupport(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Everyone); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Everyone); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := logic.RecreateOnCallRole(ctx, nil); err != nil {
+		if err := logic.RecreateOnCallRole(ctx, ctx, nil); err != nil {
 			ctx.HandleError(err)
 			return
 		}

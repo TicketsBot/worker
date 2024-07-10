@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -23,6 +24,7 @@ func (ClaimCommand) Properties() registry.Properties {
 		Type:            interaction.ApplicationCommandTypeChatInput,
 		PermissionLevel: permission.Support,
 		Category:        command.Tickets,
+		Timeout:         constants.TimeoutOpenTicket,
 	}
 }
 
@@ -32,7 +34,7 @@ func (c ClaimCommand) GetExecutor() interface{} {
 
 func (ClaimCommand) Execute(ctx registry.CommandContext) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -56,7 +58,7 @@ func (ClaimCommand) Execute(ctx registry.CommandContext) {
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx, ticket, ctx.UserId()); err != nil {
+	if err := logic.ClaimTicket(ctx, ctx, ticket, ctx.UserId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}

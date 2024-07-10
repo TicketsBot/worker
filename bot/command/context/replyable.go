@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	permcache "github.com/TicketsBot/common/permission"
@@ -19,6 +20,7 @@ import (
 	"github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest/request"
 	"strings"
+	"time"
 )
 
 type Replyable struct {
@@ -29,11 +31,13 @@ type Replyable struct {
 func NewReplyable(ctx registry.CommandContext) *Replyable {
 	var colourCodes map[customisation.Colour]int
 	if ctx.PremiumTier() > premium.None {
-		var err error
-		colourCodes, err = customisation.GetColours(ctx.GuildId())
+		// TODO: Propagate context
+		tmp, err := customisation.GetColours(context.Background(), ctx.GuildId())
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			colourCodes = customisation.DefaultColours
+		} else {
+			colourCodes = tmp
 		}
 	} else {
 		colourCodes = customisation.DefaultColours
@@ -120,7 +124,10 @@ func (r *Replyable) HandleError(err error) {
 	}
 
 	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
-	permLevel, resolveError := r.ctx.UserPermissionLevel()
+	ctx, cancel := context.WithTimeout(r.ctx, time.Second*3)
+	defer cancel()
+
+	permLevel, resolveError := r.ctx.UserPermissionLevel(ctx)
 	showInviteLink := !r.ctx.Worker().IsWhitelabel && (resolveError != nil || permLevel > permcache.Everyone)
 
 	res := r.buildErrorResponse(err, eventId, showInviteLink)
@@ -134,8 +141,11 @@ func (r *Replyable) HandleWarning(err error) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.ctx, time.Second*3)
+	defer cancel()
+
 	// We should show the invite link if the user is staff (or if we failed to resolve their permission level, show it)
-	permLevel, resolveError := r.ctx.UserPermissionLevel()
+	permLevel, resolveError := r.ctx.UserPermissionLevel(ctx)
 	showInviteLink := !r.ctx.Worker().IsWhitelabel && (resolveError != nil || permLevel > permcache.Everyone)
 
 	res := r.buildErrorResponse(err, eventId, showInviteLink)

@@ -9,33 +9,31 @@ import (
 	"github.com/rxdn/gdl/cache"
 )
 
-func buildContext(ticket database.Ticket, cache *cache.PgCache) (ctx *worker.Context, err error) {
-	ctx = &worker.Context{
-		Context:     context.Background(),
+func buildContext(ctx context.Context, ticket database.Ticket, cache *cache.PgCache) (*worker.Context, error) {
+	worker := &worker.Context{
 		Cache:       cache,
 		RateLimiter: nil, // Use http-proxy ratelimiting functionality
 	}
 
-	whitelabelBotId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ticket.GuildId)
+	whitelabelBotId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ctx, ticket.GuildId)
 	if err != nil {
-		return ctx, err
+		return nil, err
 	}
 
-	ctx.IsWhitelabel = isWhitelabel
+	worker.IsWhitelabel = isWhitelabel
 
 	if isWhitelabel {
-		res, err := dbclient.Client.Whitelabel.GetByBotId(whitelabelBotId)
+		res, err := dbclient.Client.Whitelabel.GetByBotId(ctx, whitelabelBotId)
 		if err != nil {
-			return ctx, err
+			return nil, err
 		}
 
-		ctx.Token = res.Token
-		ctx.BotId = whitelabelBotId
+		worker.Token = res.Token
+		worker.BotId = whitelabelBotId
 	} else {
-		ctx.Token = config.Conf.Discord.Token
-
-		ctx.BotId = config.Conf.Discord.PublicBotId
+		worker.Token = config.Conf.Discord.Token
+		worker.BotId = config.Conf.Discord.PublicBotId
 	}
 
-	return ctx, err
+	return worker, err
 }

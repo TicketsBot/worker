@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	prem "github.com/TicketsBot/worker/bot/premium"
 	"github.com/TicketsBot/worker/i18n"
+	"time"
 )
 
 type PremiumKeyButtonHandler struct{}
@@ -21,13 +22,14 @@ func (h *PremiumKeyButtonHandler) Matcher() matcher.Matcher {
 
 func (h *PremiumKeyButtonHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 3,
 	}
 }
 
 func (h *PremiumKeyButtonHandler) Execute(ctx *context.ButtonContext) {
 	// Get permission level
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return

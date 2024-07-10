@@ -10,10 +10,10 @@ import (
 )
 
 // Get whether the user is blacklisted at either global or server level
-func IsBlacklisted(guildId, userId uint64, member member.Member, permLevel permission.PermissionLevel) (bool, error) {
+func IsBlacklisted(ctx context.Context, guildId, userId uint64, member member.Member, permLevel permission.PermissionLevel) (bool, error) {
 	// Optimise as much as possible, skip errgroup if we can
 	if guildId == 0 {
-		blacklisted, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(userId)
+		blacklisted, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(ctx, userId)
 		if err != nil {
 			return false, err
 		}
@@ -23,9 +23,9 @@ func IsBlacklisted(guildId, userId uint64, member member.Member, permLevel permi
 		globalBlacklisted := false
 		guildBlacklisted := atomic.NewBool(false)
 
-		group, _ := errgroup.WithContext(context.Background())
+		group, _ := errgroup.WithContext(ctx)
 		group.Go(func() error {
-			tmp, err := dbclient.Client.Blacklist.IsBlacklisted(guildId, userId)
+			tmp, err := dbclient.Client.Blacklist.IsBlacklisted(ctx, guildId, userId)
 			if err != nil {
 				return err
 			}
@@ -38,7 +38,7 @@ func IsBlacklisted(guildId, userId uint64, member member.Member, permLevel permi
 		})
 
 		group.Go(func() error {
-			tmp, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(userId)
+			tmp, err := dbclient.Client.GlobalBlacklist.IsBlacklisted(ctx, userId)
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func IsBlacklisted(guildId, userId uint64, member member.Member, permLevel permi
 		})
 
 		group.Go(func() error {
-			tmp, err := dbclient.Client.RoleBlacklist.IsAnyBlacklisted(guildId, member.Roles)
+			tmp, err := dbclient.Client.RoleBlacklist.IsAnyBlacklisted(ctx, guildId, member.Roles)
 			if err != nil {
 				return err
 			}

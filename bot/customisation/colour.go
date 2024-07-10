@@ -1,6 +1,7 @@
 package customisation
 
 import (
+	"context"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/dbclient"
 )
@@ -40,8 +41,8 @@ func IsValidColour(colour Colour) bool {
 	return valid
 }
 
-func GetColours(guildId uint64) (map[Colour]int, error) {
-	raw, err := dbclient.Client.CustomColours.GetAll(guildId)
+func GetColours(ctx context.Context, guildId uint64) (map[Colour]int, error) {
+	raw, err := dbclient.Client.CustomColours.GetAll(ctx, guildId)
 	if err != nil {
 		return DefaultColours, err
 	}
@@ -61,8 +62,8 @@ func GetColours(guildId uint64) (map[Colour]int, error) {
 }
 
 // TODO: Premium check
-func GetColour(guildId uint64, colourCode Colour) (int, error) {
-	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
+func GetColour(ctx context.Context, guildId uint64, colourCode Colour) (int, error) {
+	colour, ok, err := dbclient.Client.CustomColours.Get(ctx, guildId, colourCode.Int16())
 	if err != nil {
 		return 0, err
 	}
@@ -75,8 +76,8 @@ func GetColour(guildId uint64, colourCode Colour) (int, error) {
 }
 
 // TODO: Premium check
-func GetColourOrDefault(guildId uint64, colourCode Colour) int {
-	colour, ok, err := dbclient.Client.CustomColours.Get(guildId, colourCode.Int16())
+func GetColourOrDefault(ctx context.Context, guildId uint64, colourCode Colour) int {
+	colour, ok, err := dbclient.Client.CustomColours.Get(ctx, guildId, colourCode.Int16())
 	if err != nil {
 		sentry.Error(err)
 		return GetDefaultColour(colourCode)

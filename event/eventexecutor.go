@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/worker"
@@ -16,12 +17,9 @@ func execute(c *worker.Context, event []byte) error {
 		return errors.New(fmt.Sprintf("error whilst decoding event data: %s (data: %s)", err.Error(), string(event)))
 	}
 
-	span := sentry.StartTransaction(c.Context, "Handle Event")
+	span := sentry.StartTransaction(context.Background(), "Handle Event")
 	span.SetTag("event", payload.EventName)
 	defer span.Finish()
-
-	// TODO: This might be bad
-	c.Context = span.Context()
 
 	if err := listeners.HandleEvent(c, span, payload); err != nil {
 		return err

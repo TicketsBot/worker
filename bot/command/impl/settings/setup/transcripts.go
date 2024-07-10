@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest/request"
+	"time"
 )
 
 type TranscriptsSetupCommand struct{}
@@ -25,6 +26,7 @@ func (TranscriptsSetupCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("channel", "The channel that ticket transcripts should be sent to", interaction.OptionTypeChannel, i18n.SetupTranscriptsInvalid),
 		),
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -43,7 +45,7 @@ func (TranscriptsSetupCommand) Execute(ctx registry.CommandContext, channelId ui
 		return
 	}
 
-	if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.Ptr(channelId)); err == nil {
+	if err := dbclient.Client.ArchiveChannel.Set(ctx, ctx.GuildId(), utils.Ptr(channelId)); err == nil {
 		ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupTranscriptsComplete, channelId)
 	} else {
 		ctx.HandleError(err)

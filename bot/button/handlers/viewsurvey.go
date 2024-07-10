@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ViewSurveyHandler struct{}
@@ -29,6 +30,7 @@ func (h *ViewSurveyHandler) Properties() registry.Properties {
 	return registry.Properties{
 		Flags:           registry.SumFlags(registry.GuildAllowed),
 		PermissionLevel: permission.Support,
+		Timeout:         time.Second * 5,
 	}
 }
 
@@ -53,7 +55,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	premiumTier, err := utils.PremiumClient.GetTierByGuildId(guildId, true, ctx.Worker().Token, ctx.Worker().RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, guildId, true, ctx.Worker().Token, ctx.Worker().RateLimiter)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -65,7 +67,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 	}
 
 	// Get ticket
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, guildId)
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, guildId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -75,7 +77,7 @@ func (h *ViewSurveyHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	surveyResponse, err := dbclient.Client.ExitSurveyResponses.GetResponses(ticket.GuildId, ticket.Id)
+	surveyResponse, err := dbclient.Client.ExitSurveyResponses.GetResponses(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return

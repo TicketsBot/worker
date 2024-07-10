@@ -1,10 +1,14 @@
 package registry
 
-import "github.com/TicketsBot/common/permission"
+import (
+	"github.com/TicketsBot/common/permission"
+	"time"
+)
 
 type Properties struct {
 	Flags           int
 	PermissionLevel permission.PermissionLevel
+	Timeout         time.Duration
 }
 
 func (p *Properties) HasFlag(flag Flag) bool {

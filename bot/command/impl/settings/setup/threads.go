@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type ThreadsSetupCommand struct{}
@@ -25,6 +26,7 @@ func (ThreadsSetupCommand) Properties() registry.Properties {
 			command.NewOptionalArgument("ticket_notification_channel", "The channel that ticket open notifications should be sent to", interaction.OptionTypeChannel, "infallible"),
 		),
 		InteractionOnly: true,
+		Timeout:         time.Second * 5,
 	}
 }
 
@@ -50,14 +52,14 @@ func (ThreadsSetupCommand) Execute(ctx registry.CommandContext, useThreads bool,
 			return
 		}
 
-		if err := dbclient.Client.Settings.EnableThreads(ctx.GuildId(), *channelId); err != nil {
+		if err := dbclient.Client.Settings.EnableThreads(ctx, ctx.GuildId(), *channelId); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
 		ctx.Reply(customisation.Green, i18n.TitleSetup, i18n.SetupThreadsSuccess)
 	} else {
-		if err := dbclient.Client.Settings.DisableThreads(ctx.GuildId()); err != nil {
+		if err := dbclient.Client.Settings.DisableThreads(ctx, ctx.GuildId()); err != nil {
 			ctx.HandleError(err)
 			return
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -27,6 +28,7 @@ func (TransferCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user", "Support representative to transfer the ticket to", interaction.OptionTypeUser, i18n.MessageInvalidUser),
 		),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
@@ -36,7 +38,7 @@ func (c TransferCommand) GetExecutor() interface{} {
 
 func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -66,7 +68,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	permissionLevel, err := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+	permissionLevel, err := permission.GetPermissionLevel(ctx, utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -77,7 +79,7 @@ func (TransferCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	if err := logic.ClaimTicket(ctx, ticket, userId); err != nil {
+	if err := logic.ClaimTicket(ctx, ctx, ticket, userId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

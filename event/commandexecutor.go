@@ -21,12 +21,14 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"golang.org/x/sync/errgroup"
 	"runtime/debug"
+	"time"
 )
 
 // TODO: Command not found messages
 // (defaultDefer, error)
 func executeCommand(
-	ctx *worker.Context,
+	ctx context.Context,
+	worker *worker.Context,
 	registry cmdregistry.Registry,
 	data interaction.ApplicationCommandInteraction,
 	responseCh chan interaction.ApplicationCommandCallbackData,
@@ -74,13 +76,16 @@ func executeCommand(
 			}
 		}()
 
+		lookupCtx, cancelLookupCtx := context.WithTimeout(ctx, time.Second*2)
+		defer cancelLookupCtx()
+
 		// Parallelise queries
-		group, _ := errgroup.WithContext(context.Background())
+		group, _ := errgroup.WithContext(lookupCtx)
 
 		// Get premium level
 		var premiumLevel = premium.None
 		group.Go(func() error {
-			tier, err := utils.PremiumClient.GetTierByGuildId(data.GuildId.Value, true, ctx.Token, ctx.RateLimiter)
+			tier, err := utils.PremiumClient.GetTierByGuildId(lookupCtx, data.GuildId.Value, true, worker.Token, worker.RateLimiter)
 			if err != nil {
 				// TODO: Better error handling
 				// But do not hard fail, as Patreon / premium proxy may be experiencing some issues
@@ -95,7 +100,7 @@ func executeCommand(
 		// Get permission level
 		var permLevel = permission.Everyone
 		group.Go(func() error {
-			res, err := permission.GetPermissionLevel(utils.ToRetriever(ctx), *data.Member, data.GuildId.Value)
+			res, err := permission.GetPermissionLevel(lookupCtx, utils.ToRetriever(worker), *data.Member, data.GuildId.Value)
 			if err != nil {
 				return err
 			}
@@ -107,7 +112,7 @@ func executeCommand(
 		// Get guild blacklisted in guild
 		var guildBlacklisted bool
 		group.Go(func() error {
-			res, err := dbclient.Client.ServerBlacklist.IsBlacklisted(data.GuildId.Value)
+			res, err := dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
 			if err != nil {
 				return err
 			}
@@ -128,7 +133,10 @@ func executeCommand(
 			return
 		}
 
-		interactionContext := cmdcontext.NewSlashCommandContext(ctx, data, premiumLevel, responseCh)
+		ctx, cancel := context.WithTimeout(ctx, properties.Timeout)
+		defer cancel()
+
+		interactionContext := cmdcontext.NewSlashCommandContext(ctx, worker, data, premiumLevel, responseCh)
 
 		if guildBlacklisted {
 			// TODO: Better message?
@@ -158,7 +166,8 @@ func executeCommand(
 
 		// Check for user blacklist - cannot parallelise as relies on permission level
 		// If data.Member is nil, it does not matter, as it is not checked if the command is not executed in a guild
-		blacklisted, err := interactionContext.IsBlacklisted()
+		blacklisted, err := interactionContext.IsBlacklisted(lookupCtx)
+		cancelLookupCtx()
 		if err != nil {
 			interactionContext.HandleError(err)
 			return
@@ -177,7 +186,7 @@ func executeCommand(
 
 		if err := callCommand(cmd, &interactionContext, options); err != nil {
 			if errors.Is(err, ErrArgumentNotFound) {
-				if ctx.IsWhitelabel {
+				if worker.IsWhitelabel {
 					content := `This command registration is outdated. Please ask the server administrators to visit the whitelabel dashboard and press "Create Slash Commands" again.`
 					embed := utils.BuildEmbedRaw(customisation.GetDefaultColour(customisation.Red), "Outdated Command", content, nil, premium.Whitelabel)
 					res := command.NewEphemeralEmbedMessageResponse(embed)

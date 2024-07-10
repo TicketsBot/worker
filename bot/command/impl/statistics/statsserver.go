@@ -1,7 +1,6 @@
 package statistics
 
 import (
-	"context"
 	"fmt"
 	"github.com/TicketsBot/analytics-client"
 	"github.com/TicketsBot/common/permission"
@@ -33,6 +32,7 @@ func (StatsServerCommand) Properties() registry.Properties {
 		Category:         command.Statistics,
 		PremiumOnly:      true,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 10,
 	}
 }
 
@@ -40,12 +40,9 @@ func (c StatsServerCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (StatsServerCommand) Execute(c registry.CommandContext) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
-
+func (StatsServerCommand) Execute(ctx registry.CommandContext) {
 	span := sentry.StartTransaction(ctx, "/stats server")
-	span.SetTag("guild", strconv.FormatUint(c.GuildId(), 10))
+	span.SetTag("guild", strconv.FormatUint(ctx.GuildId(), 10))
 	defer span.Finish()
 
 	group, _ := errgroup.WithContext(ctx)
@@ -57,7 +54,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetTotalTicketCount")
 		defer span.Finish()
 
-		totalTickets, err = dbclient.Analytics.GetTotalTicketCount(ctx, c.GuildId())
+		totalTickets, err = dbclient.Analytics.GetTotalTicketCount(ctx, ctx.GuildId())
 		return
 	})
 
@@ -66,7 +63,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetGuildOpenTickets")
 		defer span.Finish()
 
-		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(c.GuildId())
+		tickets, err := dbclient.Client.Tickets.GetGuildOpenTickets(ctx, ctx.GuildId())
 		if err != nil {
 			return err
 		}
@@ -82,7 +79,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetAverageFeedbackRating")
 		defer span.Finish()
 
-		feedbackRating, err = dbclient.Analytics.GetAverageFeedbackRatingGuild(ctx, c.GuildId())
+		feedbackRating, err = dbclient.Analytics.GetAverageFeedbackRatingGuild(ctx, ctx.GuildId())
 		return
 	})
 
@@ -90,7 +87,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetFeedbackCount")
 		defer span.Finish()
 
-		feedbackCount, err = dbclient.Analytics.GetFeedbackCountGuild(ctx, c.GuildId())
+		feedbackCount, err = dbclient.Analytics.GetFeedbackCountGuild(ctx, ctx.GuildId())
 		return
 	})
 
@@ -100,7 +97,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetFirstResponseTimeStats")
 		defer span.Finish()
 
-		firstResponseTime, err = dbclient.Analytics.GetFirstResponseTimeStats(ctx, c.GuildId())
+		firstResponseTime, err = dbclient.Analytics.GetFirstResponseTimeStats(ctx, ctx.GuildId())
 		return
 	})
 
@@ -110,7 +107,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetTicketDurationStats")
 		defer span.Finish()
 
-		ticketDuration, err = dbclient.Analytics.GetTicketDurationStats(ctx, c.GuildId())
+		ticketDuration, err = dbclient.Analytics.GetTicketDurationStats(ctx, ctx.GuildId())
 		return
 	})
 
@@ -120,7 +117,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		span := sentry.StartSpan(span.Context(), "GetLastNTicketsPerDayGuild")
 		defer span.Finish()
 
-		counts, err := dbclient.Analytics.GetLastNTicketsPerDayGuild(ctx, c.GuildId(), 7)
+		counts, err := dbclient.Analytics.GetLastNTicketsPerDayGuild(ctx, ctx.GuildId(), 7)
 		if err != nil {
 			return err
 		}
@@ -139,7 +136,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 	})
 
 	if err := group.Wait(); err != nil {
-		c.HandleError(err)
+		ctx.HandleError(err)
 		return
 	}
 
@@ -147,7 +144,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 
 	msgEmbed := embed.NewEmbed().
 		SetTitle("Statistics").
-		SetColor(c.GetColour(customisation.Green)).
+		SetColor(ctx.GetColour(customisation.Green)).
 		AddField("Total Tickets", strconv.FormatUint(totalTickets, 10), true).
 		AddField("Open Tickets", strconv.FormatUint(openTickets, 10), true).
 		AddBlankField(true).
@@ -162,7 +159,7 @@ func (StatsServerCommand) Execute(c registry.CommandContext) {
 		AddField("Average Ticket Duration (Weekly)", formatNullableTime(ticketDuration.Weekly), true).
 		AddField("Ticket Volume", fmt.Sprintf("```\n%s\n```", ticketVolumeTable), false)
 
-	_, _ = c.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
+	_, _ = ctx.ReplyWith(command.NewEphemeralEmbedMessageResponse(msgEmbed))
 	span.Finish()
 }
 

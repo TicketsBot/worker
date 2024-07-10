@@ -4,10 +4,7 @@ import (
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
-	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
-	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 )
 
@@ -35,11 +32,5 @@ func (c StatsCommand) GetExecutor() interface{} {
 }
 
 func (StatsCommand) Execute(ctx registry.CommandContext) {
-	usageEmbed := embed.EmbedField{
-		Name:   "Usage",
-		Value:  "`/stats server`\n`/stats user @User`",
-		Inline: false,
-	}
-
-	ctx.ReplyWithFields(customisation.Red, i18n.Error, i18n.MessageInvalidArgument, utils.ToSlice(usageEmbed))
+	// Cannot call parent command
 }

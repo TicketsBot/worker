@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -11,85 +12,85 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 )
 
-func ReopenTicket(ctx registry.CommandContext, ticketId int) {
+func ReopenTicket(ctx context.Context, cmd registry.CommandContext, ticketId int) {
 	// Check ticket limit
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := cmd.UserPermissionLevel(ctx)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if permLevel == permission.Everyone {
-		ticketLimit, err := dbclient.Client.TicketLimit.Get(ctx.GuildId())
+		ticketLimit, err := dbclient.Client.TicketLimit.Get(ctx, cmd.GuildId())
 		if err != nil {
-			ctx.HandleError(err)
+			cmd.HandleError(err)
 			return
 		}
 
 		// TODO: count()
-		openTickets, err := dbclient.Client.Tickets.GetOpenByUser(ctx.GuildId(), ctx.UserId())
+		openTickets, err := dbclient.Client.Tickets.GetOpenByUser(ctx, cmd.GuildId(), cmd.UserId())
 		if err != nil {
-			ctx.HandleError(err)
+			cmd.HandleError(err)
 			return
 		}
 
 		if len(openTickets) >= int(ticketLimit) {
-			ctx.Reply(customisation.Green, i18n.Error, i18n.MessageTicketLimitReached)
+			cmd.Reply(customisation.Green, i18n.Error, i18n.MessageTicketLimitReached)
 			return
 		}
 	}
 
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, cmd.GuildId())
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	if ticket.Id == 0 || ticket.GuildId != ctx.GuildId() {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenTicketNotFound)
+	if ticket.Id == 0 || ticket.GuildId != cmd.GuildId() {
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenTicketNotFound)
 		return
 	}
 
 	// Ensure user has permissino to reopen the ticket
-	hasPermission, err := HasPermissionForTicket(ctx.Worker(), ticket, ctx.UserId())
+	hasPermission, err := HasPermissionForTicket(ctx, cmd.Worker(), ticket, cmd.UserId())
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if !hasPermission {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenNoPermission)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenNoPermission)
 		return
 	}
 
 	// Ticket must be closed already
 	if ticket.Open {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenAlreadyOpen)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenAlreadyOpen)
 		return
 	}
 
 	// Only allow reopening threads
 	if !ticket.IsThread {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenNotThread)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenNotThread)
 		return
 	}
 
 	// Ensure channel still exists
 	if ticket.ChannelId == nil {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
 		return
 	}
 
-	ch, err := ctx.Worker().GetChannel(*ticket.ChannelId)
+	ch, err := cmd.Worker().GetChannel(*ticket.ChannelId)
 	if err != nil {
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 404 {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
+			cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
 			return
 		}
 	}
 
 	if ch.Id == 0 {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
 		return
 	}
 
@@ -100,21 +101,21 @@ func ReopenTicket(ctx registry.CommandContext, ticketId int) {
 		},
 	}
 
-	if _, err := ctx.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
+	if _, err := cmd.Worker().ModifyChannel(*ticket.ChannelId, data); err != nil {
 		if err, ok := err.(request.RestError); ok && err.StatusCode == 404 {
-			ctx.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
+			cmd.Reply(customisation.Red, i18n.Error, i18n.MessageReopenThreadDeleted)
 			return
 		}
 
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	ctx.Reply(customisation.Green, i18n.Success, i18n.MessageReopenSuccess, ticket.Id, *ticket.ChannelId)
+	cmd.Reply(customisation.Green, i18n.Success, i18n.MessageReopenSuccess, ticket.Id, *ticket.ChannelId)
 
-	embedData := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleReopened, i18n.MessageReopenedTicket, nil, ctx.UserId())
-	if _, err := ctx.Worker().CreateMessageEmbed(*ticket.ChannelId, embedData); err != nil {
-		ctx.HandleError(err)
+	embedData := utils.BuildEmbed(cmd, customisation.Green, i18n.TitleReopened, i18n.MessageReopenedTicket, nil, cmd.UserId())
+	if _, err := cmd.Worker().CreateMessageEmbed(*ticket.ChannelId, embedData); err != nil {
+		cmd.HandleError(err)
 		return
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strconv"
+	"time"
 )
 
 type AdminCheckPremiumCommand struct {
@@ -26,6 +27,7 @@ func (AdminCheckPremiumCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to check premium status for", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -46,7 +48,7 @@ func (AdminCheckPremiumCommand) Execute(ctx registry.CommandContext, raw string)
 		return
 	}
 
-	tier, src, err := utils.PremiumClient.GetTierByGuild(guild)
+	tier, src, err := utils.PremiumClient.GetTierByGuild(ctx, guild)
 	if err != nil {
 		ctx.HandleError(err)
 		return

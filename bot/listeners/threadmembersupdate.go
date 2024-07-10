@@ -1,6 +1,7 @@
 package listeners
 
 import (
+	"context"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker"
@@ -9,16 +10,20 @@ import (
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	"time"
 )
 
 func OnThreadMembersUpdate(worker *worker.Context, e events.ThreadMembersUpdate) {
-	settings, err := dbclient.Client.Settings.Get(e.GuildId)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*6) // TODO: Propagate context
+	defer cancel()
+
+	settings, err := dbclient.Client.Settings.Get(ctx, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(worker.Context, e.ThreadId, e.GuildId)
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, e.ThreadId, e.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 		return
@@ -31,7 +36,7 @@ func OnThreadMembersUpdate(worker *worker.Context, e events.ThreadMembersUpdate)
 	if ticket.JoinMessageId != nil {
 		var panel *database.Panel
 		if ticket.PanelId != nil {
-			tmp, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+			tmp, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 			if err != nil {
 				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 				return
@@ -42,20 +47,20 @@ func OnThreadMembersUpdate(worker *worker.Context, e events.ThreadMembersUpdate)
 			}
 		}
 
-		premiumTier, err := utils.PremiumClient.GetTierByGuildId(e.GuildId, true, worker.Token, worker.RateLimiter)
+		premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, e.GuildId, true, worker.Token, worker.RateLimiter)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 			return
 		}
 
-		threadStaff, err := logic.GetStaffInThread(worker, ticket, e.ThreadId)
+		threadStaff, err := logic.GetStaffInThread(ctx, worker, ticket, e.ThreadId)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 			return
 		}
 
 		if settings.TicketNotificationChannel != nil {
-			data := logic.BuildJoinThreadMessage(worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, threadStaff, premiumTier)
+			data := logic.BuildJoinThreadMessage(ctx, worker, ticket.GuildId, ticket.UserId, ticket.Id, panel, threadStaff, premiumTier)
 			if _, err := worker.EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, data.IntoEditMessageData()); err != nil {
 				sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{Guild: e.GuildId})
 			}

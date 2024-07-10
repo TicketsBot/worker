@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type LimitSetupCommand struct{}
@@ -22,6 +23,7 @@ func (LimitSetupCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("limit", "The maximum amount of tickets a user can have open simultaneously", interaction.OptionTypeInteger, i18n.SetupLimitInvalid),
 		),
+		Timeout: time.Second * 3,
 	}
 }
 
@@ -35,7 +37,7 @@ func (LimitSetupCommand) Execute(ctx registry.CommandContext, limit int) {
 		return
 	}
 
-	if err := dbclient.Client.TicketLimit.Set(ctx.GuildId(), uint8(limit)); err != nil {
+	if err := dbclient.Client.TicketLimit.Set(ctx, ctx.GuildId(), uint8(limit)); err != nil {
 		ctx.HandleError(err)
 		return
 	}

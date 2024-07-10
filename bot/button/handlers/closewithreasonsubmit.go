@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/logic"
 )
 
@@ -16,7 +17,8 @@ func (h *CloseWithReasonSubmitHandler) Matcher() matcher.Matcher {
 
 func (h *CloseWithReasonSubmitHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: constants.TimeoutCloseTicket,
 	}
 }
 
@@ -48,5 +50,5 @@ func (h *CloseWithReasonSubmitHandler) Execute(ctx *context.ModalContext) {
 	}
 
 	ctx.Ack()
-	logic.CloseTicket(ctx, &textInput.Value, false)
+	logic.CloseTicket(ctx.Context, ctx, &textInput.Value, false)
 }

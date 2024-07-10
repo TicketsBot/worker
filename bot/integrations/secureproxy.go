@@ -2,12 +2,13 @@ package integrations
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -35,7 +36,7 @@ type requestBody interface {
 	[]byte | any
 }
 
-func (p *SecureProxyClient) DoRequest(method, url string, headers map[string]string, bodyData requestBody) ([]byte, error) {
+func (p *SecureProxyClient) DoRequest(ctx context.Context, method, url string, headers map[string]string, bodyData requestBody) ([]byte, error) {
 	body := secureProxyRequest{
 		Method:  method,
 		Url:     url,
@@ -62,7 +63,14 @@ func (p *SecureProxyClient) DoRequest(method, url string, headers map[string]str
 		return nil, err
 	}
 
-	res, err := p.client.Post(p.Url+"/proxy", "application/json", bytes.NewBuffer(encoded))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, p.Url+"/proxy", bytes.NewBuffer(encoded))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := p.client.Do(req)
 	if err != nil {
 		sentry.Error(err)
 		return nil, errors.New("error proxying request")
@@ -78,7 +86,7 @@ func (p *SecureProxyClient) DoRequest(method, url string, headers map[string]str
 		return nil, fmt.Errorf("integration request returned status code %d", res.StatusCode)
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

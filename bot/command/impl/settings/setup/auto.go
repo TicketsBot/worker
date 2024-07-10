@@ -16,6 +16,7 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	channel_permissions "github.com/rxdn/gdl/permission"
 	"github.com/rxdn/gdl/rest"
+	"time"
 )
 
 const freePanelLimit = 3
@@ -32,6 +33,7 @@ func (AutoSetupCommand) Properties() registry.Properties {
 		Category:        command.Settings,
 		Children:        nil,
 		InteractionOnly: true,
+		Timeout:         time.Second * 10,
 	}
 }
 
@@ -56,7 +58,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 		supportRoleId = role.Id
 
 		// set in db
-		if err := dbclient.Client.RolePermissions.AddSupport(ctx.GuildId(), role.Id); err != nil {
+		if err := dbclient.Client.RolePermissions.AddSupport(ctx, ctx.GuildId(), role.Id); err != nil {
 			ctx.HandleError(err)
 		}
 
@@ -65,7 +67,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 			adminRoleId = role.Id
 
 			// set in db
-			if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), role.Id); err != nil {
+			if err := dbclient.Client.RolePermissions.AddAdmin(ctx, ctx.GuildId(), role.Id); err != nil {
 				ctx.HandleError(err)
 			}
 
@@ -80,7 +82,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 
 	embed := embed.NewEmbed().
 		SetTitle("Setup").
-		SetColor(getColour(ctx.GuildId(), failed)).
+		SetColor(getColour(context.Background(), ctx.GuildId(), failed)). // TODO: Propagate context
 		SetDescription(messageContent)
 
 	ctx.ReplyWithEmbed(embed)
@@ -90,7 +92,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	case nil:
 		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoTranscriptChannelSuccess, transcriptChannel.Id))
 
-		if err := dbclient.Client.ArchiveChannel.Set(ctx.GuildId(), utils.Ptr(transcriptChannel.Id)); err != nil {
+		if err := dbclient.Client.ArchiveChannel.Set(ctx, ctx.GuildId(), utils.Ptr(transcriptChannel.Id)); err != nil {
 			ctx.HandleError(err)
 		}
 	default:
@@ -115,7 +117,7 @@ func (AutoSetupCommand) Execute(ctx registry.CommandContext) {
 	case nil: // ok
 		messageContent += fmt.Sprintf("\n✅ %s", i18n.GetMessageFromGuild(ctx.GuildId(), i18n.SetupAutoCategorySuccess))
 
-		if err := dbclient.Client.ChannelCategory.Set(ctx.GuildId(), category.Id); err != nil {
+		if err := dbclient.Client.ChannelCategory.Set(ctx, ctx.GuildId(), category.Id); err != nil {
 			ctx.HandleError(err)
 		}
 	default: // error
@@ -144,7 +146,7 @@ func edit(ctx *cmdcontext.SlashCommandContext, e *embed.Embed) error {
 	return err
 }
 
-func getColour(guildId uint64, failed bool) int {
+func getColour(ctx context.Context, guildId uint64, failed bool) int {
 	var colour customisation.Colour
 	if failed {
 		colour = customisation.Red
@@ -153,7 +155,7 @@ func getColour(guildId uint64, failed bool) int {
 	}
 
 	// ignore error, return default
-	hex, _ := customisation.GetColour(guildId, colour)
+	hex, _ := customisation.GetColour(ctx, guildId, colour)
 	return hex
 }
 

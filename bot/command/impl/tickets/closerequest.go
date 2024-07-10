@@ -33,6 +33,7 @@ func (c CloseRequestCommand) Properties() registry.Properties {
 			command.NewOptionalArgument("close_delay", "Hours to close the ticket in if the user does not respond", interaction.OptionTypeInteger, "infallible"),
 			command.NewOptionalAutocompleteableArgument("reason", "The reason the ticket was closed", interaction.OptionTypeString, "infallible", c.ReasonAutoCompleteHandler),
 		),
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -41,7 +42,7 @@ func (c CloseRequestCommand) GetExecutor() interface{} {
 }
 
 func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int, reason *string) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -71,7 +72,7 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		Reason:   reason,
 	}
 
-	if err := dbclient.Client.CloseRequest.Set(closeRequest); err != nil {
+	if err := dbclient.Client.CloseRequest.Set(ctx, closeRequest); err != nil {
 		ctx.HandleError(err)
 		return
 	}

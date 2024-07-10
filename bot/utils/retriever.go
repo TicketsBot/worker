@@ -29,12 +29,12 @@ func (wr WorkerRetriever) Cache() permission.PermissionCache {
 	return permission.NewRedisCache(redis.Client)
 }
 
-func (wr WorkerRetriever) IsBotAdmin(userId uint64) bool {
+func (wr WorkerRetriever) IsBotAdmin(_ context.Context, userId uint64) bool {
 	return IsBotAdmin(userId)
 }
 
-func (wr WorkerRetriever) GetGuildOwner(guildId uint64) (uint64, error) {
-	cachedOwner, err := wr.ctx.Cache.GetGuildOwner(context.Background(), guildId)
+func (wr WorkerRetriever) GetGuildOwner(ctx context.Context, guildId uint64) (uint64, error) {
+	cachedOwner, err := wr.ctx.Cache.GetGuildOwner(ctx, guildId)
 	if err == nil {
 		return cachedOwner, nil
 	} else if !errors.Is(err, cache.ErrNotFound) {
@@ -46,6 +46,6 @@ func (wr WorkerRetriever) GetGuildOwner(guildId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	go wr.ctx.Cache.StoreGuild(context.Background(), guild)
+	go wr.ctx.Cache.StoreGuild(ctx, guild)
 	return guild.OwnerId, nil
 }

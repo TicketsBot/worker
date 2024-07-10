@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
@@ -20,6 +21,7 @@ import (
 )
 
 type PanelContext struct {
+	context.Context
 	*Replyable
 	*StateCache
 	worker                     *worker.Context
@@ -28,12 +30,16 @@ type PanelContext struct {
 	dmChannelId                uint64
 }
 
+var _ registry.CommandContext = (*PanelContext)(nil)
+
 func NewPanelContext(
+	ctx context.Context,
 	worker *worker.Context,
 	guildId, channelId, userId uint64,
 	premium premium.PremiumTier,
 ) PanelContext {
-	ctx := PanelContext{
+	c := PanelContext{
+		Context:     ctx,
 		worker:      worker,
 		guildId:     guildId,
 		channelId:   channelId,
@@ -42,62 +48,62 @@ func NewPanelContext(
 		dmChannelId: 0,
 	}
 
-	ctx.Replyable = NewReplyable(&ctx)
-	ctx.StateCache = NewStateCache(&ctx)
-	return ctx
+	c.Replyable = NewReplyable(&c)
+	c.StateCache = NewStateCache(&c)
+	return c
 }
 
-func (ctx *PanelContext) Worker() *worker.Context {
-	return ctx.worker
+func (c *PanelContext) Worker() *worker.Context {
+	return c.worker
 }
 
-func (ctx *PanelContext) GuildId() uint64 {
-	return ctx.guildId
+func (c *PanelContext) GuildId() uint64 {
+	return c.guildId
 }
 
-func (ctx *PanelContext) ChannelId() uint64 {
-	return ctx.channelId
+func (c *PanelContext) ChannelId() uint64 {
+	return c.channelId
 }
 
-func (ctx *PanelContext) UserId() uint64 {
-	return ctx.userId
+func (c *PanelContext) UserId() uint64 {
+	return c.userId
 }
 
-func (ctx *PanelContext) UserPermissionLevel() (permcache.PermissionLevel, error) {
-	member, err := ctx.Member()
+func (c *PanelContext) UserPermissionLevel(ctx context.Context) (permcache.PermissionLevel, error) {
+	member, err := c.Member()
 	if err != nil {
 		return permcache.Everyone, err
 	}
 
-	return permcache.GetPermissionLevel(utils.ToRetriever(ctx.worker), member, ctx.guildId)
+	return permcache.GetPermissionLevel(ctx, utils.ToRetriever(c.worker), member, c.guildId)
 }
 
-func (ctx *PanelContext) PremiumTier() premium.PremiumTier {
-	return ctx.premium
+func (c *PanelContext) PremiumTier() premium.PremiumTier {
+	return c.premium
 }
 
-func (ctx *PanelContext) IsInteraction() bool {
+func (c *PanelContext) IsInteraction() bool {
 	return true
 }
 
-func (ctx *PanelContext) Source() registry.Source {
+func (c *PanelContext) Source() registry.Source {
 	return registry.SourceDashboard // TODO: Correct source?
 }
 
-func (ctx *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
+func (c *PanelContext) ToErrorContext() errorcontext.WorkerErrorContext {
 	return errorcontext.WorkerErrorContext{
-		Guild:   ctx.guildId,
-		User:    ctx.userId,
-		Channel: ctx.channelId,
+		Guild:   c.guildId,
+		User:    c.userId,
+		Channel: c.channelId,
 	}
 }
 
-func (ctx *PanelContext) openDm() (uint64, bool) {
-	if ctx.dmChannelId == 0 {
-		cachedId, err := redis.GetDMChannel(ctx.UserId(), ctx.Worker().BotId)
+func (c *PanelContext) openDm() (uint64, bool) {
+	if c.dmChannelId == 0 {
+		cachedId, err := redis.GetDMChannel(c.UserId(), c.Worker().BotId)
 		if err != nil { // We can continue
 			if err != redis.ErrNotCached {
-				sentry.ErrorWithContext(err, ctx.ToErrorContext())
+				sentry.ErrorWithContext(err, c.ToErrorContext())
 			}
 		} else { // We have it cached
 			if cachedId == nil {
@@ -107,47 +113,47 @@ func (ctx *PanelContext) openDm() (uint64, bool) {
 			}
 		}
 
-		ch, err := ctx.Worker().CreateDM(ctx.UserId())
+		ch, err := c.Worker().CreateDM(c.UserId())
 		if err != nil {
 			// check for 403
 			if err, ok := err.(request.RestError); ok && err.StatusCode == 403 {
-				if err := redis.StoreNullDMChannel(ctx.UserId(), ctx.Worker().BotId); err != nil {
-					sentry.ErrorWithContext(err, ctx.ToErrorContext())
+				if err := redis.StoreNullDMChannel(c.UserId(), c.Worker().BotId); err != nil {
+					sentry.ErrorWithContext(err, c.ToErrorContext())
 				}
 
 				return 0, false
 			}
 
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+			sentry.ErrorWithContext(err, c.ToErrorContext())
 			return 0, false
 		}
 
-		if err := redis.StoreDMChannel(ctx.UserId(), ch.Id, ctx.Worker().BotId); err != nil {
-			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		if err := redis.StoreDMChannel(c.UserId(), ch.Id, c.Worker().BotId); err != nil {
+			sentry.ErrorWithContext(err, c.ToErrorContext())
 		}
 
-		ctx.dmChannelId = ch.Id
+		c.dmChannelId = ch.Id
 	}
 
-	return ctx.dmChannelId, true
+	return c.dmChannelId, true
 }
 
-func (ctx *PanelContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
-	ch, ok := ctx.openDm()
+func (c *PanelContext) ReplyWith(response command.MessageResponse) (message.Message, error) {
+	ch, ok := c.openDm()
 	if !ok { // Error handled in openDm function
 		return message.Message{}, errors.New("failed to open dm")
 	}
 
-	msg, err := ctx.Worker().CreateMessageComplex(ch, response.IntoCreateMessageData())
+	msg, err := c.Worker().CreateMessageComplex(ch, response.IntoCreateMessageData())
 	if err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		sentry.ErrorWithContext(err, c.ToErrorContext())
 	}
 
 	return msg, err
 }
 
-func (ctx *PanelContext) Channel() (channel.PartialChannel, error) {
-	ch, err := ctx.Worker().GetChannel(ctx.channelId)
+func (c *PanelContext) Channel() (channel.PartialChannel, error) {
+	ch, err := c.Worker().GetChannel(c.channelId)
 	if err != nil {
 		return channel.PartialChannel{}, err
 	}
@@ -155,30 +161,30 @@ func (ctx *PanelContext) Channel() (channel.PartialChannel, error) {
 	return ch.ToPartialChannel(), nil
 }
 
-func (ctx *PanelContext) Guild() (guild.Guild, error) {
-	return ctx.Worker().GetGuild(ctx.guildId)
+func (c *PanelContext) Guild() (guild.Guild, error) {
+	return c.Worker().GetGuild(c.guildId)
 }
 
-func (ctx *PanelContext) Member() (member.Member, error) {
-	return ctx.Worker().GetGuildMember(ctx.guildId, ctx.userId)
+func (c *PanelContext) Member() (member.Member, error) {
+	return c.Worker().GetGuildMember(c.guildId, c.userId)
 }
 
-func (ctx *PanelContext) User() (user.User, error) {
-	return ctx.Worker().GetUser(ctx.UserId())
+func (c *PanelContext) User() (user.User, error) {
+	return c.Worker().GetUser(c.UserId())
 }
 
-func (ctx *PanelContext) IsBlacklisted() (bool, error) {
-	permLevel, err := ctx.UserPermissionLevel()
+func (c *PanelContext) IsBlacklisted(ctx context.Context) (bool, error) {
+	permLevel, err := c.UserPermissionLevel(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	member, err := ctx.Member()
+	member, err := c.Member()
 	if err != nil {
 		return false, err
 	}
 
 	// if interaction.Member is nil, it does not matter, as the member's roles are not checked
 	// if the command is not executed in a guild
-	return utils.IsBlacklisted(ctx.GuildId(), ctx.UserId(), member, permLevel)
+	return utils.IsBlacklisted(ctx, c.GuildId(), c.UserId(), member, permLevel)
 }

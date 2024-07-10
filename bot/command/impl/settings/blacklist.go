@@ -13,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type BlacklistCommand struct {
@@ -30,6 +31,7 @@ func (BlacklistCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("user_or_role", "User or role to blacklist or unblacklist", interaction.OptionTypeMentionable, i18n.MessageBlacklistNoMembers),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -62,7 +64,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 			return
 		}
 
-		permLevel, err := permission.GetPermissionLevel(utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
+		permLevel, err := permission.GetPermissionLevel(ctx, utils.ToRetriever(ctx.Worker()), member, ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -73,14 +75,14 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 			return
 		}
 
-		isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx.GuildId(), id)
+		isBlacklisted, err := dbclient.Client.Blacklist.IsBlacklisted(ctx, ctx.GuildId(), id)
 		if err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			return
 		}
 
 		if isBlacklisted {
-			if err := dbclient.Client.Blacklist.Remove(ctx.GuildId(), id); err != nil {
+			if err := dbclient.Client.Blacklist.Remove(ctx, ctx.GuildId(), id); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -88,7 +90,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 			ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemove, id)
 		} else {
 			// Limit of 250 *users*
-			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx.GuildId())
+			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx, ctx.GuildId())
 			if err != nil {
 				ctx.HandleError(err)
 				return
@@ -99,7 +101,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 				return
 			}
 
-			if err := dbclient.Client.Blacklist.Add(ctx.GuildId(), member.User.Id); err != nil {
+			if err := dbclient.Client.Blacklist.Add(ctx, ctx.GuildId(), member.User.Id); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -108,7 +110,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 	} else if mentionableType == context.MentionableTypeRole {
 		// Check if role is staff
-		isSupport, err := dbclient.Client.RolePermissions.IsSupport(id)
+		isSupport, err := dbclient.Client.RolePermissions.IsSupport(ctx, id)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -120,7 +122,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 		}
 
 		// Check if staff is part of any team
-		isSupport, err = dbclient.Client.SupportTeamRoles.IsSupport(ctx.GuildId(), id)
+		isSupport, err = dbclient.Client.SupportTeamRoles.IsSupport(ctx, ctx.GuildId(), id)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -131,14 +133,14 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 			return
 		}
 
-		isBlacklisted, err := dbclient.Client.RoleBlacklist.IsBlacklisted(ctx.GuildId(), id)
+		isBlacklisted, err := dbclient.Client.RoleBlacklist.IsBlacklisted(ctx, ctx.GuildId(), id)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
 		if isBlacklisted {
-			if err := dbclient.Client.RoleBlacklist.Remove(ctx.GuildId(), id); err != nil {
+			if err := dbclient.Client.RoleBlacklist.Remove(ctx, ctx.GuildId(), id); err != nil {
 				ctx.HandleError(err)
 				return
 			}
@@ -146,7 +148,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 			ctx.Reply(customisation.Green, i18n.TitleBlacklist, i18n.MessageBlacklistRemoveRole, id)
 		} else {
 			// Limit of 50 *roles*
-			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx.GuildId())
+			count, err := dbclient.Client.Blacklist.GetBlacklistedCount(ctx, ctx.GuildId())
 			if err != nil {
 				ctx.HandleError(err)
 				return
@@ -157,7 +159,7 @@ func (BlacklistCommand) Execute(ctx registry.CommandContext, id uint64) {
 				return
 			}
 
-			if err := dbclient.Client.RoleBlacklist.Add(ctx.GuildId(), id); err != nil {
+			if err := dbclient.Client.RoleBlacklist.Add(ctx, ctx.GuildId(), id); err != nil {
 				ctx.HandleError(err)
 				return
 			}

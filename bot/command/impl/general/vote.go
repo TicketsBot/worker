@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type VoteCommand struct {
@@ -21,6 +22,7 @@ func (VoteCommand) Properties() registry.Properties {
 		Category:         command.General,
 		DefaultEphemeral: true,
 		MainBotOnly:      true,
+		Timeout:          time.Second * 3,
 	}
 }
 

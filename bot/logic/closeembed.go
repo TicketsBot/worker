@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -118,6 +119,7 @@ func FeedbackRowElement(condition bool) CloseEmbedElement {
 }
 
 func BuildCloseEmbed(
+	ctx context.Context,
 	worker *worker.Context,
 	ticket database.Ticket,
 	closedBy uint64,
@@ -137,7 +139,7 @@ func BuildCloseEmbed(
 
 	var claimedBy string
 	{
-		claimUserId, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
+		claimUserId, err := dbclient.Client.TicketClaims.Get(ctx, ticket.GuildId, ticket.Id)
 		if err != nil {
 			sentry.Error(err)
 		}
@@ -149,7 +151,7 @@ func BuildCloseEmbed(
 		}
 	}
 
-	colour, err := utils.GetColourForGuild(worker, customisation.Green, ticket.GuildId)
+	colour, err := utils.GetColourForGuild(ctx, worker, customisation.Green, ticket.GuildId)
 	if err != nil {
 		sentry.Error(err)
 		colour = customisation.Green.Default()
@@ -201,6 +203,7 @@ func formatTitle(s string, emoji customisation.CustomEmoji, isWhitelabel bool) s
 }
 
 func EditGuildArchiveMessageIfExists(
+	ctx context.Context,
 	worker *worker.Context,
 	ticket database.Ticket,
 	settings database.Settings,
@@ -209,7 +212,7 @@ func EditGuildArchiveMessageIfExists(
 	reason *string,
 	rating *uint8,
 ) error {
-	archiveMessage, ok, err := dbclient.Client.ArchiveMessages.Get(ticket.GuildId, ticket.Id)
+	archiveMessage, ok, err := dbclient.Client.ArchiveMessages.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return err
 	}
@@ -226,7 +229,7 @@ func EditGuildArchiveMessageIfExists(
 		},
 	}
 
-	embed, components := BuildCloseEmbed(worker, ticket, closedBy, reason, rating, componentBuilders)
+	embed, components := BuildCloseEmbed(ctx, worker, ticket, closedBy, reason, rating, componentBuilders)
 	_, err = worker.EditMessage(archiveMessage.ChannelId, archiveMessage.MessageId, rest.EditMessageData{
 		Embeds:     utils.Slice(embed),
 		Components: components,

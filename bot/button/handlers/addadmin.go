@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type AddAdminHandler struct{}
@@ -32,7 +33,8 @@ func (h *AddAdminHandler) Matcher() matcher.Matcher {
 
 func (h *AddAdminHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: time.Second * 30,
 	}
 }
 
@@ -40,7 +42,7 @@ var addAdminPattern = regexp.MustCompile(`addadmin-(\d)-(\d+)`)
 
 func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 	// Permission check
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -82,17 +84,17 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 			return
 		}
 
-		if err := dbclient.Client.Permissions.AddAdmin(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.Permissions.AddAdmin(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Admin); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Admin); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.PremiumClient.DeleteCachedTier(ctx.GuildId()); err != nil {
+		if err := utils.PremiumClient.DeleteCachedTier(ctx, ctx.GuildId()); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -102,12 +104,12 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 			return
 		}
 
-		if err := dbclient.Client.RolePermissions.AddAdmin(ctx.GuildId(), id); err != nil {
+		if err := dbclient.Client.RolePermissions.AddAdmin(ctx, ctx.GuildId(), id); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx.GuildId(), id, permcache.Admin); err != nil {
+		if err := utils.ToRetriever(ctx.Worker()).Cache().SetCachedPermissionLevel(ctx, ctx.GuildId(), id, permcache.Admin); err != nil {
 			ctx.HandleError(err)
 			return
 		}
@@ -135,7 +137,7 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 		})
 	}
 
-	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx.GuildId())
+	openTickets, err := dbclient.Client.Tickets.GetGuildOpenTicketsExcludeThreads(ctx, ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -153,7 +155,7 @@ func (h *AddAdminHandler) Execute(ctx *context.ButtonContext) {
 			var restError request.RestError
 			if errors.As(err, &restError) && restError.StatusCode == 404 {
 				if restError.StatusCode == 404 {
-					if err := dbclient.Client.Tickets.CloseByChannel(*ticket.ChannelId); err != nil {
+					if err := dbclient.Client.Tickets.CloseByChannel(ctx, *ticket.ChannelId); err != nil {
 						ctx.HandleError(err)
 						return
 					}

@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/gofrs/uuid"
+	"time"
 )
 
 type PremiumKeySubmitHandler struct{}
@@ -22,12 +23,13 @@ func (h *PremiumKeySubmitHandler) Matcher() matcher.Matcher {
 
 func (h *PremiumKeySubmitHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: time.Second * 5,
 	}
 }
 
 func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -50,7 +52,7 @@ func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
 		return
 	}
 
-	length, premiumTypeRaw, err := dbclient.Client.PremiumKeys.Delete(parsed)
+	length, premiumTypeRaw, err := dbclient.Client.PremiumKeys.Delete(ctx, parsed)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -63,24 +65,24 @@ func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
 
 	premiumType := premium.PremiumTier(premiumTypeRaw)
 
-	if err := dbclient.Client.UsedKeys.Set(parsed, ctx.GuildId(), ctx.UserId()); err != nil {
+	if err := dbclient.Client.UsedKeys.Set(ctx, parsed, ctx.GuildId(), ctx.UserId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
 	if premiumType == premium.Premium {
-		if err := dbclient.Client.PremiumGuilds.Add(ctx.GuildId(), length); err != nil {
+		if err := dbclient.Client.PremiumGuilds.Add(ctx, ctx.GuildId(), length); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	} else if premiumType == premium.Whitelabel { // TODO: Ensure user is admin
-		if err := dbclient.Client.WhitelabelUsers.Add(ctx.UserId(), length); err != nil {
+		if err := dbclient.Client.WhitelabelUsers.Add(ctx, ctx.UserId(), length); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	}
 	// Re-enable panels
-	if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+	if err := dbclient.Client.Panel.EnableAll(ctx, ctx.GuildId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -90,7 +92,7 @@ func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
 		Source: premium.SourcePremiumKey,
 	}
 
-	if err = utils.PremiumClient.SetCachedTier(ctx.GuildId(), data); err == nil {
+	if err = utils.PremiumClient.SetCachedTier(ctx, ctx.GuildId(), data); err == nil {
 		ctx.EditWith(customisation.Green, i18n.TitlePremium, i18n.MessagePremiumSuccess, int(length.Hours()/24))
 	} else {
 		ctx.HandleError(err)

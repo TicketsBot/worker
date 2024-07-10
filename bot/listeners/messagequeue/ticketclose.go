@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/cache"
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -24,11 +25,15 @@ func ListenTicketClose() {
 		payload := payload
 
 		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), constants.TimeoutCloseTicket)
+			defer cancel()
+
 			if payload.Reason == "" {
 				payload.Reason = "No reason specified"
 			}
+
 			// Get the ticket struct
-			ticket, err := dbclient.Client.Tickets.Get(payload.TicketId, payload.GuildId)
+			ticket, err := dbclient.Client.Tickets.Get(ctx, payload.TicketId, payload.GuildId)
 			if err != nil {
 				sentry.Error(err)
 				return
@@ -49,13 +54,13 @@ func ListenTicketClose() {
 			var token string
 			var botId uint64
 			{
-				whiteLabelBotId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(payload.GuildId)
+				whiteLabelBotId, isWhitelabel, err := dbclient.Client.WhitelabelGuilds.GetBotByGuild(ctx, payload.GuildId)
 				if err != nil {
 					sentry.ErrorWithContext(err, errorContext)
 				}
 
 				if isWhitelabel {
-					bot, err := dbclient.Client.Whitelabel.GetByBotId(whiteLabelBotId)
+					bot, err := dbclient.Client.Whitelabel.GetByBotId(ctx, whiteLabelBotId)
 					if err != nil {
 						sentry.ErrorWithContext(err, errorContext)
 						return
@@ -74,7 +79,6 @@ func ListenTicketClose() {
 
 			// Create worker context
 			workerCtx := &worker.Context{
-				Context:      context.Background(),
 				Token:        token,
 				IsWhitelabel: botId != 0,
 				Cache:        cache.Client, // TODO: Less hacky
@@ -82,7 +86,7 @@ func ListenTicketClose() {
 			}
 
 			// Get whether the guild is premium for log archiver
-			premiumTier, err := utils.PremiumClient.GetTierByGuildId(payload.GuildId, true, token, workerCtx.RateLimiter)
+			premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, payload.GuildId, true, token, workerCtx.RateLimiter)
 			if err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 				return
@@ -91,16 +95,15 @@ func ListenTicketClose() {
 			// if ticket didnt open in the first place, no channel ID is assigned.
 			// we should close it here, or it wont get closed at all
 			if ticket.ChannelId == nil {
-				if err := dbclient.Client.Tickets.Close(payload.TicketId, payload.GuildId); err != nil {
+				if err := dbclient.Client.Tickets.Close(ctx, payload.TicketId, payload.GuildId); err != nil {
 					sentry.ErrorWithContext(err, errorContext)
 				}
 				return
 			}
 
 			// ticket.ChannelId cannot be nil
-			ctx := cmdcontext.NewDashboardContext(workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
-
-			logic.CloseTicket(&ctx, &payload.Reason, false)
+			cc := cmdcontext.NewDashboardContext(ctx, workerCtx, ticket.GuildId, *ticket.ChannelId, payload.UserId, premiumTier)
+			logic.CloseTicket(ctx, &cc, &payload.Reason, false)
 		}()
 	}
 }

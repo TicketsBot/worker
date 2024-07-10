@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type ManageTagsDeleteCommand struct {
@@ -25,6 +26,7 @@ func (ManageTagsDeleteCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("id", "ID of the tag to delete", interaction.OptionTypeString, i18n.MessageTagDeleteInvalidArguments),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 
@@ -33,7 +35,7 @@ func (c ManageTagsDeleteCommand) GetExecutor() interface{} {
 }
 
 func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string) {
-	exists, err := dbclient.Client.Tag.Exists(ctx.GuildId(), tagId)
+	exists, err := dbclient.Client.Tag.Exists(ctx, ctx.GuildId(), tagId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -44,7 +46,7 @@ func (ManageTagsDeleteCommand) Execute(ctx registry.CommandContext, tagId string
 		return
 	}
 
-	if err := dbclient.Client.Tag.Delete(ctx.GuildId(), tagId); err != nil {
+	if err := dbclient.Client.Tag.Delete(ctx, ctx.GuildId(), tagId); err != nil {
 		ctx.HandleError(err)
 		return
 	}

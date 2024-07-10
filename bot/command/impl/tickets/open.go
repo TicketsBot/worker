@@ -5,6 +5,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/i18n"
@@ -26,6 +27,7 @@ func (OpenCommand) Properties() registry.Properties {
 			command.NewOptionalArgument("subject", "The subject of the ticket", interaction.OptionTypeString, "infallible"),
 		),
 		DefaultEphemeral: true,
+		Timeout:          constants.TimeoutOpenTicket,
 	}
 }
 
@@ -50,5 +52,5 @@ func (OpenCommand) Execute(ctx *context.SlashCommandContext, providedSubject *st
 		subject = *providedSubject
 	}
 
-	logic.OpenTicket(ctx, nil, subject, nil)
+	logic.OpenTicket(ctx.Context, ctx, nil, subject, nil)
 }

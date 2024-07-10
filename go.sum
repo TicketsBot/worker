@@ -55,8 +55,12 @@ github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2 h1:x2AZW
 github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2/go.mod h1:sc1kAppJn1fX6ZCsiU3ltGiXIj9GEZkjkdh8fbmwxWQ=
 github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37 h1:NC5fn+uAup0JxLiX85+bjVdyfUUXW3pKZYmp72/29hw=
 github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37/go.mod h1:UZ6Kzobh9akWyon7iGLPb4w/9gmKV+sLuR6PmthsS+U=
+github.com/TicketsBot/common v0.0.0-20240710005307-9cc26f78d8e3 h1:Z4Ri2MC03YqLO+gY32SuWzt8SIL+QqwQYs59iizr7k8=
+github.com/TicketsBot/common v0.0.0-20240710005307-9cc26f78d8e3/go.mod h1:W1AwQkgiRyLxrpf8civa7p5ksKOGCyS0QocT5CPZVq8=
 github.com/TicketsBot/database v0.0.0-20240622123318-f2e43bd962cb h1://4tzbjko/3ji+9lrp0tHGtBWavvJusBkfxmmLEIigs=
 github.com/TicketsBot/database v0.0.0-20240622123318-f2e43bd962cb/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
+github.com/TicketsBot/database v0.0.0-20240710005219-ca0a96a7b7c5 h1:9yatpKRgKNyxS0HFlW3iQQvGdRe0M18n9MV4AE9fJT0=
+github.com/TicketsBot/database v0.0.0-20240710005219-ca0a96a7b7c5/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c/go.mod h1:jgi2OXQKsd5nUnTIRkwvPmeuD/i7OhN68LKMssuQY1c=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=

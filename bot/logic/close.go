@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
@@ -22,59 +23,59 @@ import (
 	"time"
 )
 
-func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCheck bool) {
+func CloseTicket(ctx context.Context, cmd registry.CommandContext, reason *string, bypassPermissionCheck bool) {
 	var success bool
-	errorContext := ctx.ToErrorContext()
+	errorContext := cmd.ToErrorContext()
 
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker(), ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, cmd.ChannelId(), cmd.GuildId())
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	if ticket.Id == 0 || ticket.GuildId != ctx.GuildId() {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
+	if ticket.Id == 0 || ticket.GuildId != cmd.GuildId() {
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageNotATicketChannel)
 		return
 	}
 
 	defer func() {
 		if !success {
-			if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+			if err := dbclient.Client.AutoCloseExclude.Exclude(ctx, ticket.GuildId, ticket.Id); err != nil {
 				sentry.ErrorWithContext(err, errorContext)
 			}
 		}
 	}()
 
-	if !bypassPermissionCheck && !utils.CanClose(ctx, ticket) {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
+	if !bypassPermissionCheck && !utils.CanClose(ctx, cmd, ticket) {
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageCloseNoPermission)
 		return
 	}
 
-	member, err := ctx.Member()
+	member, err := cmd.Member()
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	settings, err := ctx.Settings()
+	settings, err := cmd.Settings()
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	// Check the channel still exists - if it does not, just set to closed in the database, as this must be a request
 	// from the dashboard for a ticket with a channel that does not exist.
-	if ctx.Source() == registry.SourceDashboard {
-		channelExists, err := checkChannelExists(ctx, ticket)
+	if cmd.Source() == registry.SourceDashboard {
+		channelExists, err := checkChannelExists(cmd, ticket)
 		if err != nil {
-			ctx.HandleError(err)
+			cmd.HandleError(err)
 			return
 		}
 
 		if !channelExists {
-			if err := dbclient.Client.Tickets.Close(ticket.Id, ticket.GuildId); err != nil {
-				ctx.HandleError(err)
+			if err := dbclient.Client.Tickets.Close(ctx, ticket.Id, ticket.GuildId); err != nil {
+				cmd.HandleError(err)
 				return
 			}
 
@@ -91,7 +92,7 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 		lastId := uint64(0)
 		lastChunkSize := limit
 		for lastChunkSize == limit {
-			chunk, err := ctx.Worker().GetChannelMessages(ctx.ChannelId(), rest.GetChannelMessagesData{
+			chunk, err := cmd.Worker().GetChannelMessages(cmd.ChannelId(), rest.GetChannelMessagesData{
 				Before: lastId,
 				Limit:  limit,
 			})
@@ -100,12 +101,12 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 				// First rest interaction, check for 403
 				var restError request.RestError
 				if errors.As(restError, &restError) && restError.StatusCode == 403 {
-					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx.GuildId()); err != nil {
+					if err := dbclient.Client.AutoCloseExclude.ExcludeAll(ctx, cmd.GuildId()); err != nil {
 						sentry.ErrorWithContext(err, errorContext)
 					}
 				}
 
-				ctx.HandleError(err)
+				cmd.HandleError(err)
 				return
 			}
 
@@ -122,20 +123,20 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 			msgs[i], msgs[j] = msgs[j], msgs[i]
 		}
 
-		if err := utils.ArchiverClient.Store(msgs, ctx.GuildId(), ticket.Id, ctx.PremiumTier() > premium.None); err != nil {
-			ctx.HandleError(err)
+		if err := utils.ArchiverClient.Store(msgs, cmd.GuildId(), ticket.Id, cmd.PremiumTier() > premium.None); err != nil {
+			cmd.HandleError(err)
 			return
 		}
 
-		if err := dbclient.Client.Tickets.SetHasTranscript(ctx.GuildId(), ticket.Id, true); err != nil {
-			ctx.HandleError(err)
+		if err := dbclient.Client.Tickets.SetHasTranscript(ctx, cmd.GuildId(), ticket.Id, true); err != nil {
+			cmd.HandleError(err)
 			return
 		}
 	}
 
 	// Set ticket state as closed and delete channel
-	if err := dbclient.Client.Tickets.Close(ticket.Id, ctx.GuildId()); err != nil {
-		ctx.HandleError(err)
+	if err := dbclient.Client.Tickets.Close(ctx, ticket.Id, cmd.GuildId()); err != nil {
+		cmd.HandleError(err)
 		return
 	}
 
@@ -147,29 +148,29 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 		Reason: reason,
 	}
 
-	if ctx.UserId() != ctx.Worker().BotId {
-		closeMetadata.ClosedBy = utils.Ptr(ctx.UserId())
+	if cmd.UserId() != cmd.Worker().BotId {
+		closeMetadata.ClosedBy = utils.Ptr(cmd.UserId())
 	}
 
-	if err := dbclient.Client.CloseReason.Set(ctx.GuildId(), ticket.Id, closeMetadata); err != nil {
-		ctx.HandleError(err)
+	if err := dbclient.Client.CloseReason.Set(ctx, cmd.GuildId(), ticket.Id, closeMetadata); err != nil {
+		cmd.HandleError(err)
 		return
 	}
 
 	if ticket.IsThread {
 		// If it is a thread, we need to send a message
 		if reason == nil {
-			ctx.ReplyPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, ctx.UserId())
+			cmd.ReplyPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, cmd.UserId())
 		} else {
 			fields := []embed.EmbedField{
 				{
-					Name:   ctx.GetMessage(i18n.Reason),
+					Name:   cmd.GetMessage(i18n.Reason),
 					Value:  fmt.Sprintf("```%s```", *reason),
 					Inline: false,
 				},
 			}
 
-			ctx.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, ctx.UserId())
+			cmd.ReplyWithFieldsPermanent(customisation.Green, i18n.TitleTicketClosed, i18n.MessageCloseSuccess, fields, cmd.UserId())
 		}
 
 		// Discord has a race condition
@@ -182,55 +183,55 @@ func CloseTicket(ctx registry.CommandContext, reason *string, bypassPermissionCh
 			},
 		}
 
-		if _, err := ctx.Worker().ModifyChannel(ctx.ChannelId(), data); err != nil {
-			ctx.HandleError(err)
+		if _, err := cmd.Worker().ModifyChannel(cmd.ChannelId(), data); err != nil {
+			cmd.HandleError(err)
 			return
 		}
 	} else {
-		if _, err := ctx.Worker().DeleteChannel(ctx.ChannelId()); err != nil {
+		if _, err := cmd.Worker().DeleteChannel(cmd.ChannelId()); err != nil {
 			// Check if we should exclude this from autoclose
 			var restError request.RestError
 			if errors.As(err, &restError) && restError.StatusCode == 403 {
-				if err := dbclient.Client.AutoCloseExclude.Exclude(ticket.GuildId, ticket.Id); err != nil {
+				if err := dbclient.Client.AutoCloseExclude.Exclude(ctx, ticket.GuildId, ticket.Id); err != nil {
 					sentry.ErrorWithContext(err, errorContext)
 				}
 			}
 
-			ctx.HandleError(err)
+			cmd.HandleError(err)
 			return
 		}
 	}
 
 	// Save space - delete the webhook
 	if !ticket.IsThread {
-		go dbclient.Client.Webhooks.Delete(ctx.GuildId(), ticket.Id)
+		go dbclient.Client.Webhooks.Delete(ctx, cmd.GuildId(), ticket.Id)
 	}
 
-	if err := dbclient.Client.CloseRequest.Delete(ticket.GuildId, ticket.Id); err != nil {
-		sentry.ErrorWithContext(err, ctx.ToErrorContext())
+	if err := dbclient.Client.CloseRequest.Delete(ctx, ticket.GuildId, ticket.Id); err != nil {
+		sentry.ErrorWithContext(err, cmd.ToErrorContext())
 	}
 
 	// Delete join thread button
 	if ticket.IsThread && ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
-		_ = ctx.Worker().DeleteMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId)
-		if err := dbclient.Client.Tickets.SetJoinMessageId(ticket.GuildId, ticket.Id, nil); err != nil {
+		_ = cmd.Worker().DeleteMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId)
+		if err := dbclient.Client.Tickets.SetJoinMessageId(ctx, ticket.GuildId, ticket.Id, nil); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}
 
-	sendCloseEmbed(ctx, errorContext, member, settings, ticket, reason)
+	sendCloseEmbed(ctx, cmd, errorContext, member, settings, ticket, reason)
 }
 
-func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContext, member member.Member, settings database.Settings, ticket database.Ticket, reason *string) {
+func sendCloseEmbed(ctx context.Context, cmd registry.CommandContext, errorContext sentry.ErrorContext, member member.Member, settings database.Settings, ticket database.Ticket, reason *string) {
 	// Send logs to archive channel
-	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(ticket.GuildId)
+	archiveChannelId, err := dbclient.Client.ArchiveChannel.Get(ctx, ticket.GuildId)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorContext)
 	}
 
 	var archiveChannelExists bool
 	if archiveChannelId != nil {
-		if _, err := ctx.Worker().GetChannel(*archiveChannelId); err == nil {
+		if _, err := cmd.Worker().GetChannel(*archiveChannelId); err == nil {
 			archiveChannelExists = true
 		}
 	}
@@ -243,20 +244,20 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			},
 		}
 
-		closeEmbed, closeComponents := BuildCloseEmbed(ctx.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx, cmd.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
 
 		data := rest.CreateMessageData{
 			Embeds:     utils.Slice(closeEmbed),
 			Components: closeComponents,
 		}
 
-		msg, err := ctx.Worker().CreateMessageComplex(*archiveChannelId, data)
+		msg, err := cmd.Worker().CreateMessageComplex(*archiveChannelId, data)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		} else {
 			// Add message to archive
-			if err := dbclient.Client.ArchiveMessages.Set(ticket.GuildId, ticket.Id, *archiveChannelId, msg.Id); err != nil {
-				ctx.HandleError(err)
+			if err := dbclient.Client.ArchiveMessages.Set(ctx, ticket.GuildId, ticket.Id, *archiveChannelId, msg.Id); err != nil {
+				cmd.HandleError(err)
 				return
 			}
 		}
@@ -264,22 +265,22 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 
 	// Notify user and send logs in DMs
 	// This mutates state!
-	dmChannel, ok := getDmChannel(ctx, ticket.UserId)
+	dmChannel, ok := getDmChannel(cmd, ticket.UserId)
 	if ok {
-		guild, err := ctx.Guild()
+		guild, err := cmd.Guild()
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
 
-		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx.GuildId())
+		feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx, cmd.GuildId())
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 			return
 		}
 
 		// Only offer to take feedback if the user has sent a message
-		hasSentMessage, err := dbclient.Client.Participants.HasParticipated(ctx.GuildId(), ticket.Id, ticket.UserId)
+		hasSentMessage, err := dbclient.Client.Participants.HasParticipated(ctx, cmd.GuildId(), ticket.Id, ticket.UserId)
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 			return
@@ -297,7 +298,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			},
 		}
 
-		closeEmbed, closeComponents := BuildCloseEmbed(ctx.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
+		closeEmbed, closeComponents := BuildCloseEmbed(ctx, cmd.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
 		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
 
 		data := rest.CreateMessageData{
@@ -305,7 +306,7 @@ func sendCloseEmbed(ctx registry.CommandContext, errorContext sentry.ErrorContex
 			Components: closeComponents,
 		}
 
-		if _, err := ctx.Worker().CreateMessageComplex(dmChannel, data); err != nil {
+		if _, err := cmd.Worker().CreateMessageComplex(dmChannel, data); err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 		}
 	}

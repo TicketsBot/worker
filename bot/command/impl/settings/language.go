@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"math"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -28,6 +29,7 @@ func (c LanguageCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Admin,
 		Category:         command.Settings,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 

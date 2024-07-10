@@ -1,17 +1,19 @@
 package manager
 
 import (
+	"context"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/button"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/config"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
-func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker.Context, data interaction.ModalSubmitInteraction, responseCh chan button.Response) bool {
+func HandleModalInteraction(ctx context.Context, manager *ComponentInteractionManager, worker *worker.Context, data interaction.ModalSubmitInteraction, responseCh chan button.Response) bool {
 	// Safety checks
 	if data.GuildId.Value != 0 && data.Member == nil {
 		return false
@@ -21,7 +23,10 @@ func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker
 		return false
 	}
 
-	premiumTier, err := getPremiumTier(worker, data.GuildId.Value)
+	lookupCtx, cancelLookupCtx := context.WithTimeout(ctx, time.Second*2)
+	defer cancelLookupCtx()
+
+	premiumTier, err := getPremiumTier(lookupCtx, worker, data.GuildId.Value)
 	if err != nil {
 		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   data.GuildId.Value,
@@ -40,10 +45,17 @@ func HandleModalInteraction(manager *ComponentInteractionManager, worker *worker
 		return false
 	}
 
-	ctx := context.NewModalContext(worker, data, premiumTier, responseCh)
-	shouldExecute, canEdit := doPropertiesChecks(data.GuildId.Value, ctx, handler.Properties())
+	ctx, cancel := context.WithTimeout(ctx, handler.Properties().Timeout)
+
+	cc := cmdcontext.NewModalContext(ctx, worker, data, premiumTier, responseCh)
+	shouldExecute, canEdit := doPropertiesChecks(lookupCtx, data.GuildId.Value, cc, handler.Properties())
 	if shouldExecute {
-		go handler.Execute(ctx)
+		go func() {
+			defer cancel()
+			handler.Execute(cc)
+		}()
+	} else {
+		cancel()
 	}
 
 	return canEdit

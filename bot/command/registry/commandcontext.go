@@ -17,16 +17,19 @@ import (
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
+	"golang.org/x/net/context"
 )
 
 type CommandContext interface {
+	context.Context
+
 	Worker() *worker.Context
 
 	GuildId() uint64
 	ChannelId() uint64
 	UserId() uint64
 
-	UserPermissionLevel() (permcache.PermissionLevel, error)
+	UserPermissionLevel(ctx context.Context) (permcache.PermissionLevel, error)
 	PremiumTier() premium.PremiumTier
 	IsInteraction() bool
 	Source() Source
@@ -61,7 +64,7 @@ type CommandContext interface {
 	User() (user.User, error)
 	Settings() (database.Settings, error)
 
-	IsBlacklisted() (bool, error)
+	IsBlacklisted(ctx context.Context) (bool, error)
 }
 
 type InteractionContext interface {

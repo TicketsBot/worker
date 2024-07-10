@@ -13,6 +13,7 @@ import (
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type PremiumCommand struct {
@@ -26,6 +27,7 @@ func (PremiumCommand) Properties() registry.Properties {
 		PermissionLevel:  permission.Admin,
 		Category:         command.Settings,
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 5,
 	}
 }
 
@@ -39,7 +41,7 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 	// Tell user if premium is already active
 	if premiumTier > premium.None {
 		// Re-enable panels
-		if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+		if err := dbclient.Client.Panel.EnableAll(ctx, ctx.GuildId()); err != nil {
 			ctx.HandleError(err)
 			return
 		}

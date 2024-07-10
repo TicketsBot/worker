@@ -11,6 +11,7 @@ import (
 	prem "github.com/TicketsBot/worker/bot/premium"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
+	"time"
 )
 
 type PremiumCheckAgain struct{}
@@ -23,13 +24,14 @@ func (h *PremiumCheckAgain) Matcher() matcher.Matcher {
 
 func (h *PremiumCheckAgain) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: time.Second * 5,
 	}
 }
 
 func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 	// Get permission level
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -42,7 +44,7 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 
 	ctx.EditWith(customisation.Green, i18n.MessagePremiumChecking, i18n.MessagePremiumPleaseWait)
 
-	if err := utils.PremiumClient.DeleteCachedTier(ctx.GuildId()); err != nil {
+	if err := utils.PremiumClient.DeleteCachedTier(ctx, ctx.GuildId()); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -51,12 +53,12 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 		ctx.EditWith(customisation.Green, i18n.Success, i18n.MessagePremiumSuccessAfterCheck)
 
 		// Re-enable panels
-		if err := dbclient.Client.Panel.EnableAll(ctx.GuildId()); err != nil {
+		if err := dbclient.Client.Panel.EnableAll(ctx, ctx.GuildId()); err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	} else {
-		tier, err := utils.PremiumClient.GetTierByUser(ctx.UserId(), false)
+		tier, err := utils.PremiumClient.GetTierByUser(ctx, ctx.UserId(), false)
 		if err != nil {
 			ctx.HandleError(err)
 			return

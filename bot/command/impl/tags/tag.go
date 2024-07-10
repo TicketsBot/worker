@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"context"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -12,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"time"
 )
 
 type TagCommand struct {
@@ -28,6 +30,7 @@ func (c TagCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredAutocompleteableArgument("id", "The ID of the tag to be sent to the channel", interaction.OptionTypeString, i18n.MessageTagInvalidArguments, c.AutoCompleteHandler),
 		),
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -42,7 +45,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		Inline: false,
 	}
 
-	tag, ok, err := dbclient.Client.Tag.Get(ctx.GuildId(), tagId)
+	tag, ok, err := dbclient.Client.Tag.Get(ctx, ctx.GuildId(), tagId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -53,7 +56,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		return
 	}
 
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		return
@@ -62,7 +65,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
 	if ticket.GuildId != 0 {
 		go func() {
-			if err := dbclient.Client.Participants.Set(ctx.Worker().Context, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
+			if err := dbclient.Client.Participants.Set(ctx, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			}
 		}()
@@ -70,13 +73,13 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 
 	content := utils.ValueOrZero(tag.Content)
 	if ticket.Id != 0 {
-		content = logic.DoPlaceholderSubstitutions(content, ctx.Worker(), ticket, nil)
+		content = logic.DoPlaceholderSubstitutions(ctx, content, ctx.Worker(), ticket, nil)
 	}
 
 	var embeds []*embed.Embed
 	if tag.Embed != nil {
 		embeds = []*embed.Embed{
-			logic.BuildCustomEmbed(ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, false, nil),
+			logic.BuildCustomEmbed(ctx, ctx.Worker(), ticket, *tag.Embed.CustomEmbed, tag.Embed.Fields, false, nil),
 		}
 	}
 
@@ -92,7 +95,10 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 }
 
 func (TagCommand) AutoCompleteHandler(data interaction.ApplicationCommandAutoCompleteInteraction, value string) []interaction.ApplicationCommandOptionChoice {
-	tagIds, err := dbclient.Client.Tag.GetStartingWith(data.GuildId.Value, value, 25)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3) // TODO: Propagate context
+	defer cancel()
+
+	tagIds, err := dbclient.Client.Tag.GetStartingWith(ctx, data.GuildId.Value, value, 25)
 	if err != nil {
 		sentry.Error(err) // TODO: Error context
 		return nil

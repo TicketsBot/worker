@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -23,12 +24,13 @@ func (h *CloseRequestAcceptHandler) Matcher() matcher.Matcher {
 
 func (h *CloseRequestAcceptHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: constants.TimeoutCloseTicket,
 	}
 }
 
 func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -44,7 +46,7 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	closeRequest, ok, err := dbclient.Client.CloseRequest.Get(ticket.GuildId, ticket.Id)
+	closeRequest, ok, err := dbclient.Client.CloseRequest.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -61,5 +63,5 @@ func (h *CloseRequestAcceptHandler) Execute(ctx *context.ButtonContext) {
 
 	// Avoid users cant close issue
 	// Allow members to close too, for context menu tickets
-	logic.CloseTicket(ctx, closeRequest.Reason, true)
+	logic.CloseTicket(ctx.Context, ctx, closeRequest.Reason, true)
 }

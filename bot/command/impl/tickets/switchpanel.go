@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command"
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -36,6 +37,7 @@ func (c SwitchPanelCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredAutocompleteableArgument("panel", "Ticket panel to switch the ticket to", interaction.OptionTypeInteger, i18n.MessageInvalidUser, c.AutoCompleteHandler), // TODO: Fix invalid message
 		),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
@@ -45,7 +47,7 @@ func (c SwitchPanelCommand) GetExecutor() interface{} {
 
 func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId int) {
 	// Get ticket struct
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -58,7 +60,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	}
 
 	// Check ratelimit
-	ratelimitCtx, cancel := context.WithTimeout(ctx.Worker(), time.Second*3)
+	ratelimitCtx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
 	allowed, err := redis.TakeRenameRatelimit(ratelimitCtx, ctx.ChannelId())
@@ -73,7 +75,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	}
 
 	// Try to move ticket to new category
-	panel, err := dbclient.Client.Panel.GetById(panelId)
+	panel, err := dbclient.Client.Panel.GetById(ctx, panelId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -86,13 +88,13 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	}
 
 	// Update panel assigned to ticket in database
-	if err := dbclient.Client.Tickets.SetPanelId(ctx.GuildId(), ticket.Id, panelId); err != nil {
+	if err := dbclient.Client.Tickets.SetPanelId(ctx, ctx.GuildId(), ticket.Id, panelId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
 
 	// Get ticket claimer
-	claimer, err := dbclient.Client.TicketClaims.Get(ticket.GuildId, ticket.Id)
+	claimer, err := dbclient.Client.TicketClaims.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -114,7 +116,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 				subject = embeds[0].Title // TODO: Store subjects in database
 			}
 
-			embeds[0], err = logic.BuildWelcomeMessageEmbed(ctx, ticket, subject, &panel, nil)
+			embeds[0], err = logic.BuildWelcomeMessageEmbed(ctx.Context, ctx, ticket, subject, &panel, nil)
 			if err != nil {
 				ctx.HandleError(err)
 				return
@@ -138,7 +140,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	}
 
 	// Get new channel name
-	channelName, err := logic.GenerateChannelName(ctx, &panel, ticket.Id, ticket.UserId, utils.NilIfZero(claimer))
+	channelName, err := logic.GenerateChannelName(ctx.Context, ctx, &panel, ticket.Id, ticket.UserId, utils.NilIfZero(claimer))
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -166,13 +168,13 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 
 		// Modify join message
 		if ticket.JoinMessageId != nil && settings.TicketNotificationChannel != nil {
-			threadStaff, err := logic.GetStaffInThread(ctx.Worker(), ticket, *ticket.ChannelId)
+			threadStaff, err := logic.GetStaffInThread(ctx.Context, ctx.Worker(), ticket, *ticket.ChannelId)
 			if err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return
 			}
 
-			msg := logic.BuildJoinThreadMessage(ctx.Worker(), ctx.GuildId(), ticket.UserId, ticket.Id, &panel, threadStaff, ctx.PremiumTier())
+			msg := logic.BuildJoinThreadMessage(ctx.Context, ctx.Worker(), ctx.GuildId(), ticket.UserId, ticket.Id, &panel, threadStaff, ctx.PremiumTier())
 			if _, err := ctx.Worker().EditMessage(*settings.TicketNotificationChannel, *ticket.JoinMessageId, msg.IntoEditMessageData()); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext()) // Only log
 				return
@@ -183,7 +185,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	}
 
 	// Append additional ticket members to overwrites
-	members, err := dbclient.Client.TicketMembers.Get(ctx.GuildId(), ticket.Id)
+	members, err := dbclient.Client.TicketMembers.Get(ctx, ctx.GuildId(), ticket.Id)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -192,13 +194,13 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 	// Calculate new channel permissions
 	var overwrites []channel.PermissionOverwrite
 	if claimer == 0 {
-		overwrites, err = logic.CreateOverwrites(ctx, ticket.UserId, &panel, members...)
+		overwrites, err = logic.CreateOverwrites(ctx.Context, ctx, ticket.UserId, &panel, members...)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 	} else {
-		overwrites, err = logic.GenerateClaimedOverwrites(ctx.Worker(), ticket, claimer, members...)
+		overwrites, err = logic.GenerateClaimedOverwrites(ctx.Context, ctx.Worker(), ticket, claimer)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -207,7 +209,7 @@ func (SwitchPanelCommand) Execute(ctx *cmdcontext.SlashCommandContext, panelId i
 		// GenerateClaimedOverwrites returns nil if the permissions are the same as an unclaimed ticket
 		// so if this is the case, we still need to calculate permissions
 		if overwrites == nil {
-			overwrites, err = logic.CreateOverwrites(ctx, ticket.UserId, &panel, members...)
+			overwrites, err = logic.CreateOverwrites(ctx.Context, ctx, ticket.UserId, &panel, members...)
 		}
 	}
 
@@ -231,7 +233,10 @@ func (SwitchPanelCommand) AutoCompleteHandler(data interaction.ApplicationComman
 		return nil
 	}
 
-	panels, err := dbclient.Client.Panel.GetByGuild(data.GuildId.Value)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3) // TODO: Propagate context
+	defer cancel()
+
+	panels, err := dbclient.Client.Panel.GetByGuild(ctx, data.GuildId.Value)
 	if err != nil {
 		sentry.Error(err) // TODO: Context
 		return nil

@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -22,7 +23,8 @@ func (h *MultiPanelHandler) Matcher() matcher.Matcher {
 
 func (h *MultiPanelHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed),
+		Flags:   registry.SumFlags(registry.GuildAllowed),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
@@ -33,7 +35,7 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 
 	panelCustomId := ctx.InteractionData.Values[0]
 
-	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx.GuildId(), panelCustomId)
+	panel, ok, err := dbclient.Client.Panel.GetByCustomId(ctx, ctx.GuildId(), panelCustomId)
 	if err != nil {
 		sentry.Error(err) // TODO: Proper context
 		return
@@ -46,7 +48,7 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 		}
 
 		// blacklist check
-		blacklisted, err := ctx.IsBlacklisted()
+		blacklisted, err := ctx.IsBlacklisted(ctx)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -58,9 +60,9 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 		}
 
 		if panel.FormId == nil {
-			_, _ = logic.OpenTicket(ctx, &panel, panel.Title, nil)
+			_, _ = logic.OpenTicket(ctx.Context, ctx, &panel, panel.Title, nil)
 		} else {
-			form, ok, err := dbclient.Client.Forms.Get(*panel.FormId)
+			form, ok, err := dbclient.Client.Forms.Get(ctx, *panel.FormId)
 			if err != nil {
 				ctx.HandleError(err)
 				return
@@ -71,14 +73,14 @@ func (h *MultiPanelHandler) Execute(ctx *context.SelectMenuContext) {
 				return
 			}
 
-			inputs, err := dbclient.Client.FormInput.GetInputs(form.Id)
+			inputs, err := dbclient.Client.FormInput.GetInputs(ctx, form.Id)
 			if err != nil {
 				ctx.HandleError(err)
 				return
 			}
 
 			if len(inputs) == 0 { // Don't open a blank form
-				_, _ = logic.OpenTicket(ctx, &panel, panel.Title, nil)
+				_, _ = logic.OpenTicket(ctx.Context, ctx, &panel, panel.Title, nil)
 			} else {
 				modal := buildForm(panel, form, inputs)
 				ctx.Modal(modal)

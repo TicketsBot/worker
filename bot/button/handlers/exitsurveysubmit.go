@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
-	"github.com/TicketsBot/worker/bot/command/context"
+	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ExitSurveySubmitHandler struct{}
@@ -27,131 +29,135 @@ func (h *ExitSurveySubmitHandler) Matcher() matcher.Matcher {
 
 func (h *ExitSurveySubmitHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.DMsAllowed),
+		Flags:   registry.SumFlags(registry.DMsAllowed),
+		Timeout: time.Second * 8,
 	}
 }
 
 var exitSurveyPattern = regexp.MustCompile(`exit-survey-(\d+)-(\d+)`)
 
-func (h *ExitSurveySubmitHandler) Execute(ctx *context.ModalContext) {
-	groups := exitSurveyPattern.FindStringSubmatch(ctx.Interaction.Data.CustomId)
+func (h *ExitSurveySubmitHandler) Execute(cmd *cmdcontext.ModalContext) {
+	groups := exitSurveyPattern.FindStringSubmatch(cmd.Interaction.Data.CustomId)
 	if len(groups) != 3 {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(cmd.Context, time.Second*10)
+	defer cancel()
+
 	// Error may occur if guild ID in custom ID > max u64 size
 	guildId, err := strconv.ParseUint(groups[1], 10, 64)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	ticketId, err := strconv.Atoi(groups[2])
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	premiumTier, err := utils.PremiumClient.GetTierByGuildId(guildId, true, ctx.Worker().Token, ctx.Worker().RateLimiter)
+	premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, guildId, true, cmd.Worker().Token, cmd.Worker().RateLimiter)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if premiumTier == premium.None {
-		ctx.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
+		cmd.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
 		return
 	}
 
 	// Get ticket
-	ticket, err := dbclient.Client.Tickets.Get(ticketId, guildId)
+	ticket, err := dbclient.Client.Tickets.Get(ctx, ticketId, guildId)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
-	if ticket.UserId != ctx.InteractionUser().Id || ticket.GuildId != guildId || ticket.Id != ticketId {
+	if ticket.UserId != cmd.InteractionUser().Id || ticket.GuildId != guildId || ticket.Id != ticketId {
 		return
 	}
 
-	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(guildId)
+	feedbackEnabled, err := dbclient.Client.FeedbackEnabled.Get(ctx, guildId)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if !feedbackEnabled {
-		ctx.Reply(customisation.Red, i18n.Error, i18n.MessageFeedbackDisabled)
+		cmd.Reply(customisation.Red, i18n.Error, i18n.MessageFeedbackDisabled)
 		return
 	}
 
 	if ticket.PanelId == nil {
-		ctx.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
+		cmd.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
 		return
 	}
 
-	panel, err := dbclient.Client.Panel.GetById(*ticket.PanelId)
+	panel, err := dbclient.Client.Panel.GetById(ctx, *ticket.PanelId)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if panel.GuildId != guildId || panel.PanelId != *ticket.PanelId {
-		ctx.HandleError(fmt.Errorf("panel not found"))
+		cmd.HandleError(fmt.Errorf("panel not found"))
 		return
 	}
 
 	if panel.ExitSurveyFormId == nil {
-		ctx.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
+		cmd.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
 		return
 	}
 
-	form, ok, err := dbclient.Client.Forms.Get(*panel.ExitSurveyFormId)
+	form, ok, err := dbclient.Client.Forms.Get(ctx, *panel.ExitSurveyFormId)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	if !ok {
-		ctx.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
+		cmd.ReplyRaw(customisation.Red, "Error", "The survey is no longer available for this ticket.") // TODO: i18n
 		return
 	}
 
-	formInputs, err := dbclient.Client.FormInput.GetInputs(form.Id)
+	formInputs, err := dbclient.Client.FormInput.GetInputs(ctx, form.Id)
 	if err != nil {
-		ctx.HandleError(err)
+		cmd.HandleError(err)
 		return
 	}
 
 	responses := make(map[int]string)
 	for _, input := range formInputs {
-		value, ok := ctx.GetInput(input.CustomId)
+		value, ok := cmd.GetInput(input.CustomId)
 		if ok {
 			responses[input.Id] = value
 		}
 	}
 
-	if err := dbclient.Client.ExitSurveyResponses.AddResponses(guildId, ticketId, *panel.ExitSurveyFormId, responses); err != nil {
-		ctx.HandleError(err)
+	if err := dbclient.Client.ExitSurveyResponses.AddResponses(ctx, guildId, ticketId, *panel.ExitSurveyFormId, responses); err != nil {
+		cmd.HandleError(err)
 		return
 	}
 
-	ctx.EditWithRaw(customisation.Green, "Success", "Thank you for your feedback!") // TODO: i18n
+	cmd.EditWithRaw(customisation.Green, "Success", "Thank you for your feedback!") // TODO: i18n
 
-	if err := addViewFeedbackButton(ctx, ticket); err != nil {
-		ctx.HandleError(err)
+	if err := addViewFeedbackButton(ctx, cmd, ticket); err != nil {
+		cmd.HandleError(err)
 		return
 	}
 }
 
-func addViewFeedbackButton(ctx *context.ModalContext, ticket database.Ticket) error {
+func addViewFeedbackButton(ctx context.Context, cmd *cmdcontext.ModalContext, ticket database.Ticket) error {
 	// Get archive message
-	settings, err := ctx.Settings()
+	settings, err := cmd.Settings()
 	if err != nil {
 		return err
 	}
 
-	closeMetadata, ok, err := dbclient.Client.CloseReason.Get(ticket.GuildId, ticket.Id)
+	closeMetadata, ok, err := dbclient.Client.CloseReason.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return err
 	}
@@ -166,7 +172,7 @@ func addViewFeedbackButton(ctx *context.ModalContext, ticket database.Ticket) er
 		}
 	}
 
-	rating, ok, err := dbclient.Client.ServiceRatings.Get(ticket.GuildId, ticket.Id)
+	rating, ok, err := dbclient.Client.ServiceRatings.Get(ctx, ticket.GuildId, ticket.Id)
 	if err != nil {
 		return err
 	}
@@ -175,5 +181,5 @@ func addViewFeedbackButton(ctx *context.ModalContext, ticket database.Ticket) er
 		return fmt.Errorf("exit survey was completed, but no rating was found (%d:%d)", ticket.GuildId, ticket.Id)
 	}
 
-	return logic.EditGuildArchiveMessageIfExists(ctx.Worker(), ticket, settings, true, closedBy, reason, &rating)
+	return logic.EditGuildArchiveMessageIfExists(ctx, cmd.Worker(), ticket, settings, true, closedBy, reason, &rating)
 }

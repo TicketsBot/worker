@@ -13,6 +13,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type PremiumKeyOpenHandler struct{}
@@ -23,12 +24,13 @@ func (h *PremiumKeyOpenHandler) Matcher() matcher.Matcher {
 
 func (h *PremiumKeyOpenHandler) Properties() registry.Properties {
 	return registry.Properties{
-		Flags: registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Flags:   registry.SumFlags(registry.GuildAllowed, registry.CanEdit),
+		Timeout: time.Second * 5,
 	}
 }
 
 func (h *PremiumKeyOpenHandler) Execute(ctx *context.SelectMenuContext) {
-	permLevel, err := ctx.UserPermissionLevel()
+	permLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -45,7 +47,7 @@ func (h *PremiumKeyOpenHandler) Execute(ctx *context.SelectMenuContext) {
 
 	option := ctx.InteractionData.Values[0]
 	if option == "patreon" {
-		tier, err := utils.PremiumClient.GetTierByUser(ctx.UserId(), false)
+		tier, err := utils.PremiumClient.GetTierByUser(ctx, ctx.UserId(), false)
 		if err != nil {
 			ctx.HandleError(err)
 			return

@@ -4,6 +4,7 @@ import (
 	permcache "github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/constants"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
@@ -25,6 +26,7 @@ func (AddCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user", "User to add to the ticket", interaction.OptionTypeUser, i18n.MessageAddNoMembers),
 		),
+		Timeout: constants.TimeoutOpenTicket,
 	}
 }
 
@@ -33,7 +35,7 @@ func (c AddCommand) GetExecutor() interface{} {
 }
 
 func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
-	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx.Worker().Context, ctx.ChannelId(), ctx.GuildId())
+	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -45,7 +47,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		return
 	}
 
-	permissionLevel, err := ctx.UserPermissionLevel()
+	permissionLevel, err := ctx.UserPermissionLevel(ctx)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -58,7 +60,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 	}
 
 	// Add user to ticket in DB
-	if err := dbclient.Client.TicketMembers.Add(ctx.GuildId(), ticket.Id, userId); err != nil {
+	if err := dbclient.Client.TicketMembers.Add(ctx, ctx.GuildId(), ticket.Id, userId); err != nil {
 		ctx.HandleError(err)
 		return
 	}
@@ -81,7 +83,7 @@ func (AddCommand) Execute(ctx registry.CommandContext, userId uint64) {
 		}
 	} else {
 		// Build permissions
-		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx.GuildId())
+		additionalPermissions, err := dbclient.Client.TicketPermissions.Get(ctx, ctx.GuildId())
 		if err != nil {
 			ctx.HandleError(err)
 			return

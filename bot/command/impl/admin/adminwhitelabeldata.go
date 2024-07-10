@@ -13,6 +13,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"strings"
+	"time"
 )
 
 type AdminWhitelabelDataCommand struct {
@@ -29,6 +30,7 @@ func (AdminWhitelabelDataCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("user_id", "ID of the user who has the whitelabel subscription", interaction.OptionTypeUser, i18n.MessageInvalidArgument),
 		),
+		Timeout: time.Second * 10,
 	}
 }
 
@@ -37,7 +39,7 @@ func (c AdminWhitelabelDataCommand) GetExecutor() interface{} {
 }
 
 func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId uint64) {
-	tier, err := utils.PremiumClient.GetTierByUser(userId, false)
+	tier, err := utils.PremiumClient.GetTierByUser(ctx, userId, false)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -48,7 +50,7 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 		return
 	}
 
-	data, err := dbclient.Client.Whitelabel.GetByUserId(userId)
+	data, err := dbclient.Client.Whitelabel.GetByUserId(ctx, userId)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -59,7 +61,7 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 	if data.BotId != 0 {
 		botIdFormatted = fmt.Sprintf("%d (<@%d>)", data.BotId, data.BotId)
 
-		publicKey, err := dbclient.Client.WhitelabelKeys.Get(data.BotId)
+		publicKey, err := dbclient.Client.WhitelabelKeys.Get(ctx, data.BotId)
 		if err != nil {
 			ctx.HandleError(err)
 			return
@@ -70,7 +72,7 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 		}
 	}
 
-	errors, err := dbclient.Client.WhitelabelErrors.GetRecent(userId, 3)
+	errors, err := dbclient.Client.WhitelabelErrors.GetRecent(ctx, userId, 3)
 	if err != nil {
 		ctx.HandleError(err)
 		return
@@ -88,7 +90,7 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 		errorsFormatted = strings.Join(strs, "\n")
 	}
 
-	guilds, err := dbclient.Client.WhitelabelGuilds.GetGuilds(data.BotId)
+	guilds, err := dbclient.Client.WhitelabelGuilds.GetGuilds(ctx, data.BotId)
 	if err != nil {
 		ctx.HandleError(err)
 		return

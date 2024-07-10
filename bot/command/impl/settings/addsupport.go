@@ -12,6 +12,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
+	"time"
 )
 
 type AddSupportCommand struct{}
@@ -29,6 +30,7 @@ func (AddSupportCommand) Properties() registry.Properties {
 			command.NewRequiredArgument("role", "Role to apply the support representative permission to", interaction.OptionTypeMentionable, i18n.MessageAddSupportNoMembers),
 		),
 		DefaultEphemeral: true,
+		Timeout:          time.Second * 3,
 	}
 }
 
