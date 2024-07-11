@@ -287,8 +287,22 @@ func sendCloseEmbed(ctx context.Context, cmd registry.CommandContext, errorConte
 			return
 		}
 
+		openerMember, err := cmd.Worker().GetGuildMember(cmd.GuildId(), ticket.UserId)
+		if err != nil {
+			var restError request.RestError
+			if errors.As(err, &restError) {
+				if restError.StatusCode != 404 { // User left the server
+					sentry.ErrorWithContext(err, errorContext)
+					return
+				}
+			} else {
+				sentry.ErrorWithContext(err, errorContext)
+				return
+			}
+		}
+
 		// Only offer to take feedback if the user is *not* staff
-		permLevel, err := permission.GetPermissionLevel(ctx, utils.ToRetriever(cmd.Worker()), member, cmd.GuildId())
+		permLevel, err := permission.GetPermissionLevel(ctx, utils.ToRetriever(cmd.Worker()), openerMember, cmd.GuildId())
 		if err != nil {
 			sentry.ErrorWithContext(err, errorContext)
 			return
