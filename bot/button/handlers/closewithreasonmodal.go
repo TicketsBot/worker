@@ -55,7 +55,7 @@ func (h *CloseWithReasonModalHandler) Execute(ctx *context.ButtonContext) {
 					Style:       component.TextStyleParagraph,
 					CustomId:    "reason",
 					Label:       i18n.Reason.GetFromGuild(ctx.GuildId()),
-					Placeholder: utils.Ptr(i18n.MessageCloseReasonPlacehodler.GetFromGuild(ctx.GuildId())),
+					Placeholder: utils.Ptr(i18n.MessageCloseReasonPlaceholder.GetFromGuild(ctx.GuildId())),
 					MinLength:   nil,
 					MaxLength:   utils.Ptr(uint32(1024)),
 				})),

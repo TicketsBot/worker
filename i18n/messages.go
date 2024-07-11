@@ -52,22 +52,19 @@ var (
 	TitleJumpToTop         MessageId = "generic.title.jump_to_top"
 	TitleReopened          MessageId = "generic.title.reopened"
 
-	MessageUnknownArgumentType MessageId = "generic.unknown_argument_type"
-
-	MessageAbout             MessageId = "commands.about"
-	MessagePremium           MessageId = "commands.premium"
-	MessageInteractionOnly   MessageId = "commands.interaction_only"
-	MessageInteractionSwitch MessageId = "commands.interaction_switch"
+	MessageAbout   MessageId = "commands.about"
+	MessagePremium MessageId = "commands.premium"
 
 	MessageVote                   MessageId = "commands.vote"
 	MessageInvalidArgument        MessageId = "generic.invalid_argument"
 	MessageJoinSupportServer      MessageId = "generic.join_support_server"
 	MessageCloseNoPermission      MessageId = "close.no_permission"
 	MessageCloseReasonTooLong     MessageId = "close.reason_too_long"
-	MessageCloseReasonPlacehodler MessageId = "close.reason.placeholder"
+	MessageCloseReasonPlaceholder MessageId = "close.reason.placeholder"
 	MessageCloseConfirmation      MessageId = "close.confirmation"
 	MessageCloseSuccess           MessageId = "close.success"
-	MessageUseSlashCommands       MessageId = "generic.use_slash_commands"
+	MessageCloseCantRateStaff     MessageId = "close.rate.not_allowed.staff"
+	MessageCloseCantRateEmpty     MessageId = "close.rate.not_allowed.empty"
 
 	MessageTag                       MessageId = "commands.tag.generic"
 	MessageTagCreateInvalidArguments MessageId = "commands.tags.create.invalid_arguments"
@@ -104,11 +101,9 @@ var (
 	MessageAddSupportSuccess   MessageId = "commands.addsupport.success"
 	MessageAddSupportEveryone  MessageId = "commands.addsupport.everyone"
 
-	MessageAddNoMembers        MessageId = "commands.add.no_members"
-	MessageAddNoChannel        MessageId = "commands.add.no_channel"
-	MessageAddChannelNotTicket MessageId = "commands.add.not_ticket"
-	MessageAddNoPermission     MessageId = "commands.add.no_permission"
-	MessageAddSuccess          MessageId = "commands.add.success"
+	MessageAddNoMembers    MessageId = "commands.add.no_members"
+	MessageAddNoPermission MessageId = "commands.add.no_permission"
+	MessageAddSuccess      MessageId = "commands.add.success"
 
 	MessageBlacklisted         MessageId = "generic.error.blacklisted"
 	MessageBlacklistNoMembers  MessageId = "commands.blacklist.no_members"
@@ -128,7 +123,6 @@ var (
 	MessagePanel MessageId = "commands.panel"
 
 	MessagePremiumAbout                          MessageId = "commands.premium.about"
-	MessageAlreadyPremium                        MessageId = "commands.premium.already_premium"
 	MessageInvalidPremiumKey                     MessageId = "commands.premium.invalid_key"
 	MessagePremiumMethodSelector                 MessageId = "commands.premium.selector.description"
 	MessagePremiumMethodSelectorKey              MessageId = "commands.premium.selector.key.description"
@@ -203,12 +197,6 @@ var (
 	MessageJumpToTopNoWelcomeMessage MessageId = "commands.jump_to_top.no_welcome_message"
 	MessageJumpToTopContent          MessageId = "commands.jump_to_top.content"
 
-	SetupArchiveChannel  MessageId = "setup.info.archive_channel"
-	SetupChannelCategory MessageId = "setup.info.category"
-	SetupPrefix          MessageId = "setup.info.prefix"
-	SetupTicketLimit     MessageId = "setup.info.ticket_limit"
-	SetupWelcomeMessage  MessageId = "setup.info.welcome_message"
-
 	MessageLanguageCommand    MessageId = "commands.language.content"
 	MessageLanguageSelect     MessageId = "commands.language.select"
 	MessageLanguageHelpWanted MessageId = "commands.language.help_wanted"
@@ -240,16 +228,6 @@ var (
 	HelpAdminBlacklist    MessageId = "help.admin.blacklist"
 	HelpAdminUnblacklist  MessageId = "help.admin.unblacklist"
 
-	SetupChoose                    MessageId = "setup.info.choose"
-	SetupAutoDescription           MessageId = "setup.info.auto"
-	SetupPrefixDescription         MessageId = "setup.info.prefix"
-	SetupDashboardDescription      MessageId = "setup.info.dashboard"
-	SetupLimitDescription          MessageId = "setup.info.ticket_limit"
-	SetupWelcomeMessageDescription MessageId = "setup.info.welcome_message"
-	SetupTranscriptsDescription    MessageId = "setup.info.transcripts"
-	SetupCategoryDescription       MessageId = "setup.info.category"
-	SetupReactionPanelsDescription MessageId = "setup.info.panels"
-
 	SetupAutoRolesSuccess             MessageId = "setup.auto.roles.success"
 	SetupAutoRolesFailure             MessageId = "setup.auto.roles.failure"
 	SetupAutoTranscriptChannelSuccess MessageId = "setup.auto.transcript.success"
@@ -259,22 +237,12 @@ var (
 	SetupAutoCompleted                MessageId = "setup.auto.completed"
 	SetupAutoDocs                     MessageId = "setup.auto.docs"
 
-	SetupPrefixInvalid  MessageId = "setup.prefix.invalid"
-	SetupPrefixComplete MessageId = "setup.prefix.success"
-
-	SetupWelcomeMessageInvalid  MessageId = "setup.welcome_message.invalid"
-	SetupWelcomeMessageComplete MessageId = "setup.welcome_message.success"
-
 	SetupLimitInvalid  MessageId = "setup.ticket_limit.invalid"
 	SetupLimitComplete MessageId = "setup.ticket_limit.success"
 
 	SetupTranscriptsInvalid  MessageId = "setup.transcript.invalid"
 	SetupTranscriptsComplete MessageId = "setup.transcript.success"
 
-	SetupCategoryInvalid  MessageId = "setup.category.invalid"
-	SetupCategoryComplete MessageId = "setup.category.success"
-
-	SetupThreadsMissingBoosts           MessageId = "setup.threads.missing_boosts"
 	SetupThreadsNoNotificationChannel   MessageId = "setup.threads.no_notification_channel"
 	SetupThreadsNotificationChannelType MessageId = "setup.threads.notification_channel_type"
 	SetupThreadsSuccess                 MessageId = "setup.threads.success"
@@ -291,10 +259,8 @@ var (
 	MessageButtonDMOnly    MessageId = "button.dms_only"
 
 	HelpAdmin              MessageId = "help.admin"
-	HelpAdminForceClose    MessageId = "help.admin.force_close"
 	HelpAdminGenPremium    MessageId = "help.admin.generate_premium"
 	HelpAdminGetOwner      MessageId = "help.admin.get_owner"
-	HelpAdminUpdateSchema  MessageId = "help.admin.update_schema"
 	HelpAbout              MessageId = "help.about"
 	HelpAutoClose          MessageId = "help.autoclose"
 	HelpAutoCloseExclude   MessageId = "help.autoclose.exclude"

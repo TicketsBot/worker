@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -286,6 +287,13 @@ func sendCloseEmbed(ctx context.Context, cmd registry.CommandContext, errorConte
 			return
 		}
 
+		// Only offer to take feedback if the user is *not* staff
+		permLevel, err := permission.GetPermissionLevel(ctx, utils.ToRetriever(cmd.Worker()), member, cmd.GuildId())
+		if err != nil {
+			sentry.ErrorWithContext(err, errorContext)
+			return
+		}
+
 		statsd.Client.IncrementKey(statsd.KeyDirectMessage)
 
 		componentBuilders := [][]CloseEmbedElement{
@@ -294,14 +302,25 @@ func sendCloseEmbed(ctx context.Context, cmd registry.CommandContext, errorConte
 				ThreadLinkElement(ticket.IsThread && ticket.ChannelId != nil),
 			},
 			{
-				FeedbackRowElement(feedbackEnabled && hasSentMessage),
+				FeedbackRowElement(feedbackEnabled && hasSentMessage && permLevel == permission.Everyone),
 			},
 		}
 
 		closeEmbed, closeComponents := BuildCloseEmbed(ctx, cmd.Worker(), ticket, member.User.Id, reason, nil, componentBuilders)
 		closeEmbed.SetAuthor(guild.Name, "", fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.png", guild.Id, guild.Icon))
 
+		// Use message content to tell users why they can't rate a ticket
+		var content string
+		if feedbackEnabled {
+			if permLevel > permission.Everyone {
+				content = "-# " + cmd.GetMessage(i18n.MessageCloseCantRateStaff)
+			} else if !hasSentMessage {
+				content = "-# " + cmd.GetMessage(i18n.MessageCloseCantRateEmpty)
+			}
+		}
+
 		data := rest.CreateMessageData{
+			Content:    content,
 			Embeds:     utils.Slice(closeEmbed),
 			Components: closeComponents,
 		}
