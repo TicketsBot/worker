@@ -313,7 +313,7 @@ func sendCloseEmbed(ctx context.Context, cmd registry.CommandContext, errorConte
 		var content string
 		if feedbackEnabled {
 			if permLevel > permission.Everyone {
-				content = "-# " + cmd.GetMessage(i18n.MessageCloseCantRateStaff)
+				content = "-# " + cmd.GetMessage(i18n.MessageCloseCantRateStaff, guild.Name)
 			} else if !hasSentMessage {
 				content = "-# " + cmd.GetMessage(i18n.MessageCloseCantRateEmpty)
 			}
