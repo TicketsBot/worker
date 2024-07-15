@@ -126,7 +126,7 @@ func CloseTicket(ctx context.Context, cmd registry.CommandContext, reason *strin
 		}
 
 		// Update participants, incase the websocket gateway missed any messages
-		var participants collections.Set[uint64]
+		participants := collections.NewSet[uint64]()
 		for _, msg := range msgs {
 			participants.Add(msg.Author.Id)
 		}
