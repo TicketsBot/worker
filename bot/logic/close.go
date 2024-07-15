@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/TicketsBot/common/collections"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
@@ -122,6 +123,17 @@ func CloseTicket(ctx context.Context, cmd registry.CommandContext, reason *strin
 		// Reverse messages
 		for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
 			msgs[i], msgs[j] = msgs[j], msgs[i]
+		}
+
+		// Update participants, incase the websocket gateway missed any messages
+		var participants collections.Set[uint64]
+		for _, msg := range msgs {
+			participants.Add(msg.Author.Id)
+		}
+
+		if err := dbclient.Client.Participants.SetBulk(ctx, cmd.GuildId(), ticket.Id, participants.Collect()); err != nil {
+			cmd.HandleError(err)
+			return
 		}
 
 		if err := utils.ArchiverClient.Store(msgs, cmd.GuildId(), ticket.Id, cmd.PremiumTier() > premium.None); err != nil {
