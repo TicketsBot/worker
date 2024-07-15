@@ -51,10 +51,12 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 	unlocked := false
 	defer func() {
 		if !unlocked {
-			ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 			defer cancel()
 
-			mu.UnlockContext(ctx)
+			if _, err := mu.UnlockContext(ctx); err != nil {
+				cmd.HandleError(err)
+			}
 		}
 	}()
 
