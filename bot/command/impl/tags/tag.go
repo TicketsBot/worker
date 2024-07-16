@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"time"
 )
@@ -83,9 +84,17 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		}
 	}
 
+	var allowedMentions message.AllowedMention
+	if ticket.Id != 0 {
+		allowedMentions = message.AllowedMention{
+			Users: []uint64{ticket.UserId},
+		}
+	}
+
 	data := command.MessageResponse{
-		Content: content,
-		Embeds:  embeds,
+		Content:         content,
+		Embeds:          embeds,
+		AllowedMentions: allowedMentions,
 	}
 
 	if _, err := ctx.ReplyWith(data); err != nil {
