@@ -77,11 +77,11 @@ func (ManageTagsAddCommand) Execute(ctx registry.CommandContext, tagId, content 
 	}
 
 	tag := database.Tag{
-		Id:              tagId,
-		GuildId:         ctx.GuildId(),
-		UseGuildCommand: false,
-		Content:         &content,
-		Embed:           nil,
+		Id:                   tagId,
+		GuildId:              ctx.GuildId(),
+		Content:              &content,
+		Embed:                nil,
+		ApplicationCommandId: nil,
 	}
 
 	if err := dbclient.Client.Tag.Set(ctx, tag); err != nil {

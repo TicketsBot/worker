@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/command"
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
+	"github.com/TicketsBot/worker/bot/command/impl/tags"
 	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -43,7 +44,20 @@ func executeCommand(
 
 	cmd, ok := registry[data.Data.Name]
 	if !ok {
-		return false, fmt.Errorf("command %s does not exist", data.Data.Name)
+		// If a registered command is not found, check for a tag alias
+		tag, exists, err := dbclient.Client.Tag.GetByApplicationCommandId(ctx, data.GuildId.Value, data.Data.Id)
+		if err != nil {
+			sentry.Error(err)
+			return false, err
+		}
+
+		if !exists {
+			return false, fmt.Errorf("command %s does not exist", data.Data.Name)
+		}
+
+		// Execute tag
+		cmd = tags.NewTagAliasCommand(tag)
+		ok = true
 	}
 
 	options := data.Data.Options

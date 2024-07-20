@@ -7,9 +7,9 @@ import (
     "fmt"
     "github.com/TicketsBot/worker/bot/command"
     cmdcontext "github.com/TicketsBot/worker/bot/command/context"
-    "github.com/TicketsBot/worker/bot/command/impl/settings"
     "github.com/TicketsBot/worker/bot/command/impl/tickets"
     "github.com/TicketsBot/worker/bot/command/impl/general"
+    "github.com/TicketsBot/worker/bot/command/impl/settings"
     "github.com/TicketsBot/worker/bot/command/impl/tags"
     "github.com/TicketsBot/worker/bot/command/impl/admin"
     "github.com/TicketsBot/worker/bot/command/impl/settings/setup"
@@ -674,6 +674,11 @@ func callCommand(
     case tickets.UnclaimCommand:
 
         v.Execute(ctx)
+
+    
+    case tags.TagAliasCommand:
+        v.Execute(ctx)
+
     default:
         return fmt.Errorf("unknown command %s", cmd.Properties().Name)
     }
