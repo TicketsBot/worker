@@ -2,10 +2,12 @@ package tags
 
 import (
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
+	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/logic"
 	"github.com/TicketsBot/worker/bot/utils"
@@ -42,6 +44,11 @@ func (c TagAliasCommand) GetExecutor() interface{} {
 }
 
 func (c TagAliasCommand) Execute(ctx registry.CommandContext) {
+	if ctx.PremiumTier() < premium.Premium {
+		ctx.Reply(customisation.Red, i18n.TitlePremiumOnly, i18n.MessageTagAliasRequiresPremium)
+		return
+	}
+
 	ticket, err := dbclient.Client.Tickets.GetByChannelAndGuild(ctx, ctx.ChannelId(), ctx.GuildId())
 	if err != nil {
 		sentry.ErrorWithContext(err, ctx.ToErrorContext())

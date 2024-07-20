@@ -79,8 +79,9 @@ var (
 
 	MessageTagList MessageId = "commands.tags.list"
 
-	MessageTagInvalidArguments MessageId = "commands.tags.get.invalid_arguments"
-	MessageTagInvalidTag       MessageId = "commands.tags.get.invalid_tag"
+	MessageTagInvalidArguments     MessageId = "commands.tags.get.invalid_arguments"
+	MessageTagInvalidTag           MessageId = "commands.tags.get.invalid_tag"
+	MessageTagAliasRequiresPremium MessageId = "commands.tags.get.requires_premium"
 
 	MessageOpenThreadAnnouncementChannel MessageId = "open.thread_in_announcement_channel"
 	MessageOpenRatelimited               MessageId = "open.ratelimited"
