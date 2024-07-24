@@ -51,6 +51,8 @@ github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0
 github.com/ReneKroon/ttlcache v1.6.0/go.mod h1:DG6nbhXKUQhrExfwwLuZUdH7UnRDDRA1IW+nBuCssvs=
 github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3 h1:lSv0RoMTXohcN6yYKsBQftpYnRMZUYdmeFkpEMj6X7A=
 github.com/TicketsBot/analytics-client v0.0.0-20240415004242-017c23403af3/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
+github.com/TicketsBot/analytics-client v0.0.0-20240724103359-30f5dac821e6 h1:JigBTrKv/wRkCnz0G9m/EsqmG5DU6pFWBtrXNhcvK3E=
+github.com/TicketsBot/analytics-client v0.0.0-20240724103359-30f5dac821e6/go.mod h1:9Z9qP/yovb6DUe1KlzgN2wicc+8ey6MMoxfynFbMyRg=
 github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2 h1:x2AZWm2zeyIJxVJbq9JQB1Q2mAaaTuCbCiPIU1E8G1o=
 github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2/go.mod h1:sc1kAppJn1fX6ZCsiU3ltGiXIj9GEZkjkdh8fbmwxWQ=
 github.com/TicketsBot/common v0.0.0-20240613013221-1e27eb8bfe37 h1:NC5fn+uAup0JxLiX85+bjVdyfUUXW3pKZYmp72/29hw=
