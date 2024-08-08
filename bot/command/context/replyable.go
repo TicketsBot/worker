@@ -117,6 +117,10 @@ func (r *Replyable) ReplyPlainPermanent(content string) {
 }
 
 func (r *Replyable) HandleError(err error) {
+	if config.Conf.DebugMode != "" {
+		fmt.Printf("ctx.HandleError: %s\n", err.Error())
+	}
+
 	eventId := sentry.ErrorWithContext(err, r.ctx.ToErrorContext())
 
 	if errors.Is(err, ErrReplyLimitReached) {
