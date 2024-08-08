@@ -181,6 +181,7 @@ var (
 	MessageFormMissingInput         MessageId = "commands.open.missing_form_answer"
 	MessageOpenCommandDisabled      MessageId = "commands.open.disabled"
 	MessageOpenCantSeeParentChannel MessageId = "commands.open.threads.cant_see_parent_channel"
+	MessageOpenCantMessageInThreads MessageId = "commands.open.threads.cant_message_in_threads"
 
 	MessageCloseRequestNoReason     MessageId = "commands.close_request.no_reason"
 	MessageCloseRequestWithReason   MessageId = "commands.close_request.with_reason"

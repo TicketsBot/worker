@@ -177,6 +177,15 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 	}
 	span.Finish()
 
+	// Check if the user has Send Messages in Threads
+	if isThread && cmd.InteractionMetadata().Member != nil {
+		member := cmd.InteractionMetadata().Member
+		if member.Permissions > 0 && !permission.HasPermissionRaw(member.Permissions, permission.SendMessagesInThreads) {
+			cmd.Reply(customisation.Red, i18n.Error, i18n.MessageOpenCantMessageInThreads)
+			return database.Ticket{}, nil
+		}
+	}
+
 	// If we're using a panel, then we need to create the ticket in the specified category
 	span = sentry.StartSpan(rootSpan.Context(), "Get category")
 	var category uint64
