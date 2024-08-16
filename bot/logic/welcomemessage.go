@@ -322,6 +322,9 @@ var substitutions = map[string]PlaceholderSubstitutionFunc{
 	"user": func(ctx *worker.Context, ticket database.Ticket) string {
 		return fmt.Sprintf("<@%d>", ticket.UserId)
 	},
+	"user_id" : func(ctx *worker.Context, ticket database.Ticket) string {
+		return strconv.FormatUint(uint64(ticket.UserId), 10)
+	}
 	"ticket_id": func(ctx *worker.Context, ticket database.Ticket) string {
 		return strconv.Itoa(ticket.Id)
 	},
