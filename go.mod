@@ -5,8 +5,8 @@ go 1.22
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240724103359-30f5dac821e6
 	github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2
-	github.com/TicketsBot/common v0.0.0-20240817201050-001c8b1c09c9
-	github.com/TicketsBot/database v0.0.0-20240817200342-4ead4bd5d052
+	github.com/TicketsBot/common v0.0.0-20240817202338-dba787965ff6
+	github.com/TicketsBot/database v0.0.0-20240817202311-a25f662c572b
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/getsentry/sentry-go v0.21.0

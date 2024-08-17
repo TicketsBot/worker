@@ -61,6 +61,8 @@ github.com/TicketsBot/common v0.0.0-20240710005307-9cc26f78d8e3 h1:Z4Ri2MC03YqLO
 github.com/TicketsBot/common v0.0.0-20240710005307-9cc26f78d8e3/go.mod h1:W1AwQkgiRyLxrpf8civa7p5ksKOGCyS0QocT5CPZVq8=
 github.com/TicketsBot/common v0.0.0-20240817201050-001c8b1c09c9 h1:qJNkpp4UhvWyK1vS5/CTT1wIRQhuQ4Pnm5bV7GxsZ/c=
 github.com/TicketsBot/common v0.0.0-20240817201050-001c8b1c09c9/go.mod h1:wfshgIcRtxg43JzXjzWZHfX3uLNRnpVKJ/b5bHZh6Q4=
+github.com/TicketsBot/common v0.0.0-20240817202338-dba787965ff6 h1:nWZN4Yff8fi3giH+GVqvkgsrc8pbgHO845/iqzpMAXk=
+github.com/TicketsBot/common v0.0.0-20240817202338-dba787965ff6/go.mod h1:/v+rKDrmOi7TnQKHDmsZW9HuIiEiNffUtpRfxSYWrjM=
 github.com/TicketsBot/database v0.0.0-20240622123318-f2e43bd962cb h1://4tzbjko/3ji+9lrp0tHGtBWavvJusBkfxmmLEIigs=
 github.com/TicketsBot/database v0.0.0-20240622123318-f2e43bd962cb/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/database v0.0.0-20240710005219-ca0a96a7b7c5 h1:9yatpKRgKNyxS0HFlW3iQQvGdRe0M18n9MV4AE9fJT0=
@@ -73,6 +75,8 @@ github.com/TicketsBot/database v0.0.0-20240729222446-2c671b9b9366 h1:KC7NWVXk8xX
 github.com/TicketsBot/database v0.0.0-20240729222446-2c671b9b9366/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/database v0.0.0-20240817200342-4ead4bd5d052 h1:MQ9WNUjUTUdhhR0pDKOFBcSJ+PdYlj6zrjMk2P88jQA=
 github.com/TicketsBot/database v0.0.0-20240817200342-4ead4bd5d052/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
+github.com/TicketsBot/database v0.0.0-20240817202311-a25f662c572b h1:s4m3mwvMLsQ1HdE4VXt9I1/gv7WYy9HHhZ8f17gSE88=
+github.com/TicketsBot/database v0.0.0-20240817202311-a25f662c572b/go.mod h1:gAtOoQKZfCkQ4AoNWQUSl51Fnlqk+odzD/hZ1e1sXyI=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c h1:OqGjFH6mbE6gd+NqI2ARJdtH3UUvhiAkD0r0fhGJK2s=
 github.com/TicketsBot/logarchiver v0.0.0-20220326162808-cdf0310f5e1c/go.mod h1:jgi2OXQKsd5nUnTIRkwvPmeuD/i7OhN68LKMssuQY1c=
 github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261 h1:NHD5GB6cjlkpZFjC76Yli2S63/J2nhr8MuE6KlYJpQM=
