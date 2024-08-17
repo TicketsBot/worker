@@ -85,7 +85,7 @@ func main() {
 
 	fmt.Println("Retrieved command list, initialising microservice clients...")
 	if config.Conf.DebugMode == "" {
-		utils.PremiumClient = premium.NewPremiumLookupClient(premium.NewPatreonClient(config.Conf.PremiumProxy.Url, config.Conf.PremiumProxy.Key), redis.Client, &pgCache, dbclient.Client)
+		utils.PremiumClient = premium.NewPremiumLookupClient(redis.Client, &pgCache, dbclient.Client)
 	} else {
 		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
 		utils.PremiumClient = &c
