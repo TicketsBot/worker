@@ -58,11 +58,11 @@ func (AdminListUserEntitlementsCommand) Execute(ctx registry.CommandContext, use
 		}
 
 		value := fmt.Sprintf(
-			"**Tier:** %\n**Source:** %s\n**Expires:** %s\n**SKU ID:** %s\n**SKU Priority:** %s",
+			"**Tier:** %s\n**Source:** %s\n**Expires:** %s\n**SKU ID:** %s\n**SKU Priority:** %d",
 			entitlement.Tier,
 			entitlement.Source,
 			entitlement.ExpiresAt.String(),
-			entitlement.SkuPriority,
+			entitlement.SkuId.String(),
 			entitlement.SkuPriority,
 		)
 
