@@ -10,6 +10,7 @@ import (
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/jackc/pgx/v4"
+	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"time"
@@ -66,7 +67,12 @@ func (c VoteCommand) Execute(ctx registry.CommandContext) {
 			return
 		}
 	} else {
-		embed := utils.BuildEmbed(ctx, customisation.Green, i18n.TitleVote, i18n.MessageVoteWithCredits, nil, credits, credits)
+		var embed *embed.Embed
+		if credits == 1 {
+			embed = utils.BuildEmbed(ctx, customisation.Green, i18n.TitleVote, i18n.MessageVoteWithCreditsSingular, nil, credits, credits)
+		} else {
+			embed = utils.BuildEmbed(ctx, customisation.Green, i18n.TitleVote, i18n.MessageVoteWithCreditsPlural, nil, credits, credits)
+		}
 
 		if _, err := ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(embed, buildVoteComponents(ctx, true))); err != nil {
 			ctx.HandleError(err)

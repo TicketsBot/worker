@@ -82,5 +82,9 @@ func (h *RedeemVoteCreditsHandler) Execute(ctx *context.ButtonContext) {
 		return
 	}
 
-	ctx.EditWithComponents(customisation.Green, i18n.Success, i18n.MessageVoteRedeemSuccess, make([]component.Component, 0), credits)
+	if credits == 1 {
+		ctx.EditWithComponents(customisation.Green, i18n.Success, i18n.MessageVoteRedeemSuccessSingular, make([]component.Component, 0), credits)
+	} else {
+		ctx.EditWithComponents(customisation.Green, i18n.Success, i18n.MessageVoteRedeemSuccessPlural, make([]component.Component, 0), credits)
+	}
 }
