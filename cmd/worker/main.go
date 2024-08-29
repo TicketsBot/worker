@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
+	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
@@ -87,7 +88,7 @@ func main() {
 	if config.Conf.DebugMode == "" {
 		utils.PremiumClient = premium.NewPremiumLookupClient(redis.Client, &pgCache, dbclient.Client)
 	} else {
-		c := premium.NewMockLookupClient(premium.Whitelabel, premium.SourcePatreon)
+		c := premium.NewMockLookupClient(premium.Whitelabel, model.EntitlementSourcePatreon)
 		utils.PremiumClient = &c
 
 		request.Client.Timeout = time.Second * 10

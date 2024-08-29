@@ -64,6 +64,8 @@ func (h *PremiumKeyOpenHandler) Execute(ctx *context.SelectMenuContext) {
 
 			ctx.Edit(res)
 		}
+	} else if option == "discord" {
+		ctx.Edit(prem.BuildDiscordNotFoundMessage(ctx))
 	} else if option == "key" {
 		ctx.Modal(button.ResponseModal{
 			Data: prem.BuildKeyModal(ctx.GuildId()),

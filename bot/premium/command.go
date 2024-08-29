@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+const PremiumStoreSku uint64 = 1274473638065606656
+
 func BuildKeyModal(guildId uint64) interaction.ModalResponseData {
 	return interaction.ModalResponseData{
 		CustomId: "premium_key_modal",
@@ -83,4 +85,15 @@ func BuildNotLinkedMessage(ctx registry.CommandContext) command.MessageResponse 
 
 	embed := utils.BuildEmbed(ctx, customisation.Red, i18n.TitlePremium, i18n.MessagePremiumNoSubscription, nil)
 	return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components)
+}
+
+func BuildDiscordNotFoundMessage(ctx registry.CommandContext) command.MessageResponse {
+	embed := utils.BuildEmbed(ctx, customisation.Red, i18n.TitlePremium, i18n.MessagePremiumDiscordNoSubscription, nil)
+
+	return command.NewEphemeralEmbedMessageResponseWithComponents(embed, utils.Slice(component.BuildActionRow(
+		component.BuildButton(component.Button{
+			Style: component.ButtonStylePremium,
+			SkuId: utils.Ptr(PremiumStoreSku),
+		}),
+	)))
 }

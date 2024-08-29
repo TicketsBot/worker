@@ -5,8 +5,8 @@ go 1.22
 require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240724103359-30f5dac821e6
 	github.com/TicketsBot/archiverclient v0.0.0-20240613013458-accc062facc2
-	github.com/TicketsBot/common v0.0.0-20240817232938-177cb49957b0
-	github.com/TicketsBot/database v0.0.0-20240817232910-636752476fbb
+	github.com/TicketsBot/common v0.0.0-20240829113847-03ea6248b3c2
+	github.com/TicketsBot/database v0.0.0-20240829100828-64014bc5d6bc
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/getsentry/sentry-go v0.21.0
@@ -19,7 +19,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/rxdn/gdl v0.0.0-20240708003854-64917d2277cf
+	github.com/rxdn/gdl v0.0.0-20240828205518-51a78bd387cb
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/atomic v1.10.0

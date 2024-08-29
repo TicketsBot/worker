@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/button/registry"
@@ -89,7 +90,7 @@ func (h *PremiumKeySubmitHandler) Execute(ctx *context.ModalContext) {
 
 	data := premium.CachedTier{
 		Tier:   int8(premiumTypeRaw),
-		Source: premium.SourcePremiumKey,
+		Source: model.EntitlementSourceKey,
 	}
 
 	if err = utils.PremiumClient.SetCachedTier(ctx, ctx.GuildId(), data); err == nil {
