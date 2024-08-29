@@ -18,6 +18,9 @@ var (
     ChannelDeleteListeners = []func(*worker.Context, events.ChannelDelete){}
     ChannelPinsUpdateListeners = []func(*worker.Context, events.ChannelPinsUpdate){}
     ChannelUpdateListeners = []func(*worker.Context, events.ChannelUpdate){}
+    EntitlementCreateListeners = []func(*worker.Context, events.EntitlementCreate){}
+    EntitlementDeleteListeners = []func(*worker.Context, events.EntitlementDelete){}
+    EntitlementUpdateListeners = []func(*worker.Context, events.EntitlementUpdate){}
     GuildBanAddListeners = []func(*worker.Context, events.GuildBanAdd){}
     GuildBanRemoveListeners = []func(*worker.Context, events.GuildBanRemove){}
     GuildCreateListeners = []func(*worker.Context, events.GuildCreate){}
@@ -104,6 +107,36 @@ func HandleEvent(c *worker.Context, span *sentry.Span, payload payloads.Payload)
         }
 
         for _, listener := range ChannelUpdateListeners {
+            listener(c, event)
+        }
+    
+    case events.ENTITLEMENT_CREATE:
+        var event events.EntitlementCreate
+        if err := json.Unmarshal(payload.Data, &event); err != nil {
+            return err
+        }
+
+        for _, listener := range EntitlementCreateListeners {
+            listener(c, event)
+        }
+    
+    case events.ENTITLEMENT_DELETE:
+        var event events.EntitlementDelete
+        if err := json.Unmarshal(payload.Data, &event); err != nil {
+            return err
+        }
+
+        for _, listener := range EntitlementDeleteListeners {
+            listener(c, event)
+        }
+    
+    case events.ENTITLEMENT_UPDATE:
+        var event events.EntitlementUpdate
+        if err := json.Unmarshal(payload.Data, &event); err != nil {
+            return err
+        }
+
+        for _, listener := range EntitlementUpdateListeners {
             listener(c, event)
         }
     
