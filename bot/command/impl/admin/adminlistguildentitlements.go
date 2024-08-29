@@ -30,7 +30,7 @@ func (AdminListGuildEntitlementsCommand) Properties() registry.Properties {
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "Guild ID to fetch entitlements for", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 15,
 	}
 }
 
@@ -105,15 +105,15 @@ func (AdminListGuildEntitlementsCommand) Execute(ctx registry.CommandContext, gu
 		}
 
 		value := fmt.Sprintf(
-			"**Tier:** %s\n**Source:** %s\n**Expires:** %s\n**SKU ID:** %s\n**SKU Priority:** %d",
+			"**Tier:** %s\n**Source:** %s\n**Expires:** <t:%d>\n**SKU ID:** %s\n**SKU Priority:** %d",
 			entitlement.Tier,
 			entitlement.Source,
-			entitlement.ExpiresAt.String(),
+			entitlement.ExpiresAt.Unix(),
 			entitlement.SkuId.String(),
 			entitlement.SkuPriority,
 		)
 
-		embed.AddField(entitlement.SkuLabel, value, true)
+		embed.AddField(entitlement.SkuLabel, value, false)
 	}
 
 	ctx.ReplyWithEmbed(embed)
