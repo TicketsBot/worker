@@ -115,4 +115,6 @@ func (AdminListGuildEntitlementsCommand) Execute(ctx registry.CommandContext, gu
 
 		embed.AddField(entitlement.SkuLabel, value, true)
 	}
+
+	ctx.ReplyWithEmbed(embed)
 }

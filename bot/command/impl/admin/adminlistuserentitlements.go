@@ -68,4 +68,6 @@ func (AdminListUserEntitlementsCommand) Execute(ctx registry.CommandContext, use
 
 		embed.AddField(entitlement.SkuLabel, value, true)
 	}
+
+	ctx.ReplyWithEmbed(embed)
 }
