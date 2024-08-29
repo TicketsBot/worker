@@ -210,40 +210,25 @@ func interactionHandler(redis *redis.Client, cache *cache.PgCache) func(*gin.Con
 				options = subCommand.Options
 			}
 
-			value, path, found := findFocusedPath(interactionData.Data.Options, nil)
-			if !found {
+			focused := findFocusedOption(interactionData.Data.Options)
+			if focused == nil {
 				logrus.Warnf("focused option not found")
 				return
 			}
 
-			if len(path) > 1 {
-			outer:
-				for i := 0; i < len(path)-1; i++ {
-					for _, child := range cmd.Properties().Children {
-						if child.Properties().Name == strings.ToLower(path[i]) {
-							cmd = child
-							continue outer
-						}
-					}
-
-					logrus.Warnf("subcommand %s does not exist for command %s", path[i], cmd.Properties().Name)
-					return
-				}
-			}
-
 			var handler command.AutoCompleteHandler
 			for _, arg := range cmd.Properties().Arguments {
-				if arg.Name == strings.ToLower(path[len(path)-1]) {
+				if strings.ToLower(arg.Name) == strings.ToLower(focused.Name) {
 					handler = arg.AutoCompleteHandler
 				}
 			}
 
 			if handler == nil {
-				logrus.Warnf("autocomplete for argument without handler: %s", path)
+				logrus.Warnf("autocomplete for argument without handler: %s", focused.Name)
 				return
 			}
 
-			choices := handler(interactionData, value)
+			choices := handler(interactionData, fmt.Sprintf("%v", focused.Value))
 			res := interaction.NewApplicationCommandAutoCompleteResultResponse(choices)
 			ctx.JSON(200, res)
 			ctx.Writer.Flush()
@@ -352,19 +337,20 @@ func handleButtonResponseAfterDefer(interactionData interaction.InteractionMetad
 }
 
 // TODO: Handle other data types
-func findFocusedPath(options []interaction.ApplicationCommandInteractionDataOption, currentPath []string) (_value string, _path []string, _ok bool) {
+func findFocusedOption(options []interaction.ApplicationCommandInteractionDataOption) *interaction.ApplicationCommandInteractionDataOption {
 	for _, option := range options {
 		if option.Focused {
-			return fmt.Sprintf("%v", option.Value), append(currentPath, option.Name), true
+			return &option
 		}
 
-		value, path, found := findFocusedPath(option.Options, append(currentPath, option.Name))
-		if found {
-			return value, path, true
+		if option.Options != nil {
+			if focused := findFocusedOption(option.Options); focused != nil {
+				return focused
+			}
 		}
 	}
 
-	return "", nil, false
+	return nil
 }
 
 func calculateTimeToReceive(interactionId uint64) time.Duration {
