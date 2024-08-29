@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/caarlos0/env/v10"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -96,6 +97,8 @@ type Config struct {
 		Enabled   bool   `env:"ENABLED" envDefault:"false"`
 		ProjectId string `env:"PROJECT_ID"`
 	} `envPrefix:"WORKER_CLOUD_PROFILER_"`
+
+	VoteSkuId uuid.UUID `env:"VOTE_SKU_ID"`
 }
 
 var Conf Config

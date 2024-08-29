@@ -63,6 +63,7 @@ func (m *ComponentInteractionManager) RegisterCommands() {
 		new(handlers.PremiumCheckAgain),
 		new(handlers.PremiumKeyButtonHandler),
 		new(handlers.RateHandler),
+		new(handlers.RedeemVoteCreditsHandler),
 		new(handlers.ViewStaffHandler),
 		new(handlers.ViewSurveyHandler),
 	)

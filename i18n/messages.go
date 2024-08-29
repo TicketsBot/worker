@@ -56,6 +56,10 @@ var (
 	MessagePremium MessageId = "commands.premium"
 
 	MessageVote                   MessageId = "commands.vote"
+	MessageVoteWithCredits        MessageId = "commands.vote.with_credits"
+	MessageVoteRedeemCredits      MessageId = "commands.vote.redeem_credits"
+	MessageVoteNoCredits          MessageId = "commands.vote.no_credits"
+	MessageVoteRedeemSuccess      MessageId = "commands.vote.redeem.success"
 	MessageInvalidArgument        MessageId = "generic.invalid_argument"
 	MessageJoinSupportServer      MessageId = "generic.join_support_server"
 	MessageCloseNoPermission      MessageId = "close.no_permission"
