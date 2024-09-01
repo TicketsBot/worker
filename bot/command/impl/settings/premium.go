@@ -53,16 +53,37 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 			content = i18n.MessagePremiumLinkAlreadyActivated
 		}
 
+		buttons := []component.Component{
+			component.BuildButton(component.Button{
+				Label:    ctx.GetMessage(i18n.MessagePremiumUseKeyAnyway),
+				CustomId: "open_premium_key_modal",
+				Style:    component.ButtonStyleSecondary,
+				Emoji:    utils.BuildEmoji("🔑"),
+			}),
+		}
+
+		// Check for patreon, and show server selector button if necessary
+		legacyEntitlement, err := dbclient.Client.LegacyPremiumEntitlements.GetUserTier(ctx, ctx.UserId(), premium.PatreonGracePeriod)
+		if err != nil {
+			ctx.HandleError(err)
+			return
+		}
+
+		if legacyEntitlement != nil && !legacyEntitlement.IsLegacy {
+			// make it first button
+			buttons = append([]component.Component{
+				component.BuildButton(component.Button{
+					Label: ctx.GetMessage(i18n.MessagePremiumOpenServerSelector),
+					Style: component.ButtonStyleLink,
+					Emoji: utils.BuildEmoji("🔗"),
+					Url:   utils.Ptr("https://dashboard.ticketsbot.net/premium/select-servers"),
+				}),
+			}, buttons...)
+		}
+
 		ctx.ReplyWith(command.NewEphemeralEmbedMessageResponseWithComponents(
 			utils.BuildEmbed(ctx, customisation.Green, i18n.TitlePremium, content, nil),
-			utils.Slice(component.BuildActionRow(
-				component.BuildButton(component.Button{
-					Label:    ctx.GetMessage(i18n.MessagePremiumUseKeyAnyway),
-					CustomId: "open_premium_key_modal",
-					Style:    component.ButtonStyleSecondary,
-					Emoji:    utils.BuildEmoji("🔑"),
-				}),
-			)),
+			utils.Slice(component.BuildActionRow(buttons...)),
 		))
 
 	} else {

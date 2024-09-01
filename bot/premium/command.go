@@ -1,12 +1,17 @@
 package premium
 
 import (
+	"fmt"
+	"github.com/TicketsBot/common/model"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
+	"github.com/jackc/pgx/v4"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"strings"
@@ -31,37 +36,79 @@ func BuildKeyModal(guildId uint64) interaction.ModalResponseData {
 	}
 }
 
-func BuildSubscriptionFoundMessage(ctx registry.CommandContext) (command.MessageResponse, error) {
+func BuildPatreonSubscriptionFoundMessage(ctx registry.CommandContext) (command.MessageResponse, error) {
 	guild, err := ctx.Guild()
 	if err != nil {
 		return command.MessageResponse{}, err
 	}
 
-	commands, err := command.LoadCommandIds(ctx.Worker(), ctx.Worker().BotId)
+	legacyEntitlement, err := dbclient.Client.LegacyPremiumEntitlements.GetUserTier(ctx, ctx.UserId(), premium.PatreonGracePeriod)
 	if err != nil {
 		return command.MessageResponse{}, err
 	}
 
-	components := utils.Slice(component.BuildActionRow(
-		component.BuildButton(component.Button{
-			Label:    ctx.GetMessage(i18n.MessagePremiumCheckAgain),
-			CustomId: "premium_check_again",
-			Style:    component.ButtonStylePrimary,
-			Emoji:    utils.BuildEmoji("🔎"),
-		}),
-		component.BuildButton(component.Button{
-			Label: ctx.GetMessage(i18n.MessageJoinSupportServer),
-			Style: component.ButtonStyleLink,
-			Emoji: utils.BuildEmoji("❓"),
-			Url:   utils.Ptr(strings.ReplaceAll(config.Conf.Bot.SupportServerInvite, "\n", "")),
-		}),
-	))
+	if legacyEntitlement == nil {
+		return BuildPatreonNotLinkedMessage(ctx), nil
+	}
 
-	embed := utils.BuildEmbed(ctx, customisation.Red, i18n.MessagePremiumSubscriptionFound, i18n.MessagePremiumSubscriptionFoundContent, nil, guild.OwnerId, commands["addadmin"], commands["viewstaff"])
-	return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components), nil
+	var sku *model.SubscriptionSku
+	if err := dbclient.Client.WithTx(ctx, func(tx pgx.Tx) (err error) {
+		sku, err = dbclient.Client.SubscriptionSkus.GetSku(ctx, tx, legacyEntitlement.SkuId)
+		return
+	}); err != nil {
+		return command.MessageResponse{}, err
+	}
+
+	// Infallible
+	if sku == nil {
+		return command.MessageResponse{}, fmt.Errorf("sku %s not found", legacyEntitlement.SkuId)
+	}
+
+	if sku.IsGlobal { // Legacy entitlements
+		commands, err := command.LoadCommandIds(ctx.Worker(), ctx.Worker().BotId)
+		if err != nil {
+			return command.MessageResponse{}, err
+		}
+
+		components := utils.Slice(component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label:    ctx.GetMessage(i18n.MessagePremiumCheckAgain),
+				CustomId: "premium_check_again",
+				Style:    component.ButtonStylePrimary,
+				Emoji:    utils.BuildEmoji("🔎"),
+			}),
+			component.BuildButton(component.Button{
+				Label: ctx.GetMessage(i18n.MessageJoinSupportServer),
+				Style: component.ButtonStyleLink,
+				Emoji: utils.BuildEmoji("❓"),
+				Url:   utils.Ptr(strings.ReplaceAll(config.Conf.Bot.SupportServerInvite, "\n", "")),
+			}),
+		))
+
+		embed := utils.BuildEmbed(ctx, customisation.Red, i18n.MessagePremiumSubscriptionFound, i18n.MessagePremiumSubscriptionFoundContent, nil, guild.OwnerId, commands["addadmin"], commands["viewstaff"])
+		return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components), nil
+	} else { // Modern entitlements
+		components := utils.Slice(component.BuildActionRow(
+			component.BuildButton(component.Button{
+				Label: ctx.GetMessage(i18n.MessagePremiumOpenServerSelector),
+				Style: component.ButtonStyleLink,
+				Emoji: utils.BuildEmoji("🔗"),
+				Url:   utils.Ptr("https://dashboard.ticketsbot.net/premium/select-servers"),
+			}),
+			component.BuildButton(component.Button{
+				Label:    ctx.GetMessage(i18n.MessagePremiumCheckAgain),
+				CustomId: "premium_check_again",
+				Style:    component.ButtonStylePrimary,
+				Emoji:    utils.BuildEmoji("🔎"),
+			}),
+		))
+
+		embed := utils.BuildEmbed(ctx, customisation.Red, i18n.MessagePremiumSubscriptionFound, i18n.MessagePremiumSubscriptionFoundContentModern, nil)
+		return command.NewEphemeralEmbedMessageResponseWithComponents(embed, components), nil
+	}
 }
 
-func BuildNotLinkedMessage(ctx registry.CommandContext) command.MessageResponse {
+func BuildPatreonNotLinkedMessage(ctx registry.CommandContext) command.MessageResponse {
 	components := utils.Slice(component.BuildActionRow(
 		component.BuildButton(component.Button{
 			Label:    ctx.GetMessage(i18n.MessagePremiumCheckAgain),

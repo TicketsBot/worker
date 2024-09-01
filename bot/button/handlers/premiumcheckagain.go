@@ -65,9 +65,9 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 		}
 
 		if tier == premium.None {
-			ctx.Edit(prem.BuildNotLinkedMessage(ctx))
+			ctx.Edit(prem.BuildPatreonNotLinkedMessage(ctx))
 		} else {
-			res, err := prem.BuildSubscriptionFoundMessage(ctx)
+			res, err := prem.BuildPatreonSubscriptionFoundMessage(ctx)
 			if err != nil {
 				ctx.HandleError(err)
 				return
