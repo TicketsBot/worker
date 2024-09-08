@@ -19,7 +19,7 @@ import (
 
 // proxy messages to web UI + set last message id
 func OnMessage(worker *worker.Context, e events.MessageCreate) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5) // TODO: Propagate context
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*7) // TODO: Propagate context
 	defer cancel()
 
 	statsd.Client.IncrementKey(statsd.KeyMessages)
@@ -114,7 +114,7 @@ func updateLastMessage(ctx context.Context, msg events.MessageCreate, ticket dat
 	}
 
 	// If the last message *and* this message were sent by staff members, then do not reset the timer
-	if lastMessage.UserIsStaff && isStaff {
+	if lastMessage.UserId != nil && *lastMessage.UserIsStaff && isStaff {
 		return nil
 	}
 
