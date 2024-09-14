@@ -57,7 +57,7 @@ func SendWelcomeMessage(
 			SetColor(welcomeMessageEmbed.Color)
 
 		for _, field := range fields {
-			formAnswersEmbed.AddField(field.Name, field.Value, field.Inline)
+			formAnswersEmbed.AddField(field.Name, utils.EscapeMarkdown(field.Value), field.Inline)
 		}
 
 		if cmd.PremiumTier() == premium.None {
