@@ -22,6 +22,8 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*7) // TODO: Propagate context
 	defer cancel()
 
+	span := sentry.StartTransaction(ctx, "OnMessage")
+
 	statsd.Client.IncrementKey(statsd.KeyMessages)
 
 	// ignore DMs
@@ -29,7 +31,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 		return
 	}
 
-	ticket, isTicket, err := getTicket(ctx, e.ChannelId)
+	ticket, isTicket, err := getTicket(span.Context(), e.ChannelId)
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return
@@ -43,13 +45,13 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	// ignore our own messages
 	if e.Author.Id != worker.BotId && !e.Author.Bot {
 		// set participants, for logging
-		sentry.WithSpan0(ctx, "Add participant", func(span *sentry.Span) {
+		sentry.WithSpan0(span.Context(), "Add participant", func(span *sentry.Span) {
 			if err := dbclient.Client.Participants.Set(ctx, e.GuildId, ticket.Id, e.Author.Id); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 		})
 
-		isStaff, err := sentry.WithSpan2(ctx, "Update ticket last activity", func(span *sentry.Span) (bool, error) {
+		isStaff, err := sentry.WithSpan2(span.Context(), "Update ticket last activity", func(span *sentry.Span) (bool, error) {
 			return isStaff(ctx, e, ticket)
 		})
 
@@ -57,13 +59,13 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		} else {
 			// set ticket last message, for autoclose
-			if err := updateLastMessage(ctx, e, ticket, isStaff); err != nil {
+			if err := updateLastMessage(span.Context(), e, ticket, isStaff); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 
 			if isStaff { // check the user is staff
 				// We don't have to check for previous responses due to ON CONFLICT DO NOTHING
-				sentry.WithSpan0(ctx, "Set first response time", func(span *sentry.Span) {
+				sentry.WithSpan0(span.Context(), "Set first response time", func(span *sentry.Span) {
 					if err := dbclient.Client.FirstResponseTime.Set(ctx, e.GuildId, e.Author.Id, ticket.Id, time.Now().Sub(ticket.OpenTime)); err != nil {
 						sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 					}
@@ -72,7 +74,9 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 		}
 	}
 
-	premiumTier, err := utils.PremiumClient.GetTierByGuildId(ctx, e.GuildId, true, worker.Token, worker.RateLimiter)
+	premiumTier, err := sentry.WithSpan2(span.Context(), "Get premium tier", func(span *sentry.Span) (premium.PremiumTier, error) {
+		return utils.PremiumClient.GetTierByGuildId(ctx, e.GuildId, true, worker.Token, worker.RateLimiter)
+	})
 	if err != nil {
 		sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		return
@@ -80,16 +84,16 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 
 	// proxy msg to web UI
 	if premiumTier > premium.None {
-		data := chatrelay.MessageData{
-			Ticket:  ticket,
-			Message: e.Message,
-		}
+		if err := sentry.WithSpan1(span.Context(), "Relay message to dashboard", func(span *sentry.Span) error {
+			data := chatrelay.MessageData{
+				Ticket:  ticket,
+				Message: e.Message,
+			}
 
-		span := sentry.StartSpan(ctx, "Relay message to dashboard")
-		if err := chatrelay.PublishMessage(redis.Client, data); err != nil {
+			return chatrelay.PublishMessage(redis.Client, data)
+		}); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}
-		span.Finish()
 	}
 }
 
