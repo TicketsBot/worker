@@ -23,6 +23,7 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 	defer cancel()
 
 	span := sentry.StartTransaction(ctx, "OnMessage")
+	defer span.Finish()
 
 	statsd.Client.IncrementKey(statsd.KeyMessages)
 
