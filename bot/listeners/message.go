@@ -14,6 +14,7 @@ import (
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	"strconv"
 	"time"
 )
 
@@ -24,6 +25,10 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 
 	span := sentry.StartTransaction(ctx, "OnMessage")
 	defer span.Finish()
+
+	if e.GuildId != 0 {
+		span.SetTag("guild_id", strconv.FormatUint(e.GuildId, 10))
+	}
 
 	statsd.Client.IncrementKey(statsd.KeyMessages)
 
