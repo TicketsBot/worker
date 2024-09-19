@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -12,11 +13,34 @@ func SnowflakeToTime(snowflake uint64) time.Time {
 }
 
 func EscapeMarkdown(s string) string {
-	s = strings.ReplaceAll(s, "*", "\\*")
-	s = strings.ReplaceAll(s, "_", "\\_")
-	s = strings.ReplaceAll(s, "`", "\\`")
-	s = strings.ReplaceAll(s, "~", "\\~")
-	s = strings.ReplaceAll(s, "|", "\\|")
-	s = strings.ReplaceAll(s, "#", "\\#")
-	return s
+	var builder strings.Builder
+	var inLink bool
+
+	builder.Grow(len(s))
+
+	for i, c := range s {
+		if c == ' ' {
+			inLink = false
+		}
+
+		fmt.Printf("inlink: %v, c: %v\n", inLink, string(c))
+
+		if !inLink {
+			if c == 'h' || c == 'H' {
+				if len(s) >= i+8 && strings.EqualFold(s[i:i+8], "https://") {
+					inLink = true
+				} else if len(s) >= i+7 && strings.EqualFold(s[i:i+7], "http://") {
+					inLink = true
+				}
+			}
+
+			if c == '*' || c == '_' || c == '`' || c == '~' || c == '|' || c == '#' {
+				builder.WriteRune('\\')
+			}
+		}
+
+		builder.WriteRune(c)
+	}
+
+	return builder.String()
 }
