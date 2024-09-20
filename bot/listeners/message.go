@@ -160,7 +160,7 @@ func getTicket(ctx context.Context, channelId uint64) (database.Ticket, bool, er
 	if err == nil && !isTicket {
 		prometheus.LogOnMessageTicketLookup(false, cacheHit)
 		return database.Ticket{}, false, nil
-	} else if !errors.Is(err, redis.ErrTicketStatusNotCached) {
+	} else if err != nil && !errors.Is(err, redis.ErrTicketStatusNotCached) {
 		return database.Ticket{}, false, err
 	}
 
