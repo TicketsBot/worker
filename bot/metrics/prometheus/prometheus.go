@@ -29,7 +29,17 @@ var (
 	InboundRequests           = newCounterVec("inbound_requests", "route")
 	ActiveInteractions        = newGauge("active_interactions")
 	InteractionTimeToComplete = newHistogram("interaction_time_to_complete")
+
+	ForwardedDashboardMessages = newCounter("forwarded_dashboard_messages")
 )
+
+func newCounter(name string) prometheus.Counter {
+	return promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      name,
+	})
+}
 
 func newCounterVec(name string, labels ...string) *prometheus.CounterVec {
 	return promauto.NewCounterVec(prometheus.CounterOpts{

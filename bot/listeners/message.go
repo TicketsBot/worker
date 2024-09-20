@@ -96,6 +96,8 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 				Message: e.Message,
 			}
 
+			prometheus.ForwardedDashboardMessages.Inc()
+
 			return chatrelay.PublishMessage(redis.Client, data)
 		}); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
