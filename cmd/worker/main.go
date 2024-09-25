@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/archiverclient"
 	"github.com/TicketsBot/common/model"
+	"github.com/TicketsBot/common/observability"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
@@ -19,8 +20,13 @@ import (
 	"github.com/TicketsBot/worker/event"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/rest/request"
+	"go.uber.org/zap"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -43,8 +49,13 @@ func main() {
 		}
 	}
 
+	logger, err := observability.Configure(nil, config.Conf.JsonLogs, config.Conf.LogLevel)
+	if err != nil {
+		panic(err)
+	}
+
 	if len(config.Conf.DebugMode) == 0 {
-		fmt.Println("Connecting to Sentry...")
+		logger.Info("Connecting to sentry")
 		if err := sentry.Initialise(sentry.Options{
 			Dsn:              config.Conf.Sentry.Dsn,
 			Debug:            config.Conf.DebugMode != "",
@@ -52,39 +63,50 @@ func main() {
 			EnableTracing:    config.Conf.Sentry.UseTracing,
 			TracesSampleRate: config.Conf.Sentry.TracingSampleRate,
 		}); err != nil {
-			fmt.Println(err.Error())
+			logger.Error("Failed to connect to sentry", zap.Error(err))
+		} else {
+			logger.Info("Connected to sentry")
 		}
 	}
 
-	fmt.Println("Connected to Sentry, connect to Redis...")
+	logger.Info("Connecting to Redis")
 	if err := redis.Connect(); err != nil {
-		panic(err)
+		logger.Fatal("Failed to connect to Redis", zap.Error(err))
+		return
 	}
 
-	fmt.Println("Connected to Redis, connect to DB...")
+	logger.Info("Connected to Redis")
+
+	logger.Info("Connecting to DB")
 	dbclient.Connect()
+	logger.Info("Connected to DB")
 
+	logger.Info("Loading i18n files")
 	i18n.Init()
+	logger.Info("Loaded i18n files")
 
-	fmt.Println("Connected to DB, connect to cache...")
-	pgCache, err := cache.Connect()
+	logger.Info("Connecting to cache")
+	pgCache, err := cache.Connect(logger.With(zap.String("service", "cache")))
 	if err != nil {
-		panic(err)
+		logger.Fatal("Failed to connect to cache", zap.Error(err))
+		return
 	}
 
 	cache.Client = &pgCache
+	logger.Info("Connected to cache")
 
-	fmt.Println("Connected to cache, connect to clickhouse...")
-	dbclient.ConnectAnalytics()
+	logger.Info("Connecting to clickhouse")
+	dbclient.ConnectAnalytics(logger.With(zap.String("service", "clickhouse")))
+	logger.Info("Connected to clickhouse")
 
 	// Configure HTTP proxy
-	fmt.Println("Configuring proxy...")
 	if config.Conf.Discord.ProxyUrl != "" {
+		logger.Info("Configuring REST proxy", zap.String("url", config.Conf.Discord.ProxyUrl))
 		request.Client.Timeout = config.Conf.Discord.RequestTimeout
 		request.RegisterPreRequestHook(utils.ProxyHook)
 	}
 
-	fmt.Println("Retrieved command list, initialising microservice clients...")
+	logger.Info("Configuring microservice clients (no I/O)")
 	if config.Conf.DebugMode == "" {
 		utils.PremiumClient = premium.NewPremiumLookupClient(redis.Client, &pgCache, dbclient.Client)
 	} else {
@@ -96,25 +118,82 @@ func main() {
 
 	utils.ArchiverClient = archiverclient.NewArchiverClient(config.Conf.Archiver.Url, []byte(config.Conf.Archiver.AesKey))
 
+	logger.Info("Starting Prometheus server")
 	prometheus.StartServer(config.Conf.Prometheus.Address)
+	logger.Info("Started Prometheus server")
 
+	logger.Info("Starting StatsD client")
 	statsd.Client, err = statsd.NewClient(config.Conf.Statsd.Address, config.Conf.Statsd.Prefix)
 	if err != nil {
-		sentry.Error(err)
+		logger.Error("Failed to start StatsD client", zap.Error(err))
 	} else {
 		request.RegisterPreRequestHook(statsd.RestHook)
 		go statsd.Client.StartDaemon()
+		logger.Info("Started StatsD client")
 	}
 
+	logger.Info("Registering Prometheus hooks")
 	request.RegisterPreRequestHook(prometheus.PreRequestHook)
 	request.RegisterPostRequestHook(prometheus.PostRequestHook)
 
+	logger.Info("Initialising integrations")
 	integrations.InitIntegrations()
 
 	go messagequeue.ListenTicketClose()
 	go messagequeue.ListenAutoClose()
 	go messagequeue.ListenCloseRequestTimer()
 
-	fmt.Println("Listening for events...")
-	event.HttpListen(redis.Client, &pgCache)
+	if config.Conf.WorkerMode == config.WorkerModeInteractions {
+		logger.Info("Starting HTTP server", zap.String("mode", string(config.Conf.WorkerMode)))
+
+		event.HttpListen(redis.Client, &pgCache)
+	} else if config.Conf.WorkerMode == config.WorkerModeGateway {
+		logger.Info("Starting event listeners", zap.String("mode", string(config.Conf.WorkerMode)))
+
+		go event.HttpListen(redis.Client, &pgCache)
+
+		var wg sync.WaitGroup
+
+		kafkaConsumer, err := event.ConnectKafka(logger.With(zap.String("service", "kafka")), &pgCache)
+		if err != nil {
+			logger.Fatal("Failed to connect to Kafka", zap.Error(err))
+			return
+		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			kafkaConsumer.Run()
+		}()
+
+		shutdownCh := make(chan os.Signal, 1)
+		signal.Notify(shutdownCh, syscall.SIGINT, syscall.SIGTERM)
+		<-shutdownCh
+
+		logger.Info("Received shutdown signal")
+		kafkaConsumer.Shutdown()
+
+		if waitTimeout(&wg, time.Second*10) {
+			logger.Info("Shutdown completed gracefully")
+		} else {
+			logger.Warn("Graceful shutdown timed out, exiting now")
+		}
+	} else {
+		logger.Fatal("Invalid worker mode", zap.String("mode", string(config.Conf.WorkerMode)))
+	}
+}
+
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	ch := make(chan struct{})
+	go func() {
+		defer close(ch)
+		wg.Wait()
+	}()
+
+	select {
+	case <-ch:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
 }

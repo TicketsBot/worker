@@ -9,12 +9,13 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/cache"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"time"
 )
 
 var Client *cache.PgCache
 
-func Connect() (client cache.PgCache, err error) {
+func Connect(logger *zap.Logger) (client cache.PgCache, err error) {
 	uri := fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		config.Conf.Cache.Username,
@@ -29,12 +30,12 @@ func Connect() (client cache.PgCache, err error) {
 		panic(err)
 	}
 
-	fmt.Printf(
-		"Connecting to cache on postgres://%s:XXYYZZ@%s/%s?pool_max_conns=%d\n",
-		config.Conf.Cache.Username,
-		config.Conf.Cache.Host,
-		config.Conf.Cache.Database,
-		config.Conf.Cache.Threads,
+	logger.Info(
+		"Connecting to Postgres cache",
+		zap.String("username", config.Conf.Cache.Username),
+		zap.String("host", config.Conf.Cache.Host),
+		zap.String("database", config.Conf.Cache.Database),
+		zap.Int("threads", config.Conf.Cache.Threads),
 	)
 
 	// TODO: Sentry

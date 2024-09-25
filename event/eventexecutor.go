@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/listeners"
-	"github.com/TicketsBot/worker/bot/metrics/statsd"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/getsentry/sentry-go"
 	"github.com/rxdn/gdl/gateway/payloads"
 )
@@ -21,12 +21,11 @@ func execute(c *worker.Context, event []byte) error {
 	span.SetTag("event", payload.EventName)
 	defer span.Finish()
 
+	prometheus.Events.WithLabelValues(payload.EventName).Inc()
+
 	if err := listeners.HandleEvent(c, span, payload); err != nil {
 		return err
 	}
-
-	// Goroutine because recording metrics is blocking
-	statsd.Client.IncrementKey(statsd.KeyEvents)
 
 	return nil
 }

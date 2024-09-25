@@ -31,6 +31,9 @@ var (
 	InteractionTimeToComplete = newHistogram("interaction_time_to_complete")
 
 	ForwardedDashboardMessages = newCounter("forwarded_dashboard_messages")
+
+	Events         = newCounterVec("events", "event_type")
+	KafkaBatchSize = newHistogram("kafka_batch_size")
 )
 
 func newCounter(name string) prometheus.Counter {
