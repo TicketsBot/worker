@@ -9,6 +9,7 @@ import (
 	"github.com/TicketsBot/worker/bot/button/registry/matcher"
 	"github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/customisation"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	prem "github.com/TicketsBot/worker/bot/premium"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/i18n"
@@ -47,16 +48,16 @@ func (h *PremiumKeyOpenHandler) Execute(ctx *context.SelectMenuContext) {
 
 	option := ctx.InteractionData.Values[0]
 	if option == "patreon" {
-		tier, err := utils.PremiumClient.GetTierByUser(ctx, ctx.UserId(), false)
+		entitlement, err := dbclient.Client.LegacyPremiumEntitlements.GetUserTier(ctx, ctx.UserId(), premium.PatreonGracePeriod)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if tier == premium.None {
+		if entitlement == nil {
 			ctx.Edit(prem.BuildPatreonNotLinkedMessage(ctx))
 		} else {
-			res, err := prem.BuildPatreonSubscriptionFoundMessage(ctx)
+			res, err := prem.BuildPatreonSubscriptionFoundMessage(ctx, entitlement)
 			if err != nil {
 				ctx.HandleError(err)
 				return

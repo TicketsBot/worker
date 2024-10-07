@@ -58,16 +58,16 @@ func (h *PremiumCheckAgain) Execute(ctx *context.ButtonContext) {
 			return
 		}
 	} else {
-		tier, err := utils.PremiumClient.GetTierByUser(ctx, ctx.UserId(), false)
+		entitlement, err := dbclient.Client.LegacyPremiumEntitlements.GetUserTier(ctx, ctx.UserId(), premium.PatreonGracePeriod)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if tier == premium.None {
+		if entitlement == nil {
 			ctx.Edit(prem.BuildPatreonNotLinkedMessage(ctx))
 		} else {
-			res, err := prem.BuildPatreonSubscriptionFoundMessage(ctx)
+			res, err := prem.BuildPatreonSubscriptionFoundMessage(ctx, entitlement)
 			if err != nil {
 				ctx.HandleError(err)
 				return

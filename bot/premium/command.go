@@ -3,7 +3,7 @@ package premium
 import (
 	"fmt"
 	"github.com/TicketsBot/common/model"
-	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
@@ -36,19 +36,14 @@ func BuildKeyModal(guildId uint64) interaction.ModalResponseData {
 	}
 }
 
-func BuildPatreonSubscriptionFoundMessage(ctx registry.CommandContext) (command.MessageResponse, error) {
+func BuildPatreonSubscriptionFoundMessage(ctx registry.CommandContext, legacyEntitlement *database.LegacyPremiumEntitlement) (command.MessageResponse, error) {
+	if legacyEntitlement == nil {
+		return BuildPatreonNotLinkedMessage(ctx), nil
+	}
+
 	guild, err := ctx.Guild()
 	if err != nil {
 		return command.MessageResponse{}, err
-	}
-
-	legacyEntitlement, err := dbclient.Client.LegacyPremiumEntitlements.GetUserTier(ctx, ctx.UserId(), premium.PatreonGracePeriod)
-	if err != nil {
-		return command.MessageResponse{}, err
-	}
-
-	if legacyEntitlement == nil {
-		return BuildPatreonNotLinkedMessage(ctx), nil
 	}
 
 	var sku *model.SubscriptionSku

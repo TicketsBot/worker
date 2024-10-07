@@ -87,11 +87,10 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 		))
 
 	} else {
-		var patreonEmoji, keyEmoji *emoji.Emoji
-		//var patreonEmoji, discordEmoji, keyEmoji *emoji.Emoji
+		var patreonEmoji, discordEmoji, keyEmoji *emoji.Emoji
 		if !ctx.Worker().IsWhitelabel {
 			patreonEmoji = customisation.EmojiPatreon.BuildEmoji()
-			//discordEmoji = customisation.EmojiDiscord.BuildEmoji()
+			discordEmoji = customisation.EmojiDiscord.BuildEmoji()
 			keyEmoji = utils.BuildEmoji("🔑")
 		}
 
@@ -114,13 +113,12 @@ func (PremiumCommand) Execute(ctx registry.CommandContext) {
 								Description: ctx.GetMessage(i18n.MessagePremiumMethodSelectorPatreon),
 								Emoji:       patreonEmoji,
 							},
-							// TODO: Enable on October 7th
-							//component.SelectOption{
-							//	Label:       "Discord",
-							//	Value:       "discord",
-							//	Description: ctx.GetMessage(i18n.MessagePremiumMethodSelectorDiscord),
-							//	Emoji:       discordEmoji,
-							//},
+							component.SelectOption{
+								Label:       "Discord",
+								Value:       "discord",
+								Description: ctx.GetMessage(i18n.MessagePremiumMethodSelectorDiscord),
+								Emoji:       discordEmoji,
+							},
 							component.SelectOption{
 								Label:       ctx.GetMessage(i18n.MessagePremiumGiveawayKey),
 								Value:       "key",
