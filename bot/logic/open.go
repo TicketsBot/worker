@@ -607,7 +607,7 @@ func checkChannelLimitAndDetermineParentId(
 
 					return checkChannelLimitAndDetermineParentId(ctx, worker, guildId, categoryId, settings, false)
 				} else {
-					return 0, fmt.Errorf("category full")
+					return 0, errCategoryChannelLimitReached
 				}
 			}
 
