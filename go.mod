@@ -7,7 +7,7 @@ require (
 	github.com/TicketsBot/analytics-client v0.0.0-20240724103359-30f5dac821e6
 	github.com/TicketsBot/archiverclient v0.0.0-20241012221057-16a920bfb454
 	github.com/TicketsBot/common v0.0.0-20240829163809-6f60869d8941
-	github.com/TicketsBot/database v0.0.0-20240908162702-a0592f669978
+	github.com/TicketsBot/database v0.0.0-20241012232857-feadc19c6a12
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/elliotchance/orderedmap v1.2.1
 	github.com/getsentry/sentry-go v0.21.0
@@ -20,7 +20,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/rxdn/gdl v0.0.0-20241012214045-890597169639
+	github.com/rxdn/gdl v0.0.0-20241012233117-48a75067a54d
 	github.com/schollz/progressbar/v3 v3.8.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
@@ -29,7 +29,7 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/net v0.26.0
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.8.0
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 )
@@ -123,12 +123,12 @@ require (
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/api v0.186.0 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
