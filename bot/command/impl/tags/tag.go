@@ -63,15 +63,6 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		return
 	}
 
-	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
-	if ticket.GuildId != 0 {
-		go func() {
-			if err := dbclient.Client.Participants.Set(ctx, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
-				sentry.ErrorWithContext(err, ctx.ToErrorContext())
-			}
-		}()
-	}
-
 	content := utils.ValueOrZero(tag.Content)
 	if ticket.Id != 0 {
 		content = logic.DoPlaceholderSubstitutions(ctx, content, ctx.Worker(), ticket, nil)
@@ -100,6 +91,13 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	if _, err := ctx.ReplyWith(data); err != nil {
 		ctx.HandleError(err)
 		return
+	}
+
+	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
+	if ticket.GuildId != 0 {
+		if err := dbclient.Client.Participants.Set(ctx, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
 	}
 }
 
