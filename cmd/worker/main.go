@@ -116,7 +116,10 @@ func main() {
 		request.Client.Timeout = time.Second * 10
 	}
 
-	utils.ArchiverClient = archiverclient.NewArchiverClient(config.Conf.Archiver.Url, []byte(config.Conf.Archiver.AesKey))
+	utils.ArchiverClient = archiverclient.NewArchiverClient(
+		archiverclient.NewProxyRetriever(config.Conf.Archiver.Url),
+		[]byte(config.Conf.Archiver.AesKey),
+	)
 
 	logger.Info("Starting Prometheus server")
 	prometheus.StartServer(config.Conf.Prometheus.Address)

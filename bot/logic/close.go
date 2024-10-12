@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/collections"
 	"github.com/TicketsBot/common/permission"
-	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -136,7 +135,7 @@ func CloseTicket(ctx context.Context, cmd registry.CommandContext, reason *strin
 			return
 		}
 
-		if err := utils.ArchiverClient.Store(msgs, cmd.GuildId(), ticket.Id, cmd.PremiumTier() > premium.None); err != nil {
+		if err := utils.ArchiverClient.Store(ctx, cmd.GuildId(), ticket.Id, msgs); err != nil {
 			cmd.HandleError(err)
 			return
 		}
