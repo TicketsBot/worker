@@ -14,6 +14,16 @@ func Contains[T comparable](slice []T, target T) bool {
 	return false
 }
 
+func ContainsFunc[T any](slice []T, f func(T) bool) bool {
+	for _, el := range slice {
+		if f(el) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func HasIntersection[T comparable](slice []T, slice2 []T) bool {
 	for _, el := range slice {
 		for _, el2 := range slice2 {

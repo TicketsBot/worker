@@ -235,64 +235,20 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 
 	// Channel count checks
 	if !isThread {
-		span := sentry.StartSpan(rootSpan.Context(), "Check < 500 channels")
-		channels, _ := cmd.Worker().GetGuildChannels(cmd.GuildId())
-
-		// 500 guild limit check
-		if !isThread && countRealChannels(channels, 0) >= 500 {
-			cmd.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
-			return database.Ticket{}, fmt.Errorf("channel limit reached")
-		}
-
-		span.Finish()
-
-		// Make sure there's not > 50 channels in a category
-		if useCategory {
-			span := sentry.StartSpan(rootSpan.Context(), "Check < 50 channels in category")
-			categoryChildrenCount := countRealChannels(channels, category)
-
-			if categoryChildrenCount >= 50 {
-				// Try to use the overflow category if there is one
-				if settings.OverflowEnabled {
-					// If overflow is enabled, and the category id is nil, then use the root of the server
-					if settings.OverflowCategoryId == nil {
-						useCategory = false
-					} else {
-						category = *settings.OverflowCategoryId
-
-						// Verify that the overflow category still exists
-						span := sentry.StartSpan(span.Context(), "Check if overflow category exists")
-						if _, err := cmd.Worker().GetChannel(category); err != nil {
-							var restError request.RestError
-							if errors.As(err, &restError) && restError.StatusCode == 404 {
-								if err := dbclient.Client.Settings.SetOverflow(ctx, cmd.GuildId(), false, nil); err != nil {
-									cmd.HandleError(err)
-									return database.Ticket{}, err
-								}
-							}
-
-							cmd.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-							return database.Ticket{}, err
-						}
-
-						// Check that the overflow category still has space
-						overflowCategoryChildrenCount := countRealChannels(channels, *settings.OverflowCategoryId)
-
-						if overflowCategoryChildrenCount >= 50 {
-							cmd.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-							return database.Ticket{}, fmt.Errorf("overflow category full")
-						}
-
-						span.Finish()
-					}
-				} else {
-					cmd.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
-					return database.Ticket{}, fmt.Errorf("category ticket limit reached")
-				}
+		newCategoryId, err := checkChannelLimitAndDetermineParentId(ctx, cmd.Worker(), cmd.GuildId(), category, settings, true)
+		if err != nil {
+			if errors.Is(err, errGuildChannelLimitReached) {
+				cmd.Reply(customisation.Red, i18n.Error, i18n.MessageGuildChannelLimitReached)
+			} else if errors.Is(err, errCategoryChannelLimitReached) {
+				cmd.Reply(customisation.Red, i18n.Error, i18n.MessageTooManyTickets)
+			} else {
+				cmd.HandleError(err)
 			}
 
-			span.Finish()
+			return database.Ticket{}, err
 		}
+
+		category = newCategoryId
 	}
 
 	var panelId *int
@@ -590,6 +546,115 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 	span.Finish()
 
 	return ticket, nil
+}
+
+var (
+	errGuildChannelLimitReached    = errors.New("guild channel limit reached")
+	errCategoryChannelLimitReached = errors.New("category channel limit reached")
+)
+
+func checkChannelLimitAndDetermineParentId(
+	ctx context.Context,
+	worker *worker.Context,
+	guildId uint64,
+	categoryId uint64,
+	settings database.Settings,
+	canRetry bool,
+) (uint64, error) {
+	span := sentry.StartSpan(ctx, "Check < 500 channels")
+	channels, _ := worker.GetGuildChannels(guildId)
+
+	// 500 guild limit check
+	if countRealChannels(channels, 0) >= 500 {
+		if !canRetry {
+			return 0, errGuildChannelLimitReached
+		} else {
+			canRefresh, err := redis.TakeChannelRefetchToken(ctx, guildId)
+			if err != nil {
+				return 0, err
+			}
+
+			if canRefresh {
+				if err := refreshCachedChannels(ctx, worker, guildId); err != nil {
+					return 0, err
+				}
+
+				return checkChannelLimitAndDetermineParentId(ctx, worker, guildId, categoryId, settings, false)
+			} else {
+				return 0, errGuildChannelLimitReached
+			}
+		}
+	}
+
+	span.Finish()
+
+	// Make sure there's not > 50 channels in a category
+	if categoryId != 0 {
+		span := sentry.StartSpan(ctx, "Check < 50 channels in category")
+		categoryChildrenCount := countRealChannels(channels, categoryId)
+
+		if categoryChildrenCount >= 50 {
+			if canRetry {
+				canRefresh, err := redis.TakeChannelRefetchToken(ctx, guildId)
+				if err != nil {
+					return 0, err
+				}
+
+				if canRefresh {
+					if err := refreshCachedChannels(ctx, worker, guildId); err != nil {
+						return 0, err
+					}
+
+					return checkChannelLimitAndDetermineParentId(ctx, worker, guildId, categoryId, settings, false)
+				} else {
+					return 0, fmt.Errorf("category full")
+				}
+			}
+
+			// Try to use the overflow category if there is one
+			if settings.OverflowEnabled {
+				// If overflow is enabled, and the category id is nil, then use the root of the server
+				if settings.OverflowCategoryId == nil {
+					categoryId = 0
+				} else {
+					categoryId = *settings.OverflowCategoryId
+
+					// Verify that the overflow category still exists
+					span := sentry.StartSpan(span.Context(), "Check if overflow category exists")
+					if !utils.ContainsFunc(channels, func(c channel.Channel) bool {
+						return c.Id == categoryId
+					}) {
+						if err := dbclient.Client.Settings.SetOverflow(ctx, guildId, false, nil); err != nil {
+							return 0, err
+						}
+
+						return 0, errCategoryChannelLimitReached
+					}
+
+					// Check that the overflow category still has space
+					overflowCategoryChildrenCount := countRealChannels(channels, *settings.OverflowCategoryId)
+					if overflowCategoryChildrenCount >= 50 {
+						return 0, errCategoryChannelLimitReached
+					}
+
+					span.Finish()
+				}
+			} else {
+				return 0, errCategoryChannelLimitReached
+			}
+		}
+	}
+
+	return categoryId, nil
+}
+
+func refreshCachedChannels(ctx context.Context, worker *worker.Context, guildId uint64) error {
+	channels, err := rest.GetGuildChannels(ctx, worker.Token, worker.RateLimiter, guildId)
+	if err != nil {
+		return err
+	}
+
+	return worker.Cache.ReplaceChannels(ctx, guildId, channels)
 }
 
 // has hit ticket limit, ticket limit

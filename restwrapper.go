@@ -329,7 +329,7 @@ func (ctx *Context) GetGuildChannels(guildId uint64) ([]channel.Channel, error) 
 	channels, err := rest.GetGuildChannels(context.Background(), ctx.Token, ctx.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
-		go ctx.Cache.StoreChannels(context.Background(), channels)
+		go ctx.Cache.ReplaceChannels(context.Background(), guildId, channels)
 	}
 
 	return channels, err
