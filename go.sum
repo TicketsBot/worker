@@ -484,6 +484,8 @@ github.com/rxdn/gdl v0.0.0-20241012233117-48a75067a54d h1:BAHaXVlpp0Cqm4j0Uj+SIA
 github.com/rxdn/gdl v0.0.0-20241012233117-48a75067a54d/go.mod h1:hDxVWVHzvsO3Mt9d5KIjMLbm3K91Qgqw3LS0FIUxGVo=
 github.com/rxdn/gdl v0.0.0-20241019184637-59fcf2e22089 h1:ssWmvTNy2km/JNxQwJYLEO+6L6LvOxzUTqDCmked99I=
 github.com/rxdn/gdl v0.0.0-20241019184637-59fcf2e22089/go.mod h1:hDxVWVHzvsO3Mt9d5KIjMLbm3K91Qgqw3LS0FIUxGVo=
+github.com/rxdn/gdl v0.0.0-20241019192512-14b65ccd95be h1:aSUjioM9WRiK9ksHVyVIhpNGl2p/aNeHsSb0YxqYxzU=
+github.com/rxdn/gdl v0.0.0-20241019192512-14b65ccd95be/go.mod h1:hDxVWVHzvsO3Mt9d5KIjMLbm3K91Qgqw3LS0FIUxGVo=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/progressbar/v3 v3.8.2 h1:2kZJwZCpb+E/V79kGO7daeq+hUwUJW0A5QD1Wv455dA=
 github.com/schollz/progressbar/v3 v3.8.2/go.mod h1:9KHLdyuXczIsyStQwzvW8xiELskmX7fQMaZdN23nAv8=
