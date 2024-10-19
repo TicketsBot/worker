@@ -366,7 +366,7 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 		return database.Ticket{}, err
 	}
 
-	prometheus.LogTicketCreated(cmd.GuildId())
+	prometheus.TicketsCreated.Inc()
 
 	// Parallelise as much as possible
 	group, _ := errgroup.WithContext(ctx)

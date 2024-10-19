@@ -14,9 +14,9 @@ const (
 
 var (
 	IntegrationRequests = newCounterVec("integration_requests", "integration_id", "integration_name", "guild_id")
-	TicketsCreated      = newCounterVec("tickets_created", "guild_id")
+	TicketsCreated      = newCounter("tickets_created")
 
-	Commands = newCounterVec("commands", "guild_id", "command")
+	Commands = newCounterVec("commands", "command")
 
 	InteractionTimeToDefer   = newHistogram("interaction_time_to_defer")
 	InteractionTimeToReceive = newHistogram("interaction_time_to_receive")
@@ -77,12 +77,8 @@ func LogIntegrationRequest(integration database.CustomIntegration, guildId uint6
 	).Inc()
 }
 
-func LogTicketCreated(guildId uint64) {
-	TicketsCreated.WithLabelValues(strconv.FormatUint(guildId, 10)).Inc()
-}
-
-func LogCommand(guildId uint64, command string) {
-	Commands.WithLabelValues(strconv.FormatUint(guildId, 10), command).Inc()
+func LogCommand(command string) {
+	Commands.WithLabelValues(command).Inc()
 }
 
 func LogOnMessageTicketLookup(isTicket, cacheHit bool) {

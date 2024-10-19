@@ -194,7 +194,7 @@ func executeCommand(
 
 		statsd.Client.IncrementKey(statsd.KeySlashCommands)
 		statsd.Client.IncrementKey(statsd.KeyCommands)
-		prometheus.LogCommand(data.GuildId.Value, data.Data.Name)
+		prometheus.LogCommand(data.Data.Name)
 
 		defer close(responseCh)
 
