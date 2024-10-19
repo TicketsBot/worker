@@ -25,6 +25,7 @@ var (
 
 	ActiveHttpRequests  = newGauge("active_http_requests")
 	HttpRequestDuration = newHistogram("http_request_duration")
+	DiscordApiErrors    = newCounterVec("discord_api_errors", "status", "error_code")
 
 	InboundRequests           = newCounterVec("inbound_requests", "route")
 	ActiveInteractions        = newGauge("active_interactions")
