@@ -196,8 +196,8 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 				message = formatDiscordError(restError, eventId)
 			}
 		} else if code, ok := restError.ApiError.Code.(string); ok && code == "CHANNEL_PARENT_INVALID" {
-			message = fmt.Sprintf("Could not find the ticket channel category: it must have been deleted. Ask a server administrator to visit the dashboard and assign a valid channel category to this ticket panel.\nError ID: `%s`", eventId)
-			//imageUrl = utils.Ptr("https://docs.ticketsbot.net/img/multi_panel_category.png")
+			message = "Could not find the ticket channel category: it must have been deleted. Ask a server " +
+				"administrator to visit the dashboard and assign a valid channel category to this ticket panel."
 		} else {
 			message = formatDiscordError(restError, eventId)
 		}
