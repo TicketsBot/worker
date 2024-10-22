@@ -12,14 +12,12 @@ import (
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
-	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -34,8 +32,8 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 		return false
 	}
 
-	lookupCtx, cancelLookupCtx := context.WithTimeout(ctx, time.Second*2)
-	defer cancelLookupCtx()
+	//lookupCtx, cancelLookupCtx := context.WithTimeout(ctx, time.Second*2)
+	//defer cancelLookupCtx()
 
 	// Fetch premium tier
 	// TODO: Re-architecture system to tie DMs to guilds
@@ -71,38 +69,38 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 	}
 
 	// Parallelise checks
-	group, _ := errgroup.WithContext(lookupCtx)
-
-	// Check if the user is blacklisted at guild / global level
-	var userBlacklisted bool
-	group.Go(func() (err error) {
-		userBlacklisted, err = cc.IsBlacklisted(lookupCtx)
-		return
-	})
-
-	// Check for guild-wide blacklist
-	var guildBlacklisted = false
-	if data.GuildId.Value != 0 {
-		group.Go(func() (err error) {
-			guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
-			return
-		})
-	}
-
-	if err := group.Wait(); err != nil {
-		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
-			Guild:   data.GuildId.Value,
-			Channel: data.ChannelId,
-		})
-
-		cc.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
-		return false
-	}
-
-	if userBlacklisted || guildBlacklisted {
-		cc.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
-		return false
-	}
+	//group, _ := errgroup.WithContext(lookupCtx)
+	//
+	//// Check if the user is blacklisted at guild / global level
+	//var userBlacklisted bool
+	//group.Go(func() (err error) {
+	//	userBlacklisted, err = cc.IsBlacklisted(lookupCtx)
+	//	return
+	//})
+	//
+	//// Check for guild-wide blacklist
+	//var guildBlacklisted = false
+	//if data.GuildId.Value != 0 {
+	//	group.Go(func() (err error) {
+	//		guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
+	//		return
+	//	})
+	//}
+	//
+	//if err := group.Wait(); err != nil {
+	//	errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
+	//		Guild:   data.GuildId.Value,
+	//		Channel: data.ChannelId,
+	//	})
+	//
+	//	cc.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
+	//	return false
+	//}
+	//
+	//if userBlacklisted || guildBlacklisted {
+	//	cc.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
+	//	return false
+	//}
 
 	checkCtx, cancel := context.WithTimeout(ctx, time.Second*2)
 	defer cancel()
