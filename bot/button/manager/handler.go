@@ -39,17 +39,18 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 
 	// Fetch premium tier
 	// TODO: Re-architecture system to tie DMs to guilds
-	premiumTier, err := getPremiumTier(lookupCtx, worker, data.GuildId.Value)
-	if err != nil {
-		// TODO: Better handling
-		// Allow executing to continue, assuming no premium
-		sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
-			Guild:   data.GuildId.Value,
-			Channel: data.ChannelId,
-		})
-
-		premiumTier = premium.None
-	}
+	premiumTier := premium.Premium
+	//premiumTier, err := getPremiumTier(lookupCtx, worker, data.GuildId.Value)
+	//if err != nil {
+	//	// TODO: Better handling
+	//	// Allow executing to continue, assuming no premium
+	//	sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
+	//		Guild:   data.GuildId.Value,
+	//		Channel: data.ChannelId,
+	//	})
+	//
+	//	premiumTier = premium.None
+	//}
 
 	if premiumTier == premium.None && config.Conf.PremiumOnly {
 		return false
