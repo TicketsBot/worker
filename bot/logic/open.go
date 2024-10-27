@@ -341,11 +341,27 @@ func OpenTicket(ctx context.Context, cmd registry.InteractionContext, panel *dat
 		span = sentry.StartSpan(rootSpan.Context(), "Create channel")
 		tmp, err := cmd.Worker().CreateGuildChannel(cmd.GuildId(), data)
 		if err != nil { // Bot likely doesn't have permission
-			cmd.HandleError(err)
-
 			// To prevent tickets getting in a glitched state, we should mark it as closed (or delete it completely?)
 			if err := dbclient.Client.Tickets.Close(ctx, ticketId, cmd.GuildId()); err != nil {
 				cmd.HandleError(err)
+			}
+
+			cmd.HandleError(err)
+
+			var restError request.RestError
+			if errors.As(err, &restError) && restError.ApiError.FirstErrorCode() == "CHANNEL_PARENT_MAX_CHANNELS" {
+				canRefresh, err := redis.TakeChannelRefetchToken(ctx, cmd.GuildId())
+				if err != nil {
+					cmd.HandleError(err)
+					return database.Ticket{}, err
+				}
+
+				if canRefresh {
+					if err := refreshCachedChannels(ctx, cmd.Worker(), cmd.GuildId()); err != nil {
+						cmd.HandleError(err)
+						return database.Ticket{}, err
+					}
+				}
 			}
 
 			return database.Ticket{}, err
