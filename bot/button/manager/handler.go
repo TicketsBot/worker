@@ -83,7 +83,7 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 	var guildBlacklisted = false
 	if data.GuildId.Value != 0 {
 		group.Go(func() (err error) {
-			guildBlacklisted, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
+			guildBlacklisted, _, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
 			return
 		})
 	}

@@ -23,7 +23,7 @@ func OnGuildCreate(worker *worker.Context, e events.GuildCreate) {
 	defer cancel()
 
 	// check if guild is blacklisted
-	if blacklisted, err := dbclient.Client.ServerBlacklist.IsBlacklisted(ctx, e.Guild.Id); err == nil {
+	if blacklisted, _, err := dbclient.Client.ServerBlacklist.IsBlacklisted(ctx, e.Guild.Id); err == nil {
 		if blacklisted {
 			if err := worker.LeaveGuild(e.Guild.Id); err != nil {
 				sentry.Error(err)

@@ -126,7 +126,7 @@ func executeCommand(
 		// Get guild blacklisted in guild
 		var guildBlacklisted bool
 		group.Go(func() error {
-			res, err := dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
+			res, _, err := dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
 			if err != nil {
 				return err
 			}
