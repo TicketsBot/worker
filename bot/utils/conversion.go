@@ -25,6 +25,14 @@ func ValueOrZero[T any](v *T) T {
 	}
 }
 
+func ValueOrDefault[T any](v *T, def T) T {
+	if v == nil {
+		return def
+	} else {
+		return *v
+	}
+}
+
 func NilIfZero[T comparable](v T) *T {
 	if v == *new(T) {
 		return nil

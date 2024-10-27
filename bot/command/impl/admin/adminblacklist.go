@@ -26,6 +26,7 @@ func (AdminBlacklistCommand) Properties() registry.Properties {
 		AdminOnly:       true,
 		Arguments: command.Arguments(
 			command.NewRequiredArgument("guild_id", "ID of the guild to blacklist", interaction.OptionTypeString, i18n.MessageInvalidArgument),
+			command.NewOptionalArgument("reason", "Reason for blacklisting the guild", interaction.OptionTypeString, i18n.MessageInvalidArgument),
 		),
 		Timeout: time.Second * 10,
 	}
@@ -35,14 +36,14 @@ func (c AdminBlacklistCommand) GetExecutor() interface{} {
 	return c.Execute
 }
 
-func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string) {
+func (AdminBlacklistCommand) Execute(ctx registry.CommandContext, raw string, reason *string) {
 	guildId, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
 		ctx.ReplyRaw(customisation.Red, ctx.GetMessage(i18n.Error), "Invalid guild ID provided")
 		return
 	}
 
-	if err := dbclient.Client.ServerBlacklist.Add(ctx, guildId); err != nil {
+	if err := dbclient.Client.ServerBlacklist.Add(ctx, guildId, reason); err != nil {
 		ctx.HandleError(err)
 		return
 	}

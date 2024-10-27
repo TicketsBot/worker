@@ -167,7 +167,7 @@ func callCommand(
         }
 
         v.Execute(ctx, arg0)
-    case admin.AdminUnblacklistCommand:
+    case admin.AdminCheckBlacklistCommand:
         var arg0 string
 
         opt0, ok0 := findOption(cmd.Properties().Arguments[0], options)
