@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/observability"
 	"github.com/TicketsBot/common/premium"
+	"github.com/TicketsBot/common/rpc"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/cache"
 	"github.com/TicketsBot/worker/bot/dbclient"
@@ -15,7 +16,6 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
-	"github.com/TicketsBot/worker/bot/rpc"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/event"
@@ -158,13 +158,21 @@ func main() {
 
 		var wg sync.WaitGroup
 
-		rpcClient, err := rpc.NewClient(logger.With(zap.String("service", "rpc")), map[string]rpc.Listener{
-			// Listen for gateway events over Kafka
-			config.Conf.Kafka.EventsTopic: event.NewKafkaListener(
-				logger.With(zap.String("service", "gateway-events-kafka")),
-				&pgCache,
-			),
-		})
+		rpcClient, err := rpc.NewClient(
+			logger.With(zap.String("service", "rpc")),
+			rpc.Config{
+				Brokers:             config.Conf.Kafka.Brokers,
+				ConsumerGroup:       "worker",
+				ConsumerConcurrency: config.Conf.Kafka.GoroutineLimit,
+			},
+			map[string]rpc.Listener{
+				// Listen for gateway events over Kafka
+				config.Conf.Kafka.EventsTopic: event.NewKafkaListener(
+					logger.With(zap.String("service", "gateway-events-kafka")),
+					&pgCache,
+				),
+			})
+
 		if err != nil {
 			logger.Fatal("Failed to create RPC client", zap.Error(err))
 			return
@@ -173,7 +181,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rpcClient.Run()
+			rpcClient.StartConsumer()
 		}()
 
 		shutdownCh := make(chan os.Signal, 1)

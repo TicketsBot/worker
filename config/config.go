@@ -86,8 +86,9 @@ type (
 		} `envPrefix:"WORKER_REDIS_"`
 
 		Kafka struct {
-			Brokers     []string `env:"BROKERS"`
-			EventsTopic string   `env:"EVENTS_TOPIC"`
+			Brokers        []string `env:"BROKERS"`
+			EventsTopic    string   `env:"EVENTS_TOPIC"`
+			GoroutineLimit int      `env:"GOROUTINE_LIMIT" envDefault:"1000"`
 		} `envPrefix:"KAFKA_"`
 
 		Prometheus struct {
