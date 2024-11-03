@@ -35,6 +35,7 @@ var (
 
 	Events         = newCounterVec("events", "event_type")
 	KafkaBatchSize = newHistogram("kafka_batch_size")
+	KafkaMessages  = newHistogramVec("kafka_messages", "topic")
 )
 
 func newCounter(name string) prometheus.Counter {
@@ -59,6 +60,14 @@ func newHistogram(name string) prometheus.Histogram {
 		Subsystem: Subsystem,
 		Name:      name,
 	})
+}
+
+func newHistogramVec(name string, labels ...string) *prometheus.HistogramVec {
+	return promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      name,
+	}, labels)
 }
 
 func newGauge(name string) prometheus.Gauge {

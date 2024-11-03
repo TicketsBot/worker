@@ -48,3 +48,12 @@ func FindIntersection[T comparable](slice []T, slice2 []T) []T {
 
 	return intersection
 }
+
+func Keys[T comparable, U any](m map[T]U) []T {
+	keys := make([]T, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}

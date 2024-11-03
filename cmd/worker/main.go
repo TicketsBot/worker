@@ -15,6 +15,7 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/bot/rpc"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/event"
@@ -157,16 +158,22 @@ func main() {
 
 		var wg sync.WaitGroup
 
-		kafkaConsumer, err := event.ConnectKafka(logger.With(zap.String("service", "kafka")), &pgCache)
+		rpcClient, err := rpc.NewClient(logger.With(zap.String("service", "rpc")), map[string]rpc.Listener{
+			// Listen for gateway events over Kafka
+			config.Conf.Kafka.EventsTopic: event.NewKafkaListener(
+				logger.With(zap.String("service", "gateway-events-kafka")),
+				&pgCache,
+			),
+		})
 		if err != nil {
-			logger.Fatal("Failed to connect to Kafka", zap.Error(err))
+			logger.Fatal("Failed to create RPC client", zap.Error(err))
 			return
 		}
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			kafkaConsumer.Run()
+			rpcClient.Run()
 		}()
 
 		shutdownCh := make(chan os.Signal, 1)
@@ -174,7 +181,7 @@ func main() {
 		<-shutdownCh
 
 		logger.Info("Received shutdown signal")
-		kafkaConsumer.Shutdown()
+		rpcClient.Shutdown()
 
 		if waitTimeout(&wg, time.Second*10) {
 			logger.Info("Shutdown completed gracefully")
