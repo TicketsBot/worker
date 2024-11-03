@@ -30,6 +30,14 @@ var Locales = []*Locale{
 		DiscordLocale: nil,
 	},
 	{
+		IsoShortCode:  "az",
+		IsoLongCode:   "az-AZ",
+		FlagEmoji:     "🇦🇿",
+		EnglishName:   "Azerbaijani",
+		LocalName:     "Azərbaycanca",
+		DiscordLocale: nil,
+	},
+	{
 		IsoShortCode:  "bg",
 		IsoLongCode:   "bg-BG",
 		FlagEmoji:     "🇧🇬",
