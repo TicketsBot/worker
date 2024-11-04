@@ -7,17 +7,25 @@ import (
 	"github.com/TicketsBot/common/rpc/model"
 	"github.com/TicketsBot/worker"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/rest"
 	"go.uber.org/zap"
 )
 
 type TicketStatusUpdater struct {
-	BaseListener
+	*BaseListener
 	logger *zap.Logger
 }
 
 var _ rpc.Listener = (*TicketStatusUpdater)(nil)
+
+func NewTicketStatusUpdater(cache *cache.PgCache, logger *zap.Logger) *TicketStatusUpdater {
+	return &TicketStatusUpdater{
+		BaseListener: NewBaseListener(cache),
+		logger:       logger,
+	}
+}
 
 func (u *TicketStatusUpdater) HandleMessage(ctx context.Context, message []byte) {
 	var event model.TicketStatusUpdate

@@ -16,6 +16,7 @@ import (
 	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
 	"github.com/TicketsBot/worker/bot/redis"
+	"github.com/TicketsBot/worker/bot/rpc/listeners"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/event"
@@ -171,6 +172,8 @@ func main() {
 					logger.With(zap.String("service", "gateway-events-kafka")),
 					&pgCache,
 				),
+				// TODO: Don't hardcode
+				"tickets.rpc.categoryupdate": listeners.NewTicketStatusUpdater(&pgCache, logger),
 			})
 
 		if err != nil {
