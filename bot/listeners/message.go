@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/TicketsBot/common/chatrelay"
+	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/database"
@@ -48,6 +49,8 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 		return
 	}
 
+	var isStaffCached *bool
+
 	// ignore our own messages
 	if e.Author.Id != worker.BotId && !e.Author.Bot {
 		// set participants, for logging
@@ -57,19 +60,21 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 			}
 		})
 
-		isStaff, err := sentry.WithSpan2(span.Context(), "Update ticket last activity", func(span *sentry.Span) (bool, error) {
-			return isStaff(ctx, e, ticket)
+		isStaffCached, err = sentry.WithSpan2(span.Context(), "Update ticket last activity", func(span *sentry.Span) (*bool, error) {
+			v, err := isStaff(ctx, e, ticket)
+			return &v, err
 		})
 
 		if err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		} else {
 			// set ticket last message, for autoclose
-			if err := updateLastMessage(span.Context(), e, ticket, isStaff); err != nil {
+			// isStaffCached cannot be nil at this point
+			if err := updateLastMessage(span.Context(), e, ticket, *isStaffCached); err != nil {
 				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 			}
 
-			if isStaff { // check the user is staff
+			if *isStaffCached { // check the user is staff
 				// We don't have to check for previous responses due to ON CONFLICT DO NOTHING
 				sentry.WithSpan0(span.Context(), "Set first response time", func(span *sentry.Span) {
 					if err := dbclient.Client.FirstResponseTime.Set(ctx, e.GuildId, e.Author.Id, ticket.Id, time.Now().Sub(ticket.OpenTime)); err != nil {
@@ -99,6 +104,32 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 			prometheus.ForwardedDashboardMessages.Inc()
 
 			return chatrelay.PublishMessage(redis.Client, data)
+		}); err != nil {
+			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+		}
+
+		var userIsStaff bool
+		if isStaffCached != nil {
+			userIsStaff = *isStaffCached
+		} else {
+			tmp, err := isStaff(ctx, e, ticket)
+			if err != nil {
+				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+				return
+			}
+
+			userIsStaff = tmp
+		}
+
+		var newStatus model.TicketStatus
+		if userIsStaff {
+			newStatus = model.TicketStatusPending
+		} else {
+			newStatus = model.TicketStatusOpen
+		}
+
+		if err := sentry.WithSpan1(span.Context(), "Update status update queue", func(span *sentry.Span) error {
+			return dbclient.Client.CategoryUpdateQueue.Add(ctx, e.GuildId, ticket.Id, newStatus)
 		}); err != nil {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}

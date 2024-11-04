@@ -47,6 +47,27 @@ func (u *TicketStatusUpdater) HandleMessage(ctx context.Context, message []byte)
 		return
 	}
 
+	// Don't move the ticket if it's already in the correct category
+	ch, err := worker.GetChannel(event.ChannelId)
+	if err != nil {
+		u.logger.Error(
+			"Failed to get ticket channel",
+			zap.Error(err),
+			zap.Uint64("channel_id", event.ChannelId),
+			zap.Uint64("guild_id", event.GuildId),
+		)
+		return
+	}
+
+	if ch.ParentId.Value == event.NewCategoryId {
+		u.logger.Debug(
+			"Ticket is already in the correct category",
+			zap.Uint64("channel_id", event.ChannelId),
+			zap.Uint64("category_id", event.NewCategoryId),
+		)
+		return
+	}
+
 	if _, err := worker.ModifyChannel(event.ChannelId, rest.ModifyChannelData{
 		ParentId: event.NewCategoryId,
 	}); err != nil {
