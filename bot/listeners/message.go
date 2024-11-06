@@ -108,30 +108,39 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 		}
 
-		var userIsStaff bool
-		if isStaffCached != nil {
-			userIsStaff = *isStaffCached
-		} else {
-			tmp, err := isStaff(ctx, e, ticket)
-			if err != nil {
-				sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
-				return
+		// Ignore the welcome message and ping message
+		if e.Author.Id != worker.BotId {
+			var userIsStaff bool
+			if isStaffCached != nil {
+				userIsStaff = *isStaffCached
+			} else {
+				tmp, err := isStaff(ctx, e, ticket)
+				if err != nil {
+					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+					return
+				}
+
+				userIsStaff = tmp
 			}
 
-			userIsStaff = tmp
-		}
+			var newStatus model.TicketStatus
+			if userIsStaff {
+				newStatus = model.TicketStatusPending
+			} else {
+				newStatus = model.TicketStatusOpen
+			}
 
-		var newStatus model.TicketStatus
-		if userIsStaff {
-			newStatus = model.TicketStatusPending
-		} else {
-			newStatus = model.TicketStatusOpen
-		}
+			if ticket.Status != newStatus {
+				if err := dbclient.Client.Tickets.SetStatus(ctx, e.GuildId, ticket.Id, newStatus); err != nil {
+					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+				}
 
-		if err := sentry.WithSpan1(span.Context(), "Update status update queue", func(span *sentry.Span) error {
-			return dbclient.Client.CategoryUpdateQueue.Add(ctx, e.GuildId, ticket.Id, newStatus)
-		}); err != nil {
-			sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+				if err := sentry.WithSpan1(span.Context(), "Update status update queue", func(span *sentry.Span) error {
+					return dbclient.Client.CategoryUpdateQueue.Add(ctx, e.GuildId, ticket.Id, newStatus)
+				}); err != nil {
+					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+				}
+			}
 		}
 	}
 }

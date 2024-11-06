@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"fmt"
+	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
@@ -114,6 +115,11 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 	}
 
 	if _, err := ctx.ReplyWith(data); err != nil {
+		ctx.HandleError(err)
+		return
+	}
+
+	if err := dbclient.Client.Tickets.SetStatus(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
 		ctx.HandleError(err)
 		return
 	}

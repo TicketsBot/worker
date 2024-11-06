@@ -2,6 +2,7 @@ package tags
 
 import (
 	"context"
+	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/permission"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
@@ -96,6 +97,10 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 	// Count user as a participant so that Tickets Answered stat includes tickets where only /tag was used
 	if ticket.GuildId != 0 {
 		if err := dbclient.Client.Participants.Set(ctx, ctx.GuildId(), ticket.Id, ctx.UserId()); err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
+
+		if err := dbclient.Client.Tickets.SetStatus(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 	}
