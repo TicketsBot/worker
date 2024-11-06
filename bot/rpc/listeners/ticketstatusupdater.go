@@ -34,6 +34,11 @@ func (u *TicketStatusUpdater) HandleMessage(ctx context.Context, message []byte)
 		return
 	}
 
+	// Feature-gate for now
+	if event.GuildId != 508392876359680000 {
+		return
+	}
+
 	worker, err := u.ContextForGuild(ctx, event.GuildId)
 	if err != nil {
 		u.logger.Error("Failed to get worker context", zap.Error(err))
