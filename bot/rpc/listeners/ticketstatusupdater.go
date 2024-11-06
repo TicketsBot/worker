@@ -6,6 +6,7 @@ import (
 	"github.com/TicketsBot/common/rpc"
 	"github.com/TicketsBot/common/rpc/model"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/metrics/prometheus"
 	"github.com/TicketsBot/worker/bot/redis"
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/objects/channel"
@@ -89,6 +90,7 @@ func (u *TicketStatusUpdater) HandleMessage(ctx context.Context, message []byte)
 		return
 	}
 
+	prometheus.CategoryUpdates.Inc()
 	u.logger.Debug("Moved ticket to updated status category", zap.Uint64("channel_id", event.ChannelId), zap.Uint64("category_id", event.NewCategoryId))
 }
 

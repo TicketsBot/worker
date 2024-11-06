@@ -36,6 +36,8 @@ var (
 	Events         = newCounterVec("events", "event_type")
 	KafkaBatchSize = newHistogram("kafka_batch_size")
 	KafkaMessages  = newHistogramVec("kafka_messages", "topic")
+
+	CategoryUpdates = newCounter("category_updates")
 )
 
 func newCounter(name string) prometheus.Counter {
