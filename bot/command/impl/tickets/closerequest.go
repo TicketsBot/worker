@@ -123,6 +123,11 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		ctx.HandleError(err)
 		return
 	}
+
+	if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
+		ctx.HandleError(err)
+		return
+	}
 }
 
 // ReasonAutoCompleteHandler TODO: Make a utility function rather than call the Close handler directly

@@ -103,6 +103,10 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 		if err := dbclient.Client.Tickets.SetStatus(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
+
+		if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
+			sentry.ErrorWithContext(err, ctx.ToErrorContext())
+		}
 	}
 }
 
