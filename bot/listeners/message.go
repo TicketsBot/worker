@@ -135,10 +135,12 @@ func OnMessage(worker *worker.Context, e events.MessageCreate) {
 					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
 				}
 
-				if err := sentry.WithSpan1(span.Context(), "Update status update queue", func(span *sentry.Span) error {
-					return dbclient.Client.CategoryUpdateQueue.Add(ctx, e.GuildId, ticket.Id, newStatus)
-				}); err != nil {
-					sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+				if !ticket.IsThread {
+					if err := sentry.WithSpan1(span.Context(), "Update status update queue", func(span *sentry.Span) error {
+						return dbclient.Client.CategoryUpdateQueue.Add(ctx, e.GuildId, ticket.Id, newStatus)
+					}); err != nil {
+						sentry.ErrorWithContext(err, utils.MessageCreateErrorContext(e))
+					}
 				}
 			}
 		}

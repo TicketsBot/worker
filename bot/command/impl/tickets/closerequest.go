@@ -124,9 +124,11 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		return
 	}
 
-	if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
-		ctx.HandleError(err)
-		return
+	if !ticket.IsThread {
+		if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
+			ctx.HandleError(err)
+			return
+		}
 	}
 }
 
