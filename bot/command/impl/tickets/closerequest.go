@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -124,7 +125,7 @@ func (CloseRequestCommand) Execute(ctx registry.CommandContext, closeDelay *int,
 		return
 	}
 
-	if !ticket.IsThread {
+	if !ticket.IsThread && ctx.PremiumTier() > premium.None {
 		if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
 			ctx.HandleError(err)
 			return

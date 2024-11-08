@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/TicketsBot/common/model"
 	"github.com/TicketsBot/common/permission"
+	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker/bot/command"
 	"github.com/TicketsBot/worker/bot/command/registry"
@@ -104,7 +105,7 @@ func (TagCommand) Execute(ctx registry.CommandContext, tagId string) {
 			sentry.ErrorWithContext(err, ctx.ToErrorContext())
 		}
 
-		if !ticket.IsThread {
+		if !ticket.IsThread && ctx.PremiumTier() > premium.None {
 			if err := dbclient.Client.CategoryUpdateQueue.Add(ctx, ctx.GuildId(), ticket.Id, model.TicketStatusPending); err != nil {
 				sentry.ErrorWithContext(err, ctx.ToErrorContext())
 			}
