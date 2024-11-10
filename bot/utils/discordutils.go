@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -22,8 +21,6 @@ func EscapeMarkdown(s string) string {
 		if c == ' ' {
 			inLink = false
 		}
-
-		fmt.Printf("inlink: %v, c: %v\n", inLink, string(c))
 
 		if !inLink {
 			if c == 'h' || c == 'H' {
