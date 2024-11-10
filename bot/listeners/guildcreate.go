@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/blacklist"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/metrics/statsd"
@@ -23,16 +24,12 @@ func OnGuildCreate(worker *worker.Context, e events.GuildCreate) {
 	defer cancel()
 
 	// check if guild is blacklisted
-	if blacklisted, _, err := dbclient.Client.ServerBlacklist.IsBlacklisted(ctx, e.Guild.Id); err == nil {
-		if blacklisted {
-			if err := worker.LeaveGuild(e.Guild.Id); err != nil {
-				sentry.Error(err)
-			}
-
-			return
+	if blacklist.IsGuildBlacklisted(e.Guild.Id) {
+		if err := worker.LeaveGuild(e.Guild.Id); err != nil {
+			sentry.Error(err)
 		}
-	} else {
-		sentry.Error(err)
+
+		return
 	}
 
 	if time.Now().Sub(e.JoinedAt) < time.Minute {

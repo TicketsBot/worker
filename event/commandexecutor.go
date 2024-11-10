@@ -8,6 +8,7 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/blacklist"
 	"github.com/TicketsBot/worker/bot/command"
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	"github.com/TicketsBot/worker/bot/command/impl/tags"
@@ -123,18 +124,6 @@ func executeCommand(
 			return nil
 		})
 
-		// Get guild blacklisted in guild
-		var guildBlacklisted bool
-		group.Go(func() error {
-			res, _, err := dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
-			if err != nil {
-				return err
-			}
-
-			guildBlacklisted = res
-			return nil
-		})
-
 		if err := group.Wait(); err != nil {
 			errorId := sentry.Error(err)
 			responseCh <- interaction.ApplicationCommandCallbackData{
@@ -152,8 +141,8 @@ func executeCommand(
 
 		interactionContext := cmdcontext.NewSlashCommandContext(ctx, worker, data, premiumLevel, responseCh)
 
-		if guildBlacklisted {
-			// TODO: Better message?
+		// Check if the guild is globally blacklisted
+		if blacklist.IsGuildBlacklisted(data.GuildId.Value) {
 			interactionContext.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 			return
 		}

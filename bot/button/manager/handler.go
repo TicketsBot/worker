@@ -7,12 +7,12 @@ import (
 	"github.com/TicketsBot/common/premium"
 	"github.com/TicketsBot/common/sentry"
 	"github.com/TicketsBot/worker"
+	"github.com/TicketsBot/worker/bot/blacklist"
 	"github.com/TicketsBot/worker/bot/button"
 	"github.com/TicketsBot/worker/bot/button/registry"
 	cmdcontext "github.com/TicketsBot/worker/bot/command/context"
 	cmdregistry "github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
-	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/bot/errorcontext"
 	"github.com/TicketsBot/worker/bot/utils"
 	"github.com/TicketsBot/worker/config"
@@ -69,6 +69,12 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 		return false
 	}
 
+	// Check for guild-wide blacklist
+	if data.GuildId.Value != 0 && blacklist.IsGuildBlacklisted(data.GuildId.Value) {
+		cc.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
+		return false
+	}
+
 	// Parallelise checks
 	group, _ := errgroup.WithContext(lookupCtx)
 
@@ -78,15 +84,6 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 		userBlacklisted, err = cc.IsBlacklisted(lookupCtx)
 		return
 	})
-
-	// Check for guild-wide blacklist
-	var guildBlacklisted = false
-	if data.GuildId.Value != 0 {
-		group.Go(func() (err error) {
-			guildBlacklisted, _, err = dbclient.Client.ServerBlacklist.IsBlacklisted(lookupCtx, data.GuildId.Value)
-			return
-		})
-	}
 
 	if err := group.Wait(); err != nil {
 		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
@@ -98,7 +95,7 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 		return false
 	}
 
-	if userBlacklisted || guildBlacklisted {
+	if userBlacklisted {
 		cc.Reply(customisation.Red, i18n.TitleBlacklisted, i18n.MessageBlacklisted)
 		return false
 	}
