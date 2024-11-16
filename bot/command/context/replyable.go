@@ -172,7 +172,8 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 	var message string
 	var imageUrl *string
 
-	if restError, ok := err.(request.RestError); ok {
+	var restError request.RestError
+	if errors.As(err, &restError) {
 		if restError.ApiError.Message == "Missing Permissions" { // Override for missing permissions
 			interactionCtx, ok := r.ctx.(registry.InteractionContext)
 			if ok {
@@ -201,6 +202,8 @@ func (r *Replyable) buildErrorResponse(err error, eventId string, includeInviteL
 		} else {
 			message = formatDiscordError(restError, eventId)
 		}
+	} else if errors.Is(err, context.DeadlineExceeded) {
+		message = "The operation timed out, please try again."
 	} else {
 		message = fmt.Sprintf("An error occurred while performing this action.\nError ID: `%s`", eventId)
 	}
