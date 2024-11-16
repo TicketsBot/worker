@@ -19,7 +19,6 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/interaction/component"
-	"golang.org/x/sync/errgroup"
 	"time"
 )
 
@@ -75,17 +74,20 @@ func HandleInteraction(ctx context.Context, manager *ComponentInteractionManager
 		return false
 	}
 
-	// Parallelise checks
-	group, _ := errgroup.WithContext(lookupCtx)
+	// Check not if the context has been cancelled
+	if err := lookupCtx.Err(); err != nil {
+		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
+			Guild:   data.GuildId.Value,
+			Channel: data.ChannelId,
+		})
+
+		cc.ReplyRaw(customisation.Red, "Error", fmt.Sprintf("An error occurred while processing this request (Error ID `%s`)", errorId))
+		return false
+	}
 
 	// Check if the user is blacklisted at guild / global level
-	var userBlacklisted bool
-	group.Go(func() (err error) {
-		userBlacklisted, err = cc.IsBlacklisted(lookupCtx)
-		return
-	})
-
-	if err := group.Wait(); err != nil {
+	userBlacklisted, err := cc.IsBlacklisted(lookupCtx)
+	if err != nil {
 		errorId := sentry.ErrorWithContext(err, errorcontext.WorkerErrorContext{
 			Guild:   data.GuildId.Value,
 			Channel: data.ChannelId,
