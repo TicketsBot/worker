@@ -12,6 +12,7 @@ import (
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/interaction"
+	"github.com/rxdn/gdl/rest"
 	"strings"
 	"time"
 )
@@ -61,14 +62,16 @@ func (AdminWhitelabelDataCommand) Execute(ctx registry.CommandContext, userId ui
 	if data.BotId != 0 {
 		botIdFormatted = fmt.Sprintf("%d (<@%d>)", data.BotId, data.BotId)
 
-		publicKey, err := dbclient.Client.WhitelabelKeys.Get(ctx, data.BotId)
+		application, err := rest.GetCurrentApplication(ctx, data.Token, nil)
 		if err != nil {
 			ctx.HandleError(err)
 			return
 		}
 
-		if publicKey != "" {
-			publicKeyFormatted = "Has public key"
+		if application.VerifyKey == data.PublicKey {
+			publicKeyFormatted = "Matches"
+		} else {
+			publicKeyFormatted = "Does not match(!)"
 		}
 	}
 
