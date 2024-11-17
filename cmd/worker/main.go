@@ -68,7 +68,12 @@ func main() {
 		}); err != nil {
 			logger.Error("Failed to connect to sentry", zap.Error(err))
 		} else {
-			logger.Info("Connected to sentry")
+			logger.Info(
+				"Connected to sentry",
+				zap.Float64("sample_rate", config.Conf.Sentry.SampleRate),
+				zap.Bool("tracing", config.Conf.Sentry.UseTracing),
+				zap.Float64("tracing_sample_rate", config.Conf.Sentry.TracingSampleRate),
+			)
 		}
 	}
 
