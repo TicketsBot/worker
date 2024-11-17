@@ -6,15 +6,13 @@ import (
 	"github.com/TicketsBot/database"
 	"github.com/TicketsBot/worker/config"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 var Client *database.Database
-var Pool *pgxpool.Pool
 
-func Connect() {
+func Connect(logger *zap.Logger) {
 	cfg, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?pool_max_conns=%d",
 		config.Conf.Database.Username,
@@ -25,17 +23,19 @@ func Connect() {
 	))
 
 	if err != nil {
-		panic(err)
+		logger.Fatal("Failed to parse database config", zap.Error(err))
+		return
 	}
 
 	// TODO: Sentry
 	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
-	cfg.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
+	cfg.ConnConfig.Logger = NewLogAdapter(logger)
 
-	Pool, err = pgxpool.ConnectConfig(context.Background(), cfg)
+	pool, err := pgxpool.ConnectConfig(context.Background(), cfg)
 	if err != nil {
-		panic(err)
+		logger.Fatal("Failed to connect to database", zap.Error(err))
+		return
 	}
 
-	Client = database.NewDatabase(Pool)
+	Client = database.NewDatabase(pool)
 }

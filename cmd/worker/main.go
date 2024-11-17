@@ -86,7 +86,7 @@ func main() {
 	logger.Info("Connected to Redis")
 
 	logger.Info("Connecting to DB")
-	dbclient.Connect()
+	dbclient.Connect(logger.With(zap.String("service", "database")))
 	logger.Info("Connected to DB")
 
 	logger.Info("Loading i18n files")
