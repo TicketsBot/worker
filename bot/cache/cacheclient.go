@@ -3,12 +3,11 @@ package cache
 import (
 	"context"
 	"fmt"
+	"github.com/TicketsBot/worker/bot/dbclient"
 	"github.com/TicketsBot/worker/config"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/cache"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"time"
 )
@@ -40,7 +39,7 @@ func Connect(logger *zap.Logger) (client cache.PgCache, err error) {
 
 	// TODO: Sentry
 	cfg.ConnConfig.LogLevel = pgx.LogLevelWarn
-	cfg.ConnConfig.Logger = logrusadapter.NewLogger(logrus.New())
+	cfg.ConnConfig.Logger = dbclient.NewLogAdapter(logger)
 	cfg.ConnConfig.PreferSimpleProtocol = true
 	cfg.ConnConfig.ConnectTimeout = time.Second * 15
 
