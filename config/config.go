@@ -16,6 +16,8 @@ type (
 		LogLevel    zapcore.Level `env:"WORKER_LOG_LEVEL" envDefault:"info"`
 		PremiumOnly bool          `env:"WORKER_PREMIUM_ONLY" envDefault:"false"`
 
+		ShutdownMessageRollout int `env:"SHUTDOWN_MESSAGE_ROLLOUT" envDefault:"0"`
+
 		WorkerMode WorkerMode `env:"WORKER_MODE"`
 
 		Discord struct {

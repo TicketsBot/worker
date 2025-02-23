@@ -7,6 +7,7 @@ import (
 	"github.com/TicketsBot/worker/bot/command/registry"
 	"github.com/TicketsBot/worker/bot/customisation"
 	"github.com/TicketsBot/worker/bot/dbclient"
+	"github.com/TicketsBot/worker/config"
 	"github.com/TicketsBot/worker/i18n"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -30,7 +31,11 @@ func BuildEmbed(
 	}
 
 	if ctx.PremiumTier() == premium.None {
-		msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
+		if ctx.GuildId()%100 <= uint64(config.Conf.ShutdownMessageRollout) {
+			msgEmbed.SetFooter("Tickets will sunset on the 5th of March. See ticketsbot.net/sunset for more information.", "https://ticketsbot.net/assets/img/logo.png")
+		} else {
+			msgEmbed.SetFooter("Powered by ticketsbot.net", "https://ticketsbot.net/assets/img/logo.png")
+		}
 	}
 
 	return msgEmbed
