@@ -591,8 +591,22 @@ func BuildCustomEmbed(
 	}
 
 	if customEmbed.AuthorName != nil {
-		e.SetAuthor(*customEmbed.AuthorName, utils.ValueOrZero(customEmbed.AuthorUrl), utils.ValueOrZero(customEmbed.AuthorIconUrl))
+    		authorName := DoPlaceholderSubstitutions(*customEmbed.AuthorName, ctx, ticket, additionalPlaceholders)
+
+    		authorUrl := ValueOrZero(customEmbed.AuthorUrl)
+    		if authorUrl != "" {
+        		authorUrl = DoPlaceholderSubstitutions(authorUrl, ctx, ticket, additionalPlaceholders)
+    		}
+
+    		authorIconUrl := ValueOrZero(customEmbed.AuthorIconUrl)
+    		if authorIconUrl != "" {
+        		authorIconUrl = DoPlaceholderSubstitutions(authorIconUrl, ctx, ticket, additionalPlaceholders)
+    		}
+
+    		e.SetAuthor(authorName, authorUrl, authorIconUrl)
 	}
+
+
 
 	for _, field := range fields {
 		value := field.Value
